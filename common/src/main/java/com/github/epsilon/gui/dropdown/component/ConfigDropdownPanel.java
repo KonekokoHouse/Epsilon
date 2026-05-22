@@ -82,21 +82,24 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                 boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, BUTTON_HEIGHT);
                 renderer.roundRect().addRoundRect(btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                         hovered ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH);
-                float labelW = renderer.text().getWidth(actions[index], 0.48f);
-                renderer.text().addText(actions[index], btnX + (btnW - labelW) * 0.5f, btnY + 3.0f, 0.48f, MD3Theme.TEXT_PRIMARY);
+                float labelScale = 0.48f;
+                float labelW = renderer.text().getWidth(actions[index], labelScale);
+                renderer.text().addText(actions[index], btnX + (btnW - labelW) * 0.5f, getCenteredTextY(renderer, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY);
             }
         }
         currentY += BUTTON_HEIGHT * 3.0f + GAP * 3.0f;
 
         if (!status.isEmpty()) {
-            renderer.text().addText(trimToWidth(status, 0.50f, contentW, renderer), contentX, currentY + 2.0f, 0.50f, MD3Theme.TEXT_MUTED);
+            float statusScale = 0.50f;
+            renderer.text().addText(trimToWidth(status, statusScale, contentW, renderer), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, statusScale), statusScale, MD3Theme.TEXT_MUTED);
             currentY += ROW_HEIGHT;
         }
 
         String active = ConfigManager.INSTANCE.getActiveConfigName();
         List<String> configs = ConfigManager.INSTANCE.listConfigs();
         if (configs.isEmpty()) {
-            renderer.text().addText(emptyComponent.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            float emptyScale = 0.55f;
+            renderer.text().addText(emptyComponent.getTranslatedName(), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
             return;
         }
         for (String name : configs) {
@@ -104,10 +107,12 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
             boolean hovered = isHovered(mouseX, mouseY, contentX, currentY, contentW, ROW_HEIGHT);
             renderer.roundRect().addRoundRect(contentX, currentY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     activeRow ? MD3Theme.PRIMARY_CONTAINER : (hovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_LOW));
-            renderer.text().addText(trimToWidth(name, 0.56f, contentW - 28.0f, renderer), contentX + 6.0f, currentY + 5.0f, 0.56f,
+            float nameScale = 0.56f;
+            renderer.text().addText(trimToWidth(name, nameScale, contentW - 28.0f, renderer), contentX + 6.0f, getCenteredTextY(renderer, currentY, ROW_HEIGHT, nameScale), nameScale,
                     activeRow ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
             float deleteX = contentX + contentW - 18.0f;
-            renderer.text().addText("x", deleteX + 5.0f, currentY + 5.0f, 0.52f,
+            float deleteScale = 0.52f;
+            renderer.text().addText("x", deleteX + 5.0f, getCenteredTextY(renderer, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
                     isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f) ? MD3Theme.ERROR : MD3Theme.TEXT_MUTED);
             currentY += ROW_HEIGHT + GAP;
         }
@@ -237,6 +242,10 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     private String errorText(Exception e) {
         String message = e.getMessage();
         return errorComponent.getTranslatedName() + ": " + (message == null || message.isBlank() ? e.getClass().getSimpleName() : message);
+    }
+
+    private float getCenteredTextY(DropdownRenderer renderer, float boxY, float boxH, float scale) {
+        return boxY + (boxH - renderer.text().getHeight(scale)) / 2.0f;
     }
 
 }
