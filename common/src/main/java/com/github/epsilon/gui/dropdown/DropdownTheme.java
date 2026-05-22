@@ -76,7 +76,7 @@ public class DropdownTheme {
     }
 
     public static Color moduleDivider() {
-        return MD3Theme.withAlpha(MD3Theme.OUTLINE, 48);
+        return MD3Theme.withAlpha(MD3Theme.OUTLINE, 24);
     }
 
     public static Color moduleEnabled(float hoverProgress) {
