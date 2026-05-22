@@ -3,8 +3,6 @@ package com.github.epsilon.gui.dropdown.widget;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.render.animation.Animation;
-import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
@@ -13,14 +11,11 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
     private static final float VALUE_FIELD_WIDTH = 40.0f;
     private static final float VALUE_FIELD_HEIGHT = 12.0f;
 
-    private final Animation slideAnim = new Animation(Easing.EASE_OUT_CUBIC, 100L);
     private final DropdownTextField inputField = new DropdownTextField(12, value -> value.matches("[0-9-]"));
     private boolean dragging;
 
     public IntSliderWidget(IntSetting setting) {
         super(setting);
-        float initial = (float) (setting.getValue() - setting.getMin()) / (float) (setting.getMax() - setting.getMin());
-        slideAnim.setStartValue(initial);
     }
 
     @Override
@@ -31,8 +26,7 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
     @Override
     public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
         float ratio = (float) (setting.getValue() - setting.getMin()) / (float) (setting.getMax() - setting.getMin());
-        slideAnim.run(ratio);
-        float animatedRatio = slideAnim.getValue();
+        float sliderRatio = Mth.clamp(ratio, 0.0f, 1.0f);
 
         renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
@@ -51,12 +45,12 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
 
         renderer.roundRect().addRoundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack());
 
-        float activeW = trackW * Mth.clamp(animatedRatio, 0.0f, 1.0f);
+        float activeW = trackW * sliderRatio;
         if (activeW > 0.5f) {
             renderer.roundRect().addRoundRect(trackX, trackY, activeW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderActive());
         }
 
-        float knobX = trackX + trackW * Mth.clamp(animatedRatio, 0.0f, 1.0f);
+        float knobX = trackX + trackW * sliderRatio;
         float knobY = trackY + trackH * 0.5f;
         float kr = DropdownTheme.SLIDER_KNOB_RADIUS;
         renderer.roundRect().addRoundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());

@@ -31,9 +31,9 @@ public class DropdownTheme {
     public static final float SETTING_GAP = 3.0f;
     public static final float SETTING_INDENT = 5.0f;
 
-    public static final float SLIDER_HEIGHT = 5.0f;
-    public static final float SLIDER_RADIUS = 2.5f;
-    public static final float SLIDER_KNOB_RADIUS = 4.5f;
+    public static final float SLIDER_HEIGHT = 3.0f;
+    public static final float SLIDER_RADIUS = 1.5f;
+    public static final float SLIDER_KNOB_RADIUS = 3.5f;
 
     public static final float COLOR_PREVIEW_SIZE = 12.0f;
     public static final float COLOR_PICKER_HEIGHT = 60.0f;
