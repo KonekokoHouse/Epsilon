@@ -116,23 +116,23 @@ public class ZealotCrystalPlus extends Module {
 
     // Place
     private final EnumSetting<PlaceMode> placeMode = enumSetting("Place Mode", PlaceMode.Single).group(sgPlace);
-    private final EnumSetting<PacketPlaceMode> packetPlace = enumSetting("Packet Place", PacketPlaceMode.Weak).group(sgPlace);
+    private final EnumSetting<PacketPlaceMode> packetPlace = enumSetting("Packet Place", PacketPlaceMode.Off).group(sgPlace);
     private final BoolSetting spamPlace = boolSetting("Spam Place", false).group(sgPlace);
     private final EnumSetting<SwitchMode> placeSwitchMode = enumSetting("Place Switch Mode", SwitchMode.Off).group(sgPlace);
-    private final BoolSetting placeSwing = boolSetting("Place Swing", false).group(sgPlace);
+    private final BoolSetting placeSwing = boolSetting("Place Swing", true).group(sgPlace);
     private final EnumSetting<PlaceBypass> placeSideBypass = enumSetting("Place Side Bypass", PlaceBypass.Up).group(sgPlace);
     private final DoubleSetting placeMinDamage = doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25).group(sgPlace);
     private final DoubleSetting placeMaxSelfDamage = doubleSetting("Place Max Self Damage", 6.0, 0.0, 20.0, 0.25).group(sgPlace);
     private final DoubleSetting placeBalance = doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25).group(sgPlace);
     private final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1).group(sgPlace);
-    private final DoubleSetting placeRange = doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1).group(sgPlace);
+    private final DoubleSetting placeRange = doubleSetting("Place Range", 3.0, 0.0, 8.0, 0.1).group(sgPlace);
     private final EnumSetting<RangeMode> placeRangeMode = enumSetting("Place Range Mode", RangeMode.Feet).group(sgPlace);
 
     // Break
     private final EnumSetting<BreakMode> breakMode = enumSetting("Break Mode", BreakMode.Smart).group(sgBreak);
     private final BoolSetting bbtt = boolSetting("2B2T", false).group(sgBreak);
     private final IntSetting bbttFactor = intSetting("2B2T Factor", 200, 0, 1000, 25, bbtt::getValue).group(sgBreak);
-    private final EnumSetting<BreakMode> packetBreak = enumSetting("Packet Break", BreakMode.Target, () -> !bbtt.getValue()).group(sgBreak);
+    private final EnumSetting<BreakMode> packetBreak = enumSetting("Packet Break", BreakMode.Off, () -> !bbtt.getValue()).group(sgBreak);
     private final IntSetting ownTimeout = intSetting("Own Timeout", 100, 0, 2000, 25,
             () -> breakMode.getValue() == BreakMode.Own || packetBreak.getValue() == BreakMode.Own).group(sgBreak);
     private final EnumSetting<SwitchMode> antiWeakness = enumSetting("Anti Weakness", SwitchMode.Off).group(sgBreak);
@@ -141,7 +141,7 @@ public class ZealotCrystalPlus extends Module {
     private final DoubleSetting breakMaxSelfDamage = doubleSetting("Break Max Self Damage", 8.0, 0.0, 20.0, 0.25).group(sgBreak);
     private final DoubleSetting breakBalance = doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25).group(sgBreak);
     private final IntSetting breakDelay = intSetting("Break Delay", 100, 0, 500, 1).group(sgBreak);
-    private final DoubleSetting breakRange = doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1).group(sgBreak);
+    private final DoubleSetting breakRange = doubleSetting("Break Range", 3.5, 0.0, 8.0, 0.1).group(sgBreak);
     private final EnumSetting<RangeMode> breakRangeMode = enumSetting("Break Range Mode", RangeMode.Feet).group(sgBreak);
 
     // Render
@@ -1343,7 +1343,7 @@ public class ZealotCrystalPlus extends Module {
                     double crystalY = y + 1.0;
                     double crystalZ = z + 0.5;
                     if (placeDistanceSq(mc.player, crystalX, crystalY, crystalZ) > rangeSq) continue;
-                    if (!isPlaceable(pos)) continue;
+                    if (!isPotentialPlacePosition(pos)) continue;
 
                     double feetDistSq = feetPos.distanceToSqr(crystalX, crystalY, crystalZ);
                     if (feetDistSq > wallRangeSq && !RaytraceUtils.canSeePointFrom(eyePos, new Vec3(crystalX, crystalY + 1.7, crystalZ))) {
@@ -1437,12 +1437,16 @@ public class ZealotCrystalPlus extends Module {
     }
 
     private boolean isPlaceable(BlockPos pos) {
+        if (!isPotentialPlacePosition(pos)) return false;
+        return mc.level.getEntities(null, getCrystalPlaceBox(pos)).isEmpty();
+    }
+
+    private boolean isPotentialPlacePosition(BlockPos pos) {
         if (!isCrystalSupport(pos)) return false;
 
         BlockPos crystalPos = pos.above();
         if (!mc.level.getBlockState(crystalPos).canBeReplaced()) return false;
-        if (!mc.level.getBlockState(crystalPos.above()).canBeReplaced()) return false;
-        return mc.level.getEntities(null, getCrystalPlaceBox(pos)).isEmpty();
+        return mc.level.getBlockState(crystalPos.above()).canBeReplaced();
     }
 
     private boolean isCrystalSupport(BlockPos pos) {
@@ -2077,4 +2081,3 @@ public class ZealotCrystalPlus extends Module {
         }
     }
 }
-
