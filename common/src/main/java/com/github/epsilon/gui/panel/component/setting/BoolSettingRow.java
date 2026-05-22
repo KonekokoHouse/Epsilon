@@ -17,7 +17,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 public class BoolSettingRow extends SettingRow<BoolSetting> {
 
     private final Animation hoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
-    private final Animation toggleAnimation = new Animation(Easing.EASE_OUT_ELASTIC, 450L);
+    private final Animation toggleAnimation = new Animation(Easing.EASE_OUT_ELASTIC, 620L);
 
     public BoolSettingRow(BoolSetting setting) {
         super(setting);
