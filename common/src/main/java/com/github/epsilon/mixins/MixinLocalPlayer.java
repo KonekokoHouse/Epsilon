@@ -1,7 +1,6 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.events.impl.SlowdownEvent;
 import com.github.epsilon.events.impl.SwingHandEvent;
@@ -28,11 +27,6 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     protected MixinLocalPlayer(ClientLevel level, GameProfile gameProfile) {
         super(level, gameProfile);
-    }
-
-    @Inject(method = "tick", at = @At("HEAD"))
-    private void onTickHead(CallbackInfo ci) {
-        EventBus.INSTANCE.post(new PlayerTickEvent());
     }
 
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
