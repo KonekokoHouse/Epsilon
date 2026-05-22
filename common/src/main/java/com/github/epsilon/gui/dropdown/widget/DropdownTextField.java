@@ -43,9 +43,8 @@ public class DropdownTextField {
             int safeCursor = Math.min(cursor, display.length());
             display = display.substring(0, safeCursor) + "|" + display.substring(safeCursor);
         }
-        float textY = y + (height - renderer.text().getHeight(textScale)) * 0.5f;
-        renderer.text().addText(trimToWidth(display, textScale, width - 8.0f, renderer),
-                x + 4.0f, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
+        float textY = y + (height - renderer.text().getLineHeight(textScale)) / 2.0f; // i07你还挺聪明
+        renderer.text().addText(trimToWidth(display, textScale, width - 8.0f, renderer), x + 4.0f, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
 
         if (focused) {
             int safeCursor = Math.min(cursor, text.length());

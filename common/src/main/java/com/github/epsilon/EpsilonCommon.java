@@ -9,7 +9,7 @@ import java.lang.invoke.MethodHandles;
 public class EpsilonCommon {
 
     public static void init() {
-        Constants.LOGGER.info("Welcome to Epsilon.");
+        Constants.LOGGER.info("Welcome to " + Constants.NAME + ".");
 
         EventBus.INSTANCE.registerLambdaFactory(EpsilonCommon.class.getPackageName(), (lookupInMethod, klass) -> (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup()));
 
@@ -26,10 +26,10 @@ public class EpsilonCommon {
         // 添加一个退出游戏时候的钩子
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ConfigManager.INSTANCE.saveNow();
-            Constants.LOGGER.info("Epsilon saved config on shutdown.");
+            Constants.LOGGER.info(Constants.NAME + " saved config on shutdown.");
         }));
 
-        Constants.LOGGER.info("Epsilon has loaded successfully.");
+        Constants.LOGGER.info(Constants.NAME + " has loaded successfully.");
     }
 
 }

@@ -22,9 +22,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     private static final TranslateComponent friendComponent = EpsilonTranslateComponent.create("gui", "tab.friend");
     private static final TranslateComponent configComponent = EpsilonTranslateComponent.create("gui", "tab.config");
     private static final TranslateComponent addonComponent = EpsilonTranslateComponent.create("gui", "tab.addon");
-    private static final TranslateComponent collapseComponent = EpsilonTranslateComponent.create("gui", "dropdown.collapse_all");
 
-    private static final float HEADER_HEIGHT = 12.0f;
     private static final float ICON_SIZE = 30.0f;
     private static final float ICON_GAP = 7.0f;
     private static final float ICON_SCALE = 0.88f;
@@ -48,7 +46,6 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         add(friendComponent::getTranslatedName, "4", "friend", togglePanel, panelVisibleResolver);
         add(configComponent::getTranslatedName, "O", "config", togglePanel, panelVisibleResolver);
         add(addonComponent::getTranslatedName, "+", "addon", togglePanel, panelVisibleResolver);
-        entries.add(new Entry(collapseComponent::getTranslatedName, "X", "__collapse_all__", togglePanel, anySubPanelVisible));
     }
 
     private void add(LabelSupplier labelSupplier, String icon, String panelId, Consumer<String> togglePanel, PanelVisibleResolver panelVisibleResolver) {
@@ -56,16 +53,31 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
+    public void drawBackground(DropdownRenderer renderer) {
+        super.drawBackground(renderer);
+
+        float versionScale = 0.48f;
+        float versionX = x + renderer.text().getWidth(getTitle(), DropdownTheme.HEADER_TEXT_SCALE) + 12.0f;
+        float versionMaxWidth = x + width - 17.0f - versionX;
+        if (versionMaxWidth <= 2.0f) return;
+
+        String version = trimToWidth(Constants.VERSION, versionScale, versionMaxWidth, renderer);
+        if (!version.isEmpty()) {
+            float nameY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.text().getHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
+            float versionY = nameY + renderer.text().getHeight(DropdownTheme.HEADER_TEXT_SCALE) - renderer.text().getHeight(versionScale);
+            renderer.text().addText(version, versionX, versionY, versionScale, MD3Theme.TEXT_MUTED);
+        }
+    }
+
+    @Override
     protected float computeContentHeight() {
         int rows = getIconRows();
-        return HEADER_HEIGHT + CONTENT_PADDING + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING + settingsContent.computeContentHeight();
+        return CONTENT_PADDING + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING + settingsContent.computeContentHeight();
     }
 
     @Override
     protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
-        float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll;
-        drawBrandHeader(renderer, currentY);
-        currentY += HEADER_HEIGHT + CONTENT_PADDING;
+        float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING;
 
         for (int index = 0; index < entries.size(); index++) {
             Entry entry = entries.get(index);
@@ -97,15 +109,10 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         settingsContent.draw(renderer, mouseX, mouseY, x, currentY, width);
     }
 
-    private void drawBrandHeader(DropdownRenderer renderer, float headerY) {
-        float versionScale = 0.7f;
-        renderer.text().addText(Constants.VERSION, x + CONTENT_PADDING, headerY + 6.0f, versionScale, MD3Theme.TEXT_MUTED);
-    }
-
     @Override
     protected boolean mouseClickedContent(double mouseX, double mouseY, int button) {
         if (button != 0) return false;
-        float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + HEADER_HEIGHT + CONTENT_PADDING;
+        float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING;
         for (int index = 0; index < entries.size(); index++) {
             Entry entry = entries.get(index);
             float iconX = getIconX(index);
@@ -143,7 +150,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
 
     private float getSettingsY() {
         int rows = getIconRows();
-        return y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + HEADER_HEIGHT + CONTENT_PADDING + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING;
+        return y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING;
     }
 
     private int getIconRows() {
