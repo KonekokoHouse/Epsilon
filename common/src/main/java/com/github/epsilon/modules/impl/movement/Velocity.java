@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.MoveInputEvent;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -84,7 +84,7 @@ public class Velocity extends Module {
     }
 
     @EventHandler
-    private void onKeyboardInput(MoveInputEvent event) {
+    private void onKeyboardInput(KeyboardInputEvent event) {
         if (jump) {
             if (mc.player.onGround() && MoveUtils.isMoving()) {
                 mc.player.input.makeJump();

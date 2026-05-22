@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.movement;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
-import com.github.epsilon.events.impl.MoveInputEvent;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.events.impl.TickEvent;
@@ -175,7 +175,7 @@ public class Scaffold extends Module {
     }
 
     @EventHandler
-    private void onMoveInput(MoveInputEvent event) {
+    private void onMoveInput(KeyboardInputEvent event) {
         if (mc.player.onGround() && MoveUtils.isMoving() && mode.is(Mode.TellyBridge) && !mc.options.keyJump.isDown()) {
             event.setJump(true);
         }

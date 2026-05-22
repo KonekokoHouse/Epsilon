@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.MoveInputEvent;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -51,7 +51,7 @@ public class NoFall extends Module {
     }
 
     @EventHandler
-    private void onMovementInputEvent(MoveInputEvent event) {
+    private void onMovementInputEvent(KeyboardInputEvent event) {
         if (jump) {
             event.setJump(true);
             jump = false;

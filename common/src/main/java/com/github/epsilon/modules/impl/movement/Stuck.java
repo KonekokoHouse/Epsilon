@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClickEvent;
-import com.github.epsilon.events.impl.MoveInputEvent;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.modules.Category;
@@ -41,7 +41,7 @@ public class Stuck extends Module {
     }
 
     @EventHandler
-    private void onKeyboardInput(MoveInputEvent event) {
+    private void onKeyboardInput(KeyboardInputEvent event) {
         event.setForward(0);
         event.setStrafe(0);
     }

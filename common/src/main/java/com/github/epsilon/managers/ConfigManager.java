@@ -707,8 +707,8 @@ public class ConfigManager {
         String fileName = normalized.isEmpty()
                 ? configName + ".zip"
                 : (path.getFileName() == null
-                ? configName + ".zip"
-                : path.getFileName().toString());
+                   ? configName + ".zip"
+                   : path.getFileName().toString());
         if (!fileName.toLowerCase().endsWith(".zip")) {
             fileName = fileName + ".zip";
         }

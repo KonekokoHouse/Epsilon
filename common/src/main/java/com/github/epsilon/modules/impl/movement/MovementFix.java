@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.movement;
 
-import com.github.epsilon.events.impl.MoveInputEvent;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import net.minecraft.util.Mth;
@@ -51,7 +51,7 @@ public class MovementFix extends Module {
         return direction;
     }
 
-    public void fixMovement(MoveInputEvent event, float yaw) {
+    public void fixMovement(KeyboardInputEvent event, float yaw) {
         float forward = event.getForward();
         float strafe = event.getStrafe();
 

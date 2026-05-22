@@ -58,7 +58,7 @@ public class NotificationsHUD extends HudModule {
 
             float renderX = getHorizontalAnchor() == HorizontalAnchor.Right ? this.x + this.width - boxWidth
                     : getHorizontalAnchor() == HorizontalAnchor.Center ? this.x + (this.width - boxWidth) / 2.0f
-                    : this.x;
+                      : this.x;
             float targetY = getVerticalAnchor() == VerticalAnchor.Bottom ? this.y + this.height - (index + 1) * spacing : this.y + index * spacing;
 
             if (Math.abs(targetY - n.getCurrentY()) > 0.5f) {

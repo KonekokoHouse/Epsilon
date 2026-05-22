@@ -22,6 +22,7 @@ public class PanelElements {
 
     public static final float ROW_LABEL_INSET = MD3Theme.ROW_CONTENT_INSET + 4.0f;
     public static final float ICON_BUTTON_SIZE = 20.0f;
+    private static final float SWITCH_KNOB_STRETCH = 3.5f;
 
     private PanelElements() {
     }
@@ -70,10 +71,14 @@ public class PanelElements {
         float clampedToggle = Math.clamp(toggleProgress, 0.0f, 1.0f);
         float knobSize = MD3Theme.SWITCH_HANDLE_SIZE_OFF
                 + (MD3Theme.SWITCH_HANDLE_SIZE_ON - MD3Theme.SWITCH_HANDLE_SIZE_OFF) * clampedToggle;
-        float knobStartX = rect.x() + MD3Theme.SWITCH_HANDLE_INSET_OFF;
-        float knobEndX = rect.right() - MD3Theme.SWITCH_HANDLE_INSET_ON - knobSize;
-        float knobX = knobStartX + (knobEndX - knobStartX) * clampedToggle;
-        float knobY = rect.centerY() - knobSize / 2.0f;
+        float stretchFactor = 4.0f * clampedToggle * (1.0f - clampedToggle);
+        float knobWidth = knobSize + SWITCH_KNOB_STRETCH * stretchFactor;
+        float inset = MD3Theme.SWITCH_HANDLE_INSET_OFF
+                + (MD3Theme.SWITCH_HANDLE_INSET_ON - MD3Theme.SWITCH_HANDLE_INSET_OFF) * clampedToggle;
+        float knobMinX = rect.x() + inset + knobWidth / 2.0f;
+        float knobMaxX = rect.right() - inset - knobWidth / 2.0f;
+        float knobCenterX = knobMinX + (knobMaxX - knobMinX) * toggleProgress;
+        float knobCenterY = rect.centerY();
 
         roundRectRenderer.addRoundRect(rect.x(), rect.y(), rect.width(), rect.height(), rect.height() / 2.0f, track);
         if (outline.getAlpha() > 0 && roundRectOutlineRenderer != null) {
@@ -86,12 +91,12 @@ public class PanelElements {
         }
         if (hoverProgress > 0.02f) {
             float haloSize = MD3Theme.SWITCH_STATE_LAYER_SIZE;
-            float haloX = knobX + knobSize / 2.0f - haloSize / 2.0f;
-            float haloY = rect.centerY() - haloSize / 2.0f;
+            float haloX = knobCenterX - haloSize / 2.0f;
+            float haloY = knobCenterY - haloSize / 2.0f;
             roundRectRenderer.addRoundRect(haloX, haloY, haloSize, haloSize, haloSize / 2.0f,
                     MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18));
         }
-        roundRectRenderer.addRoundRect(knobX, knobY, knobSize, knobSize, knobSize / 2.0f, knob);
+        roundRectRenderer.addRoundRect(knobCenterX - knobWidth / 2.0f, knobCenterY - knobSize / 2.0f, knobWidth, knobSize, knobSize / 2.0f, knob);
     }
 
     public static void buildSwitch(PanelUiTree.Scope scope, PanelLayout.Rect rect, float toggleProgress, float hoverProgress) {

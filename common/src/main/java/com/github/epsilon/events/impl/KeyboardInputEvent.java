@@ -2,7 +2,7 @@ package com.github.epsilon.events.impl;
 
 import net.minecraft.world.entity.player.Input;
 
-public class MoveInputEvent {
+public class KeyboardInputEvent {
 
     private float forward;
     private float strafe;
@@ -10,7 +10,7 @@ public class MoveInputEvent {
     private boolean sneak;
     private boolean sprint;
 
-    public MoveInputEvent(boolean forward, boolean backward, boolean left, boolean right, boolean jump, boolean sneak, boolean sprint) {
+    public KeyboardInputEvent(boolean forward, boolean backward, boolean left, boolean right, boolean jump, boolean sneak, boolean sprint) {
         float f = forward == backward ? 0.0F : (forward ? 1.0F : -1.0F);
         float g = left == right ? 0.0F : (left ? 1.0F : -1.0F);
         this.forward = f;

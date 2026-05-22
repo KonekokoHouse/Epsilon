@@ -218,7 +218,7 @@ public class RotationManager {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    private void onMoveInput(MoveInputEvent event) {
+    private void onMoveInput(KeyboardInputEvent event) {
         MovementFix moveFix = MovementFix.INSTANCE;
         if (moveFix.isEnabled() && active && rotations != null) {
             moveFix.fixMovement(event, rotations.x);

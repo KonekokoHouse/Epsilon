@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.MoveInputEvent;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.SlowdownEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -65,7 +65,7 @@ public class NoSlow extends Module {
     }
 
     @EventHandler
-    private void onKeyboardInput(MoveInputEvent event) {
+    private void onKeyboardInput(KeyboardInputEvent event) {
         if (mode.is(Mode.Jump) && mc.player.onGround() && mc.player.isUsingItem() && (event.getForward() != 0 || event.getStrafe() != 0)) {
             event.setJump(true);
         }
