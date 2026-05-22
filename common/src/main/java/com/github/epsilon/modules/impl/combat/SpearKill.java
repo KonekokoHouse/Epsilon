@@ -2,7 +2,8 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.TickEvent;
-import com.github.epsilon.managers.TargetManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -105,7 +106,7 @@ public class SpearKill extends Module {
         if (killtarget == null || autoSwitch.getValue()) {
             double rangeValue = maxRange.getValue();
             var candidates = TargetManager.INSTANCE.acquireTargets(
-                    TargetManager.TargetRequest.of(
+                    TargetRequest.of(
                             rangeValue,
                             360.0f,
                             players.getValue(),

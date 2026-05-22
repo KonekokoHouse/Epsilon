@@ -4,7 +4,8 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.TickEvent;
 import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.managers.TargetManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -115,7 +116,7 @@ public class KillAura extends Module {
 
         if (mc.player.isUsingItem() || mc.player.isBlocking()) return;
 
-        List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(TargetManager.TargetRequest.of(
+        List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(TargetRequest.of(
                 aimRange.getValue(),
                 fov.getValue().floatValue(),
                 player.getValue(),

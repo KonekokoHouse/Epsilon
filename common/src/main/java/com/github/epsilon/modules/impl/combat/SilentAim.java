@@ -3,7 +3,8 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.SwingHandEvent;
 import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.managers.TargetManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -50,7 +51,7 @@ public class SilentAim extends Module {
             return;
         }
 
-        LivingEntity target = TargetManager.INSTANCE.acquirePrimary(TargetManager.TargetRequest.of(
+        LivingEntity target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
                 range.getValue(), fov.getValue(), player.getValue(), mob.getValue(), animal.getValue(), villagers.getValue(), invisible.getValue(), 1
         ));
         if (target == null) return;

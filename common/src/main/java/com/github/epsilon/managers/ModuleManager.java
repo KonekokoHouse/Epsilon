@@ -49,6 +49,7 @@ public class ModuleManager {
                 ClientSetting.INSTANCE,
 
                 // Combat
+                AimAssist.INSTANCE,
                 AnchorBlast.INSTANCE,
                 AntiBot.INSTANCE,
                 AutoClicker.INSTANCE,

@@ -7,7 +7,8 @@ import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.TickEvent;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.managers.TargetManager;
+import com.github.epsilon.managers.target.TargetManager;
+import com.github.epsilon.managers.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -554,7 +555,7 @@ public class ZealotCrystalPlus extends Module {
 
         int ticks = motionPredict.getValue() ? predictTicks.getValue() : 0;
         List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(
-                TargetManager.TargetRequest.of(
+                TargetRequest.of(
                         targetRange.getValue(),
                         360.0f,
                         players.getValue(),
