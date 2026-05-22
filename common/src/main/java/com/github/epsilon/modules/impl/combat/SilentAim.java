@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.SwingHandEvent;
+import com.github.epsilon.events.impl.TickEvent;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.managers.target.TargetManager;
 import com.github.epsilon.managers.target.TargetRequest;
@@ -54,7 +55,7 @@ public class SilentAim extends Module {
         Vector2f rotations = RotationUtils.calculate(target.getEyePosition());
         RotationManager.INSTANCE.setRotations(rotations, 10, Priority.High);
 
-        if (mc.hitResult != null && mc.hitResult.getType() == HitResult.ENTITY) {
+        if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.ENTITY) {
             mc.gameMode.attack(mc.player, target);
             mc.player.swing(InteractionHand.MAIN_HAND);
             redirecting = false;
