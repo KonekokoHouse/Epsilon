@@ -38,6 +38,28 @@ public class SilentAim extends Module {
     private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
 
     private boolean redirecting;
+    private LivingEntity target;
+
+    @EventHandler
+    private void onTick(TickEvent.Pre event) {
+        if (nullCheck()) return;
+
+        if (!redirecting || target == null) return;
+
+        if (!target.isAlive() || target.isDeadOrDying()) {
+            redirecting = false;
+            return;
+        }
+
+        Vector2f rotations = RotationUtils.calculate(target.getEyePosition());
+        RotationManager.INSTANCE.setRotations(rotations, 10, Priority.High);
+
+        if (mc.hitResult != null && mc.hitResult.getType() == HitResult.ENTITY) {
+            mc.gameMode.attack(mc.player, target);
+            mc.player.swing(InteractionHand.MAIN_HAND);
+            redirecting = false;
+        }
+    }
 
     @EventHandler
     private void onSwingHand(SwingHandEvent event) {
@@ -51,27 +73,21 @@ public class SilentAim extends Module {
             return;
         }
 
-        LivingEntity target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
-                range.getValue(), fov.getValue(), player.getValue(), mob.getValue(), animal.getValue(), villagers.getValue(), invisible.getValue(), 1
+        target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
+                range.getValue(),
+                fov.getValue(),
+                player.getValue(),
+                mob.getValue(),
+                animal.getValue(),
+                villagers.getValue(),
+                invisible.getValue(),
+                1
         ));
+
         if (target == null) return;
 
-        event.setCancelled(true);
+        //event.setCancelled(true);
         redirecting = true;
-
-        Vector2f rotations = RotationUtils.calculate(target.getEyePosition());
-
-        RotationManager.INSTANCE.setRotations(rotations, 10, Priority.High);
-
-        if (!target.isAlive() || target.isDeadOrDying()) {
-            redirecting = false;
-            return;
-        }
-
-        mc.gameMode.attack(mc.player, target);
-        mc.player.swing(InteractionHand.MAIN_HAND);
-
-        redirecting = false;
     }
 
 }
