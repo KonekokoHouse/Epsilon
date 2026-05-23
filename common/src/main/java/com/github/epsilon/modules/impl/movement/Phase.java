@@ -208,7 +208,7 @@ public class Phase extends Module {
                     float prevYaw = mc.player.getYRot();
                     float prevPitch = mc.player.getXRot();
 
-                    mc.player.setYRot(angle.x);
+                    mc.player.setYRot(angle.getYaw());
                     mc.player.setXRot(pitch.getValue().floatValue());
 
                     doUsePearl(result.slot());

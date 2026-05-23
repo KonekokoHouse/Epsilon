@@ -347,7 +347,7 @@ public class Scaffold extends Module {
 
     private Rot2f getRotation(BlockInfo blockCache) {
         Rot2f calculate = onAir() ? RotationUtils.calculate(blockCache.position, blockCache.dir) : RotationUtils.calculate(blockCache.position.getCenter());
-        Rot2f reverseYaw = new Rot2f(Mth.wrapDegrees(mc.player.getYRot() - 180), calculate.y);
+        Rot2f reverseYaw = new Rot2f(Mth.wrapDegrees(mc.player.getYRot() - 180), calculate.getPitch());
         boolean hasRotated = RaytraceUtils.overBlock(reverseYaw, blockCache.position, blockCache.dir);
         if (hasRotated) return reverseYaw;
         else return calculate;
