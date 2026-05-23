@@ -128,10 +128,7 @@ public class BPSHUD extends HudModule {
         if (smoothNumber.getValue()) {
             float frameTime = deltaTracker == null ? 0.05f : deltaTracker.getGameTimeDeltaTicks() / 20.0f;
             if (!bpsText.equals(targetBpsText)) {
-                if (!bpsText.equals(pendingBpsText)) {
-                    pendingBpsText = bpsText;
-                    delayTimer = 0f;
-                }
+                pendingBpsText = bpsText;
                 delayTimer += frameTime;
                 if (delayTimer >= numberDelay.getValue().floatValue()) {
                     previousBpsText = targetBpsText;
@@ -139,6 +136,8 @@ public class BPSHUD extends HudModule {
                     numberAnimProgress = 0f;
                     delayTimer = 0f;
                 }
+            } else {
+                delayTimer = 0f;
             }
             if (numberAnimProgress < 1f) {
                 numberAnimProgress = Math.min(1f, numberAnimProgress + frameTime * 3f);
