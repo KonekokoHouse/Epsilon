@@ -121,7 +121,7 @@ public class BPSHUD extends HudModule {
         textRenderer.addText(bpsText, this.x + 10f * s, this.y + 27f * s, numberScale, textColor.getValue());
         textRenderer.addText("bps", this.x + 10f * s + numberWidth + 3f * s, this.y + 33f * s, unitScale, textSecondary.getValue());
 
-        String peakText = "Peak " + formatBps(highestBps);
+        String peakText = "Maximum " + formatBps(highestBps);
         textRenderer.addText(peakText, this.x + 10f * s, this.y + 52f * s, peakScale, textMuted.getValue());
 
         if (showGraph.getValue()) {
