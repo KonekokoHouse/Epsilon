@@ -50,6 +50,9 @@ public class BPSHUD extends HudModule {
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
     private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
 
+    private final BoolSetting smoothNumber = boolSetting("Smooth Number", true);
+    private final DoubleSetting numberDelay = doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, smoothNumber::getValue);
+
     private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
     private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
@@ -63,6 +66,12 @@ public class BPSHUD extends HudModule {
     private float animatedBps;
     private float highestBps;
     private boolean initialized;
+
+    private String previousBpsText = "0.0";
+    private String targetBpsText = "0.0";
+    private String pendingBpsText = "0.0";
+    private float numberAnimProgress = 1.0f;
+    private float delayTimer;
 
     @Override
     protected void onEnable() {
@@ -116,9 +125,35 @@ public class BPSHUD extends HudModule {
         float unitScale = 0.65f * s;
         float peakScale = 0.5f * s;
 
-        float numberWidth = textRenderer.getWidth(bpsText, numberScale);
-        textRenderer.addText(bpsText, this.x + 10f * s, this.y + 27f * s, numberScale, textColor.getValue());
-        textRenderer.addText("bps", this.x + 10f * s + numberWidth + 3f * s, this.y + 33f * s, unitScale, textSecondary.getValue());
+        if (smoothNumber.getValue()) {
+            float frameTime = deltaTracker == null ? 0.05f : deltaTracker.getGameTimeDeltaTicks() / 20.0f;
+            if (!bpsText.equals(targetBpsText)) {
+                if (!bpsText.equals(pendingBpsText)) {
+                    pendingBpsText = bpsText;
+                    delayTimer = 0f;
+                }
+                delayTimer += frameTime;
+                if (delayTimer >= numberDelay.getValue().floatValue()) {
+                    previousBpsText = targetBpsText;
+                    targetBpsText = pendingBpsText;
+                    numberAnimProgress = 0f;
+                    delayTimer = 0f;
+                }
+            }
+            if (numberAnimProgress < 1f) {
+                numberAnimProgress = Math.min(1f, numberAnimProgress + frameTime * 3f);
+                if (numberAnimProgress >= 1f) {
+                    previousBpsText = targetBpsText;
+                }
+            }
+            drawRollingNumber(textRenderer, numberScale, s);
+            float targetWidth = textRenderer.getWidth(targetBpsText, numberScale);
+            textRenderer.addText("bps", this.x + 10f * s + targetWidth + 3f * s, this.y + 33f * s, unitScale, textSecondary.getValue());
+        } else {
+            textRenderer.addText(bpsText, this.x + 10f * s, this.y + 27f * s, numberScale, textColor.getValue());
+            float numberWidth = textRenderer.getWidth(bpsText, numberScale);
+            textRenderer.addText("bps", this.x + 10f * s + numberWidth + 3f * s, this.y + 33f * s, unitScale, textSecondary.getValue());
+        }
 
         String peakText = "Maximum " + formatBps(highestBps);
         textRenderer.addText(peakText, this.x + 10f * s, this.y + 52f * s, peakScale, textMuted.getValue());
@@ -275,6 +310,48 @@ public class BPSHUD extends HudModule {
         return Math.max(max, 8f);
     }
 
+    private void drawRollingNumber(TextRenderer textRenderer, float numberScale, float s) {
+        float progress = numberAnimProgress;
+        String prev = previousBpsText;
+        String target = targetBpsText;
+
+        int maxLen = Math.max(prev.length(), target.length());
+        float charX = this.x + 10f * s;
+        float baseY = this.y + 27f * s;
+        float slideOffset = 4f * s;
+
+        for (int i = 0; i < maxLen; i++) {
+            char prevChar = i < prev.length() ? prev.charAt(i) : '\0';
+            char targetChar = i < target.length() ? target.charAt(i) : '\0';
+
+            float slotWidth = 0f;
+            if (prevChar != '\0') {
+                slotWidth = Math.max(slotWidth, textRenderer.getWidth(String.valueOf(prevChar), numberScale));
+            }
+            if (targetChar != '\0') {
+                slotWidth = Math.max(slotWidth, textRenderer.getWidth(String.valueOf(targetChar), numberScale));
+            }
+
+            if (prevChar == targetChar) {
+                if (targetChar != '\0') {
+                    textRenderer.addText(String.valueOf(targetChar), charX, baseY, numberScale, textColor.getValue());
+                }
+            } else {
+                float oldAlpha = 1f - progress;
+                float newAlpha = progress;
+
+                if (prevChar != '\0' && oldAlpha > 0.01f) {
+                    textRenderer.addText(String.valueOf(prevChar), charX, baseY - progress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha));
+                }
+                if (targetChar != '\0' && newAlpha > 0.01f) {
+                    textRenderer.addText(String.valueOf(targetChar), charX, baseY + (1f - progress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha));
+                }
+            }
+
+            charX += slotWidth;
+        }
+    }
+
     private void resetBps() {
         initialized = false;
         lastX = 0;
@@ -287,6 +364,11 @@ public class BPSHUD extends HudModule {
         for (int i = 0; i < graphValues.length; i++) {
             graphValues[i] = 0f;
         }
+        previousBpsText = "0.0";
+        targetBpsText = "0.0";
+        numberAnimProgress = 1.0f;
+        pendingBpsText = "0.0";
+        delayTimer = 0f;
     }
 
     private static String formatBps(float bps) {
