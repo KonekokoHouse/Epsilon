@@ -123,13 +123,11 @@ public class BPSHUD extends HudModule {
         String peakText = "Maximum " + formatBps(highestBps);
         textRenderer.addText(peakText, this.x + 10f * s, this.y + 52f * s, peakScale, textMuted.getValue());
 
-        if (showGraph.getValue()) {
-            float graphX = this.x + 68f * s;
-            float graphY = this.y + 20f * s;
-            float graphW = 82f * s;
-            float graphH = graphHeight.getValue().floatValue() * s;
-            drawGraph(roundRectRenderer, graphX, graphY, graphW, graphH, s);
-        }
+        float graphX = this.x + 68f * s;
+        float graphY = this.y + 20f * s;
+        float graphW = 82f * s;
+        float graphH = graphHeight.getValue().floatValue() * s;
+        drawGraph(roundRectRenderer, graphX, graphY, graphW, graphH, s);
 
         roundRectRenderer.drawAndClear();
         textRenderer.drawAndClear();
