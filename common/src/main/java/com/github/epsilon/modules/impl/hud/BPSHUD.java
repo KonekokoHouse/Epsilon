@@ -37,12 +37,11 @@ public class BPSHUD extends HudModule {
     private final ColorSetting textSecondary = colorSetting("Text Secondary", new Color(210, 214, 225, 165));
     private final ColorSetting textMuted = colorSetting("Text Muted", new Color(180, 184, 194, 145));
 
-    private final BoolSetting showGraph = boolSetting("Show Graph", true);
-    private final DoubleSetting graphHeight = doubleSetting("Graph Height", 34.0, 20.0, 60.0, 1.0, showGraph::getValue);
-    private final ColorSetting graphBgColor = colorSetting("Graph Background", new Color(255, 255, 255, 10), showGraph::getValue);
-    private final ColorSetting graphMidlineColor = colorSetting("Graph Midline", new Color(255, 255, 255, 10), showGraph::getValue);
-    private final ColorSetting graphLineColor = colorSetting("Graph Line Color", new Color(130, 180, 255, 235), showGraph::getValue);
-    private final ColorSetting graphGlowColor = colorSetting("Graph Glow Color", new Color(130, 180, 255, 70), showGraph::getValue);
+    private final DoubleSetting graphHeight = doubleSetting("Graph Height", 34.0, 20.0, 60.0, 1.0);
+    private final ColorSetting graphBgColor = colorSetting("Graph Background", new Color(255, 255, 255, 10));
+    private final ColorSetting graphMidlineColor = colorSetting("Graph Midline", new Color(255, 255, 255, 10));
+    private final ColorSetting graphLineColor = colorSetting("Graph Line Color", new Color(130, 180, 255, 235));
+    private final ColorSetting graphGlowColor = colorSetting("Graph Glow Color", new Color(130, 180, 255, 70));
 
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
     private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
