@@ -266,21 +266,21 @@ public class RotationManager {
 
     @EventHandler
     private void onStrafe(StrafeEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
+        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
             event.setYaw(rotations.getYaw());
         }
     }
 
     @EventHandler
     private void onJump(JumpEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
+        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
             event.setYaw(rotations.getYaw());
         }
     }
 
     @EventHandler
     private void onFallFlying(FallFlyingEvent event) {
-        if (rotations != null) {
+        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
             event.setPitch(rotations.getPitch());
         }
     }
