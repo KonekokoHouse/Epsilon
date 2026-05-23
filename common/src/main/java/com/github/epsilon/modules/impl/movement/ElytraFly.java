@@ -49,6 +49,7 @@ public class ElytraFly extends Module {
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Control);
     private final EnumSetting<SwapMode> swapMode = enumSetting("SwapMode", SwapMode.InvSwitch);
     private final BoolSetting armored = boolSetting("Armored", false);
+    private final BoolSetting highVersion = boolSetting("1.20.6+", true);
     private final DoubleSetting horizontalSpeed = doubleSetting("HorizontalSpeed", 1.35, 0.1, 5.0, 0.05, () -> mode.is(Mode.Control));
     private final DoubleSetting verticalSpeed = doubleSetting("VerticalSpeed", 0.8, 0.1, 2.0, 0.05, () -> mode.is(Mode.Control));
     private final DoubleSetting accel = doubleSetting("Acceleration", 0.35, 0.05, 1.0, 0.05, () -> mode.is(Mode.Control));
@@ -242,7 +243,7 @@ public class ElytraFly extends Module {
     }
 
     private void syncInput() {
-        if (shouldRestore) return;
+        if (!highVersion.getValue() || shouldRestore) return;
         bypassedInput = mc.player.input.keyPresses;
         mc.player.input.keyPresses = Input.EMPTY;
         mc.getConnection().send(new ServerboundPlayerInputPacket(Input.EMPTY));
