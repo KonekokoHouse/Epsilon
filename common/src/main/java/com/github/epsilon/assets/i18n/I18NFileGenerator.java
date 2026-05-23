@@ -35,13 +35,13 @@ public class I18NFileGenerator {
         root.addProperty(PREFIX + "module.hidden", "");
 
         root.addProperty(PREFIX + "gui.search", "");
-        root.addProperty(PREFIX + "gui.gameaccount", "");
         root.addProperty(PREFIX + "gui.clientsettings", "");
         root.addProperty(PREFIX + "gui.no_module", "");
 
         root.addProperty(PREFIX + "gui.tab.general", "");
         root.addProperty(PREFIX + "gui.tab.friend", "");
         root.addProperty(PREFIX + "gui.tab.config", "");
+        root.addProperty(PREFIX + "gui.tab.addon", "");
 
         root.addProperty(PREFIX + "gui.friend.empty", "");
         root.addProperty(PREFIX + "gui.friend.input.placeholder", "");
@@ -54,6 +54,7 @@ public class I18NFileGenerator {
         root.addProperty(PREFIX + "gui.config.action.reload", "");
         root.addProperty(PREFIX + "gui.config.action.export", "");
         root.addProperty(PREFIX + "gui.config.action.import", "");
+        root.addProperty(PREFIX + "gui.config.action.new", "");
         root.addProperty(PREFIX + "gui.config.action.open_folder", "");
         root.addProperty(PREFIX + "gui.config.delete.confirm.title", "");
         root.addProperty(PREFIX + "gui.config.delete.confirm.message", "");
@@ -71,6 +72,26 @@ public class I18NFileGenerator {
         root.addProperty(PREFIX + "gui.config.error.delete_last", "");
         root.addProperty(PREFIX + "gui.config.export.success.title", "");
         root.addProperty(PREFIX + "gui.config.export.success.message", "");
+
+        root.addProperty(PREFIX + "gui.dropdown.status.saved", "");
+        root.addProperty(PREFIX + "gui.dropdown.status.reloaded", "");
+        root.addProperty(PREFIX + "gui.dropdown.status.exported", "");
+        root.addProperty(PREFIX + "gui.dropdown.status.imported", "");
+        root.addProperty(PREFIX + "gui.dropdown.status.deleted", "");
+        root.addProperty(PREFIX + "gui.dropdown.status.switched", "");
+        root.addProperty(PREFIX + "gui.dropdown.status.created", "");
+
+        root.addProperty(PREFIX + "gui.modules", "");
+
+        root.addProperty(PREFIX + "gui.addon.empty", "");
+        root.addProperty(PREFIX + "gui.addon.no_settings", "");
+        root.addProperty(PREFIX + "gui.addon.info.id", "");
+        root.addProperty(PREFIX + "gui.addon.info.version", "");
+        root.addProperty(PREFIX + "gui.addon.info.authors", "");
+        root.addProperty(PREFIX + "gui.addon.info.modules", "");
+
+        root.addProperty(PREFIX + "gui.inspector", "");
+        root.addProperty(PREFIX + "gui.inspector.select", "");
 
         for (Module module : ModuleManager.INSTANCE.getModules()) {
             if (module.translateComponent == null) continue;
