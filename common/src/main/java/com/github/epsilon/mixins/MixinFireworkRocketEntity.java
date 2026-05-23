@@ -24,7 +24,7 @@ public class MixinFireworkRocketEntity {
         ElytraFly module = ElytraFly.INSTANCE;
         if (module.isEnabled()) {
             FireworkRocketEntity firework = (FireworkRocketEntity) (Object) this;
-            if (module.isFirework(firework) && this.life > this.lifetime) {
+            if (module.isMyFirework(firework) && this.life > this.lifetime) {
                 firework.discard();
             }
         }
@@ -35,7 +35,7 @@ public class MixinFireworkRocketEntity {
         ElytraFly module = ElytraFly.INSTANCE;
         if (module.isEnabled()) {
             FireworkRocketEntity firework = (FireworkRocketEntity) (Object) this;
-            if (module.isFirework(firework)) {
+            if (module.isMyFirework(firework)) {
                 firework.discard();
                 ci.cancel();
             }
@@ -47,7 +47,7 @@ public class MixinFireworkRocketEntity {
         ElytraFly module = ElytraFly.INSTANCE;
         if (module.isEnabled()) {
             FireworkRocketEntity firework = (FireworkRocketEntity) (Object) this;
-            if (module.isFirework(firework)) {
+            if (module.isMyFirework(firework)) {
                 firework.discard();
                 ci.cancel();
             }

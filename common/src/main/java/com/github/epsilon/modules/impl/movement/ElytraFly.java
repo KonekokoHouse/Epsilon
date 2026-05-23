@@ -324,7 +324,7 @@ public class ElytraFly extends Module {
         mc.gameMode.handleContainerInput(containerId, containerSlot, 0, ContainerInput.PICKUP, mc.player);
     }
 
-    public boolean isFirework(FireworkRocketEntity firework) {
+    public boolean isMyFirework(FireworkRocketEntity firework) {
         return firework.getOwner() == mc.player;
     }
 
