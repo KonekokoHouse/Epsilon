@@ -571,6 +571,7 @@
   "epsilon.modules.elytra fly.swapmode.silent": "Silent",
   "epsilon.modules.elytra fly.swapmode.invswitch": "Inv Switch",
   "epsilon.modules.elytra fly.armored": "Armored",
+  "epsilon.modules.elytra fly.1206+": "1.20.6+",
   "epsilon.modules.elytra fly.horizontalspeed": "Horizontal Speed",
   "epsilon.modules.elytra fly.verticalspeed": "Vertical Speed",
   "epsilon.modules.elytra fly.acceleration": "Acceleration",

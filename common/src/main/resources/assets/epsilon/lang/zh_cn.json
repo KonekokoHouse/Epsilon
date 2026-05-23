@@ -557,6 +557,7 @@
   "epsilon.modules.elytra fly.swapmode.silent": "静默",
   "epsilon.modules.elytra fly.swapmode.invswitch": "背包切换",
   "epsilon.modules.elytra fly.armored": "穿甲",
+  "epsilon.modules.elytra fly.1206+": "1.20.6+",
   "epsilon.modules.elytra fly.horizontalspeed": "水平速度",
   "epsilon.modules.elytra fly.verticalspeed": "垂直速度",
   "epsilon.modules.elytra fly.acceleration": "加速度",

@@ -48,14 +48,14 @@ public class ElytraFly extends Module {
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Control);
-    private final EnumSetting<SwapMode> swapMode = enumSetting("SwapMode", SwapMode.InvSwitch);
+    private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.InvSwitch);
     private final BoolSetting armored = boolSetting("Armored", false);
-    private final BoolSetting highVersion = boolSetting("1.20.6+", true);
-    private final DoubleSetting horizontalSpeed = doubleSetting("HorizontalSpeed", 1.35, 0.1, 5.0, 0.05, () -> mode.is(Mode.Control));
-    private final DoubleSetting verticalSpeed = doubleSetting("VerticalSpeed", 0.8, 0.1, 2.0, 0.05, () -> mode.is(Mode.Control));
+    private final BoolSetting highVersion = boolSetting("1206+", true);
+    private final DoubleSetting horizontalSpeed = doubleSetting("Horizontal Speed", 1.35, 0.1, 5.0, 0.05, () -> mode.is(Mode.Control));
+    private final DoubleSetting verticalSpeed = doubleSetting("Vertical Speed", 0.8, 0.1, 2.0, 0.05, () -> mode.is(Mode.Control));
     private final DoubleSetting accel = doubleSetting("Acceleration", 0.35, 0.05, 1.0, 0.05, () -> mode.is(Mode.Control));
-    private final BoolSetting useFireworks = boolSetting("UseFireworks", true, () -> mode.is(Mode.Control));
-    private final IntSetting boostDelay = intSetting("BoostDelay", 20, 2, 50, 1, () -> mode.is(Mode.Control) && useFireworks.getValue());
+    private final BoolSetting useFireworks = boolSetting("Use Fireworks", true, () -> mode.is(Mode.Control));
+    private final IntSetting boostDelay = intSetting("Boost Delay", 20, 2, 50, 1, () -> mode.is(Mode.Control) && useFireworks.getValue());
 
     private boolean hasFirstFirework;
     private boolean shouldJump;

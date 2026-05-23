@@ -1,0 +1,305 @@
+package com.github.epsilon.modules.impl.hud;
+
+import com.github.epsilon.graphics.renderers.RoundRectRenderer;
+import com.github.epsilon.graphics.renderers.ShadowRenderer;
+import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.modules.Category;
+import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.settings.impl.ColorSetting;
+import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.settings.impl.IntSetting;
+import com.google.common.base.Suppliers;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.util.Mth;
+
+import java.awt.*;
+import java.util.Locale;
+import java.util.function.Supplier;
+
+public class BPSHUD extends HudModule {
+
+    public static final BPSHUD INSTANCE = new BPSHUD();
+
+    private static final int GRAPH_SIZE = 72;
+
+    private BPSHUD() {
+        super("BPS Hud", Category.HUD, 0f, 0f, 158f, 68f);
+    }
+
+    private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
+    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 8.0, 0.0, 14.0, 0.5);
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 210));
+    private final ColorSetting accentColor = colorSetting("Accent Color", new Color(130, 180, 255, 255));
+    private final ColorSetting textColor = colorSetting("Text Color", new Color(248, 249, 252, 245));
+    private final ColorSetting textSecondary = colorSetting("Text Secondary", new Color(210, 214, 225, 165));
+    private final ColorSetting textMuted = colorSetting("Text Muted", new Color(180, 184, 194, 145));
+
+    private final BoolSetting showGraph = boolSetting("Show Graph", true);
+    private final DoubleSetting graphHeight = doubleSetting("Graph Height", 34.0, 20.0, 60.0, 1.0, showGraph::getValue);
+    private final ColorSetting graphBgColor = colorSetting("Graph Background", new Color(255, 255, 255, 10), showGraph::getValue);
+    private final ColorSetting graphMidlineColor = colorSetting("Graph Midline", new Color(255, 255, 255, 10), showGraph::getValue);
+    private final ColorSetting graphLineColor = colorSetting("Graph Line Color", new Color(130, 180, 255, 235), showGraph::getValue);
+    private final ColorSetting graphGlowColor = colorSetting("Graph Glow Color", new Color(130, 180, 255, 70), showGraph::getValue);
+
+    private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
+
+    private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
+    private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
+
+    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
+    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
+    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
+
+    private final float[] graphValues = new float[GRAPH_SIZE];
+    private int graphIndex;
+    private double lastX;
+    private double lastZ;
+    private long lastUpdateTime;
+    private float currentBps;
+    private float animatedBps;
+    private float highestBps;
+    private boolean initialized;
+
+    @Override
+    protected void onEnable() {
+        resetBps();
+    }
+
+    @Override
+    protected void onDisable() {
+        resetBps();
+    }
+
+    @Override
+    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        if (nullCheck()) {
+            resetBps();
+            return;
+        }
+
+        updateBps();
+
+        RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
+        ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
+        TextRenderer textRenderer = textRendererSupplier.get();
+
+        float s = scale.getValue().floatValue();
+        float radius = cornerRadius.getValue().floatValue() * s;
+
+        float panelW = 158f * s;
+        float panelH = 68f * s;
+
+        if (backgroundBlur.getValue()) {
+            BlurShader.INSTANCE.render(this.x, this.y, panelW, panelH, radius, blurStrength.getValue());
+        }
+
+        if (drawShadow.getValue()) {
+            shadowRenderer.addShadow(this.x, this.y, panelW, panelH, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
+            shadowRenderer.drawAndClear();
+        }
+
+        roundRectRenderer.addRoundRect(this.x, this.y, panelW, panelH, radius, backgroundColor.getValue());
+
+        float dotSize = 6f * s;
+        float dotRadius = dotSize / 2f;
+        roundRectRenderer.addRoundRect(this.x + 9f * s, this.y + 11f * s, dotSize, dotSize, dotRadius, accentColor.getValue());
+
+        float titleScale = 0.7f * s;
+        textRenderer.addText("Movement", this.x + 22f * s, this.y + 9f * s, titleScale, textColor.getValue());
+
+        String bpsText = formatBps(animatedBps);
+        float numberScale = 1.2f * s;
+        float unitScale = 0.65f * s;
+        float peakScale = 0.5f * s;
+
+        float numberWidth = textRenderer.getWidth(bpsText, numberScale);
+        textRenderer.addText(bpsText, this.x + 10f * s, this.y + 27f * s, numberScale, textColor.getValue());
+        textRenderer.addText("bps", this.x + 10f * s + numberWidth + 3f * s, this.y + 33f * s, unitScale, textSecondary.getValue());
+
+        String peakText = "Peak " + formatBps(highestBps);
+        textRenderer.addText(peakText, this.x + 10f * s, this.y + 52f * s, peakScale, textMuted.getValue());
+
+        if (showGraph.getValue()) {
+            float graphX = this.x + 68f * s;
+            float graphY = this.y + 20f * s;
+            float graphW = 82f * s;
+            float graphH = graphHeight.getValue().floatValue() * s;
+            drawGraph(roundRectRenderer, graphX, graphY, graphW, graphH, s);
+        }
+
+        roundRectRenderer.drawAndClear();
+        textRenderer.drawAndClear();
+
+        setBounds(panelW, panelH);
+    }
+
+    private void drawGraph(RoundRectRenderer rr, float x, float y, float w, float h, float s) {
+        float graphRadius = 6f * s;
+
+        rr.addRoundRect(x, y, w, h, graphRadius, graphBgColor.getValue());
+
+        float paddingX = 6f * s;
+        float paddingY = 4f * s;
+        float innerX = x + paddingX;
+        float innerY = y + paddingY;
+        float innerW = w - paddingX * 2f;
+        float innerH = h - paddingY * 2f;
+
+        if (innerW <= 0f || innerH <= 0f) return;
+
+        float baseline = innerY + innerH;
+        float usableH = innerH * 0.88f;
+
+        float refLineY = baseline - usableH * 0.22f;
+        float refThickness = Math.max(0.45f * s, 0.5f);
+        rr.addRoundRect(x + 5f * s, refLineY - refThickness / 2f, w - 10f * s, refThickness, refThickness / 2f, graphMidlineColor.getValue());
+
+        float max = getGraphMax();
+        if (max < 0.1f) max = 1f;
+
+        Color lineColor = graphLineColor.getValue();
+        Color glowColor = graphGlowColor.getValue();
+
+        float step = innerW / (GRAPH_SIZE - 1);
+        float barWidth = Math.max(step * 0.75f, 0.7f * s);
+        float glowBarWidth = Math.max(barWidth + 1.8f * s, 1.2f * s);
+        float barRadius = Math.min(1f * s, barWidth / 2f);
+        float glowBarRadius = Math.min(1.5f * s, glowBarWidth / 2f);
+
+        for (int i = 0; i < GRAPH_SIZE; i++) {
+            int dataIndex = (graphIndex + i) % GRAPH_SIZE;
+            float value = graphValues[dataIndex];
+            float normalized = Mth.clamp(value / max, 0f, 1f);
+
+            float wave = (float) Math.sin(i * 0.75f) * 0.04f;
+            float finalValue = Math.max(0f, Math.min(1f, normalized + wave * normalized));
+
+            float barH = finalValue * usableH;
+            if (barH < 0.01f) continue;
+
+            float barX = innerX + i * step - barWidth / 2f;
+            float glowX = innerX + i * step - glowBarWidth / 2f;
+
+            float age = i / (float) GRAPH_SIZE;
+            float glowAlpha = 0.10f + age * 0.24f;
+            float mainAlpha = 0.30f + age * 0.62f;
+
+            rr.addRoundRect(glowX, baseline - barH, glowBarWidth, barH, glowBarRadius, withAlpha(glowColor, glowAlpha));
+            rr.addRoundRect(barX, baseline - barH, barWidth, barH, barRadius, withAlpha(lineColor, mainAlpha));
+        }
+
+        float latestValue = graphValues[(graphIndex - 1 + GRAPH_SIZE) % GRAPH_SIZE];
+        float latestNormalized = Mth.clamp(latestValue / max, 0f, 1f);
+        float latestY = baseline - latestNormalized * usableH;
+        float latestX = innerX + innerW;
+        float pulse = 0.6f + latestNormalized * 1.8f;
+        float dotR = (2.0f + pulse) * s;
+
+        rr.addRoundRect(latestX - dotR, latestY - dotR, dotR * 2f, dotR * 2f, dotR, withAlpha(glowColor, 0.24f + latestNormalized * 0.22f));
+        rr.addRoundRect(latestX - 1.55f * s, latestY - 1.55f * s, 3.1f * s, 3.1f * s, 1.55f * s, lineColor);
+    }
+
+    private void updateBps() {
+        long now = System.currentTimeMillis();
+
+        double x = mc.player.getX();
+        double z = mc.player.getZ();
+
+        if (!initialized) {
+            initialized = true;
+            lastX = x;
+            lastZ = z;
+            lastUpdateTime = now;
+            currentBps = 0f;
+            animatedBps = 0f;
+            highestBps = 0f;
+            pushGraphValue(0f);
+            return;
+        }
+
+        long diff = now - lastUpdateTime;
+        if (diff <= 0L) return;
+
+        if (diff < 70L) {
+            animatedBps = Mth.lerp(0.16f, animatedBps, currentBps);
+            return;
+        }
+
+        double dx = x - lastX;
+        double dz = z - lastZ;
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        float rawBps = (float) (distance / (diff / 1000.0));
+
+        if (rawBps > 80f || mc.player.isDeadOrDying()) {
+            rawBps = 0f;
+            lastX = x;
+            lastZ = z;
+            lastUpdateTime = now;
+        }
+
+        currentBps = Mth.lerp(0.55f, currentBps, rawBps);
+        animatedBps = Mth.lerp(0.25f, animatedBps, currentBps);
+
+        if (currentBps > highestBps && currentBps < 80f) {
+            highestBps = currentBps;
+        }
+
+        pushGraphValue(currentBps);
+
+        lastX = x;
+        lastZ = z;
+        lastUpdateTime = now;
+    }
+
+    private void pushGraphValue(float value) {
+        value = Math.max(0f, value);
+        value = Math.min(value, 26f);
+
+        int prevIndex = (graphIndex - 1 + GRAPH_SIZE) % GRAPH_SIZE;
+        float previous = graphValues[prevIndex];
+
+        float speed = value > previous ? 0.68f : 0.34f;
+        float smoothed = Mth.lerp(speed, previous, value);
+
+        graphValues[graphIndex] = smoothed;
+        graphIndex = (graphIndex + 1) % GRAPH_SIZE;
+    }
+
+    private float getGraphMax() {
+        float max = 0f;
+        for (float value : graphValues) {
+            if (value > max) max = value;
+        }
+        return Math.max(max, 8f);
+    }
+
+    private void resetBps() {
+        initialized = false;
+        lastX = 0;
+        lastZ = 0;
+        lastUpdateTime = 0L;
+        currentBps = 0f;
+        animatedBps = 0f;
+        highestBps = 0f;
+        graphIndex = 0;
+        for (int i = 0; i < graphValues.length; i++) {
+            graphValues[i] = 0f;
+        }
+    }
+
+    private static String formatBps(float bps) {
+        if (bps < 0.05f) return "0.0";
+        return String.format(Locale.ROOT, "%.1f", bps);
+    }
+
+    private static Color withAlpha(Color color, float alphaMul) {
+        int a = Mth.clamp((int) (color.getAlpha() * alphaMul), 0, 255);
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), a);
+    }
+
+}

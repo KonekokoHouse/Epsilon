@@ -121,6 +121,7 @@ public class ModuleManager {
 
                 // Hud
                 NotificationsHUD.INSTANCE,
+                BPSHUD.INSTANCE,
                 InventoryHUD.INSTANCE,
                 ModuleListHUD.INSTANCE,
                 PotionHUD.INSTANCE,
