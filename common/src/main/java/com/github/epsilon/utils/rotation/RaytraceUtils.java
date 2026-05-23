@@ -5,7 +5,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.*;
-import org.joml.Vector2f;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,21 +17,21 @@ public class RaytraceUtils {
         return mc.level.clip(new ClipContext(eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player)).getType() == HitResult.Type.MISS;
     }
 
-    public static HitResult raytrace(Vector2f rotation, double range) {
+    public static HitResult raytrace(Rot2f rotation, double range) {
         return raytrace(rotation, range, 0);
     }
 
-    public static HitResult raytrace(Vector2f rotation, double range, float expand) {
+    public static HitResult raytrace(Rot2f rotation, double range, float expand) {
         return raytrace(rotation, range, expand, mc.player);
     }
 
-    public static HitResult raytrace(Vector2f rotation, double range, float expand, Entity entity) {
+    public static HitResult raytrace(Rot2f rotation, double range, float expand, Entity entity) {
         if (mc.level == null || entity == null) return null;
 
         float partialTicks = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         Vec3 eyePos = entity.getEyePosition(partialTicks);
-        Vec3 lookVec = Vec3.directionFromRotation(rotation.y, rotation.x);
+        Vec3 lookVec = Vec3.directionFromRotation(rotation.getPitch(), rotation.getYaw());
         Vec3 endVec = eyePos.add(lookVec.scale(range));
 
         HitResult objectMouseOver = mc.level.clip(new ClipContext(
@@ -96,8 +95,8 @@ public class RaytraceUtils {
         return objectMouseOver;
     }
 
-    public static boolean overBlock(Vector2f rotation, Direction dir, BlockPos pos, boolean strict) {
-        Vec3 lookVec = Vec3.directionFromRotation(rotation.y, rotation.x);
+    public static boolean overBlock(Rot2f rotation, Direction dir, BlockPos pos, boolean strict) {
+        Vec3 lookVec = Vec3.directionFromRotation(rotation.getPitch(), rotation.getYaw());
 
         Vec3 eyePos = mc.player.getEyePosition(1.0F);
         double reach = 4.5D;
@@ -118,15 +117,15 @@ public class RaytraceUtils {
         return result.getBlockPos().equals(pos) && (!strict || result.getDirection() == dir);
     }
 
-    public static boolean overBlock(Vector2f rotation, BlockPos pos, boolean strict) {
+    public static boolean overBlock(Rot2f rotation, BlockPos pos, boolean strict) {
         return overBlock(rotation, Direction.UP, pos, strict);
     }
 
-    public static boolean overBlock(Vector2f rotation, BlockPos pos) {
+    public static boolean overBlock(Rot2f rotation, BlockPos pos) {
         return overBlock(rotation, Direction.UP, pos, false);
     }
 
-    public static boolean overBlock(Vector2f rotation, BlockPos pos, Direction enumFacing) {
+    public static boolean overBlock(Rot2f rotation, BlockPos pos, Direction enumFacing) {
         return overBlock(rotation, enumFacing, pos, true);
     }
 

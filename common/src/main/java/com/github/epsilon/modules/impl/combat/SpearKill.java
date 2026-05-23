@@ -214,9 +214,9 @@ public class SpearKill extends Module {
     private void rotateToTarget(LivingEntity target) {
         if (target == null) return;
         var rotations = RotationUtils.getRotationsToEntity(target);
-        mc.player.setYRot(rotations.x);
-        mc.player.setYHeadRot(rotations.x);
-        mc.player.setXRot(rotations.y);
+        mc.player.setYRot(rotations.getYaw());
+        mc.player.setYHeadRot(rotations.getYaw());
+        mc.player.setXRot(rotations.getPitch());
     }
 
 }

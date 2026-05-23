@@ -10,10 +10,10 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.rotation.Priority;
+import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Items;
-import org.joml.Vector2f;
 
 public class AutoMend extends Module {
 
@@ -52,7 +52,7 @@ public class AutoMend extends Module {
         FindItemResult result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
         if (!result.found()) return;
 
-        RotationManager.INSTANCE.setRotations(new Vector2f(mc.player.getYRot(), 90), 10, Priority.High);
+        RotationManager.INSTANCE.setRotations(new Rot2f(mc.player.getYRot(), 90), 10, Priority.High);
 
         InvUtils.swap(result.slot(), true);
 

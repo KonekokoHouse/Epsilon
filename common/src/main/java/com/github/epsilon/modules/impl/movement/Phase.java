@@ -15,6 +15,7 @@ import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -27,7 +28,6 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
-import org.joml.Vector2f;
 
 public class Phase extends Module {
 
@@ -202,7 +202,7 @@ public class Phase extends Module {
                     return;
                 }
 
-                Vector2f angle = RotationUtils.calculate(block.getCenter());
+                Rot2f angle = RotationUtils.calculate(block.getCenter());
                 FindItemResult result = swapMode.is(SwapMode.Silent) ? InvUtils.findInHotbar(Items.ENDER_PEARL) : InvUtils.find(Items.ENDER_PEARL);
                 if (result.found()) {
                     float prevYaw = mc.player.getYRot();

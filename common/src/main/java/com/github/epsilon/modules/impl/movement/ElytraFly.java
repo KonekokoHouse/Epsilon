@@ -13,6 +13,7 @@ import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.rotation.Priority;
+import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.util.Mth;
@@ -24,7 +25,6 @@ import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector2f;
 
 public class ElytraFly extends Module {
 
@@ -186,7 +186,7 @@ public class ElytraFly extends Module {
         if (horizontal < 1.0E-5 && Math.abs(y) < 1.0E-5) return;
         float yaw = (float) Math.toDegrees(Math.atan2(z, x)) - 90.0f;
         float pitch = (float) (-Math.toDegrees(Math.atan2(y, Math.max(horizontal, 1.0E-5))));
-        RotationManager.INSTANCE.setRotations(new Vector2f(Mth.wrapDegrees(yaw), Mth.clamp(pitch, -90.0f, 90.0f)), 10, Priority.Highest);
+        RotationManager.INSTANCE.setRotations(new Rot2f(Mth.wrapDegrees(yaw), Mth.clamp(pitch, -90.0f, 90.0f)), 10, Priority.Highest);
     }
 
     private boolean hasInput() {

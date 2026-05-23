@@ -14,7 +14,6 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.joml.Vector2f;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -144,11 +143,11 @@ public class RotationUtils {
 
     public static boolean isInFov(LivingEntity entity, float fov) {
         if (fov >= 360.0) return true;
-        float yawDiff = Math.abs(Mth.wrapDegrees(RotationUtils.getRotationsToEntity(entity).x - mc.player.getYRot()));
+        float yawDiff = Math.abs(Mth.wrapDegrees(RotationUtils.getRotationsToEntity(entity).getYaw() - mc.player.getYRot()));
         return yawDiff <= fov / 2.0;
     }
 
-    public static Vector2f getRotationsToEntity(LivingEntity entity) {
+    public static Rot2f getRotationsToEntity(LivingEntity entity) {
         Vec3 eyePos = mc.player.getEyePosition();
         Vec3 targetPos = entity.position().add(0, entity.getBbHeight() / 2.0, 0);
         double dx = targetPos.x - eyePos.x;
@@ -159,7 +158,7 @@ public class RotationUtils {
         float yaw = (float) Math.toDegrees(-Math.atan2(dx, dz));
         float pitch = (float) Math.toDegrees(-Math.atan2(dy, dist));
 
-        return new Vector2f(yaw, Mth.clamp(pitch, -90, 90));
+        return new Rot2f(yaw, Mth.clamp(pitch, -90, 90));
     }
 
     public static double getEyeDistanceToEntity(LivingEntity entity) {
@@ -171,15 +170,15 @@ public class RotationUtils {
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    public static Vector2f calculate(final Vec3 from, final Vec3 to) {
+    public static Rot2f calculate(final Vec3 from, final Vec3 to) {
         final Vec3 diff = to.subtract(from);
         final double distance = Math.hypot(diff.x, diff.z);
         final float yaw = (float) Math.toDegrees(Mth.atan2(diff.z, diff.x)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Mth.atan2(diff.y, distance));
-        return new Vector2f(yaw, pitch);
+        return new Rot2f(yaw, pitch);
     }
 
-    public static Vector2f calculate(final Entity entity) {
+    public static Rot2f calculate(final Entity entity) {
         return calculate(entity.position().add(0, Mth.clamp(
                 mc.player.getY() - entity.getY() + mc.player.getEyeHeight(),
                 0.0,
@@ -187,8 +186,8 @@ public class RotationUtils {
         ), 0));
     }
 
-    public static Vector2f calculate(final Entity entity, final boolean adaptive, final double range) {
-        Vector2f normalRotations = RotationUtils.calculate(entity);
+    public static Rot2f calculate(final Entity entity, final boolean adaptive, final double range) {
+        Rot2f normalRotations = RotationUtils.calculate(entity);
 
         HitResult result = RaytraceUtils.raytrace(normalRotations, range, 0.0f);
 
@@ -216,7 +215,7 @@ public class RotationUtils {
 
                     Vec3 targetPoint = basePos.add(offsetX, offsetY, offsetZ);
 
-                    Vector2f adaptiveRotations = RotationUtils.calculate(targetPoint);
+                    Rot2f adaptiveRotations = RotationUtils.calculate(targetPoint);
 
                     HitResult rayCastResult = RaytraceUtils.raytrace(adaptiveRotations, range, 0.0f);
 
@@ -230,15 +229,15 @@ public class RotationUtils {
         return normalRotations;
     }
 
-    public static Vector2f calculate(BlockPos to) {
+    public static Rot2f calculate(BlockPos to) {
         return calculate(mc.player.getEyePosition(), to.getCenter());
     }
 
-    public static Vector2f calculate(Vec3 to) {
+    public static Rot2f calculate(Vec3 to) {
         return calculate(mc.player.getEyePosition(), to);
     }
 
-    public static Vector2f calculate(Vec3 position, Direction direction) {
+    public static Rot2f calculate(Vec3 position, Direction direction) {
         double x = position.x + 0.5D;
         double y = position.y + 0.5D;
         double z = position.z + 0.5D;
@@ -249,7 +248,7 @@ public class RotationUtils {
         return calculate(new Vec3(x, y, z));
     }
 
-    public static Vector2f calculate(BlockPos position, Direction direction) {
+    public static Rot2f calculate(BlockPos position, Direction direction) {
         double x = position.getX() + 0.5D;
         double y = position.getY() + 0.5D;
         double z = position.getZ() + 0.5D;
@@ -260,45 +259,45 @@ public class RotationUtils {
         return calculate(new Vec3(x, y, z));
     }
 
-    public static Vector2f applySensitivityPatch(Vector2f rotation) {
-        Vector2f previousRotation = new Vector2f(RotationManager.INSTANCE.getLastRotation().x, RotationManager.INSTANCE.getLastRotation().y);
+    public static Rot2f applySensitivityPatch(Rot2f rotation) {
+        Rot2f previousRotation = new Rot2f(RotationManager.INSTANCE.getLastRotation().getYaw(), RotationManager.INSTANCE.getLastRotation().getPitch());
         float mouseSensitivity = (float) (mc.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6F + 0.2F);
         double multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0F * 0.15D;
-        float yaw = previousRotation.x + (float) (Math.round((rotation.x - previousRotation.x) / multiplier) * multiplier);
-        float pitch = previousRotation.y + (float) (Math.round((rotation.y - previousRotation.y) / multiplier) * multiplier);
-        return new Vector2f(yaw, Mth.clamp(pitch, -90, 90));
+        float yaw = previousRotation.getYaw() + (float) (Math.round((rotation.getYaw() - previousRotation.getYaw()) / multiplier) * multiplier);
+        float pitch = previousRotation.getPitch() + (float) (Math.round((rotation.getPitch() - previousRotation.getPitch()) / multiplier) * multiplier);
+        return new Rot2f(yaw, Mth.clamp(pitch, -90, 90));
     }
 
-    public static Vector2f applySensitivityPatch(Vector2f rotation, Vector2f previousRotation) {
+    public static Rot2f applySensitivityPatch(Rot2f rotation, Rot2f previousRotation) {
         float mouseSensitivity = (float) (mc.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6F + 0.2F);
         double multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0F * 0.15D;
-        float yaw = previousRotation.x + (float) (Math.round((rotation.x - previousRotation.x) / multiplier) * multiplier);
-        float pitch = previousRotation.y + (float) (Math.round((rotation.y - previousRotation.y) / multiplier) * multiplier);
-        return new Vector2f(yaw, Mth.clamp(pitch, -90, 90));
+        float yaw = previousRotation.getYaw() + (float) (Math.round((rotation.getYaw() - previousRotation.getYaw()) / multiplier) * multiplier);
+        float pitch = previousRotation.getPitch() + (float) (Math.round((rotation.getPitch() - previousRotation.getPitch()) / multiplier) * multiplier);
+        return new Rot2f(yaw, Mth.clamp(pitch, -90, 90));
     }
 
-    public static Vector2f relateToPlayerRotation(Vector2f rotation) {
-        Vector2f previousRotation = new Vector2f(RotationManager.INSTANCE.getLastRotation().x, RotationManager.INSTANCE.getLastRotation().y);
-        float yaw = previousRotation.x + Mth.wrapDegrees(rotation.x - previousRotation.x);
-        float pitch = Mth.clamp(rotation.y, -90, 90);
-        return new Vector2f(yaw, pitch);
+    public static Rot2f relateToPlayerRotation(Rot2f rotation) {
+        Rot2f previousRotation = new Rot2f(RotationManager.INSTANCE.getLastRotation().getYaw(), RotationManager.INSTANCE.getLastRotation().getPitch());
+        float yaw = previousRotation.getYaw() + Mth.wrapDegrees(rotation.getYaw() - previousRotation.getYaw());
+        float pitch = Mth.clamp(rotation.getPitch(), -90, 90);
+        return new Rot2f(yaw, pitch);
     }
 
-    public static Vector2f resetRotation(final Vector2f rotation) {
+    public static Rot2f resetRotation(final Rot2f rotation) {
         if (rotation == null) return null;
-        final float yaw = rotation.x + Mth.wrapDegrees(mc.player.getYRot() - rotation.x);
+        final float yaw = rotation.getYaw() + Mth.wrapDegrees(mc.player.getYRot() - rotation.getYaw());
         final float pitch = mc.player.getXRot();
-        return new Vector2f(yaw, pitch);
+        return new Rot2f(yaw, pitch);
     }
 
-    public static Vector2f move(Vector2f targetRotation, double speed) {
+    public static Rot2f move(Rot2f targetRotation, double speed) {
         return move(RotationManager.INSTANCE.lastRotations, targetRotation, speed);
     }
 
-    public static Vector2f move(Vector2f lastRotation, Vector2f targetRotation, double speed) {
+    public static Rot2f move(Rot2f lastRotation, Rot2f targetRotation, double speed) {
         if (speed != 0) {
-            double deltaYaw = Mth.wrapDegrees(targetRotation.x - lastRotation.x);
-            double deltaPitch = (targetRotation.y - lastRotation.y);
+            double deltaYaw = Mth.wrapDegrees(targetRotation.getYaw() - lastRotation.getYaw());
+            double deltaPitch = (targetRotation.getPitch() - lastRotation.getPitch());
 
             double distance = Math.sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch);
             double distributionYaw = Math.abs(deltaYaw / distance);
@@ -310,30 +309,30 @@ public class RotationUtils {
             float moveYaw = (float) Math.max(Math.min(deltaYaw, maxYaw), -maxYaw);
             float movePitch = (float) Math.max(Math.min(deltaPitch, maxPitch), -maxPitch);
 
-            return new Vector2f(moveYaw, movePitch);
+            return new Rot2f(moveYaw, movePitch);
         }
 
-        return new Vector2f(0, 0);
+        return new Rot2f(0, 0);
     }
 
-    public static Vector2f smooth(final Vector2f targetRotation, final double speed) {
+    public static Rot2f smooth(final Rot2f targetRotation, final double speed) {
         return smooth(RotationManager.INSTANCE.lastRotations, targetRotation, speed);
     }
 
-    public static Vector2f smooth(final Vector2f lastRotation, final Vector2f targetRotation, final double speed) {
-        float yaw = targetRotation.x;
-        float pitch = targetRotation.y;
-        final float lastYaw = lastRotation.x;
-        final float lastPitch = lastRotation.y;
+    public static Rot2f smooth(final Rot2f lastRotation, final Rot2f targetRotation, final double speed) {
+        float yaw = targetRotation.getYaw();
+        float pitch = targetRotation.getPitch();
+        final float lastYaw = lastRotation.getYaw();
+        final float lastPitch = lastRotation.getPitch();
 
         if (speed != 0) {
-            Vector2f move = move(targetRotation, speed);
+            Rot2f move = move(targetRotation, speed);
 
-            yaw = lastYaw + move.x;
-            pitch = lastPitch + move.y;
+            yaw = lastYaw + move.getYaw();
+            pitch = lastPitch + move.getPitch();
 
             for (int i = 1; i <= (int) (mc.getFps() / 20f + Math.random() * 10); ++i) {
-                if (Math.abs(move.x) + Math.abs(move.y) > 0.0001) {
+                if (Math.abs(move.getYaw()) + Math.abs(move.getPitch()) > 0.0001) {
                     yaw += (float) ((Math.random() - 0.5) / 1000);
                     pitch -= (float) (Math.random() / 200);
                 }
@@ -341,18 +340,18 @@ public class RotationUtils {
                 /*
                  * Fixing GCD
                  */
-                Vector2f rotations = new Vector2f(yaw, pitch);
-                Vector2f fixedRotations = applySensitivityPatch(rotations);
+                Rot2f rotations = new Rot2f(yaw, pitch);
+                Rot2f fixedRotations = applySensitivityPatch(rotations);
 
                 /*
                  * Setting rotations
                  */
-                yaw = fixedRotations.x;
-                pitch = fixedRotations.y;
+                yaw = fixedRotations.getYaw();
+                pitch = fixedRotations.getPitch();
             }
         }
 
-        return new Vector2f(yaw, pitch);
+        return new Rot2f(yaw, pitch);
     }
 
 }

@@ -12,6 +12,7 @@ import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,7 +25,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector2f;
 
 import java.util.Comparator;
 
@@ -125,18 +125,18 @@ public class CrystalBlocker extends Module {
         if (!obsidian.found()) return;
 
         // 5. Rotation and placement
-        Vector2f rot = RotationUtils.calculate(mc.player.getEyePosition(), Vec3.atCenterOf(placePos));
+        Rot2f rot = RotationUtils.calculate(mc.player.getEyePosition(), Vec3.atCenterOf(placePos));
         boolean readyToPlace = true;
 
         if (rotate.is(RotateMode.Normal)) {
-            mc.player.setYRot(rot.x);
-            mc.player.setXRot(Mth.clamp(rot.y, -90.0f, 90.0f));
+            mc.player.setYRot(rot.getYaw());
+            mc.player.setXRot(Mth.clamp(rot.getPitch(), -90.0f, 90.0f));
         } else if (rotate.is(RotateMode.Silent)) {
             RotationManager.INSTANCE.setRotations(rot, silentSpeed.getValue(), Priority.Highest);
 
             if (RotationManager.INSTANCE.rotations != null) {
-                double yawDiff = Math.abs(Mth.wrapDegrees(RotationManager.INSTANCE.rotations.x - rot.x));
-                double pitchDiff = Math.abs(RotationManager.INSTANCE.rotations.y - rot.y);
+                double yawDiff = Math.abs(Mth.wrapDegrees(RotationManager.INSTANCE.getYaw() - rot.getYaw()));
+                double pitchDiff = Math.abs(RotationManager.INSTANCE.getPitch() - rot.getPitch());
                 if (yawDiff > 15 || pitchDiff > 15) {
                     readyToPlace = false;
                 }

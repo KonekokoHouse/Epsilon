@@ -22,6 +22,7 @@ import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -35,7 +36,6 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector2f;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -146,7 +146,7 @@ public class Scaffold extends Module {
                 yLevel = Mth.floor(mc.player.getY()) - 1;
                 airTicks = 0;
                 blockInfo = null;
-                Vector2f rotation = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+                Rot2f rotation = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
                 RotationManager.INSTANCE.setRotations(rotation, rotationBackSpeed.getValue());
             } else {
                 if (airTicks >= tellyTick.getValue() && blockInfo != null) {
@@ -345,9 +345,9 @@ public class Scaffold extends Module {
         return false;
     }
 
-    private Vector2f getRotation(BlockInfo blockCache) {
-        Vector2f calculate = onAir() ? RotationUtils.calculate(blockCache.position, blockCache.dir) : RotationUtils.calculate(blockCache.position.getCenter());
-        Vector2f reverseYaw = new Vector2f(Mth.wrapDegrees(mc.player.getYRot() - 180), calculate.y);
+    private Rot2f getRotation(BlockInfo blockCache) {
+        Rot2f calculate = onAir() ? RotationUtils.calculate(blockCache.position, blockCache.dir) : RotationUtils.calculate(blockCache.position.getCenter());
+        Rot2f reverseYaw = new Rot2f(Mth.wrapDegrees(mc.player.getYRot() - 180), calculate.y);
         boolean hasRotated = RaytraceUtils.overBlock(reverseYaw, blockCache.position, blockCache.dir);
         if (hasRotated) return reverseYaw;
         else return calculate;

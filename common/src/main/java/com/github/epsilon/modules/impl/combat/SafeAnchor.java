@@ -16,6 +16,7 @@ import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.Packet;
@@ -31,7 +32,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector2f;
 
 import java.awt.*;
 import java.util.*;
@@ -109,7 +109,7 @@ public class SafeAnchor extends Module {
     private final List<RenderBox> renderBoxes = new ArrayList<>();
 
     private BlockPos currentAnchorPos;
-    private Vector2f targetRotation;
+    private Rot2f targetRotation;
     private BlockPos targetActionPos;
     private Direction targetPlaceSide;
     private boolean isSidePlacement;
@@ -256,22 +256,22 @@ public class SafeAnchor extends Module {
             smoothAim(targetRotation, mc.getDeltaTracker().getGameTimeDeltaPartialTick(false));
         }
 
-        Vector2f currentRot = silentRotation.getValue()
+        Rot2f currentRot = silentRotation.getValue()
                 ? RotationManager.INSTANCE.getRotation()
-                : new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+                : new Rot2f(mc.player.getYRot(), mc.player.getXRot());
 
-        float yawDiff = Math.abs(Mth.wrapDegrees(targetRotation.x - currentRot.x));
-        float pitchDiff = Math.abs(targetRotation.y - currentRot.y);
+        float yawDiff = Math.abs(Mth.wrapDegrees(targetRotation.getYaw() - currentRot.getYaw()));
+        float pitchDiff = Math.abs(targetRotation.getPitch() - currentRot.getPitch());
         if (yawDiff < 1.0f && pitchDiff < 1.0f) {
             targetRotation = null;
         }
     }
 
-    private void smoothAim(Vector2f targetRotation, float tickDelta) {
+    private void smoothAim(Rot2f targetRotation, float tickDelta) {
         float currentYaw = mc.player.getYRot();
         float currentPitch = mc.player.getXRot();
-        float yawDiff = Mth.wrapDegrees(targetRotation.x - currentYaw);
-        float pitchDiff = targetRotation.y - currentPitch;
+        float yawDiff = Mth.wrapDegrees(targetRotation.getYaw() - currentYaw);
+        float pitchDiff = targetRotation.getPitch() - currentPitch;
         double aimSpeed = currentRotationSpeed * 0.5;
 
         if (dynamicSpeed.getValue()) {
@@ -297,11 +297,11 @@ public class SafeAnchor extends Module {
         mc.player.setXRot(currentPitch + pitchChange);
     }
 
-    private Vector2f getTargetRotation(Vec3 targetPos) {
-        Vector2f rot = RotationUtils.calculate(mc.player.getEyePosition(), targetPos);
+    private Rot2f getTargetRotation(Vec3 targetPos) {
+        Rot2f rot = RotationUtils.calculate(mc.player.getEyePosition(), targetPos);
         float jy = (float) (ThreadLocalRandom.current().nextGaussian() * 0.10);
         float jp = (float) (ThreadLocalRandom.current().nextGaussian() * 0.08);
-        return new Vector2f(rot.x + jy, rot.y + jp);
+        return new Rot2f(rot.getYaw() + jy, rot.getPitch() + jp);
     }
 
     private void setShiftState(boolean state) {
@@ -805,13 +805,6 @@ public class SafeAnchor extends Module {
         nextActionTimeMs = System.currentTimeMillis() + delayMs;
     }
 
-    /**
-     * Maps the user-facing rotation speed slider [1, 100] to the internal smooth-rotation
-     * range [0.1, 9.5] used by both {@link RotationManager#applyRotation} and
-     * {@link #smoothAim}. The upper bound 9.5 stays safely below RotationManager's
-     * snap threshold (speed &gt;= 10 instantly snaps to the target, which is <em>not</em>
-     * humanized/legal rotation). Linear mapping keeps the slider intuitive.
-     */
     private double mapSpeedToInternal(double slider) {
         double clamped = Mth.clamp(slider, 1.0, 100.0);
         return 0.1 + (clamped - 1.0) * (9.5 - 0.1) / 99.0;

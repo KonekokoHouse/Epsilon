@@ -22,6 +22,7 @@ import com.github.epsilon.utils.render.WorldToScreen;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -181,7 +182,7 @@ public class ZealotCrystalPlus extends Module {
     private volatile PlaceInfo cachedPlaceInfo;
     private volatile BreakPlan cachedRotationBreakPlan;
     private volatile BreakPlan cachedBreakPlan;
-    private volatile Vector2f fallbackRotation;
+    private volatile Rot2f fallbackRotation;
     private volatile long fallbackRotationExpireAt;
 
     private BlockPos renderBlockPos;
@@ -272,7 +273,7 @@ public class ZealotCrystalPlus extends Module {
             } else if (prePlace != null) {
                 RotationManager.INSTANCE.setRotations(prePlace.rotation(), getRotationSpeed(), Priority.Lowest);
             } else {
-                Vector2f rotation = getFallbackRotation();
+                Rot2f rotation = getFallbackRotation();
                 if (rotation != null) {
                     RotationManager.INSTANCE.setRotations(rotation, getRotationSpeed(), Priority.Lowest);
                 }
@@ -533,7 +534,7 @@ public class ZealotCrystalPlus extends Module {
     }
 
     private SelfSnapshot captureSelfSnapshot(Player player, DamageUtils.ArmorEnchantmentMode armorMode) {
-        Vector2f currentRotation = RotationManager.INSTANCE.getRotation();
+        Rot2f currentRotation = RotationManager.INSTANCE.getRotation();
         return new SelfSnapshot(
                 player,
                 player.position(),
@@ -1417,7 +1418,7 @@ public class ZealotCrystalPlus extends Module {
         return checkPlaceRotation(pos, RotationManager.INSTANCE.getRotation());
     }
 
-    private boolean checkPlaceRotation(BlockPos pos, Vector2f currentRotation) {
+    private boolean checkPlaceRotation(BlockPos pos, Rot2f currentRotation) {
         if (placeRotationRange.getValue() <= 0.0) return true;
         return getRotationDelta(currentRotation, RotationUtils.calculate(getCrystalPos(pos))) <= placeRotationRange.getValue();
     }
@@ -1427,7 +1428,7 @@ public class ZealotCrystalPlus extends Module {
         return checkCrystalRotation(crystalPos, range, RotationManager.INSTANCE.getRotation());
     }
 
-    private boolean checkCrystalRotation(Vec3 crystalPos, double range, Vector2f currentRotation) {
+    private boolean checkCrystalRotation(Vec3 crystalPos, double range, Rot2f currentRotation) {
         if (range <= 0.0) return true;
         return getRotationDelta(currentRotation, RotationUtils.calculate(crystalPos)) <= range;
     }
@@ -1554,9 +1555,9 @@ public class ZealotCrystalPlus extends Module {
         return Math.max(0.1, yawSpeed.getValue() / 18.0);
     }
 
-    private float getRotationDelta(Vector2f from, Vector2f to) {
-        float yawDiff = Math.abs(Mth.wrapDegrees(to.x - from.x));
-        float pitchDiff = Math.abs(to.y - from.y);
+    private float getRotationDelta(Rot2f from, Rot2f to) {
+        float yawDiff = Math.abs(Mth.wrapDegrees(to.getYaw() - from.getYaw()));
+        float pitchDiff = Math.abs(to.getPitch() - from.getPitch());
         return (float) Math.hypot(yawDiff, pitchDiff);
     }
 
@@ -1594,15 +1595,15 @@ public class ZealotCrystalPlus extends Module {
         attackedPosMap.values().removeIf(time -> time < current);
     }
 
-    private void cacheFallbackRotation(Vector2f rotation) {
+    private void cacheFallbackRotation(Rot2f rotation) {
         if (rotation == null) return;
 
-        fallbackRotation = new Vector2f(rotation.x, rotation.y);
+        fallbackRotation = new Rot2f(rotation.getYaw(), rotation.getPitch());
         fallbackRotationExpireAt = System.currentTimeMillis() + FALLBACK_ROTATION_DURATION_MS;
     }
 
-    private Vector2f getFallbackRotation() {
-        Vector2f rotation = fallbackRotation;
+    private Rot2f getFallbackRotation() {
+        Rot2f rotation = fallbackRotation;
         if (rotation == null) {
             return null;
         }
@@ -1613,7 +1614,7 @@ public class ZealotCrystalPlus extends Module {
             return null;
         }
 
-        return new Vector2f(rotation.x, rotation.y);
+        return new Rot2f(rotation.getYaw(), rotation.getPitch());
     }
 
     private boolean isEatingPaused() {
@@ -1924,7 +1925,7 @@ public class ZealotCrystalPlus extends Module {
             boolean swording,
             DamageReductionData reduction,
             Difficulty difficulty,
-            Vector2f currentRotation
+            Rot2f currentRotation
     ) {
     }
 
@@ -1984,7 +1985,7 @@ public class ZealotCrystalPlus extends Module {
             float targetDamage,
             Direction side,
             Vec3 hitVec,
-            Vector2f rotation
+            Rot2f rotation
     ) {
     }
 

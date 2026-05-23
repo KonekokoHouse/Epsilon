@@ -7,11 +7,11 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.movement.MovementFix;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.rotation.Rot2f;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.util.Mth;
-import org.joml.Vector2f;
 
 import java.util.function.Function;
 
@@ -21,17 +21,17 @@ public class RotationManager {
 
     public static final RotationManager INSTANCE = new RotationManager();
 
-    private final Vector2f offset = new Vector2f(0, 0);
-    public Vector2f rotations;
-    public Vector2f lastRotations = new Vector2f(0, 0);
-    public Vector2f targetRotations;
-    public Vector2f animationRotation = null;
-    public Vector2f lastAnimationRotation = null;
+    private final Rot2f offset = new Rot2f(0, 0);
+    public Rot2f rotations;
+    public Rot2f lastRotations = new Rot2f(0, 0);
+    public Rot2f targetRotations;
+    public Rot2f animationRotation = null;
+    public Rot2f lastAnimationRotation = null;
 
     private boolean active;
     private boolean smoothed;
     private double rotationSpeed;
-    private Function<Vector2f, Boolean> raytrace;
+    private Function<Rot2f, Boolean> raytrace;
     private float randomAngle;
     private boolean s08;
 
@@ -42,23 +42,23 @@ public class RotationManager {
         EventBus.INSTANCE.subscribe(this);
     }
 
-    public void setRotations(Vector2f rotations, double rotationSpeed) {
+    public void setRotations(Rot2f rotations, double rotationSpeed) {
         setRotations(rotations, rotationSpeed, null, Priority.Medium, null);
     }
 
-    public void setRotations(Vector2f rotations, double rotationSpeed, Priority priority) {
+    public void setRotations(Rot2f rotations, double rotationSpeed, Priority priority) {
         setRotations(rotations, rotationSpeed, null, priority, null);
     }
 
-    public void setRotations(Vector2f rotations, double rotationSpeed, Function<Vector2f, Boolean> raytrace) {
+    public void setRotations(Rot2f rotations, double rotationSpeed, Function<Rot2f, Boolean> raytrace) {
         setRotations(rotations, rotationSpeed, raytrace, Priority.Medium, null);
     }
 
-    public void setRotations(Vector2f rotations, double rotationSpeed, Function<Vector2f, Boolean> raytrace, Priority priority) {
+    public void setRotations(Rot2f rotations, double rotationSpeed, Function<Rot2f, Boolean> raytrace, Priority priority) {
         setRotations(rotations, rotationSpeed, raytrace, priority, null);
     }
 
-    public void setRotations(Vector2f rotations, double rotationSpeed, Function<Vector2f, Boolean> raytrace, Priority priority, Runnable callback) {
+    public void setRotations(Rot2f rotations, double rotationSpeed, Function<Rot2f, Boolean> raytrace, Priority priority, Runnable callback) {
         if (rotations == null) return;
 
         if (this.active && priority.priority < this.priority) {
@@ -66,7 +66,7 @@ public class RotationManager {
         }
 
         if (s08) {
-            this.rotations = this.lastRotations = this.targetRotations = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+            this.rotations = this.lastRotations = this.targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
             this.callback = null;
             s08 = false;
             return;
@@ -84,66 +84,67 @@ public class RotationManager {
 
     private void smooth() {
         if (!smoothed) {
-            float targetYaw = targetRotations.x;
-            float targetPitch = targetRotations.y;
+            float targetYaw = targetRotations.getYaw();
+            float targetPitch = targetRotations.getPitch();
 
-            if (raytrace != null && (Math.abs(targetYaw - rotations.x) > 5 || Math.abs(targetPitch - rotations.y) > 5)) {
-                final Vector2f trueTargetRotations = new Vector2f(targetRotations.x, targetRotations.y);
+            if (raytrace != null && (Math.abs(targetYaw - rotations.getYaw()) > 5 || Math.abs(targetPitch - rotations.getPitch()) > 5)) {
+                final Rot2f trueTargetRotations = new Rot2f(targetRotations.getYaw(), targetRotations.getPitch());
 
                 double speed = (Math.random() * Math.random() * Math.random()) * 20;
                 randomAngle += (float) ((20 + (float) (Math.random() - 0.5) * (Math.random() * Math.random() * Math.random() * 360)) * (mc.player.tickCount / 10 % 2 == 0 ? -1 : 1));
 
-                offset.x = (float) (offset.x + -Mth.sin((float) Math.toRadians(randomAngle)) * speed);
-                offset.y = (float) (offset.y + Mth.cos((float) Math.toRadians(randomAngle)) * speed);
+                offset.setYaw((float) (offset.getYaw() + -Mth.sin((float) Math.toRadians(randomAngle)) * speed));
+                offset.setPitch((float) (offset.getPitch() + Mth.cos((float) Math.toRadians(randomAngle)) * speed));
 
-                targetYaw += offset.x;
-                targetPitch += offset.y;
+                targetYaw += offset.getYaw();
+                targetPitch += offset.getPitch();
 
-                if (!raytrace.apply(new Vector2f(targetYaw, targetPitch))) {
-                    randomAngle = (float) Math.toDegrees(Math.atan2(trueTargetRotations.x - targetYaw, targetPitch - trueTargetRotations.y)) - 180;
+                if (!raytrace.apply(new Rot2f(targetYaw, targetPitch))) {
+                    randomAngle = (float) Math.toDegrees(Math.atan2(trueTargetRotations.getYaw() - targetYaw, targetPitch - trueTargetRotations.getPitch())) - 180;
 
-                    targetYaw -= offset.x;
-                    targetPitch -= offset.y;
+                    targetYaw -= offset.getYaw();
+                    targetPitch -= offset.getPitch();
 
-                    offset.x = (float) (offset.x + -Mth.sin((float) Math.toRadians(randomAngle)) * speed);
-                    offset.y = (float) (offset.y + Mth.cos((float) Math.toRadians(randomAngle)) * speed);
+                    offset.setYaw((float) (offset.getYaw() + -Mth.sin((float) Math.toRadians(randomAngle)) * speed));
+                    offset.setPitch((float) (offset.getPitch() + Mth.cos((float) Math.toRadians(randomAngle)) * speed));
 
-                    targetYaw = targetYaw + offset.x;
-                    targetPitch = targetPitch + offset.y;
+                    targetYaw = targetYaw + offset.getYaw();
+                    targetPitch = targetPitch + offset.getPitch();
                 }
 
-                if (!raytrace.apply(new Vector2f(targetYaw, targetPitch))) {
-                    offset.x = 0;
-                    offset.y = 0;
+                if (!raytrace.apply(new Rot2f(targetYaw, targetPitch))) {
+                    offset.setYaw(0);
+                    offset.setPitch(0);
 
-                    targetYaw = (float) (targetRotations.x + Math.random() * 2);
-                    targetPitch = (float) (targetRotations.y + Math.random() * 2);
+                    targetYaw = (float) (targetRotations.getYaw() + Math.random() * 2);
+                    targetPitch = (float) (targetRotations.getPitch() + Math.random() * 2);
                 }
             }
 
-            rotations = RotationUtils.smooth(new Vector2f(targetYaw, targetPitch), rotationSpeed + Math.random());
+            rotations = RotationUtils.smooth(new Rot2f(targetYaw, targetPitch), rotationSpeed + Math.random());
         }
 
         smoothed = true;
     }
 
-    public float getXRot() {
-        return getRotation().y();
-    }
-    public float getYRot() {
-        return getRotation().x();
+    public float getYaw() {
+        return getRotation().getYaw();
     }
 
-    public Vector2f getRotation() {
-        return active ? rotations : new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+    public float getPitch() {
+        return getRotation().getPitch();
     }
 
-    public Vector2f getLastRotation() {
-        return lastRotations != null ? lastRotations : new Vector2f(mc.player.yRotO, mc.player.xRotO);
+    public Rot2f getRotation() {
+        return active ? rotations : new Rot2f(mc.player.getYRot(), mc.player.getXRot());
+    }
+
+    public Rot2f getLastRotation() {
+        return lastRotations != null ? lastRotations : new Rot2f(mc.player.yRotO, mc.player.xRotO);
     }
 
     public boolean isDone() {
-        return Math.abs(Mth.wrapDegrees(rotations.x - targetRotations.x)) <= 1 && Math.abs(Mth.wrapDegrees(rotations.y - targetRotations.y)) <= 1;
+        return Math.abs(Mth.wrapDegrees(rotations.getYaw() - targetRotations.getYaw())) <= 1 && Math.abs(Mth.wrapDegrees(rotations.getPitch() - targetRotations.getPitch())) <= 1;
     }
 
     public boolean isActive() {
@@ -171,7 +172,7 @@ public class RotationManager {
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
         if (active && event.getPacket() instanceof ServerboundUseItemPacket packet) {
-            event.setPacket(new ServerboundUseItemPacket(packet.getHand(), packet.getSequence(), rotations.x, rotations.y));
+            event.setPacket(new ServerboundUseItemPacket(packet.getHand(), packet.getSequence(), rotations.getYaw(), rotations.getPitch()));
         }
     }
 
@@ -187,7 +188,7 @@ public class RotationManager {
         if (mc.player == null || mc.level == null) return;
 
         if (!active || rotations == null || lastRotations == null || targetRotations == null) {
-            rotations = lastRotations = targetRotations = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+            rotations = lastRotations = targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         }
 
         if (active) {
@@ -203,24 +204,24 @@ public class RotationManager {
     @EventHandler
     private void onAnimation(RotationAnimationEvent event) {
         if (active && animationRotation != null && lastAnimationRotation != null) {
-            event.setYaw(animationRotation.x);
-            event.setLastYaw(lastAnimationRotation.x);
-            event.setPitch(animationRotation.y);
-            event.setLastPitch(lastAnimationRotation.y);
+            event.setYaw(animationRotation.getYaw());
+            event.setLastYaw(lastAnimationRotation.getYaw());
+            event.setPitch(animationRotation.getPitch());
+            event.setLastPitch(lastAnimationRotation.getPitch());
         }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     private void onSendPosition(SendPositionEvent event) {
         if (active && rotations != null) {
-            float yaw = rotations.x;
-            float pitch = rotations.y;
+            float yaw = rotations.getYaw();
+            float pitch = rotations.getPitch();
             if (!Float.isNaN(yaw) && !Float.isNaN(pitch) && active) {
                 event.setYaw(yaw);
                 event.setPitch(pitch);
             }
 
-            if (Math.abs((rotations.x - mc.player.getYRot()) % 360) < 1 && Math.abs((rotations.y - mc.player.getXRot())) < 1) {
+            if (Math.abs((rotations.getYaw() - mc.player.getYRot()) % 360) < 1 && Math.abs((rotations.getPitch() - mc.player.getXRot())) < 1) {
                 active = false;
                 priority = 0;
                 callback = null;
@@ -229,12 +230,12 @@ public class RotationManager {
 
             lastRotations = rotations;
         } else {
-            lastRotations = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+            lastRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         }
 
         lastAnimationRotation = animationRotation;
-        animationRotation = new Vector2f(event.getYaw(), event.getPitch());
-        targetRotations = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+        animationRotation = new Rot2f(event.getYaw(), event.getPitch());
+        targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         raytrace = null;
         smoothed = false;
     }
@@ -243,59 +244,59 @@ public class RotationManager {
     private void onMoveInput(KeyboardInputEvent event) {
         MovementFix moveFix = MovementFix.INSTANCE;
         if (moveFix.isEnabled() && active && rotations != null) {
-            moveFix.fixMovement(event, rotations.x);
+            moveFix.fixMovement(event, rotations.getYaw());
         }
     }
 
     @EventHandler
     private void onRaytrace(RaytraceEvent event) {
         if (rotations != null && event.getEntity() == mc.player && active) {
-            event.setYaw(rotations.x);
-            event.setPitch(rotations.y);
+            event.setYaw(rotations.getYaw());
+            event.setPitch(rotations.getPitch());
         }
     }
 
     @EventHandler
     private void onItemRaytrace(UseItemRaytraceEvent event) {
         if (rotations != null && active) {
-            event.setYaw(rotations.x);
-            event.setPitch(rotations.y);
+            event.setYaw(rotations.getYaw());
+            event.setPitch(rotations.getPitch());
         }
     }
 
     @EventHandler
     private void onStrafe(StrafeEvent event) {
         if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
-            event.setYaw(rotations.x);
+            event.setYaw(rotations.getYaw());
         }
     }
 
     @EventHandler
     private void onJump(JumpEvent event) {
         if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
-            event.setYaw(rotations.x);
+            event.setYaw(rotations.getYaw());
         }
     }
 
     @EventHandler
     private void onFallFlying(FallFlyingEvent event) {
         if (rotations != null) {
-            event.setPitch(rotations.y);
+            event.setPitch(rotations.getPitch());
         }
     }
 
     @EventHandler
     private void onAttack(AttackYawEvent event) {
         if (rotations != null) {
-            event.setYaw(rotations.x);
+            event.setYaw(rotations.getYaw());
         }
     }
 
     private void correctDisabledRotations() {
-        Vector2f rotations = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
-        Vector2f fixedRotations = RotationUtils.resetRotation(RotationUtils.applySensitivityPatch(rotations, lastRotations));
-        mc.player.setYRot(fixedRotations.x);
-        mc.player.setXRot(fixedRotations.y);
+        Rot2f rotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
+        Rot2f fixedRotations = RotationUtils.resetRotation(RotationUtils.applySensitivityPatch(rotations, lastRotations));
+        mc.player.setYRot(fixedRotations.getYaw());
+        mc.player.setXRot(fixedRotations.getPitch());
     }
 
 }

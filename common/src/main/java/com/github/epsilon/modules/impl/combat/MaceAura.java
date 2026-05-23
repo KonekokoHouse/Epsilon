@@ -135,8 +135,8 @@ public class MaceAura extends Module {
     private double getAngleScore(LivingEntity entity) {
         Vec3 hitVec = getClosestPointOnBB(entity.getBoundingBox(), mc.player.getEyePosition());
         var angle = RotationUtils.calculate(hitVec);
-        float yawDiff = Math.abs(Mth.wrapDegrees(angle.x - mc.player.getYRot()));
-        float pitchDiff = Math.abs(Mth.wrapDegrees(angle.y - mc.player.getXRot()));
+        float yawDiff = Math.abs(Mth.wrapDegrees(angle.getYaw() - mc.player.getYRot()));
+        float pitchDiff = Math.abs(Mth.wrapDegrees(angle.getPitch() - mc.player.getXRot()));
         return yawDiff * yawDiff + pitchDiff * pitchDiff;
     }
 
