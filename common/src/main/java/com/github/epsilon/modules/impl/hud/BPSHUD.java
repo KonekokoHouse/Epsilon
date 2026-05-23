@@ -26,7 +26,7 @@ public class BPSHUD extends HudModule {
     private static final int GRAPH_SIZE = 72;
 
     private BPSHUD() {
-        super("BPS Hud", Category.HUD, 0f, 0f, 158f, 68f);
+        super("BPS HUD", Category.HUD, 0f, 0f, 158f, 68f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

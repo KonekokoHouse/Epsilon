@@ -31,7 +31,7 @@ public class PotionHUD extends HudModule {
     public static final PotionHUD INSTANCE = new PotionHUD();
 
     private PotionHUD() {
-        super("Potion Hud", Category.HUD, 0f, 0f, 160f, 60f);
+        super("Potion HUD", Category.HUD, 0f, 0f, 160f, 60f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.5, 0.05);

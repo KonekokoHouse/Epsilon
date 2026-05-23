@@ -20,7 +20,7 @@ public class NotificationsHUD extends HudModule {
     public static final NotificationsHUD INSTANCE = new NotificationsHUD();
 
     private NotificationsHUD() {
-        super("Notifications Hud", Category.HUD, 4f, 4f, 150f, 35f);
+        super("Notifications HUD", Category.HUD, 4f, 4f, 150f, 35f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

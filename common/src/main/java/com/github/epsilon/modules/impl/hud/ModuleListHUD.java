@@ -28,7 +28,7 @@ public class ModuleListHUD extends HudModule {
     public static final ModuleListHUD INSTANCE = new ModuleListHUD();
 
     private ModuleListHUD() {
-        super("Module List Hud", Category.HUD, 0f, 0f, 50f, 50f);
+        super("Module List HUD", Category.HUD, 0f, 0f, 50f, 50f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
