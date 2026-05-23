@@ -36,24 +36,29 @@ public class RotationManager {
     private boolean s08;
 
     private int priority;
+    private Runnable callback;
 
     private RotationManager() {
         EventBus.INSTANCE.subscribe(this);
     }
 
     public void setRotations(Vector2f rotations, double rotationSpeed) {
-        setRotations(rotations, rotationSpeed, null, Priority.Medium);
+        setRotations(rotations, rotationSpeed, null, Priority.Medium, null);
     }
 
     public void setRotations(Vector2f rotations, double rotationSpeed, Priority priority) {
-        setRotations(rotations, rotationSpeed, null, priority);
+        setRotations(rotations, rotationSpeed, null, priority, null);
     }
 
     public void setRotations(Vector2f rotations, double rotationSpeed, Function<Vector2f, Boolean> raytrace) {
-        setRotations(rotations, rotationSpeed, raytrace, Priority.Medium);
+        setRotations(rotations, rotationSpeed, raytrace, Priority.Medium, null);
     }
 
     public void setRotations(Vector2f rotations, double rotationSpeed, Function<Vector2f, Boolean> raytrace, Priority priority) {
+        setRotations(rotations, rotationSpeed, raytrace, priority, null);
+    }
+
+    public void setRotations(Vector2f rotations, double rotationSpeed, Function<Vector2f, Boolean> raytrace, Priority priority, Runnable callback) {
         if (rotations == null) return;
 
         if (this.active && priority.priority < this.priority) {
@@ -62,6 +67,7 @@ public class RotationManager {
 
         if (s08) {
             this.rotations = this.lastRotations = this.targetRotations = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
+            this.callback = null;
             s08 = false;
             return;
         }
@@ -70,6 +76,7 @@ public class RotationManager {
         this.rotationSpeed = rotationSpeed * 18;
         this.raytrace = raytrace;
         this.priority = priority.priority;
+        this.callback = callback;
         this.active = true;
 
         smooth();
@@ -120,6 +127,13 @@ public class RotationManager {
         smoothed = true;
     }
 
+    public float getXRot() {
+        return getRotation().y();
+    }
+    public float getYRot() {
+        return getRotation().x();
+    }
+
     public Vector2f getRotation() {
         return active ? rotations : new Vector2f(mc.player.getYRot(), mc.player.getXRot());
     }
@@ -168,7 +182,7 @@ public class RotationManager {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = -1000)
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null || mc.level == null) return;
 
@@ -178,6 +192,11 @@ public class RotationManager {
 
         if (active) {
             smooth();
+            EventBus.INSTANCE.post(new AfterRotationEvent());
+
+            if (callback != null) {
+                callback.run();
+            }
         }
     }
 
@@ -204,6 +223,7 @@ public class RotationManager {
             if (Math.abs((rotations.x - mc.player.getYRot()) % 360) < 1 && Math.abs((rotations.y - mc.player.getXRot())) < 1) {
                 active = false;
                 priority = 0;
+                callback = null;
                 this.correctDisabledRotations();
             }
 

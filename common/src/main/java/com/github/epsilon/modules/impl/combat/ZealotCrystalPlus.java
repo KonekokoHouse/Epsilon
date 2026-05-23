@@ -117,23 +117,23 @@ public class ZealotCrystalPlus extends Module {
 
     // Place
     private final EnumSetting<PlaceMode> placeMode = enumSetting("Place Mode", PlaceMode.Single).group(sgPlace);
-    private final EnumSetting<PacketPlaceMode> packetPlace = enumSetting("Packet Place", PacketPlaceMode.Off).group(sgPlace);
+    private final EnumSetting<PacketPlaceMode> packetPlace = enumSetting("Packet Place", PacketPlaceMode.Weak).group(sgPlace);
     private final BoolSetting spamPlace = boolSetting("Spam Place", false).group(sgPlace);
     private final EnumSetting<SwitchMode> placeSwitchMode = enumSetting("Place Switch Mode", SwitchMode.Off).group(sgPlace);
-    private final BoolSetting placeSwing = boolSetting("Place Swing", true).group(sgPlace);
+    private final BoolSetting placeSwing = boolSetting("Place Swing", false).group(sgPlace);
     private final EnumSetting<PlaceBypass> placeSideBypass = enumSetting("Place Side Bypass", PlaceBypass.Up).group(sgPlace);
     private final DoubleSetting placeMinDamage = doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25).group(sgPlace);
     private final DoubleSetting placeMaxSelfDamage = doubleSetting("Place Max Self Damage", 6.0, 0.0, 20.0, 0.25).group(sgPlace);
     private final DoubleSetting placeBalance = doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25).group(sgPlace);
     private final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1).group(sgPlace);
-    private final DoubleSetting placeRange = doubleSetting("Place Range", 3.0, 0.0, 8.0, 0.1).group(sgPlace);
+    private final DoubleSetting placeRange = doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1).group(sgPlace);
     private final EnumSetting<RangeMode> placeRangeMode = enumSetting("Place Range Mode", RangeMode.Feet).group(sgPlace);
 
     // Break
     private final EnumSetting<BreakMode> breakMode = enumSetting("Break Mode", BreakMode.Smart).group(sgBreak);
     private final BoolSetting bbtt = boolSetting("2B2T", false).group(sgBreak);
     private final IntSetting bbttFactor = intSetting("2B2T Factor", 200, 0, 1000, 25, bbtt::getValue).group(sgBreak);
-    private final EnumSetting<BreakMode> packetBreak = enumSetting("Packet Break", BreakMode.Off, () -> !bbtt.getValue()).group(sgBreak);
+    private final EnumSetting<BreakMode> packetBreak = enumSetting("Packet Break", BreakMode.Target, () -> !bbtt.getValue()).group(sgBreak);
     private final IntSetting ownTimeout = intSetting("Own Timeout", 100, 0, 2000, 25,
             () -> breakMode.getValue() == BreakMode.Own || packetBreak.getValue() == BreakMode.Own).group(sgBreak);
     private final EnumSetting<SwitchMode> antiWeakness = enumSetting("Anti Weakness", SwitchMode.Off).group(sgBreak);
@@ -142,7 +142,7 @@ public class ZealotCrystalPlus extends Module {
     private final DoubleSetting breakMaxSelfDamage = doubleSetting("Break Max Self Damage", 8.0, 0.0, 20.0, 0.25).group(sgBreak);
     private final DoubleSetting breakBalance = doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25).group(sgBreak);
     private final IntSetting breakDelay = intSetting("Break Delay", 100, 0, 500, 1).group(sgBreak);
-    private final DoubleSetting breakRange = doubleSetting("Break Range", 3.5, 0.0, 8.0, 0.1).group(sgBreak);
+    private final DoubleSetting breakRange = doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1).group(sgBreak);
     private final EnumSetting<RangeMode> breakRangeMode = enumSetting("Break Range Mode", RangeMode.Feet).group(sgBreak);
 
     // Render
@@ -554,19 +554,17 @@ public class ZealotCrystalPlus extends Module {
         if (mc.player == null || mc.level == null) return List.of();
 
         int ticks = motionPredict.getValue() ? predictTicks.getValue() : 0;
-        List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(
-                TargetRequest.of(
-                        targetRange.getValue(),
-                        360.0f,
-                        players.getValue(),
-                        mobs.getValue(),
-                        animals.getValue(),
-                        false,
-                        true,
-                        living -> living.position().y > -64.0,
-                        maxTargets.getValue()
-                )
-        );
+        List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(TargetRequest.of(
+                targetRange.getValue(),
+                360.0f,
+                players.getValue(),
+                mobs.getValue(),
+                animals.getValue(),
+                false,
+                true,
+                living -> living.position().y > -64.0,
+                maxTargets.getValue()
+        ));
 
         if (targets.isEmpty()) {
             return List.of();
@@ -1005,21 +1003,27 @@ public class ZealotCrystalPlus extends Module {
             }
         }
 
+        InteractionHand finalHand = hand;
         BlockHitResult hitResult = new BlockHitResult(placeInfo.hitVec(), placeInfo.side(), placeInfo.blockPos(), false);
-        RotationManager.INSTANCE.setRotations(placeInfo.rotation(), getRotationSpeed(), Priority.High);
-
-        InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, hitResult);
-        if (result.consumesAction()) {
-            if (placeSwing.getValue()) {
-                doSwing(resolveSwingHand(true));
+        RotationManager.INSTANCE.setRotations(placeInfo.rotation(), getRotationSpeed(), null, Priority.High, () -> {
+            if (!isEnabled() || nullCheck()) {
+                InvUtils.swapBack();
+                return;
             }
-            placedPosMap.put(placeInfo.blockPos().asLong(), System.currentTimeMillis() + ownTimeout.getValue());
-            placeTimer.reset();
-            lastActiveTime = System.currentTimeMillis();
-            target = placeInfo.target();
-            updateRenderTarget(placeInfo.blockPos(), placeInfo.targetDamage(), placeInfo.selfDamage());
-        }
-        InvUtils.swapBack();
+
+            InteractionResult result = mc.gameMode.useItemOn(mc.player, finalHand, hitResult);
+            if (result.consumesAction()) {
+                if (placeSwing.getValue()) {
+                    doSwing(resolveSwingHand(true));
+                }
+                placedPosMap.put(placeInfo.blockPos().asLong(), System.currentTimeMillis() + ownTimeout.getValue());
+                placeTimer.reset();
+                lastActiveTime = System.currentTimeMillis();
+                target = placeInfo.target();
+                updateRenderTarget(placeInfo.blockPos(), placeInfo.targetDamage(), placeInfo.selfDamage());
+            }
+            InvUtils.swapBack();
+        });
 
         return true;
     }
@@ -1047,33 +1051,38 @@ public class ZealotCrystalPlus extends Module {
             }
         }
 
-        RotationManager.INSTANCE.setRotations(RotationUtils.calculate(breakPlan.pos()), getRotationSpeed(), Priority.High);
+        RotationManager.INSTANCE.setRotations(RotationUtils.calculate(breakPlan.pos()), getRotationSpeed(), null, Priority.High, () -> {
+            if (!isEnabled() || nullCheck()) {
+                InvUtils.swapBack();
+                return;
+            }
 
-        Entity current = mc.level.getEntity(breakPlan.entityId());
-        if (!(current instanceof EndCrystal currentCrystal) || !currentCrystal.isAlive()) {
+            Entity current = mc.level.getEntity(breakPlan.entityId());
+            if (!(current instanceof EndCrystal currentCrystal) || !currentCrystal.isAlive()) {
+                InvUtils.swapBack();
+                return;
+            }
+            if (!checkBreakRange(currentCrystal.position())) {
+                InvUtils.swapBack();
+                return;
+            }
+
+            mc.gameMode.attack(mc.player, currentCrystal);
+            doSwing(resolveSwingHand(false));
+            breakTimer.reset();
+            lastActiveTime = System.currentTimeMillis();
+            attackedCrystalMap.put(currentCrystal.getId(), System.currentTimeMillis() + 1000L);
+            attackedPosMap.put(BlockPos.containing(currentCrystal.position()).asLong(), System.currentTimeMillis() + 1000L);
+            updateRenderTarget(currentCrystal.blockPosition().below(), breakPlan.targetDamage(), breakPlan.selfDamage());
+
+            PlaceInfo placeInfo = getActionPlaceInfo();
+            cacheFallbackRotation(placeInfo != null ? placeInfo.rotation() : RotationUtils.calculate(breakPlan.pos()));
+            if (packetPlace.getValue().onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos(), currentCrystal.getBoundingBox())) {
+                placeDirect(placeInfo, true);
+            }
+
             InvUtils.swapBack();
-            return true;
-        }
-        if (!checkBreakRange(currentCrystal.position())) {
-            InvUtils.swapBack();
-            return true;
-        }
-
-        mc.gameMode.attack(mc.player, currentCrystal);
-        doSwing(resolveSwingHand(false));
-        breakTimer.reset();
-        lastActiveTime = System.currentTimeMillis();
-        attackedCrystalMap.put(currentCrystal.getId(), System.currentTimeMillis() + 1000L);
-        attackedPosMap.put(BlockPos.containing(currentCrystal.position()).asLong(), System.currentTimeMillis() + 1000L);
-        updateRenderTarget(currentCrystal.blockPosition().below(), breakPlan.targetDamage(), breakPlan.selfDamage());
-
-        PlaceInfo placeInfo = getActionPlaceInfo();
-        cacheFallbackRotation(placeInfo != null ? placeInfo.rotation() : RotationUtils.calculate(breakPlan.pos()));
-        if (packetPlace.getValue().onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos(), currentCrystal.getBoundingBox())) {
-            placeDirect(placeInfo, true);
-        }
-
-        InvUtils.swapBack();
+        });
         return true;
     }
 
@@ -2082,3 +2091,4 @@ public class ZealotCrystalPlus extends Module {
         }
     }
 }
+
