@@ -45,6 +45,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     private static final TranslateComponent reloadComponent = EpsilonTranslateComponent.create("gui", "config.action.reload");
     private static final TranslateComponent exportComponent = EpsilonTranslateComponent.create("gui", "config.action.export");
     private static final TranslateComponent importComponent = EpsilonTranslateComponent.create("gui", "config.action.import");
+    private static final TranslateComponent newComponent = EpsilonTranslateComponent.create("gui", "config.action.new");
     private static final TranslateComponent openFolderComponent = EpsilonTranslateComponent.create("gui", "config.action.open_folder");
     private static final TranslateComponent deleteConfirmTitleComponent = EpsilonTranslateComponent.create("gui", "config.delete.confirm.title");
     private static final TranslateComponent deleteConfirmMessageComponent = EpsilonTranslateComponent.create("gui", "config.delete.confirm.message");
@@ -325,17 +326,17 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         Color baseColor = switch (button.type()) {
             case SAVE_AS -> MD3Theme.PRIMARY_CONTAINER;
             case RELOAD -> MD3Theme.SECONDARY_CONTAINER;
-            case EXPORT, IMPORT, OPEN_FOLDER -> MD3Theme.SURFACE_CONTAINER_HIGH;
+            case EXPORT, IMPORT, NEW, OPEN_FOLDER -> MD3Theme.SURFACE_CONTAINER_HIGH;
         };
         Color hoverColor = switch (button.type()) {
             case SAVE_AS -> MD3Theme.PRIMARY;
             case RELOAD -> MD3Theme.SECONDARY;
-            case EXPORT, IMPORT, OPEN_FOLDER -> MD3Theme.SURFACE_CONTAINER_HIGHEST;
+            case EXPORT, IMPORT, NEW, OPEN_FOLDER -> MD3Theme.SURFACE_CONTAINER_HIGHEST;
         };
         Color textColor = switch (button.type()) {
             case SAVE_AS -> MD3Theme.ON_PRIMARY_CONTAINER;
             case RELOAD -> MD3Theme.ON_SECONDARY_CONTAINER;
-            case EXPORT, IMPORT, OPEN_FOLDER -> MD3Theme.TEXT_PRIMARY;
+            case EXPORT, IMPORT, NEW, OPEN_FOLDER -> MD3Theme.TEXT_PRIMARY;
         };
 
         scope.roundRect(button.bounds().x(), button.bounds().y(), button.bounds().width(), button.bounds().height(),
@@ -402,6 +403,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             case RELOAD -> tryReload();
             case EXPORT -> tryExport();
             case IMPORT -> tryImport();
+            case NEW -> tryNewConfig();
             case OPEN_FOLDER -> tryOpenFolder();
         }
     }
@@ -418,6 +420,22 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             state.setConfigScroll(0.0f);
         } catch (Exception exception) {
             Constants.LOGGER.error("保存配置失败", exception);
+            openErrorPopup(saveErrorComponent::getTranslatedName, exception);
+        }
+    }
+
+    private void tryNewConfig() {
+        String targetName = inputField.getText().trim();
+        if (targetName.isEmpty()) {
+            return;
+        }
+        try {
+            String newName = ConfigManager.INSTANCE.newDefaultConfig(targetName);
+            inputField.setText(newName);
+            inputField.setCursorToEnd();
+            state.setConfigScroll(0.0f);
+        } catch (Exception exception) {
+            Constants.LOGGER.error("新建配置失败", exception);
             openErrorPopup(saveErrorComponent::getTranslatedName, exception);
         }
     }
@@ -606,13 +624,15 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         float y = getInputFieldBounds(inputBounds).bottom() + SECTION_GAP;
         float gap = 4.0f;
         float width = (inputBounds.width() - gap * 3.0f) / 4.0f;
+        float secondRowWidth = (inputBounds.width() - gap) / 2.0f;
         float secondRowY = y + BUTTON_HEIGHT + SECTION_GAP;
         return List.of(
                 new ActionButton(ActionButtonType.SAVE_AS, saveAsComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), y, width, BUTTON_HEIGHT)),
                 new ActionButton(ActionButtonType.RELOAD, reloadComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + width + gap, y, width, BUTTON_HEIGHT)),
                 new ActionButton(ActionButtonType.EXPORT, exportComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 2.0f, y, width, BUTTON_HEIGHT)),
                 new ActionButton(ActionButtonType.IMPORT, importComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 3.0f, y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.OPEN_FOLDER, openFolderComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), secondRowY, inputBounds.width(), BUTTON_HEIGHT))
+                new ActionButton(ActionButtonType.NEW, newComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), secondRowY, secondRowWidth, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.OPEN_FOLDER, openFolderComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + secondRowWidth + gap, secondRowY, secondRowWidth, BUTTON_HEIGHT))
         );
     }
 
@@ -664,6 +684,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         RELOAD,
         EXPORT,
         IMPORT,
+        NEW,
         OPEN_FOLDER
     }
 

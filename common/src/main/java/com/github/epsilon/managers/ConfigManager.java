@@ -143,6 +143,14 @@ public class ConfigManager {
         return configName;
     }
 
+    public synchronized String newDefaultConfig(String rawName) throws IOException {
+        String configName = normalizeAndValidateConfigName(rawName);
+        ensureRootDirectories();
+        Files.createDirectories(getConfigStorageDir(configName));
+        switchConfig(configName);
+        return configName;
+    }
+
     public synchronized void switchConfig(String rawName) throws IOException {
         String configName = normalizeAndValidateConfigName(rawName);
         ensureRootDirectories();

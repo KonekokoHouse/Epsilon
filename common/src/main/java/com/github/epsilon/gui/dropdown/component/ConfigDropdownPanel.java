@@ -20,6 +20,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     private static final TranslateComponent reloadComponent = EpsilonTranslateComponent.create("gui", "config.action.reload");
     private static final TranslateComponent exportComponent = EpsilonTranslateComponent.create("gui", "config.action.export");
     private static final TranslateComponent importComponent = EpsilonTranslateComponent.create("gui", "config.action.import");
+    private static final TranslateComponent newComponent = EpsilonTranslateComponent.create("gui", "config.action.new");
     private static final TranslateComponent openFolderComponent = EpsilonTranslateComponent.create("gui", "config.action.open_folder");
     private static final TranslateComponent savedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.saved");
     private static final TranslateComponent reloadedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.reloaded");
@@ -27,6 +28,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     private static final TranslateComponent importedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.imported");
     private static final TranslateComponent deletedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.deleted");
     private static final TranslateComponent switchedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.switched");
+    private static final TranslateComponent createdComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.created");
     private static final TranslateComponent errorComponent = EpsilonTranslateComponent.create("gui", "config.error.title");
 
     private static final float FIELD_HEIGHT = 18.0f;
@@ -65,19 +67,15 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                 reloadComponent.getTranslatedName(),
                 exportComponent.getTranslatedName(),
                 importComponent.getTranslatedName(),
+                newComponent.getTranslatedName(),
                 openFolderComponent.getTranslatedName()
         };
         for (int row = 0; row < 3; row++) {
-            int columns = row == 2 ? 1 : 2;
-            for (int col = 0; col < columns; col++) {
+            for (int col = 0; col < 2; col++) {
                 int index = row * 2 + col;
                 if (index >= actions.length) continue;
                 float btnW = (contentW - GAP) * 0.5f;
                 float btnX = contentX + col * (btnW + GAP);
-                if (row == 2) {
-                    btnW = contentW;
-                    btnX = contentX;
-                }
                 float btnY = currentY + row * (BUTTON_HEIGHT + GAP);
                 boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, BUTTON_HEIGHT);
                 renderer.roundRect().addRoundRect(btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
@@ -135,16 +133,11 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         currentY += FIELD_HEIGHT + GAP;
 
         for (int row = 0; row < 3; row++) {
-            int columns = row == 2 ? 1 : 2;
-            for (int col = 0; col < columns; col++) {
+            for (int col = 0; col < 2; col++) {
                 int index = row * 2 + col;
-                if (index >= 5) continue;
+                if (index >= 6) continue;
                 float btnW = (contentW - GAP) * 0.5f;
                 float btnX = contentX + col * (btnW + GAP);
-                if (row == 2) {
-                    btnW = contentW;
-                    btnX = contentX;
-                }
                 float btnY = currentY + row * (BUTTON_HEIGHT + GAP);
                 if (isHovered(mouseX, mouseY, btnX, btnY, btnW, BUTTON_HEIGHT)) {
                     runAction(index);
@@ -209,7 +202,15 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                         status = importedComponent.getTranslatedName() + " " + imported;
                     }
                 }
-                case 4 ->
+                case 4 -> {
+                    if (!value.isEmpty()) {
+                        String created = ConfigManager.INSTANCE.newDefaultConfig(value);
+                        inputField.setText(created);
+                        inputField.setCursorToEnd();
+                        status = createdComponent.getTranslatedName() + " " + created;
+                    }
+                }
+                case 5 ->
                         status = openFolderComponent.getTranslatedName() + " " + ConfigFolderOpener.openConfigFolder();
                 default -> {
                 }
