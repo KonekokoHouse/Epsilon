@@ -79,6 +79,8 @@ public class ElytraFly extends Module {
     private void onTick(TickEvent.Pre event) {
         if (nullCheck()) return;
 
+        redirectRotation(); // 让你转你就受着
+
         switch (mode.getValue()) {
             case Control -> updateControl();
             //case Boost -> updateBoost();
@@ -105,8 +107,6 @@ public class ElytraFly extends Module {
             hasFirstFirework = false;
             return;
         }
-
-        redirectRotation();
 
         if (armored.getValue()) {
             if (canFFlying()) {
