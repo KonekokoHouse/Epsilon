@@ -78,7 +78,6 @@ public class ModuleManager {
                 AutoKouZi.INSTANCE,
                 AutoTool.INSTANCE,
                 BreakCooldown.INSTANCE,
-                Disabler.INSTANCE,
                 ElytraSwap.INSTANCE,
                 FakePlayer.INSTANCE,
                 GhostHand.INSTANCE,
