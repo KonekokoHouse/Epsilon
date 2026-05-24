@@ -71,7 +71,10 @@ public class ElytraFly extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (nullCheck()) return;
+        if (nullCheck()) {
+            toggle();
+            return;
+        }
 
         redirectRotation(); // 让你转你就受着
 
