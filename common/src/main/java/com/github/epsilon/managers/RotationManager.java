@@ -37,6 +37,7 @@ public class RotationManager {
 
     private int priority;
     private Runnable callback;
+    private boolean rotationRequested;
 
     private RotationManager() {
         EventBus.INSTANCE.subscribe(this);
@@ -78,6 +79,7 @@ public class RotationManager {
         this.priority = priority.priority;
         this.callback = callback;
         this.active = true;
+        this.rotationRequested = true;
 
         smooth();
     }
@@ -201,6 +203,18 @@ public class RotationManager {
         }
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    private void onTickRotateBack(TickEvent.Pre event) {
+        if (mc.player == null || mc.level == null) return;
+        if (active && !rotationRequested && callback == null) {
+            targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
+            rotationSpeed = 10 * 18;
+            raytrace = null;
+            smoothed = false;
+        }
+        rotationRequested = false;
+    }
+
     @EventHandler
     private void onAnimation(RotationAnimationEvent event) {
         if (active && animationRotation != null && lastAnimationRotation != null) {
@@ -235,8 +249,10 @@ public class RotationManager {
 
         lastAnimationRotation = animationRotation;
         animationRotation = new Rot2f(event.getYaw(), event.getPitch());
-        targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
-        raytrace = null;
+        if (!active) {
+            targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
+            raytrace = null;
+        }
         smoothed = false;
     }
 
