@@ -92,6 +92,19 @@ public class DropdownScreen extends Screen {
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
 
+        // 找出鼠标位置处最上层的可见 panel，被遮挡的 panel 不应响应悬浮
+        DropdownPanel topmostHovered = null;
+        for (int i = panels.size() - 1; i >= 0; i--) {
+            DropdownPanel p = panels.get(i);
+            if (!p.isVisible()) continue;
+            float ph = p.getPanelHeight();
+            if (mouseX >= p.getX() && mouseX <= p.getX() + p.getWidth()
+                    && mouseY >= p.getY() && mouseY <= p.getY() + ph) {
+                topmostHovered = p;
+                break;
+            }
+        }
+
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
             float intro = panel.getIntroValue();
@@ -120,7 +133,9 @@ public class DropdownScreen extends Screen {
             if (actualClipH > 0.5f) {
                 renderer.beginPass();
                 renderer.setScissor(panel.getX(), clipY, panel.getWidth(), actualClipH, height);
-                panel.drawContent(renderer, mouseX, mouseY);
+                int hoverMouseX = panel == topmostHovered ? mouseX : -1;
+                int hoverMouseY = panel == topmostHovered ? mouseY : -1;
+                panel.drawContent(renderer, hoverMouseX, hoverMouseY);
                 renderer.flush();
                 renderer.clearScissor();
             }
@@ -194,7 +209,9 @@ public class DropdownScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        for (DropdownPanel panel : panels) {
+        // 从顶层向底层遍历，确保最上层 panel 优先处理滚轮事件
+        for (int i = panels.size() - 1; i >= 0; i--) {
+            DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
             if (panel.mouseScrolled(mouseX, mouseY, scrollY)) {
                 return true;
