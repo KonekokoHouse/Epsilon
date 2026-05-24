@@ -174,7 +174,7 @@ public class ZealotCrystalPlus extends Module {
     private LivingEntity target;
 
     private final Object workerSignal = new Object();
-    private final Thread workerThread = new Thread(this::workerLoop, "Epsilon-ZealotCrystalPlus");
+    private final Thread workerThread = new Thread(this::workerLoop, "Zealot+");
     private volatile SnapshotData pendingSnapshot;
     private volatile SnapshotData latestSnapshot;
     private volatile AsyncResult asyncResult = AsyncResult.EMPTY;
@@ -376,7 +376,9 @@ public class ZealotCrystalPlus extends Module {
         renderer.drawAndClear();
     }
 
-    public String getInfo() {
+
+    @Override
+    public String hudInfo() {
         return switch (hudInfo.getValue()) {
             case Off -> "";
             case Speed -> String.format(Locale.ROOT, "%.1f", getExplosionSpeed());

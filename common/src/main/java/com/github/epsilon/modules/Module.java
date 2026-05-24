@@ -156,6 +156,10 @@ public class Module {
         return translateComponent != null ? translateComponent.getTranslatedName() : name;
     }
 
+    public String hudInfo() {
+        return null;
+    }
+
     public boolean isHidden() {
         return hidden;
     }

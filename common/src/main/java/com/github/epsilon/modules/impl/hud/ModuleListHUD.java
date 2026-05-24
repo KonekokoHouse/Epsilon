@@ -51,6 +51,7 @@ public class ModuleListHUD extends HudModule {
     private static final float ROW_SPACING = 4.0f;
     private static final float INNER_PADDING_X = 8.0f;
     private static final float ICON_GAP = 4.0f;
+    private static final float HUD_INFO_PADDING = 5.0f;
 
     private final Map<Module, Float> moduleAlphaMap = new HashMap<>();
 
@@ -103,14 +104,25 @@ public class ModuleListHUD extends HudModule {
             float rowX = computeRowX(totalWidth, hAnchor);
 
             float textBoxX, iconBoxX;
+            Color textColor = new Color(255, 255, 255, (int) (235 * alpha));
 
             if (showIcon.getValue()) {
+                boolean hasHudInfo = item.hudInfoWidth() > 0;
+
                 if (iconOnLeft) {
                     iconBoxX = rowX;
-                    textBoxX = rowX + rowHeight + iconGap;
+                    if (hasHudInfo) {
+                        textBoxX = rowX + rowHeight + iconGap + item.hudInfoWidth() + iconGap;
+                    } else {
+                        textBoxX = rowX + rowHeight + iconGap;
+                    }
                 } else {
                     iconBoxX = rowX + totalWidth - rowHeight;
-                    textBoxX = rowX + totalWidth - rowHeight - iconGap - boxWidth;
+                    if (hasHudInfo) {
+                        textBoxX = rowX + totalWidth - rowHeight - iconGap - item.hudInfoWidth() - iconGap - boxWidth;
+                    } else {
+                        textBoxX = rowX + totalWidth - rowHeight - iconGap - boxWidth;
+                    }
                 }
 
                 if (backgroundBlur.getValue()) {
@@ -127,6 +139,28 @@ public class ModuleListHUD extends HudModule {
                 float iconX = iconBoxX + (rowHeight - iconWidth) / 2.0f - 1;
                 float iconY = currentY + (rowHeight - iconHeight) / 2.0f - 2;
                 textRenderer.addText(iconChar, iconX, iconY, moduleScale, new Color(255, 255, 255, (int) (180 * alpha)), StaticFontLoader.ICONS);
+
+                if (hasHudInfo) {
+                    float hudInfoBoxX;
+                    if (iconOnLeft) {
+                        hudInfoBoxX = rowX + rowHeight + iconGap;
+                    } else {
+                        hudInfoBoxX = iconBoxX - iconGap - item.hudInfoWidth();
+                    }
+
+                    if (backgroundBlur.getValue()) {
+                        BlurShader.INSTANCE.render(hudInfoBoxX, currentY, item.hudInfoWidth(), rowHeight, radius, blurStrength.getValue());
+                    }
+                    if (drawShadow.getValue()) {
+                        shadowRenderer.addShadow(hudInfoBoxX, currentY, item.hudInfoWidth(), rowHeight, radius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), alpha));
+                    }
+                    roundRectRenderer.addRoundRect(hudInfoBoxX, currentY, item.hudInfoWidth(), rowHeight, radius, withAlpha(backgroundColor.getValue(), alpha));
+
+                    float hudTextWidth = textRenderer.getWidth(item.hudInfo(), renderScale);
+                    float hudTextX = hudInfoBoxX + (item.hudInfoWidth() - hudTextWidth) / 2.0f;
+                    float hudTextY = currentY + (rowHeight - textRenderer.getHeight(renderScale)) / 2.0f;
+                    textRenderer.addText(item.hudInfo(), hudTextX, hudTextY - 1, renderScale, textColor);
+                }
             } else {
                 textBoxX = rowX;
                 boxWidth = totalWidth;
@@ -140,7 +174,6 @@ public class ModuleListHUD extends HudModule {
             }
             roundRectRenderer.addRoundRect(textBoxX, currentY, boxWidth, rowHeight, radius, withAlpha(backgroundColor.getValue(), alpha));
 
-            Color textColor = new Color(255, 255, 255, (int) (235 * alpha));
             float textX = textBoxX + padX;
             float textY = currentY + (rowHeight - textRenderer.getHeight(renderScale)) / 2.0f;
             textRenderer.addText(item.text(), textX, textY - 1, renderScale, textColor);
@@ -197,10 +230,22 @@ public class ModuleListHUD extends HudModule {
 
             float textWidth = textRenderer.getWidth(text, renderScale);
             float boxWidth = padX + textWidth + padX;
-            float totalWidth = boxWidth;
-            if (showIcon.getValue()) totalWidth = boxWidth + ICON_GAP * moduleScale + ROW_HEIGHT * moduleScale;
 
-            items.add(new ItemInfo(module, text, boxWidth, totalWidth, alpha));
+            String hudInfo = module.hudInfo();
+            float hudInfoWidth = 0;
+            if (showIcon.getValue() && hudInfo != null && !hudInfo.isEmpty()) {
+                hudInfoWidth = HUD_INFO_PADDING * moduleScale + textRenderer.getWidth(hudInfo, renderScale) + HUD_INFO_PADDING * moduleScale;
+            }
+
+            float totalWidth = boxWidth;
+            if (showIcon.getValue()) {
+                totalWidth = boxWidth + ICON_GAP * moduleScale + ROW_HEIGHT * moduleScale;
+                if (hudInfoWidth > 0) {
+                    totalWidth += ICON_GAP * moduleScale + hudInfoWidth;
+                }
+            }
+
+            items.add(new ItemInfo(module, text, boxWidth, totalWidth, alpha, hudInfo, hudInfoWidth));
         }
 
         return items;
@@ -213,9 +258,19 @@ public class ModuleListHUD extends HudModule {
         float padX = INNER_PADDING_X * moduleScale;
         float textWidth = textRenderer.getWidth(getFormattedName(module), renderScale);
         float boxWidth = padX + textWidth + padX;
+
+        String hudInfo = module.hudInfo();
+        float hudInfoWidth = 0;
+        if (showIcon.getValue() && hudInfo != null && !hudInfo.isEmpty()) {
+            hudInfoWidth = HUD_INFO_PADDING * moduleScale + textRenderer.getWidth(hudInfo, renderScale) + HUD_INFO_PADDING * moduleScale;
+        }
+
         float total = boxWidth;
         if (showIcon.getValue()) {
             total = boxWidth + ICON_GAP * moduleScale + ROW_HEIGHT * moduleScale;
+            if (hudInfoWidth > 0) {
+                total += ICON_GAP * moduleScale + hudInfoWidth;
+            }
         }
         return (int) total;
     }
@@ -233,7 +288,7 @@ public class ModuleListHUD extends HudModule {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), a);
     }
 
-    private record ItemInfo(Module module, String text, float boxWidth, float totalWidth, float alpha) {
+    private record ItemInfo(Module module, String text, float boxWidth, float totalWidth, float alpha, String hudInfo, float hudInfoWidth) {
     }
 
 }
