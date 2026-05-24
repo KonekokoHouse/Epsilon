@@ -10,7 +10,6 @@ import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.util.Mth;
 
@@ -39,11 +38,6 @@ public class RotationManager {
     private int priority;
     private Runnable callback;
     private boolean rotationRequested;
-
-    // 记录最近一次移动包的最终旋转值（经过 Disabler 等模块修改后）
-    // 用于确保 USE_ITEM 包的旋转与移动包一致，避免 BadPacketsJ 检测
-    private float lastMovePacketYaw;
-    private float lastMovePacketPitch;
 
     private RotationManager() {
         EventBus.INSTANCE.subscribe(this);
@@ -177,15 +171,10 @@ public class RotationManager {
         rotations = null;
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
-        if (event.getPacket() instanceof ServerboundMovePlayerPacket packet && packet.hasRotation()) {
-            lastMovePacketYaw = packet.yRot;
-            lastMovePacketPitch = packet.xRot;
-        }
-
         if (active && event.getPacket() instanceof ServerboundUseItemPacket packet) {
-            event.setPacket(new ServerboundUseItemPacket(packet.getHand(), packet.getSequence(), lastMovePacketYaw, lastMovePacketPitch));
+            event.setPacket(new ServerboundUseItemPacket(packet.getHand(), packet.getSequence(), rotations.getYaw(), rotations.getPitch()));
         }
     }
 

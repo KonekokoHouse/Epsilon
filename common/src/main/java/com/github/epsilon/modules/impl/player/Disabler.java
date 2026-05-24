@@ -69,9 +69,6 @@ public class Disabler extends Module {
 
     private final Random random = new Random();
 
-    private float lastMovePacketYaw = 0.0f;
-    private float lastMovePacketPitch = 0.0f;
-
     private static final double[] perfectRotSteps = new double[]{0.0, 5.625, 11.25, 16.875, 22.5, 28.125, 33.75, 39.375, 45.0, 50.625, 56.25, 61.875, 67.5, 73.125, 78.75, 84.375, 90.0};
 
     @Override
@@ -218,18 +215,6 @@ public class Disabler extends Module {
             lastYaw = movePacket2.yRot;
             lastPitch = movePacket2.xRot;
         }
-
-        if (event.getPacket() instanceof ServerboundMovePlayerPacket packet && packet.hasRotation()) {
-            lastMovePacketYaw = packet.yRot;
-            lastMovePacketPitch = packet.xRot;
-        }
-
-        if (event.getPacket() instanceof ServerboundUseItemPacket packet) {
-            if (aimModulo360.getValue() || duplicateRotPlace.getValue() || acaAimStep.getValue() || acaPerfectRotation.getValue()) {
-                packet.yRot = lastMovePacketYaw;
-                packet.xRot = lastMovePacketPitch;
-            }
-        }
     }
 
     @EventHandler
@@ -268,8 +253,6 @@ public class Disabler extends Module {
         lastPlacedYawDiff = 0.0f;
         lastPlacedPitchDiff = 0.0f;
         rotated = false;
-        lastMovePacketYaw = 0.0f;
-        lastMovePacketPitch = 0.0f;
         inventoryTimer.reset();
     }
 

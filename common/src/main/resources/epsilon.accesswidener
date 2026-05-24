@@ -7,11 +7,6 @@ mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yR
 accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
 mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
 
-accessible field net/minecraft/network/protocol/game/ServerboundUseItemPacket yRot F
-mutable field net/minecraft/network/protocol/game/ServerboundUseItemPacket yRot F
-accessible field net/minecraft/network/protocol/game/ServerboundUseItemPacket xRot F
-mutable field net/minecraft/network/protocol/game/ServerboundUseItemPacket xRot F
-
 accessible class net/minecraft/client/ResourceLoadStateTracker$ReloadState
 
 accessible field net/minecraft/client/player/LocalPlayer positionReminder I
