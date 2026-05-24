@@ -167,6 +167,7 @@ public class ElytraFly extends Module {
         if (swapMode.is(SwapMode.Silent)) {
             InvUtils.swap(rocket.slot(), true);
         } else {
+            raoGuo();
             InvUtils.invSwap(rocket.slot());
         }
 
@@ -267,6 +268,7 @@ public class ElytraFly extends Module {
         mc.player.input.keyPresses = Input.EMPTY;
         mc.getConnection().send(new ServerboundPlayerInputPacket(Input.EMPTY));
         mc.player.lastSentInput = Input.EMPTY;
+        raoGuo();
         shouldRestore = true;
     }
 
@@ -282,6 +284,14 @@ public class ElytraFly extends Module {
         mc.gameMode.handleContainerInput(containerId, containerSlot, 0, ContainerInput.PICKUP, mc.player);
         mc.gameMode.handleContainerInput(containerId, 6, 0, ContainerInput.PICKUP, mc.player);
         mc.gameMode.handleContainerInput(containerId, containerSlot, 0, ContainerInput.PICKUP, mc.player);
+    }
+
+    private void raoGuo() {
+        if (mc.player.isSprinting()) {
+            mc.player.setSprinting(false);
+            mc.player.wasSprinting = false; // BadPacketsF
+            mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+        }
     }
 
     public boolean isArmorMode() {

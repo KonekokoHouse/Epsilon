@@ -30,3 +30,5 @@ accessible field net/minecraft/client/ResourceLoadStateTracker$ReloadState finis
 accessible field net/minecraft/client/ResourceLoadStateTracker reloadState Lnet/minecraft/client/ResourceLoadStateTracker$ReloadState;
 
 accessible field net/minecraft/client/player/LocalPlayer lastSentInput Lnet/minecraft/world/entity/player/Input;
+accessible field net/minecraft/client/player/LocalPlayer wasSprinting Z
+mutable field net/minecraft/client/player/LocalPlayer wasSprinting Z
