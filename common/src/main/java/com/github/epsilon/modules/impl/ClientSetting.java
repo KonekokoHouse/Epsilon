@@ -51,17 +51,16 @@ public class ClientSetting extends Module {
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgNotification = settingGroup("Notification");
 
+    @SuppressWarnings("unused")
+    private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.setScreen(HudEditorScreen.INSTANCE));
+
     // General
     public final KeybindSetting guiKeybind = keybindSetting("Gui Keybind", GLFW.GLFW_KEY_RIGHT_SHIFT).group(sgGeneral);
 
-    public final EnumSetting<GuiMode> guiMode = enumSetting("Gui Mode", GuiMode.Dropdown, _ -> {
-        mc.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
-            case Panel -> PanelScreen.INSTANCE;
-            case Dropdown -> DropdownScreen.INSTANCE;
-        });
-    }).group(sgGeneral);
-
-    private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.setScreen(HudEditorScreen.INSTANCE)).group(sgGeneral);
+    public final EnumSetting<GuiMode> guiMode = enumSetting("Gui Mode", GuiMode.Dropdown, _ -> mc.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
+        case Panel -> PanelScreen.INSTANCE;
+        case Dropdown -> DropdownScreen.INSTANCE;
+    })).group(sgGeneral);
 
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
         TranslateHolder.INSTANCE.refresh();
