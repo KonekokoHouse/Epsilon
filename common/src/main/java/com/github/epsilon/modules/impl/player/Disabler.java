@@ -88,10 +88,10 @@ public class Disabler extends Module {
             return;
         }
 
-        if (this.storedClosePacket != null && this.inventoryTimer.passedMillise(this.inventoryCloseDelay)) {
-            PacketUtils.sendSilently(this.storedClosePacket);
-            this.log("InventoryFrequency: Released stored close packet");
-            this.storedClosePacket = null;
+        if (storedClosePacket != null && inventoryTimer.passedMillise(inventoryCloseDelay)) {
+            PacketUtils.sendSilently(storedClosePacket);
+            log("InventoryFrequency: Released stored close packet");
+            storedClosePacket = null;
         }
     }
 
@@ -109,7 +109,7 @@ public class Disabler extends Module {
                 log("BadPacketsA: Cancelled duplicate slot packet: " + slot);
                 return;
             }
-            if (this.acaFastSwitch.getValue() && lastSlot != -1 && slot != lastSlot) {
+            if (acaFastSwitch.getValue() && lastSlot != -1 && slot != lastSlot) {
                 sendIntermediateSlots(lastSlot, slot);
             }
             log("Processed slot switch: " + lastSlot + " -> " + slot);
@@ -117,33 +117,33 @@ public class Disabler extends Module {
         }
 
         if (acaInventoryFrequency.getValue() && event.getPacket() instanceof ServerboundContainerClosePacket closePacket) {
-            if (this.inventoryOpen) {
+            if (inventoryOpen) {
                 long now = System.currentTimeMillis();
-                long openDuration = now - this.inventoryOpenTime;
+                long openDuration = now - inventoryOpenTime;
                 if (openDuration <= 150L) {
                     event.setCancelled(true);
-                    this.storedClosePacket = closePacket;
-                    this.inventoryCloseDelay = 151L - openDuration;
-                    this.inventoryTimer.reset();
-                    this.log("InventoryFrequency: Storing close packet, will send after " + this.inventoryCloseDelay + "ms");
-                    this.inventoryOpen = false;
+                    storedClosePacket = closePacket;
+                    inventoryCloseDelay = 151L - openDuration;
+                    inventoryTimer.reset();
+                    log("InventoryFrequency: Storing close packet, will send after " + inventoryCloseDelay + "ms");
+                    inventoryOpen = false;
                     return;
                 }
-                this.inventoryOpen = false;
-                this.log("InventoryFrequency: Allowed close packet after " + openDuration + "ms");
+                inventoryOpen = false;
+                log("InventoryFrequency: Allowed close packet after " + openDuration + "ms");
             }
         }
 
-        if (this.themisBlink.getValue()) {
-            if (System.currentTimeMillis() - this.themisBlinkLastSend > 200L) {
-                if (this.themisBlinkCount == 0) {
+        if (themisBlink.getValue()) {
+            if (System.currentTimeMillis() - themisBlinkLastSend > 200L) {
+                if (themisBlinkCount == 0) {
                     PacketUtils.sendSilently(new ServerboundPongPacket(0));
                 }
-                this.themisBlinkLastSend = System.currentTimeMillis();
-                this.themisBlinkCount = 0;
+                themisBlinkLastSend = System.currentTimeMillis();
+                themisBlinkCount = 0;
             }
             if (event.getPacket() instanceof ServerboundMovePlayerPacket.StatusOnly || event.getPacket() instanceof ServerboundPongPacket) {
-                ++this.themisBlinkCount;
+                ++themisBlinkCount;
             }
         }
 
@@ -157,61 +157,63 @@ public class Disabler extends Module {
             }
         }
 
-        if (this.duplicateRotPlace.getValue()) {
+        if (duplicateRotPlace.getValue()) {
             if (event.getPacket() instanceof ServerboundMovePlayerPacket movePacket) {
                 if (movePacket.hasRotation()) {
-                    float prevYaw = this.currentYaw;
-                    float prevPitch = this.currentPitch;
-                    this.currentYaw = movePacket.yRot;
-                    this.currentPitch = movePacket.xRot;
-                    this.yawDiff = Math.abs(this.currentYaw - prevYaw);
-                    this.pitchDiff = Math.abs(this.currentPitch - prevPitch);
-                    this.rotated = true;
+                    float prevYaw = currentYaw;
+                    float prevPitch = currentPitch;
+                    currentYaw = movePacket.yRot;
+                    currentPitch = movePacket.xRot;
+                    yawDiff = Math.abs(currentYaw - prevYaw);
+                    pitchDiff = Math.abs(currentPitch - prevPitch);
+                    rotated = true;
                     float yawDelta;
-                    if (this.yawDiff > 2.0f && (double) (yawDelta = Math.abs(this.yawDiff - this.lastPlacedYawDiff)) < 1.0E-4) {
-                        float jitter = 0.001f + this.random.nextFloat() * 0.009f;
-                        float newYaw = this.currentYaw - jitter;
+                    if (yawDiff > 2.0f && (double) (yawDelta = Math.abs(yawDiff - lastPlacedYawDiff)) < 1.0E-4) {
+                        float jitter = 0.001f + random.nextFloat() * 0.009f;
+                        float newYaw = currentYaw - jitter;
                         movePacket.yRot = newYaw;
-                        this.log("DuplicateRotPlace: Modified yaw from " + this.currentYaw + " to " + newYaw + " (yawDiff: " + yawDelta + ")");
+                        log("DuplicateRotPlace: Modified yaw from " + currentYaw + " to " + newYaw + " (yawDiff: " + yawDelta + ")");
                     }
                     float pitchDelta;
-                    if (this.pitchDiff > 2.0f && (double) (pitchDelta = Math.abs(this.pitchDiff - this.lastPlacedPitchDiff)) < 1.0E-4) {
-                        float jitter = 0.001f + this.random.nextFloat() * 0.009f;
-                        float newPitch = Mth.clamp(this.currentPitch - jitter, -90.0f, 90.0f);
+                    if (pitchDiff > 2.0f && (double) (pitchDelta = Math.abs(pitchDiff - lastPlacedPitchDiff)) < 1.0E-4) {
+                        float jitter = 0.001f + random.nextFloat() * 0.009f;
+                        float newPitch = Mth.clamp(currentPitch - jitter, -90.0f, 90.0f);
                         movePacket.xRot = newPitch;
-                        this.log("DuplicateRotPlace: Modified pitch from " + this.currentPitch + " to " + newPitch + " (pitchDiff: " + pitchDelta + ")");
+                        log("DuplicateRotPlace: Modified pitch from " + currentPitch + " to " + newPitch + " (pitchDiff: " + pitchDelta + ")");
                     }
                 }
-            } else if (event.getPacket() instanceof ServerboundUseItemOnPacket && this.rotated) {
-                this.lastPlacedYawDiff = this.yawDiff;
-                this.lastPlacedPitchDiff = this.pitchDiff;
-                this.rotated = false;
+            } else if (event.getPacket() instanceof ServerboundUseItemOnPacket && rotated) {
+                lastPlacedYawDiff = yawDiff;
+                lastPlacedPitchDiff = pitchDiff;
+                rotated = false;
             }
         }
 
-        if ((this.acaAimStep.getValue() || this.acaPerfectRotation.getValue()) && event.getPacket() instanceof ServerboundMovePlayerPacket movePacket2) {
-            float[] fArray;
+        if ((acaAimStep.getValue() || acaPerfectRotation.getValue()) && event.getPacket() instanceof ServerboundMovePlayerPacket movePacket2) {
             float yawAim = movePacket2.yRot;
             float pitchAim = movePacket2.xRot;
             boolean modified = false;
-            if (this.acaAimStep.getValue() && this.isAimStepRotation(yawAim, pitchAim)) {
-                float[] fArray2 = this.applyAimStep(yawAim, pitchAim);
-                yawAim = fArray2[0];
-                pitchAim = fArray2[1];
+            if (acaAimStep.getValue() && isAimStepRotation(yawAim, pitchAim)) {
+                float[] arr = applyAimStep(yawAim, pitchAim);
+                yawAim = arr[0];
+                pitchAim = arr[1];
                 modified = true;
             }
-            if (this.acaPerfectRotation.getValue() && ((fArray = this.applyPerfectRotation(yawAim, pitchAim))[0] != yawAim || fArray[1] != pitchAim)) {
-                yawAim = fArray[0];
-                pitchAim = fArray[1];
-                modified = true;
-                this.log("PerfectRotation: Modified rotation");
+            if (acaPerfectRotation.getValue()) {
+                float[] arr = applyPerfectRotation(yawAim, pitchAim);
+                if (arr[0] != yawAim || arr[1] != pitchAim) {
+                    yawAim = arr[0];
+                    pitchAim = arr[1];
+                    modified = true;
+                    log("PerfectRotation: Modified rotation");
+                }
             }
             if (modified) {
                 movePacket2.yRot = yawAim;
                 movePacket2.xRot = Mth.clamp(pitchAim, -90.0f, 90.0f);
             }
-            this.lastYaw = movePacket2.yRot;
-            this.lastPitch = movePacket2.xRot;
+            lastYaw = movePacket2.yRot;
+            lastPitch = movePacket2.xRot;
         }
     }
 
@@ -228,10 +230,30 @@ public class Disabler extends Module {
         }
 
         if (event.getPacket() instanceof ClientboundOpenScreenPacket) {
-            this.inventoryOpenTime = System.currentTimeMillis();
-            this.inventoryOpen = true;
-            this.log("Inventory opened at: " + this.inventoryOpenTime);
+            inventoryOpenTime = System.currentTimeMillis();
+            inventoryOpen = true;
+            log("Inventory opened at: " + inventoryOpenTime);
         }
+    }
+
+    private void resetState() {
+        lastSlot = -1;
+        inventoryOpenTime = 0L;
+        inventoryOpen = false;
+        storedClosePacket = null;
+        inventoryCloseDelay = 0L;
+        themisBlinkLastSend = System.currentTimeMillis();
+        themisBlinkCount = 0;
+        lastYaw = 0.0f;
+        lastPitch = 0.0f;
+        currentYaw = 0.0f;
+        currentPitch = 0.0f;
+        yawDiff = 0.0f;
+        pitchDiff = 0.0f;
+        lastPlacedYawDiff = 0.0f;
+        lastPlacedPitchDiff = 0.0f;
+        rotated = false;
+        inventoryTimer.reset();
     }
 
     private void sendIntermediateSlots(int fromSlot, int toSlot) {
@@ -241,7 +263,7 @@ public class Disabler extends Module {
             for (int slot = fromSlot + step; slot != toSlot; slot += step) {
                 if (slot < 0 || slot > 8) continue;
                 PacketUtils.sendSilently(new ServerboundSetCarriedItemPacket(slot));
-                this.log("Sent intermediate slot: " + slot);
+                log("Sent intermediate slot: " + slot);
             }
         }
     }
@@ -250,29 +272,9 @@ public class Disabler extends Module {
         return fromSlot == 0 && toSlot == 8 || fromSlot == 8 && toSlot == 0;
     }
 
-    private void resetState() {
-        this.lastSlot = -1;
-        this.inventoryOpenTime = 0L;
-        this.inventoryOpen = false;
-        this.storedClosePacket = null;
-        this.inventoryCloseDelay = 0L;
-        this.themisBlinkLastSend = System.currentTimeMillis();
-        this.themisBlinkCount = 0;
-        this.lastYaw = 0.0f;
-        this.lastPitch = 0.0f;
-        this.currentYaw = 0.0f;
-        this.currentPitch = 0.0f;
-        this.yawDiff = 0.0f;
-        this.pitchDiff = 0.0f;
-        this.lastPlacedYawDiff = 0.0f;
-        this.lastPlacedPitchDiff = 0.0f;
-        this.rotated = false;
-        this.inventoryTimer.reset();
-    }
-
     private boolean shouldSkip() {
         return nullCheck()
-                || this.onlyRemoteServer.getValue() && mc.isSingleplayer()
+                || onlyRemoteServer.getValue() && mc.isSingleplayer()
                 || mc.player.isSpectator()
                 || !mc.player.isAlive()
                 || mc.player.isDeadOrDying()
@@ -280,52 +282,52 @@ public class Disabler extends Module {
     }
 
     private boolean isAimStepRotation(float yaw, float pitch) {
-        if (this.lastYaw == 0.0f && this.lastPitch == 0.0f) {
+        if (lastYaw == 0.0f && lastPitch == 0.0f) {
             return false;
         }
-        double yawDelta = Math.abs(Mth.wrapDegrees(yaw - this.lastYaw));
-        double pitchDelta = Math.abs(pitch - this.lastPitch);
+        double yawDelta = Math.abs(Mth.wrapDegrees(yaw - lastYaw));
+        double pitchDelta = Math.abs(pitch - lastPitch);
         boolean yawStuck = yawDelta < 1.0E-5 && pitchDelta > 1.0;
         boolean pitchStuck = pitchDelta < 1.0E-5 && yawDelta > 1.0;
         return yawStuck || pitchStuck;
     }
 
     private float[] applyAimStep(float yaw, float pitch) {
-        double yawDelta = Math.abs(Mth.wrapDegrees(yaw - this.lastYaw));
-        double pitchDelta = Math.abs(pitch - this.lastPitch);
+        double yawDelta = Math.abs(Mth.wrapDegrees(yaw - lastYaw));
+        double pitchDelta = Math.abs(pitch - lastPitch);
         float newYaw = yaw;
         float newPitch = pitch;
         if (yawDelta < 1.0E-5 && pitchDelta > 1.0) {
-            newYaw = this.lastYaw + (float) (this.random.nextGaussian() * 0.001);
+            newYaw = lastYaw + (float) (random.nextGaussian() * 0.001);
         }
         if (pitchDelta < 1.0E-5 && yawDelta > 1.0) {
-            newPitch = this.lastPitch + (float) (this.random.nextGaussian() * 0.001);
+            newPitch = lastPitch + (float) (random.nextGaussian() * 0.001);
         }
         return new float[]{newYaw, newPitch};
     }
 
     private float[] applyPerfectRotation(float yaw, float pitch) {
         double jitter;
-        if (this.lastYaw == 0.0f && this.lastPitch == 0.0f) {
+        if (lastYaw == 0.0f && lastPitch == 0.0f) {
             return new float[]{yaw, pitch};
         }
-        double yawDelta = Math.abs(Mth.wrapDegrees(yaw - this.lastYaw));
-        double pitchDelta = Math.abs(pitch - this.lastPitch);
+        double yawDelta = Math.abs(Mth.wrapDegrees(yaw - lastYaw));
+        double pitchDelta = Math.abs(pitch - lastPitch);
         float newYaw = yaw;
         float newPitch = pitch;
-        if (!this.isNearZeroOrMultiple(yawDelta) && this.isKnownRotationStep(yawDelta)) {
-            jitter = this.random.nextGaussian() * 0.005;
+        if (!isNearZeroOrMultiple(yawDelta) && isKnownRotationStep(yawDelta)) {
+            jitter = random.nextGaussian() * 0.005;
             newYaw = yaw + (float) jitter;
         }
-        if (!this.isNearZeroOrMultiple(pitchDelta) && this.isKnownRotationStep(pitchDelta)) {
-            jitter = this.random.nextGaussian() * 0.005;
+        if (!isNearZeroOrMultiple(pitchDelta) && isKnownRotationStep(pitchDelta)) {
+            jitter = random.nextGaussian() * 0.005;
             newPitch = pitch + (float) jitter;
         }
         return new float[]{newYaw, newPitch};
     }
 
     private boolean isNearZeroOrMultiple(double value) {
-        return Math.abs(value) <= 1.0E-10 || this.isMultipleOf(360.0, value);
+        return Math.abs(value) <= 1.0E-10 || isMultipleOf(360.0, value);
     }
 
     private boolean isMultipleOf(double base, double value) {
@@ -337,12 +339,9 @@ public class Disabler extends Module {
     }
 
     private boolean isKnownRotationStep(double value) {
-        if (Double.isInfinite(value) || Double.isNaN(value)) {
-            return false;
-        }
+        if (Double.isInfinite(value) || Double.isNaN(value)) return false;
         for (double step : perfectRotSteps) {
-            if (!this.isMultipleOf(step, value)) continue;
-            return true;
+            if (isMultipleOf(step, value)) return true;
         }
         return false;
     }
