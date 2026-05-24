@@ -155,6 +155,10 @@ public class DropdownScreen extends Screen {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
             if (panel.mouseClicked(mx, my, button)) {
+                if (i < panels.size() - 1) {
+                    panels.remove(i);
+                    panels.add(panel);
+                }
                 DropdownLayoutState.save(panels);
                 return true;
             }
