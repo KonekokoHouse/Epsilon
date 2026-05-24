@@ -10,7 +10,6 @@ import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.util.Mth;
 
 import java.util.function.Function;
@@ -172,13 +171,6 @@ public class RotationManager {
     }
 
     @EventHandler
-    private void onPacketSend(PacketEvent.Send event) {
-        if (active && event.getPacket() instanceof ServerboundUseItemPacket packet) {
-            event.setPacket(new ServerboundUseItemPacket(packet.getHand(), packet.getSequence(), rotations.getYaw(), rotations.getPitch()));
-        }
-    }
-
-    @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket || event.getPacket() instanceof ClientboundPlayerRotationPacket) {
             s08 = true;
@@ -297,6 +289,14 @@ public class RotationManager {
     @EventHandler
     private void onFallFlying(FallFlyingEvent event) {
         if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
+            event.setPitch(rotations.getPitch());
+        }
+    }
+
+    @EventHandler
+    private void onUseItem(UseItemEvent event) {
+        if (active && rotations != null) {
+            event.setYaw(rotations.getYaw());
             event.setPitch(rotations.getPitch());
         }
     }
