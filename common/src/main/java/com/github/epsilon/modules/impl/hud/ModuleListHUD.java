@@ -111,11 +111,7 @@ public class ModuleListHUD extends HudModule {
 
                 if (iconOnLeft) {
                     iconBoxX = rowX;
-                    if (hasHudInfo) {
-                        textBoxX = rowX + rowHeight + iconGap + item.hudInfoWidth() + iconGap;
-                    } else {
-                        textBoxX = rowX + rowHeight + iconGap;
-                    }
+                    textBoxX = rowX + rowHeight + iconGap;
                 } else {
                     iconBoxX = rowX + totalWidth - rowHeight;
                     if (hasHudInfo) {
@@ -143,7 +139,7 @@ public class ModuleListHUD extends HudModule {
                 if (hasHudInfo) {
                     float hudInfoBoxX;
                     if (iconOnLeft) {
-                        hudInfoBoxX = rowX + rowHeight + iconGap;
+                        hudInfoBoxX = textBoxX + boxWidth + iconGap;
                     } else {
                         hudInfoBoxX = iconBoxX - iconGap - item.hudInfoWidth();
                     }
