@@ -12,7 +12,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
     private static final float VALUE_TEXT_SCALE = 0.46f;
-    private static final float VALUE_TEXT_Y_OFFSET = 4.0f;
+    private static final float VALUE_TEXT_Y_OFFSET = 3.0f;
 
     private final DropdownTextField inputField = new DropdownTextField(16, value -> value.matches("[0-9.\\-]"));
     private boolean dragging;
@@ -23,7 +23,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     @Override
     public float getHeight() {
-        return DropdownTheme.SETTING_HEIGHT + 17.0f;
+        return DropdownTheme.SETTING_HEIGHT + 15.0f;
     }
 
     @Override
@@ -215,7 +215,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
     }
 
     private float getEditorHeight() {
-        return DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 7.0f;
+        return DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 5.0f;
     }
 
     private boolean isEditorBoundsHovered(double mouseX, double mouseY) {
@@ -223,7 +223,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
     }
 
     private boolean isEditorHitboxHovered(double mouseX, double mouseY) {
-        return isHovered(mouseX, mouseY, getTrackX(), getTrackY() - 3.0f, getTrackWidth(), DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 7.0f);
+        return isHovered(mouseX, mouseY, getTrackX(), getTrackY() - 3.0f, getTrackWidth(), DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 5.0f);
     }
 
     private String formatValue(double value) {

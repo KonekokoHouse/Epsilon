@@ -110,15 +110,16 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
 
     @Override
     protected boolean mouseClickedContent(double mouseX, double mouseY, int button) {
-        if (button != 0) return false;
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING;
-        for (int index = 0; index < entries.size(); index++) {
-            Entry entry = entries.get(index);
-            float iconX = getIconX(index);
-            float iconY = currentY + (index / ICON_COLUMNS) * (ICON_SIZE + ICON_GAP);
-            if (isHovered(mouseX, mouseY, iconX, iconY, ICON_SIZE, ICON_SIZE)) {
-                entry.action.accept(entry.panelId);
-                return true;
+        if (button == 0) {
+            for (int index = 0; index < entries.size(); index++) {
+                Entry entry = entries.get(index);
+                float iconX = getIconX(index);
+                float iconY = currentY + (index / ICON_COLUMNS) * (ICON_SIZE + ICON_GAP);
+                if (isHovered(mouseX, mouseY, iconX, iconY, ICON_SIZE, ICON_SIZE)) {
+                    entry.action.accept(entry.panelId);
+                    return true;
+                }
             }
         }
         int rows = getIconRows();
