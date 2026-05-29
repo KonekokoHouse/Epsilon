@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -15,18 +16,12 @@ public class AutoSprint extends Module {
         super("Auto Sprint", Category.MOVEMENT);
     }
 
-
     public final BoolSetting keepSprint = boolSetting("Keep Sprint", false);
     public final DoubleSetting motion = doubleSetting("Motion", 1.0, 0.0, 1.0, 0.1, keepSprint::getValue);
 
-    @Override
-    protected void onDisable() {
-        mc.options.keySprint.setDown(false);
-    }
-
     @EventHandler
-    private void onTick(TickEvent.Pre event) {
-        if (!nullCheck()) mc.options.keySprint.setDown(true);
+    private void onKeyboardEvent(KeyboardInputEvent event) {
+        event.setSprinting(true);
     }
 
 }

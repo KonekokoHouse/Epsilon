@@ -8,8 +8,8 @@ import org.lwjgl.glfw.GLFW;
 
 public class IntSliderWidget extends SettingWidget<IntSetting> {
 
-    private static final float VALUE_FIELD_WIDTH = 40.0f;
-    private static final float VALUE_FIELD_HEIGHT = 12.0f;
+    private static final float VALUE_TEXT_SCALE = 0.46f;
+    private static final float VALUE_TEXT_Y_OFFSET = 4.0f;
 
     private final DropdownTextField inputField = new DropdownTextField(12, value -> value.matches("[0-9-]"));
     private boolean dragging;
@@ -20,7 +20,7 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
 
     @Override
     public float getHeight() {
-        return DropdownTheme.SETTING_HEIGHT + 8.0f;
+        return DropdownTheme.SETTING_HEIGHT + 17.0f;
     }
 
     @Override
@@ -30,58 +30,62 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
 
         renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        String valueStr = inputField.isFocused()
-                ? inputField.getText()
-                : (setting.isPercentageMode() ? setting.getValue() + "%" : String.valueOf(setting.getValue()));
-        if (!inputField.isFocused() && !inputField.getText().equals(valueStr)) {
-            inputField.setText(valueStr);
-        }
-        inputField.draw(renderer, getFieldX(), getFieldY(), VALUE_FIELD_WIDTH, VALUE_FIELD_HEIGHT, mouseX, mouseY, valueStr, DropdownTheme.SETTING_TEXT_SCALE);
-
-        float trackX = x + DropdownTheme.SETTING_PADDING_X;
-        float trackY = y + DropdownTheme.SETTING_HEIGHT;
-        float trackW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
+        float trackX = getTrackX();
+        float trackY = getTrackY();
+        float trackW = getTrackWidth();
         float trackH = DropdownTheme.SLIDER_HEIGHT;
 
-        renderer.roundRect().addRoundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack());
+        boolean editing = inputField.isFocused();
+        if (editing) {
+            inputField.draw(renderer, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight(), mouseX, mouseY, Integer.toString(setting.getValue()), DropdownTheme.SETTING_TEXT_SCALE);
+        } else {
+            renderer.roundRect().addRoundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack());
 
-        float activeW = trackW * sliderRatio;
-        if (activeW > 0.5f) {
-            renderer.roundRect().addRoundRect(trackX, trackY, activeW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderActive());
+            float activeW = trackW * sliderRatio;
+            if (activeW > 0.5f) {
+                renderer.roundRect().addRoundRect(trackX, trackY, activeW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderActive());
+            }
+
+            float knobX = trackX + trackW * sliderRatio;
+            float knobY = trackY + trackH * 0.5f;
+            float kr = DropdownTheme.SLIDER_KNOB_RADIUS;
+            renderer.roundRect().addRoundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());
+
+            if (dragging) {
+                float rawRatio = Mth.clamp((float) (mouseX - trackX) / trackW, 0.0f, 1.0f);
+                int range = setting.getMax() - setting.getMin();
+                int step = setting.getStep();
+                int value = setting.getMin() + Math.round(rawRatio * range / step) * step;
+                setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+            }
         }
 
-        float knobX = trackX + trackW * sliderRatio;
-        float knobY = trackY + trackH * 0.5f;
-        float kr = DropdownTheme.SLIDER_KNOB_RADIUS;
-        renderer.roundRect().addRoundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());
-
-        if (dragging) {
-            float rawRatio = Mth.clamp((float) (mouseX - trackX) / trackW, 0.0f, 1.0f);
-            int range = setting.getMax() - setting.getMin();
-            int step = setting.getStep();
-            int value = setting.getMin() + Math.round(rawRatio * range / step) * step;
-            setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+        if (!editing) {
+            drawValueLabels(renderer, trackX, trackY, trackW);
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+        if (button == 1) {
             String plainValue = Integer.toString(setting.getValue());
-            if (inputField.focusIfContains(mouseX, mouseY, getFieldX(), getFieldY(), VALUE_FIELD_WIDTH, VALUE_FIELD_HEIGHT)) {
+            if (isEditorHitboxHovered(mouseX, mouseY)) {
                 inputField.setText(plainValue);
+                inputField.focusIfContains(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight());
                 inputField.setCursorToEnd();
                 dragging = false;
                 return true;
             }
+        }
+        if (button == 0) {
             if (inputField.isFocused()) {
+                if (isEditorBoundsHovered(mouseX, mouseY)) {
+                    return true;
+                }
                 commitInput();
                 inputField.blur();
             }
-            float trackX = x + DropdownTheme.SETTING_PADDING_X;
-            float trackY = y + DropdownTheme.SETTING_HEIGHT - 3.0f;
-            float trackW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
-            if (isHovered(mouseX, mouseY, trackX, trackY, trackW, DropdownTheme.SLIDER_HEIGHT + 6.0f)) {
+            if (isEditorHitboxHovered(mouseX, mouseY)) {
                 dragging = true;
                 return true;
             }
@@ -95,8 +99,8 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
             dragging = false;
             return true;
         }
-        if (button == 0 && inputField.isFocused()) {
-            if (isHovered(mouseX, mouseY, getFieldX(), getFieldY(), VALUE_FIELD_WIDTH, VALUE_FIELD_HEIGHT)) {
+        if (inputField.isFocused()) {
+            if (isEditorBoundsHovered(mouseX, mouseY)) {
                 return true;
             }
             commitInput();
@@ -164,12 +168,59 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
         }
     }
 
-    private float getFieldX() {
-        return x + width - DropdownTheme.SETTING_PADDING_X - VALUE_FIELD_WIDTH;
+    private void drawValueLabels(DropdownRenderer renderer, float trackX, float trackY, float trackW) {
+        String minValue = formatValue(setting.getMin());
+        String currentValue = formatValue(setting.getValue());
+        String maxValue = formatValue(setting.getMax());
+        float textY = trackY + DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET;
+
+        renderer.text().addText(minValue, trackX, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted());
+
+        float currentWidth = renderer.text().getWidth(currentValue, VALUE_TEXT_SCALE);
+        renderer.text().addText(currentValue, trackX + (trackW - currentWidth) * 0.5f, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabel());
+
+        float maxWidth = renderer.text().getWidth(maxValue, VALUE_TEXT_SCALE);
+        renderer.text().addText(maxValue, trackX + trackW - maxWidth, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted());
     }
 
-    private float getFieldY() {
-        return y + 2.0f;
+    private String formatValue(int value) {
+        return setting.isPercentageMode() ? value + "%" : Integer.toString(value);
+    }
+
+    private float getTrackX() {
+        return x + DropdownTheme.SETTING_PADDING_X;
+    }
+
+    private float getTrackY() {
+        return y + DropdownTheme.SETTING_HEIGHT;
+    }
+
+    private float getTrackWidth() {
+        return width - DropdownTheme.SETTING_PADDING_X * 2.0f;
+    }
+
+    private float getEditorX() {
+        return getTrackX();
+    }
+
+    private float getEditorY() {
+        return getTrackY() - 3.0f;
+    }
+
+    private float getEditorWidth() {
+        return getTrackWidth();
+    }
+
+    private float getEditorHeight() {
+        return DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 7.0f;
+    }
+
+    private boolean isEditorBoundsHovered(double mouseX, double mouseY) {
+        return isHovered(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight());
+    }
+
+    private boolean isEditorHitboxHovered(double mouseX, double mouseY) {
+        return isHovered(mouseX, mouseY, getTrackX(), getTrackY() - 3.0f, getTrackWidth(), DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 7.0f);
     }
 
 }

@@ -31,11 +31,8 @@ public class DropdownTextField {
     }
 
     public void draw(DropdownRenderer renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
-        boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
-        renderer.roundRect().addRoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS,
-                DropdownTheme.inputSurface(focused));
-        renderer.outline().addOutline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f,
-                focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
+        renderer.roundRect().addRoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
+        renderer.outline().addOutline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
