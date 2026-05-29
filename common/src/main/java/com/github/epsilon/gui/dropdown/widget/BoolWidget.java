@@ -3,6 +3,8 @@ package com.github.epsilon.gui.dropdown.widget;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -90,7 +92,9 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
             float sx = x + width - DropdownTheme.SETTING_PADDING_X - sw;
             float sy = y + (getHeight() - sh) * 0.5f;
             if (isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4)) {
-                setting.setValue(!setting.getValue());
+                boolean newValue = !setting.getValue();
+                setting.setValue(newValue);
+                SoundManager.INSTANCE.playInUi(newValue ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
                 return true;
             }
         }

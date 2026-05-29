@@ -3,6 +3,8 @@ package com.github.epsilon.gui.dropdown.widget;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.managers.sound.SoundKey;
+import com.github.epsilon.managers.sound.SoundManager;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -77,6 +79,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (expanded && keyCode == GLFW.GLFW_KEY_ESCAPE) {
             expanded = false;
+            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
             return true;
         }
         return false;
@@ -129,6 +132,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     private boolean handleFieldClick(int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && getHiddenModeCount() > 0) {
             expanded = !expanded;
+            SoundManager.INSTANCE.playInUi(expanded ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
             return true;
         }
         return expanded;
@@ -139,9 +143,11 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         if (mode != null) {
             setting.setMode(mode.name());
             expanded = false;
+            SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
             return true;
         }
         expanded = false;
+        SoundManager.INSTANCE.playInUi(SoundKey.SETTINGS_CLOSE);
         return false;
     }
 
