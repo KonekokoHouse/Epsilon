@@ -19,14 +19,6 @@ import java.util.function.Supplier;
 
 public class NotificationsHUD extends HudModule {
 
-    private static final long BAR_ENTER_DURATION = 300L;
-    private static final long CONTENT_ENTER_DURATION = 200L;
-    private static final long CONTENT_EXIT_DURATION = 200L;
-    private static final long BAR_EXIT_DURATION = 300L;
-    private static final float MIN_BOX_WIDTH = 160.0f;
-    private static final float ACCENT_BAR_WIDTH = 3.2f;
-    private static final float TEXT_PADDING = 3.5f;
-
     public static final NotificationsHUD INSTANCE = new NotificationsHUD();
 
     private NotificationsHUD() {
@@ -36,6 +28,10 @@ public class NotificationsHUD extends HudModule {
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
     private final IntSetting backgroundAlpha = intSetting("Background Alpha", 200, 0, 255, 1);
     public final IntSetting displayTime = intSetting("Display Time", 2000, 500, 5000, 100);
+
+    private static final float MIN_BOX_WIDTH = 160.0f;
+    private static final float ACCENT_BAR_WIDTH = 3.2f;
+    private static final float TEXT_PADDING = 3.5f;
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
     private final Supplier<RectRenderer> rectRendererSupplier = Suppliers.memoize(RectRenderer::create);
@@ -88,7 +84,7 @@ public class NotificationsHUD extends HudModule {
         rectRenderer.drawAndClear();
         textRenderer.drawAndClear();
 
-        setBounds(anchorWidth, resolvedHeight);
+        setBounds(anchorWidth, boxHeight);
     }
 
     private float getBoxWidth(TextRenderer textRenderer, Notification notification, float scale) {
@@ -108,13 +104,13 @@ public class NotificationsHUD extends HudModule {
     private RenderFrame getRenderFrame(Notification notification, float occupiedHeight) {
         long elapsedTime = notification.getElapsedTime();
         if (!notification.shouldSkipIntroAnim()) {
-            if (elapsedTime <= BAR_ENTER_DURATION) {
-                float progress = Easing.EASE_OUT_CUBIC.getFunction().apply(elapsedTime / (float) BAR_ENTER_DURATION);
+            if (elapsedTime <= 300L) {
+                float progress = Easing.EASE_OUT_CUBIC.getFunction().apply(elapsedTime / 300.0f);
                 return new RenderFrame(RenderStage.ENTER_BAR, progress, occupiedHeight * progress);
             }
 
-            if (elapsedTime <= BAR_ENTER_DURATION + CONTENT_ENTER_DURATION) {
-                float progress = Easing.EASE_OUT_CUBIC.getFunction().apply((elapsedTime - BAR_ENTER_DURATION) / (float) CONTENT_ENTER_DURATION);
+            if (elapsedTime <= 500L) {
+                float progress = Easing.EASE_OUT_CUBIC.getFunction().apply((elapsedTime - 300L) / 200.0f);
                 return new RenderFrame(RenderStage.ENTER_CONTENT, progress, occupiedHeight);
             }
         }
@@ -124,13 +120,13 @@ public class NotificationsHUD extends HudModule {
             return new RenderFrame(RenderStage.SHOW, 1.0f, occupiedHeight);
         }
 
-        if (exitTime <= CONTENT_EXIT_DURATION) {
-            float progress = 1.0f - Easing.EASE_OUT_CUBIC.getFunction().apply(exitTime / (float) CONTENT_EXIT_DURATION);
+        if (exitTime <= 200L) {
+            float progress = 1.0f - Easing.EASE_OUT_CUBIC.getFunction().apply(exitTime / 200.0f);
             return new RenderFrame(RenderStage.EXIT_CONTENT, progress, occupiedHeight);
         }
 
-        if (exitTime <= CONTENT_EXIT_DURATION + BAR_EXIT_DURATION) {
-            float progress = 1.0f - Easing.EASE_OUT_CUBIC.getFunction().apply((exitTime - CONTENT_EXIT_DURATION) / (float) BAR_EXIT_DURATION);
+        if (exitTime <= 500L) {
+            float progress = 1.0f - Easing.EASE_OUT_CUBIC.getFunction().apply((exitTime - 200L) / 300.0f);
             return new RenderFrame(RenderStage.EXIT_BAR, progress, occupiedHeight * progress);
         }
 
