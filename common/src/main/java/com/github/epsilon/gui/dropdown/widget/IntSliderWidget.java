@@ -11,6 +11,7 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
 
     private static final float VALUE_TEXT_SCALE = 0.46f;
     private static final float VALUE_TEXT_Y_OFFSET = 3.0f;
+    private static final float EDITOR_Y_OFFSET = 5.0f;
 
     private final DropdownTextField inputField = new DropdownTextField(12, value -> value.matches("[0-9-]"));
     private boolean dragging;
@@ -221,7 +222,7 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
     }
 
     private float getEditorY() {
-        return getTrackY() - 3.0f;
+        return getTrackY() - EDITOR_Y_OFFSET;
     }
 
     private float getEditorWidth() {
@@ -229,7 +230,7 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
     }
 
     private float getEditorHeight() {
-        return DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 5.0f;
+        return DropdownTheme.INPUT_HEIGHT;
     }
 
     private boolean isEditorBoundsHovered(double mouseX, double mouseY) {
@@ -237,7 +238,7 @@ public class IntSliderWidget extends SettingWidget<IntSetting> {
     }
 
     private boolean isEditorHitboxHovered(double mouseX, double mouseY) {
-        return isHovered(mouseX, mouseY, getTrackX(), getTrackY() - 3.0f, getTrackWidth(), DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET + 5.0f);
+        return isHovered(mouseX, mouseY, getTrackX(), getEditorY(), getTrackWidth(), DropdownTheme.INPUT_HEIGHT);
     }
 
 }
