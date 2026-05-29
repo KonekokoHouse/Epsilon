@@ -227,5 +227,5 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
     protected boolean isEditorHitboxHovered(double mouseX, double mouseY) {
         return isHovered(mouseX, mouseY, getTrackX(), getEditorY(), getTrackWidth(), DropdownTheme.INPUT_HEIGHT);
     }
-    
+
 }

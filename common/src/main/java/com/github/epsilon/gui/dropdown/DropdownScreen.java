@@ -18,6 +18,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.PreeditEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -306,7 +307,7 @@ public class DropdownScreen extends Screen {
     private void buildPanels() {
         panels.clear();
         int index = 0;
-        MainDropdownPanel mainPanel = new MainDropdownPanel(index++, this::handleMainPanelAction, this::anySubPanelVisible, this::isPanelVisible);
+        MainDropdownPanel mainPanel = new MainDropdownPanel(index++, this::handleMainPanelAction, this::isPanelVisible);
         mainPanel.setPosition(DropdownTheme.PANEL_MARGIN_X, DropdownTheme.PANEL_MARGIN_Y);
         panels.add(mainPanel);
 
@@ -334,17 +335,6 @@ public class DropdownScreen extends Screen {
     }
 
     private void handleMainPanelAction(String panelId) {
-        if ("__collapse_all__".equals(panelId)) {
-            for (DropdownPanel panel : panels) {
-                if (!"main".equals(panel.getId())) {
-                    panel.setVisible(false);
-                    panel.setOpened(false);
-                }
-            }
-            DropdownLayoutState.save(panels);
-            return;
-        }
-
         for (DropdownPanel panel : panels) {
             if (panel.getId().equals(panelId)) {
                 boolean nextVisible = !panel.isVisible();
@@ -356,10 +346,6 @@ public class DropdownScreen extends Screen {
         }
     }
 
-    private boolean anySubPanelVisible() {
-        return panels.stream().anyMatch(panel -> !"main".equals(panel.getId()) && panel.isVisible());
-    }
-
     private boolean isPanelVisible(String panelId) {
         return panels.stream().anyMatch(panel -> panel.getId().equals(panelId) && panel.isVisible());
     }
@@ -367,9 +353,8 @@ public class DropdownScreen extends Screen {
     private float resolveMaxPanelHeight(DropdownPanel panel) {
         float screenLimited = height * 0.72f;
         return switch (panel.getId()) {
-            case "main" -> Math.min(screenLimited, 260.0f);
+            case "main", "addon" -> Math.min(screenLimited, 260.0f);
             case "friend", "config" -> Math.min(screenLimited, 220.0f);
-            case "addon" -> Math.min(screenLimited, 260.0f);
             default -> Math.min(screenLimited, 350.0f);
         };
     }
@@ -392,7 +377,7 @@ public class DropdownScreen extends Screen {
     }
 
     private float getSearchWidth() {
-        return Math.min(200.0f, Math.max(140.0f, width - DropdownTheme.PANEL_MARGIN_X * 2.0f));
+        return Mth.clamp(width - DropdownTheme.PANEL_MARGIN_X * 2.0f, 140.0f, 200.0f);
     }
 
     private float getSearchHeight() {
