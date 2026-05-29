@@ -3,7 +3,11 @@ package com.github.epsilon.modules.impl.hud.notification;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Queue;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -19,49 +23,35 @@ public class NotificationManager {
     private final TranslateComponent enableComponent = EpsilonTranslateComponent.create("modules.notifications hud", "enabled");
     private final TranslateComponent disableComponent = EpsilonTranslateComponent.create("modules.notifications hud", "disabled");
 
-
-    public void post(String title, String subTitle, NotificationMode mode, int displayTime) {
-        makeRoomIfNeeded();
-        Notification notification = new Notification(title, subTitle, mode, displayTime, getScreenHeight(), false);
-        notifications.add(notification);
+    public void post(String title, String subTitle, NotificationMode mode) {
+        enqueue(new Notification(title, subTitle, mode,  false));
     }
 
-    public void postModuleNotification(String moduleName, boolean enabled, int displayTime) {
-        int hashCode = moduleName.hashCode();
+    public void postModuleNotification(String moduleName, boolean enabled) {
+        int notificationId = moduleName.hashCode();
+        String subTitle = getModuleStateText(enabled);
+        NotificationMode mode = NotificationMode.fromEnabled(enabled);
 
-        // 检查是否已存在相同模块的通知
-        Notification existing = hashCodeMap.get(hashCode);
-        if (existing != null) {
-            if (existing.isExiting()) {
-                // 旧通知已经在退出动画中：直接淘汰，避免被强制复活，也避免与新通知同时显示
-                notifications.remove(existing);
-                hashCodeMap.remove(hashCode);
-            } else {
-                // 仍处于正常显示阶段：原地更新内容与计时
-                String newTitle = enabled ? enableComponent.getTranslatedName() : disableComponent.getTranslatedName();
-                NotificationMode mode = enabled ? NotificationMode.Success : NotificationMode.Warning;
-                existing.updateModuleState(newTitle, moduleName, mode, displayTime);
-                return;
-            }
+        Notification existing = hashCodeMap.get(notificationId);
+        if (existing != null && !existing.isExiting()) {
+            existing.refresh(moduleName, subTitle, mode);
+            return;
         }
 
-        // 不存在，创建新的
-        makeRoomIfNeeded();
-        String title = enabled ? enableComponent.getTranslatedName() : disableComponent.getTranslatedName();
-        NotificationMode mode = enabled ? NotificationMode.Success : NotificationMode.Warning;
-        Notification notification = new Notification(hashCode, title, moduleName, mode, displayTime, getScreenHeight(), true);
-        notifications.add(notification);
-        hashCodeMap.put(hashCode, notification);
+        remove(existing);
+
+        Notification notification = new Notification(notificationId, moduleName, subTitle, mode, true);
+        enqueue(notification);
+        hashCodeMap.put(notificationId, notification);
     }
 
     public void update() {
         Iterator<Notification> iterator = notifications.iterator();
         while (iterator.hasNext()) {
             Notification notification = iterator.next();
-            notification.update();
             if (notification.isExpired()) {
                 iterator.remove();
-                hashCodeMap.remove(notification.getHashCode());
+                unregister(notification);
             }
         }
     }
@@ -79,12 +69,33 @@ public class NotificationManager {
         hashCodeMap.clear();
     }
 
+    private void enqueue(Notification notification) {
+        makeRoomIfNeeded();
+        notifications.add(notification);
+    }
+
+    private void remove(Notification notification) {
+        if (notification == null) {
+            return;
+        }
+
+        notifications.remove(notification);
+        unregister(notification);
+    }
+
+    private void unregister(Notification notification) {
+        if (notification != null && notification.isModule()) {
+            hashCodeMap.remove(notification.getId());
+        }
+    }
+
+    private String getModuleStateText(boolean enabled) {
+        return enabled ? enableComponent.getTranslatedName() : disableComponent.getTranslatedName();
+    }
+
     private void makeRoomIfNeeded() {
         if (notifications.size() >= MAX_NOTIFICATIONS) {
-            Notification oldest = notifications.poll();
-            if (oldest != null) {
-                hashCodeMap.remove(oldest.getHashCode());
-            }
+            unregister(notifications.poll());
         }
     }
 

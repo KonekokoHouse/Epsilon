@@ -2,6 +2,7 @@ package com.github.epsilon.modules;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.bus.EventBus;
+import com.github.epsilon.modules.impl.hud.notification.NotificationManager;
 import com.github.epsilon.modules.impl.hud.notification.NotificationsHUD;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
@@ -88,11 +89,11 @@ public class Module {
             this.enabled = enabled;
             if (enabled) {
                 EventBus.INSTANCE.subscribe(this);
-                NotificationsHUD.addModuleNotification(this.getTranslatedName(), true);
+                NotificationManager.INSTANCE.postModuleNotification(this.getTranslatedName(), true);
                 onEnable();
             } else {
                 EventBus.INSTANCE.unsubscribe(this);
-                NotificationsHUD.addModuleNotification(this.getTranslatedName(), false);
+                NotificationManager.INSTANCE.postModuleNotification(this.getTranslatedName(), false);
                 onDisable();
             }
         }
