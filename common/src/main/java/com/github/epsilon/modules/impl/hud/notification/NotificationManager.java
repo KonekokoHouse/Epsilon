@@ -5,8 +5,6 @@ import com.github.epsilon.assets.i18n.TranslateComponent;
 
 import java.util.*;
 
-import static com.github.epsilon.Constants.mc;
-
 public class NotificationManager {
 
     public static final NotificationManager INSTANCE = new NotificationManager();
@@ -93,13 +91,6 @@ public class NotificationManager {
         if (notifications.size() >= MAX_NOTIFICATIONS) {
             unregister(notifications.poll());
         }
-    }
-
-    private float getScreenHeight() {
-        if (mc.getWindow() == null) {
-            return 0;
-        }
-        return mc.getWindow().getGuiScaledHeight();
     }
 
 }

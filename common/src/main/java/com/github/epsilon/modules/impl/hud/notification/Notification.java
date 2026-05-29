@@ -10,7 +10,7 @@ public class Notification {
     private NotificationMode mode;
     private long createTime;
     private final boolean isModule;
-    private boolean skipIntroAnimation = false;
+    private boolean skipIntroAnim = false;
 
     public Notification(int id, String title, String subTitle, NotificationMode mode, boolean isModule) {
         this.id = id;
@@ -30,7 +30,7 @@ public class Notification {
         this.subTitle = newSubTitle;
         this.mode = newMode;
         this.createTime = System.currentTimeMillis();
-        this.skipIntroAnimation = true;
+        this.skipIntroAnim = true;
     }
 
     public boolean isExpired() {
@@ -82,8 +82,8 @@ public class Notification {
         return id;
     }
 
-    public boolean shouldSkipIntroAnimation() {
-        return skipIntroAnimation;
+    public boolean shouldSkipIntroAnim() {
+        return skipIntroAnim;
     }
 
     @Override
