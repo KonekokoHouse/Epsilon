@@ -43,14 +43,8 @@ public class NotificationsHUD extends HudModule {
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         NotificationManager.INSTANCE.update();
-
-        List<Notification> activeNotifications = new ArrayList<>(NotificationManager.INSTANCE.getNotifications());
-        if (activeNotifications.isEmpty()) {
-            Notification preview = createPreviewNotification();
-            if (preview != null) activeNotifications.add(preview);
-        }
-
-        if (activeNotifications.isEmpty()) return;
+        Notification previewNotification = createPreviewNotification();
+        if (NotificationManager.INSTANCE.isEmpty() && previewNotification == null) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
         RectRenderer rectRenderer = rectRendererSupplier.get();
@@ -65,13 +59,19 @@ public class NotificationsHUD extends HudModule {
         List<RenderEntry> entries = new ArrayList<>();
         float totalHeight = 0f;
 
-        for (Notification notification : activeNotifications) {
+        for (Notification notification : NotificationManager.INSTANCE.getNotifications()) {
             RenderFrame frame = getRenderFrame(notification, spacing);
             if (frame.stage == RenderStage.HIDDEN) continue;
 
             float boxWidth = getBoxWidth(textRenderer, notification, s);
             totalHeight += frame.occupiedHeight;
             entries.add(new RenderEntry(notification, boxWidth, frame));
+        }
+
+        if (entries.isEmpty() && previewNotification != null) {
+            float boxWidth = getBoxWidth(textRenderer, previewNotification, s);
+            totalHeight = spacing;
+            entries.add(new RenderEntry(previewNotification, boxWidth, new RenderFrame(RenderStage.SHOW, 1.0f, spacing)));
         }
 
         if (entries.isEmpty()) return;
