@@ -21,7 +21,7 @@ public class Disabler extends Module {
 
     private SettingGroup sgMultiActionsC = settingGroup("MultiActionsC");
 
-    private final BoolSetting badPacketsA = boolSetting("Bad Packets A", true);
+    private final BoolSetting badPacketsA = boolSetting("BadPacketsA", true);
 
     private final BoolSetting sprinting = boolSetting("Sprinting", true).group(sgMultiActionsC);
     private final BoolSetting input = boolSetting("Input", true).group(sgMultiActionsC);
