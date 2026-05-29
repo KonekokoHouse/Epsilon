@@ -23,9 +23,9 @@ public class NotificationsHUD extends HudModule {
     private static final long CONTENT_ENTER_DURATION = 200L;
     private static final long CONTENT_EXIT_DURATION = 200L;
     private static final long BAR_EXIT_DURATION = 300L;
-    private static final float MIN_BOX_WIDTH = 185.0f;
+    private static final float MIN_BOX_WIDTH = 160.0f;
     private static final float ACCENT_BAR_WIDTH = 3.2f;
-    private static final float TEXT_PADDING = 3.2f;
+    private static final float TEXT_PADDING = 3.5f;
 
     public static final NotificationsHUD INSTANCE = new NotificationsHUD();
 
@@ -165,7 +165,7 @@ public class NotificationsHUD extends HudModule {
     }
 
     private void renderText(TextRenderer textRenderer, Notification n, float x, float y, float boxHeight, float s, float textHeight, int alpha) {
-        float textY = y + (boxHeight - textHeight) * 0.5f;
+        float textY = y + boxHeight / 2.0f - s - textRenderer.getLineHeight(s) / 2.0f;
         float textX = x + (isLeftDocked() ? TEXT_PADDING * s : TEXT_PADDING * 2.0f * s);
         textRenderer.addText(n.getTitle(), textX, textY, s, new Color(255, 255, 255, alpha));
         textRenderer.addText(" " + n.getSubTitle(), textX + textRenderer.getWidth(n.getTitle(), s), textY, s, n.getMode().getColor(alpha));
