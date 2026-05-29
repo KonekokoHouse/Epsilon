@@ -39,7 +39,7 @@ public class GUIMove extends Module {
         event.setStrafe(strafe);
         event.setJump(jump);
         if (sneakValue.getValue()) event.setSneak(sneak);
-        event.setSprint(sprint);
+        event.setSprinting(sprint);
     }
 
     private boolean isKeyDown(KeyMapping mapping) {

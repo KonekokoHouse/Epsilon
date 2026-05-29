@@ -8,16 +8,16 @@ public class KeyboardInputEvent {
     private float strafe;
     private boolean jump;
     private boolean sneak;
-    private boolean sprint;
+    private boolean sprinting;
 
-    public KeyboardInputEvent(boolean forward, boolean backward, boolean left, boolean right, boolean jump, boolean sneak, boolean sprint) {
+    public KeyboardInputEvent(boolean forward, boolean backward, boolean left, boolean right, boolean jump, boolean sneak, boolean sprinting) {
         float f = forward == backward ? 0.0F : (forward ? 1.0F : -1.0F);
         float g = left == right ? 0.0F : (left ? 1.0F : -1.0F);
         this.forward = f;
         this.strafe = g;
         this.jump = jump;
         this.sneak = sneak;
-        this.sprint = sprint;
+        this.sprinting = sprinting;
     }
 
     public Input toNewInput() {
@@ -28,7 +28,7 @@ public class KeyboardInputEvent {
                 this.strafe < 0,
                 this.jump,
                 this.sneak,
-                this.sprint
+                this.sprinting
         );
     }
 
@@ -64,12 +64,12 @@ public class KeyboardInputEvent {
         this.sneak = sneak;
     }
 
-    public boolean isSprint() {
-        return sprint;
+    public boolean isSprinting() {
+        return sprinting;
     }
 
-    public void setSprint(boolean sprint) {
-        this.sprint = sprint;
+    public void setSprinting(boolean sprint) {
+        this.sprinting = sprint;
     }
 
 }
