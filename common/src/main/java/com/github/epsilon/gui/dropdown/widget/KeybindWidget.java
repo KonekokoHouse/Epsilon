@@ -39,7 +39,7 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
         buttonW = Math.max(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f);
         buttonH = DropdownTheme.KEYBIND_HEIGHT;
         buttonX = x + width - DropdownTheme.SETTING_PADDING_X - buttonW;
-        buttonY = y + (getHeight() - buttonH) * 0.5f - 0.5f;
+        buttonY = labelTextY + (textH - buttonH) * 0.5f;
 
         boolean hovered = isHovered(mouseX, mouseY, buttonX - 2.0f, buttonY - 2.0f, buttonW + 4.0f, buttonH + 4.0f);
         hoverAnim.run(hovered || listening ? 1.0f : 0.0f);
@@ -50,7 +50,7 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
 
         renderer.roundRect().addRoundRect(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, DropdownTheme.keybindSurface(listening));
         renderer.outline().addOutline(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, 0.7f, outline);
-        renderer.text().addText(keyText, buttonX + (buttonW - textW) * 0.5f, buttonY + (buttonH - textH) * 0.5f - 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.keybindText(listening));
+        renderer.text().addText(keyText, buttonX + (buttonW - textW) * 0.5f, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.keybindText(listening));
     }
 
     @Override
