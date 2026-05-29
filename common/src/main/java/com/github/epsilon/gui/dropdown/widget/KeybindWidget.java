@@ -2,15 +2,22 @@ package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 
+import java.awt.*;
+
 public class KeybindWidget extends SettingWidget<KeybindSetting> {
 
     private final Animation hoverAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER);
     private boolean listening;
+    private float buttonX;
+    private float buttonY;
+    private float buttonW = DropdownTheme.KEYBIND_WIDTH;
+    private float buttonH = DropdownTheme.KEYBIND_HEIGHT;
 
     public KeybindWidget(KeybindSetting setting) {
         super(setting);
@@ -23,27 +30,32 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
 
     @Override
     public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + (getHeight() - renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        float labelTextY = y + (getHeight() - renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f;
+        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         String keyText = listening ? "..." : KeybindUtils.format(setting.getValue());
         float textW = renderer.text().getWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE);
-        float btnW = Math.max(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f);
-        float btnH = DropdownTheme.KEYBIND_HEIGHT;
-        float btnX = x + width - DropdownTheme.SETTING_PADDING_X - btnW;
-        float btnY = y + (getHeight() - btnH) * 0.5f;
+        float textH = renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE);
+        buttonW = Math.max(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f);
+        buttonH = DropdownTheme.KEYBIND_HEIGHT;
+        buttonX = x + width - DropdownTheme.SETTING_PADDING_X - buttonW;
+        buttonY = y + (getHeight() - buttonH) * 0.5f - 0.5f;
 
-        renderer.roundRect().addRoundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, DropdownTheme.keybindSurface(listening));
-        renderer.text().addText(keyText, btnX + (btnW - textW) * 0.5f, btnY + (btnH - renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.keybindText(listening));
+        boolean hovered = isHovered(mouseX, mouseY, buttonX - 2.0f, buttonY - 2.0f, buttonW + 4.0f, buttonH + 4.0f);
+        hoverAnim.run(hovered || listening ? 1.0f : 0.0f);
+
+        Color outline = listening
+                ? MD3Theme.withAlpha(MD3Theme.PRIMARY, 200)
+                : MD3Theme.lerp(MD3Theme.withAlpha(MD3Theme.OUTLINE, 96), MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 136), hoverAnim.getValue() * 0.55f);
+
+        renderer.roundRect().addRoundRect(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, DropdownTheme.keybindSurface(listening));
+        renderer.outline().addOutline(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, 0.7f, outline);
+        renderer.text().addText(keyText, buttonX + (buttonW - textW) * 0.5f, buttonY + (buttonH - textH) * 0.5f - 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.keybindText(listening));
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        float btnW = DropdownTheme.KEYBIND_WIDTH;
-        float btnH = DropdownTheme.KEYBIND_HEIGHT;
-        float btnX = x + width - DropdownTheme.SETTING_PADDING_X - btnW;
-        float btnY = y + (getHeight() - btnH) * 0.5f;
-
-        if (button == 0 && isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH)) {
+        if (button == 0 && isHovered(mouseX, mouseY, buttonX, buttonY, buttonW, buttonH)) {
             listening = !listening;
             return true;
         }
