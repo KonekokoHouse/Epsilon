@@ -53,8 +53,6 @@ public class ElytraFly extends Module {
 
     private boolean hasFirstFirework;
     private boolean shouldJump;
-    private Input bypassedInput;
-    private boolean shouldRestore;
     private final TimerUtils timer = new TimerUtils();
 
     @Override
@@ -62,11 +60,6 @@ public class ElytraFly extends Module {
         hasFirstFirework = false;
         shouldJump = false;
         timer.setMs(917813L);
-    }
-
-    @Override
-    protected void onDisable() {
-        restoreInput();
     }
 
     @EventHandler
@@ -82,11 +75,6 @@ public class ElytraFly extends Module {
             case Control -> updateControl();
             //case Boost -> updateBoost();
         }
-    }
-
-    @EventHandler
-    private void onTick(TickEvent.Post event) {
-        restoreInput();
     }
 
     @EventHandler
@@ -167,7 +155,6 @@ public class ElytraFly extends Module {
         if (swapMode.is(SwapMode.Silent)) {
             InvUtils.swap(rocket.slot(), true);
         } else {
-            raoGuo();
             InvUtils.invSwap(rocket.slot());
         }
 
@@ -239,19 +226,16 @@ public class ElytraFly extends Module {
     }
 
     private boolean hasMoveInput() {
-        return !(mc.player.input.keyPresses.forward() == mc.player.input.keyPresses.backward())
-                || !(mc.player.input.keyPresses.left() == mc.player.input.keyPresses.right())
-                || mc.options.keyJump.isDown()
+        return mc.options.keyUp.isDown()
+                || mc.options.keyDown.isDown()
                 || mc.options.keyLeft.isDown()
                 || mc.options.keyRight.isDown()
-                || mc.options.keyUp.isDown()
-                || mc.options.keyDown.isDown();
+                || mc.options.keyJump.isDown()
+                || mc.options.keyShift.isDown();
     }
 
     private void jiaFei(int elytraSlot) {
         int elytra = elytraSlot < 9 ? elytraSlot + 36 : elytraSlot;
-
-        syncInput();
 
         swapArmor(elytra);
 
@@ -262,36 +246,11 @@ public class ElytraFly extends Module {
         swapArmor(elytra);
     }
 
-    private void syncInput() {
-        if (shouldRestore) return;
-        bypassedInput = mc.player.input.keyPresses;
-        mc.player.input.keyPresses = Input.EMPTY;
-        mc.getConnection().send(new ServerboundPlayerInputPacket(Input.EMPTY));
-        mc.player.lastSentInput = Input.EMPTY;
-        raoGuo();
-        shouldRestore = true;
-    }
-
-    private void restoreInput() {
-        if (!shouldRestore) return;
-        mc.player.input.keyPresses = bypassedInput;
-        bypassedInput = null;
-        shouldRestore = false;
-    }
-
     private void swapArmor(int containerSlot) {
         int containerId = mc.player.containerMenu.containerId;
         mc.gameMode.handleContainerInput(containerId, containerSlot, 0, ContainerInput.PICKUP, mc.player);
         mc.gameMode.handleContainerInput(containerId, 6, 0, ContainerInput.PICKUP, mc.player);
         mc.gameMode.handleContainerInput(containerId, containerSlot, 0, ContainerInput.PICKUP, mc.player);
-    }
-
-    private void raoGuo() {
-        if (mc.player.isSprinting()) {
-            mc.player.setSprinting(false);
-            mc.player.wasSprinting = false; // BadPacketsF
-            mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
-        }
     }
 
     public boolean isArmorMode() {
