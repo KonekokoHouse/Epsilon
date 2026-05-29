@@ -3,7 +3,6 @@ package com.github.epsilon.modules;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.modules.impl.hud.notification.NotificationManager;
-import com.github.epsilon.modules.impl.hud.notification.NotificationsHUD;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;

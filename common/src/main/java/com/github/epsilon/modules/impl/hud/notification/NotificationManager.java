@@ -3,11 +3,7 @@ package com.github.epsilon.modules.impl.hud.notification;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -24,7 +20,7 @@ public class NotificationManager {
     private final TranslateComponent disableComponent = EpsilonTranslateComponent.create("modules.notifications hud", "disabled");
 
     public void post(String title, String subTitle, NotificationMode mode) {
-        enqueue(new Notification(title, subTitle, mode,  false));
+        enqueue(new Notification(title, subTitle, mode, false));
     }
 
     public void postModuleNotification(String moduleName, boolean enabled) {

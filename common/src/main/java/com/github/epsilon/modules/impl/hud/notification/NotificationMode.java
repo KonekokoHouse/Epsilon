@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.hud.notification;
 
-import java.awt.Color;
+import java.awt.*;
 
 public enum NotificationMode {
 
