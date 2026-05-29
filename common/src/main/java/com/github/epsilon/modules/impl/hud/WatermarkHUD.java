@@ -1,14 +1,11 @@
 package com.github.epsilon.modules.impl.hud;
 
-import com.github.epsilon.Constants;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
-import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.settings.impl.ColorSetting;
+import com.github.epsilon.settings.impl.DoubleSetting;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
