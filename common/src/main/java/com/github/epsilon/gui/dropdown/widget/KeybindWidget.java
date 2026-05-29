@@ -30,16 +30,16 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
 
     @Override
     public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
-        float labelTextY = y + (getHeight() - renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f;
+        float lineHeight = renderer.text().getLineHeight(DropdownTheme.SETTING_TEXT_SCALE);
+        float labelTextY = y + (getHeight() - lineHeight) * 0.5f;
         renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         String keyText = listening ? "..." : KeybindUtils.format(setting.getValue());
         float textW = renderer.text().getWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE);
-        float textH = renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE);
         buttonW = Math.max(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f);
         buttonH = DropdownTheme.KEYBIND_HEIGHT;
         buttonX = x + width - DropdownTheme.SETTING_PADDING_X - buttonW;
-        buttonY = labelTextY + (textH - buttonH) * 0.5f;
+        buttonY = labelTextY + (lineHeight - buttonH) * 0.5f;
 
         boolean hovered = isHovered(mouseX, mouseY, buttonX - 2.0f, buttonY - 2.0f, buttonW + 4.0f, buttonH + 4.0f);
         hoverAnim.run(hovered || listening ? 1.0f : 0.0f);

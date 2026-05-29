@@ -123,9 +123,7 @@ public class NotificationsHUD extends HudModule {
     private Color getModeColor(NotificationMode mode, int alpha) {
         return switch (mode) {
             case Success -> new Color(118, 185, 0, alpha);
-            case Error -> new Color(255, 75, 75, alpha);
-            case Question -> new Color(255, 255, 85, alpha);
-            case Info -> new Color(85, 170, 255, alpha);
+            case Warning -> new Color(255, 75, 75, alpha);
         };
     }
 

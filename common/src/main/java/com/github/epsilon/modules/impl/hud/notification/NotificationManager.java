@@ -39,7 +39,7 @@ public class NotificationManager {
             } else {
                 // 仍处于正常显示阶段：原地更新内容与计时
                 String newTitle = enabled ? enableComponent.getTranslatedName() : disableComponent.getTranslatedName();
-                NotificationMode mode = enabled ? NotificationMode.Success : NotificationMode.Error;
+                NotificationMode mode = enabled ? NotificationMode.Success : NotificationMode.Warning;
                 existing.updateModuleState(newTitle, moduleName, mode, displayTime);
                 return;
             }
@@ -48,7 +48,7 @@ public class NotificationManager {
         // 不存在，创建新的
         makeRoomIfNeeded();
         String title = enabled ? enableComponent.getTranslatedName() : disableComponent.getTranslatedName();
-        NotificationMode mode = enabled ? NotificationMode.Success : NotificationMode.Error;
+        NotificationMode mode = enabled ? NotificationMode.Success : NotificationMode.Warning;
         Notification notification = new Notification(hashCode, title, moduleName, mode, displayTime, getScreenHeight(), true);
         notifications.add(notification);
         hashCodeMap.put(hashCode, notification);
