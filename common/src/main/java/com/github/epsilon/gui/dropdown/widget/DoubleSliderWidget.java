@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import net.minecraft.util.Mth;
@@ -16,6 +17,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     private final DropdownTextField inputField = new DropdownTextField(16, value -> value.matches("[0-9.\\-]"));
     private boolean dragging;
+    private int sessionId = -1;
 
     public DoubleSliderWidget(DoubleSetting setting) {
         super(setting);
@@ -28,6 +30,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     @Override
     public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+        syncSessionState();
         float ratio = (float) ((setting.getValue() - setting.getMin()) / (setting.getMax() - setting.getMin()));
         float sliderRatio = Mth.clamp(ratio, 0.0f, 1.0f);
 
@@ -70,6 +73,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        syncSessionState();
         if (button == 1) {
             String plainValue = formatPlainValue();
             if (isEditorHitboxHovered(mouseX, mouseY)) {
@@ -98,6 +102,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        syncSessionState();
         if (button == 0 && dragging) {
             dragging = false;
             return true;
@@ -115,6 +120,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        syncSessionState();
         if (!inputField.isFocused()) return false;
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
             commitInput();
@@ -135,6 +141,7 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     @Override
     public boolean charTyped(String typedText) {
+        syncSessionState();
         if (inputField.charTyped(typedText)) {
             syncInputValue();
             return true;
@@ -144,6 +151,16 @@ public class DoubleSliderWidget extends SettingWidget<DoubleSetting> {
 
     public boolean isFocused() {
         return inputField.isFocused();
+    }
+
+    private void syncSessionState() {
+        int currentSessionId = DropdownScreen.INSTANCE.getSessionId();
+        if (sessionId == currentSessionId) {
+            return;
+        }
+        sessionId = currentSessionId;
+        dragging = false;
+        inputField.blur();
     }
 
     private String formatPlainValue() {

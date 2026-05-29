@@ -36,6 +36,7 @@ public class DropdownScreen extends Screen {
     private LuminRenderSystem.LuminRenderTarget renderTarget;
     private IMEPreeditOverlay preeditOverlay;
     private boolean initialized;
+    private int sessionId;
 
     private DropdownScreen() {
         super(Component.literal("DropdownGui"));
@@ -44,6 +45,7 @@ public class DropdownScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        sessionId++;
         scrimAnim.setStartValue(0.0f);
         scrimAnim.run(0.0f);
         scrimAnim.run(1.0f);
@@ -395,6 +397,10 @@ public class DropdownScreen extends Screen {
 
     private float getSearchHeight() {
         return 20.0f;
+    }
+
+    public int getSessionId() {
+        return sessionId;
     }
 
 }
