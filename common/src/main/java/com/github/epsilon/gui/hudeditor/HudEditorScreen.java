@@ -32,7 +32,8 @@ public class HudEditorScreen extends Screen {
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();
 
     private final RectRenderer rectRenderer = RectRenderer.create();
-    private final HudEditorOverlayRenderer overlayRenderer = new HudEditorOverlayRenderer();
+    private final HudEditorOverlayRenderer guideOverlayRenderer = new HudEditorOverlayRenderer();
+    private final HudEditorOverlayRenderer foregroundOverlayRenderer = new HudEditorOverlayRenderer();
     private final HudEditorInspector inspector = new HudEditorInspector();
 
     private HudModule dragging;
@@ -81,8 +82,8 @@ public class HudEditorScreen extends Screen {
         boolean draggingFocus = focus != null && focus == dragging;
 
         if (focus != null) {
-            overlayRenderer.addThirdGuides(focus, draggingFocus, screenWidth, screenHeight);
-            overlayRenderer.flushRenderer();
+            guideOverlayRenderer.addThirdGuides(focus, draggingFocus, screenWidth, screenHeight);
+            guideOverlayRenderer.flushRenderer();
         }
 
         for (HudModule hudModule : hudModules) {
@@ -105,11 +106,11 @@ public class HudEditorScreen extends Screen {
         }
 
         if (focus != null) {
-            overlayRenderer.addAnchorOverlay(focus, draggingFocus, screenWidth, screenHeight);
+            foregroundOverlayRenderer.addAnchorOverlay(focus, draggingFocus, screenWidth, screenHeight);
         }
 
-        overlayRenderer.addSnapPreview(snapPreviewX, snapPreviewY, screenWidth, screenHeight);
-        overlayRenderer.flushRenderer();
+        foregroundOverlayRenderer.addSnapPreview(snapPreviewX, snapPreviewY, screenWidth, screenHeight);
+        foregroundOverlayRenderer.flushRenderer();
         inspector.queueRender(graphics, selected, screenWidth, screenHeight, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), a, screenHeight);
 
         inspector.renderPopups(graphics, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), a);

@@ -132,7 +132,7 @@ public class ShadowRenderer implements IRenderer {
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", info.dynamicUniforms());
             pass.setVertexBuffer(0, buffer.getGpuBuffer());
-            pass.setIndexBuffer(info.ibo(), info.autoIndices().type());
+            pass.setIndexBuffer(info.ibo(), info.indexType());
             pass.drawIndexed(0, 0, info.indexCount(), 1);
         }
     }

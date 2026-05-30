@@ -116,7 +116,7 @@ public class TtfTextRenderer implements ITextRenderer {
         GpuTextureView depthView = LuminRenderSystem.resolveDepthView();
         if (colorView == null) return;
 
-        GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
+        GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
                 RenderSystem.getModelViewMatrix(), new Vector4f(1, 1, 1, 1),
                 new Vector3f(0, 0, 0), TextureTransform.DEFAULT_TEXTURING.getMatrix()
         );
@@ -134,9 +134,7 @@ public class TtfTextRenderer implements ITextRenderer {
             int vertexCount = (int) (batch.offsetInAtlas / STRIDE);
             int indexCount = (vertexCount / 4) * 6;
 
-            RenderSystem.AutoStorageIndexBuffer autoIndices =
-                    RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-            GpuBuffer ibo = autoIndices.getBuffer(indexCount);
+            GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(indexCount);
 
             try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                     () -> "Lumin TTF Draw",
@@ -153,7 +151,7 @@ public class TtfTextRenderer implements ITextRenderer {
                 pass.setUniform("TtfInfo", ttfInfoUniformBuf);
 
                 pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
-                pass.setIndexBuffer(ibo, autoIndices.type());
+                pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
                 pass.bindTexture("Sampler0", atlas.getTexture().getTextureView(), atlas.getTexture().getSampler());
 
                 pass.drawIndexed(0, 0, indexCount, 1);

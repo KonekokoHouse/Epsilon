@@ -119,7 +119,7 @@ public class TriangleRenderer implements IRenderer {
         GpuTextureView depthView = LuminRenderSystem.resolveDepthView();
         if (colorView == null) return;
 
-        GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
+        GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
                 RenderSystem.getModelViewMatrix(),
                 new Vector4f(1, 1, 1, 1),
                 new Vector3f(0, 0, 0),

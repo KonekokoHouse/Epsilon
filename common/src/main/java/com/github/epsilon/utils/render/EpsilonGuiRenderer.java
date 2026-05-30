@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.render;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -42,7 +43,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
@@ -78,7 +78,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     private final List<EpsilonGuiRenderer.Draw> draws = new ArrayList<>();
     private final List<EpsilonGuiRenderer.MeshToDraw> meshesToDraw = new ArrayList<>();
     private final ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(786432);
-    private final Map<VertexFormat, MappableRingBuffer> vertexBuffers = new Object2ObjectOpenHashMap<>();
+    private final Map<VertexFormat, LuminRingBuffer> vertexBuffers = new Object2ObjectOpenHashMap<>();
     private int firstDrawIndexAfterBlur = Integer.MAX_VALUE;
     private final Projection guiProjection = new Projection();
     private final ProjectionMatrixBuffer guiProjectionMatrixBuffer = new ProjectionMatrixBuffer("gui");
@@ -123,7 +123,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         this.draw(fogBuffer);
         profiler.popPush("vertexBufferRotate");
 
-        for (MappableRingBuffer buffer : this.vertexBuffers.values()) {
+        for (LuminRingBuffer buffer : this.vertexBuffers.values()) {
             buffer.rotate();
         }
 
@@ -190,11 +190,10 @@ public class EpsilonGuiRenderer implements AutoCloseable {
                 }
             }
 
-            RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-            GpuBuffer indexBuffer = autoIndices.getBuffer(maxIndexCount);
-            VertexFormat.IndexType indexType = autoIndices.type();
-            GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
-                    .writeTransform(new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F), new Vector4f(1.0F, 1.0F, 1.0F, 1.0F), new Vector3f(), new Matrix4f());
+            GpuBuffer indexBuffer = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount);
+            VertexFormat.IndexType indexType = LuminRenderSystem.getQuadIndexType();
+            GpuBufferSlice dynamicTransforms = LuminRenderSystem.writeTransform(
+                    new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F), new Vector4f(1.0F, 1.0F, 1.0F, 1.0F), new Vector3f(), new Matrix4f());
             if (this.firstDrawIndexAfterBlur > 0) {
                 this.executeDrawRange(
                         () -> "GUI before blur",
@@ -419,7 +418,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             MeshData mesh = meshToDraw.mesh;
             MeshData.DrawState drawState = mesh.drawState();
             VertexFormat format = drawState.format();
-            MappableRingBuffer vertexBuffer = this.vertexBuffers.get(format);
+            LuminRingBuffer vertexBuffer = this.vertexBuffers.get(format);
             if (!offsets.containsKey(format)) {
                 offsets.put(format, 0);
             }
@@ -428,15 +427,13 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             int meshBufferSize = meshVertexBuffer.remaining();
             int offset = offsets.getInt(format);
 
-            try (GpuBuffer.MappedView mappedView = commandEncoder.mapBuffer(vertexBuffer.currentBuffer().slice(offset, meshBufferSize), false, true)) {
-                MemoryUtil.memCopy(meshVertexBuffer, mappedView.data());
-            }
+            vertexBuffer.write(commandEncoder, offset, meshVertexBuffer);
 
             offsets.put(format, offset + meshBufferSize);
             this.draws
                     .add(
                             new EpsilonGuiRenderer.Draw(
-                                    vertexBuffer.currentBuffer(),
+                                    vertexBuffer.getGpuBuffer(),
                                     offset / format.getVertexSize(),
                                     drawState.mode(),
                                     drawState.indexCount(),
@@ -455,13 +452,13 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         for (it.unimi.dsi.fastutil.objects.Object2IntMap.Entry<VertexFormat> entry : requiredSizes.object2IntEntrySet()) {
             VertexFormat vertexFormat = entry.getKey();
             int requiredSize = entry.getIntValue();
-            MappableRingBuffer vertexBuffer = this.vertexBuffers.get(vertexFormat);
+            LuminRingBuffer vertexBuffer = this.vertexBuffers.get(vertexFormat);
             if (vertexBuffer == null || vertexBuffer.size() < requiredSize) {
                 if (vertexBuffer != null) {
                     vertexBuffer.close();
                 }
 
-                this.vertexBuffers.put(vertexFormat, new MappableRingBuffer(() -> "GUI vertex buffer for " + vertexFormat, 34, requiredSize));
+                this.vertexBuffers.put(vertexFormat, new LuminRingBuffer(requiredSize, GpuBuffer.USAGE_VERTEX));
             }
         }
     }
@@ -540,7 +537,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
 
         this.guiProjectionMatrixBuffer.close();
 
-        for (MappableRingBuffer buffer : this.vertexBuffers.values()) {
+        for (LuminRingBuffer buffer : this.vertexBuffers.values()) {
             buffer.close();
         }
 

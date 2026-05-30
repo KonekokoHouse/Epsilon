@@ -144,7 +144,7 @@ public class TextureRenderer implements IRenderer {
         GpuTextureView colorView = LuminRenderSystem.resolveColorView();
         if (colorView == null) return;
 
-        GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
+        GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
                 RenderSystem.getModelViewMatrix(),
                 new Vector4f(1, 1, 1, 1),
                 new Vector3f(0, 0, 0),
@@ -161,8 +161,7 @@ public class TextureRenderer implements IRenderer {
             }
 
             int indexCount = (batch.vertexCount / 4) * 6;
-            RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-            GpuBuffer ibo = autoIndices.getBuffer(indexCount);
+            GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(indexCount);
 
             LuminTexture texture;
             if (textureKey instanceof Identifier id) {
@@ -187,7 +186,7 @@ public class TextureRenderer implements IRenderer {
 
                 // 使用 RingBuffer 当前指向的 GpuBuffer
                 pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
-                pass.setIndexBuffer(ibo, autoIndices.type());
+                pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
                 pass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
 
                 pass.drawIndexed(0, 0, indexCount, 1);
