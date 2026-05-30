@@ -61,6 +61,7 @@ public class ModuleManager {
                 ZealotCrystalPlus.INSTANCE,
                 CrystalAura.INSTANCE,
                 CrystalBlocker.INSTANCE,
+                FeetTrap.INSTANCE,
                 DoubleAnchor.INSTANCE,
                 HoverTotem.INSTANCE,
                 KillAura.INSTANCE,
