@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.Render2DEvent;
+import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.utils.render.EpsilonGuiRenderer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -49,26 +50,6 @@ public class MixinGuiRenderer {
 
     @Inject(method = "draw", at = @At("HEAD"))
     private void onDrawHead(GpuBufferSlice fogBuffer, CallbackInfo ci) {
-        epsilon$ensureRenderers();
-
-        int mouseX = (int) mc.mouseHandler.getScaledXPos(mc.getWindow());
-        int mouseY = (int) mc.mouseHandler.getScaledYPos(mc.getWindow());
-
-        GuiGraphicsExtractor levelGuiGraphics = new GuiGraphicsExtractor(mc, epsilon$levelRenderState, mouseX, mouseY);
-        EventBus.INSTANCE.post(new Render2DEvent.Level(levelGuiGraphics));
-        epsilon$levelGuiRenderer.render(fogBuffer);
-        epsilon$levelGuiRenderer.endFrame();
-
-        GuiGraphicsExtractor guiGraphics = new GuiGraphicsExtractor(mc, epsilon$renderState, mouseX, mouseY);
-        EventBus.INSTANCE.post(new Render2DEvent.HUD(guiGraphics));
-
-        epsilon$guiRenderer.render(fogBuffer);
-
-        epsilon$guiRenderer.endFrame();
-    }
-
-    @Unique
-    private void epsilon$ensureRenderers() {
         if (epsilon$levelRenderState == null || epsilon$levelGuiRenderer == null) {
             this.epsilon$levelRenderState = new GuiRenderState();
             this.epsilon$levelGuiRenderer = new EpsilonGuiRenderer(
@@ -87,6 +68,23 @@ public class MixinGuiRenderer {
                     this.featureRenderDispatcher
             );
         }
+
+        BlurShader.INSTANCE.beginFrame();
+
+        int mouseX = (int) mc.mouseHandler.getScaledXPos(mc.getWindow());
+        int mouseY = (int) mc.mouseHandler.getScaledYPos(mc.getWindow());
+
+        GuiGraphicsExtractor levelGuiGraphics = new GuiGraphicsExtractor(mc, epsilon$levelRenderState, mouseX, mouseY);
+        EventBus.INSTANCE.post(new Render2DEvent.Level(levelGuiGraphics));
+        epsilon$levelGuiRenderer.render(fogBuffer);
+        epsilon$levelGuiRenderer.endFrame();
+
+        GuiGraphicsExtractor guiGraphics = new GuiGraphicsExtractor(mc, epsilon$renderState, mouseX, mouseY);
+        EventBus.INSTANCE.post(new Render2DEvent.HUD(guiGraphics));
+
+        epsilon$guiRenderer.render(fogBuffer);
+
+        epsilon$guiRenderer.endFrame();
     }
 
 }

@@ -2,6 +2,7 @@ package com.github.epsilon.gui.hudeditor;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.RectRenderer;
+import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
@@ -62,6 +63,7 @@ public class HudEditorScreen extends Screen {
         }
         renderTarget.clear();
         renderTarget.resize(window.getWidth(), window.getHeight());
+        BlurShader.INSTANCE.beginFrame();
 
         LuminRenderSystem.setActiveTarget(renderTarget);
 

@@ -11,6 +11,7 @@ import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -41,7 +42,7 @@ public class TargetHUD extends HudModule {
     private final DoubleSetting nameSize = doubleSetting("Name Size", 11.5, 8.0, 18.0, 0.5);
     private final BoolSetting delayBar = boolSetting("Delay Bar", true);
     private final BoolSetting delayWait = boolSetting("Delay Wait", true, delayBar::getValue);
-    private final DoubleSetting delayTime = doubleSetting("Delay Time", 600.0, 0.0, 2000.0, 50.0, () -> delayBar.getValue() && delayWait.getValue());
+    private final DoubleSetting delayTime = doubleSetting("Delay Time", 250.0, 0.0, 500.0, 50.0, () -> delayBar.getValue() && delayWait.getValue());
     private final DoubleSetting delaySpeed = doubleSetting("Delay Speed", 2.0, 0.1, 10.0, 0.1, delayBar::getValue);
     private final BoolSetting barOutline = boolSetting("Bar Outline", true);
     private final DoubleSetting barOutlineWidth = doubleSetting("Bar Outline Width", 1.0, 0.5, 5.0, 0.5, barOutline::getValue);
@@ -55,17 +56,24 @@ public class TargetHUD extends HudModule {
     private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
     private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
 
-    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
-    private final Supplier<RoundRectOutlineRenderer> roundRectOutlineRendererSupplier = Suppliers.memoize(RoundRectOutlineRenderer::create);
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-    private final Supplier<TextureRenderer> textureRendererSupplier = Suppliers.memoize(TextureRenderer::create);
-    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
+    private static final long VISIBILITY_ANIMATION_DURATION_MS = 300L;
+    private static final float HEAD_DAMAGE_SCALE_FACTOR = 0.15f;
 
     private int lastTargetId = Integer.MIN_VALUE;
     private float displayedHealth = 0.0f;
     private float delayedHealth = 0.0f;
     private float lastKnownHealth = -1.0f;
+    private float lastKnownMaxHealth = 1.0f;
     private long lastDamageTimeMs = 0L;
+    private LivingEntity renderedTarget;
+    private float visibilityProgress = 0.0f;
+    private long lastVisibilityUpdateMs = 0L;
+
+    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
+    private final Supplier<RoundRectOutlineRenderer> roundRectOutlineRendererSupplier = Suppliers.memoize(RoundRectOutlineRenderer::create);
+    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
+    private final Supplier<TextureRenderer> textureRendererSupplier = Suppliers.memoize(TextureRenderer::create);
+    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
@@ -76,8 +84,10 @@ public class TargetHUD extends HudModule {
         float panelHeight = height.getValue().floatValue() * panelScale;
         setBounds(panelWidth, panelHeight);
 
-        LivingEntity target = resolveTarget();
-        if (target == null) return;
+        float frameTime = deltaTracker == null ? 0.05f : deltaTracker.getGameTimeDeltaTicks() / 20.0f;
+        LivingEntity target = updateRenderedTarget(resolveTarget());
+        float animationScale = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f));
+        if (target == null || animationScale <= 0.01f) return;
 
         RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
         RoundRectOutlineRenderer roundRectOutlineRenderer = roundRectOutlineRendererSupplier.get();
@@ -85,10 +95,20 @@ public class TargetHUD extends HudModule {
         TextureRenderer textureRenderer = textureRendererSupplier.get();
         ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
 
-        float frameTime = deltaTracker == null ? 0.05f : deltaTracker.getGameTimeDeltaTicks() / 20.0f;
-        float health = HealthManager.INSTANCE.getHealth(target);
-        float maxHealth = Math.max(1.0f, target.getMaxHealth() + Math.max(0.0f, target.getAbsorptionAmount()));
-        float healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime);
+        LivingEntity liveTarget = resolveTarget();
+        float maxHealth = lastKnownMaxHealth;
+        float healthPercent;
+        if (liveTarget == target) {
+            float health = HealthManager.INSTANCE.getHealth(target);
+            maxHealth = Math.max(1.0f, target.getMaxHealth() + Math.max(0.0f, target.getAbsorptionAmount()));
+            lastKnownMaxHealth = maxHealth;
+            healthPercent = updateAnimatedHealth(target, health, maxHealth, frameTime);
+        } else {
+            maxHealth = Math.max(1.0f, lastKnownMaxHealth);
+            displayedHealth = Mth.clamp(displayedHealth, 0.0f, maxHealth);
+            delayedHealth = Mth.clamp(delayedHealth, 0.0f, maxHealth);
+            healthPercent = Mth.clamp(displayedHealth / maxHealth, 0.0f, 1.0f);
+        }
         float delayHealthPercent = Mth.clamp(delayedHealth / maxHealth, 0.0f, 1.0f);
 
         float pad = 6.0f * panelScale;
@@ -96,8 +116,8 @@ public class TargetHUD extends HudModule {
         float barHeight = healthBarHeight.getValue().floatValue() * panelScale;
         float barRadius = healthBarRadius.getValue().floatValue() * panelScale;
         float barWidth = Math.max(1.0f, panelWidth - pad * 2.0f);
-        float delayedBarWidth = Math.max(0.0f, Math.min(barWidth, barWidth * delayHealthPercent));
-        float filledBarWidth = Math.max(0.0f, Math.min(barWidth, barWidth * healthPercent));
+        float delayedBarWidth = Mth.clamp(barWidth, 0.0f, barWidth * delayHealthPercent);
+        float filledBarWidth = Mth.clamp(barWidth, 0.0f, barWidth * healthPercent);
 
         float innerHeight = Math.max(1.0f, panelHeight - pad * 2.0f);
         float contentAreaHeight = Math.max(1.0f, innerHeight - pad - barHeight);
@@ -120,25 +140,59 @@ public class TargetHUD extends HudModule {
         float healthTextWidth = textRenderer.getWidth(healthText, textScale);
         float healthTextX = this.x + panelWidth - pad - healthTextWidth;
 
-        BlurShader.INSTANCE.render(this.x, this.y, panelWidth, panelHeight, cornerRadius, blurStrength.getValue().floatValue());
+        float centerX = this.x + panelWidth / 2.0f;
+        float centerY = this.y + panelHeight / 2.0f;
+        float scaledPanelX = Mth.lerp(animationScale, centerX, this.x);
+        float scaledPanelY = Mth.lerp(animationScale, centerY, this.y);
+        float scaledPanelWidth = panelWidth * animationScale;
+        float scaledPanelHeight = panelHeight * animationScale;
+        float scaledCornerRadius = cornerRadius * animationScale;
+        float scaledBarHeight = barHeight * animationScale;
+        float scaledBarRadius = barRadius * animationScale;
+        float scaledBarOutlineWidth = barOutlineWidth.getValue().floatValue() * panelScale * animationScale;
+        float scaledTextScale = textScale * animationScale;
+        float scaledHeadRadius = headSize * 0.23f * animationScale;
+        float scaledPadX = Mth.lerp(animationScale, centerX, this.x + pad);
+        float scaledBarY = Mth.lerp(animationScale, centerY, barY);
+        float scaledBarWidth = barWidth * animationScale;
+        float scaledDelayedBarWidth = delayedBarWidth * animationScale;
+        float scaledFilledBarWidth = filledBarWidth * animationScale;
+        float scaledHeadX = Mth.lerp(animationScale, centerX, headX);
+        float scaledHeadY = Mth.lerp(animationScale, centerY, headY);
+        float scaledHeadSize = headSize * animationScale;
+        float scaledTextStartX = Mth.lerp(animationScale, centerX, textStartX);
+        float scaledContentY = Mth.lerp(animationScale, centerY, contentY);
+        float scaledHealthTextX = Mth.lerp(animationScale, centerX, healthTextX);
+        float damageProgress = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(target.hurtTime / 10.0f, 0.0f, 1.0f));
+        float headDamageScale = 1.0f - damageProgress * HEAD_DAMAGE_SCALE_FACTOR;
+        float finalHeadSize = scaledHeadSize * headDamageScale;
+        float finalHeadX = scaledHeadX + (scaledHeadSize - finalHeadSize) / 2.0f;
+        float finalHeadY = scaledHeadY + (scaledHeadSize - finalHeadSize) / 2.0f;
+        float finalHeadRadius = scaledHeadRadius * headDamageScale;
+        Color headTintColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale);
+
+        BlurShader.INSTANCE.render(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, blurStrength.getValue().floatValue());
 
         if (drawShadow.getValue()) {
-            shadowRenderer.addShadow(this.x, this.y, panelWidth, panelHeight, cornerRadius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
+            shadowRenderer.addShadow(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, shadowBlur.getValue().floatValue() * animationScale, withAlpha(shadowColor.getValue(), animationScale));
             shadowRenderer.drawAndClear();
         }
 
-        roundRectRenderer.addRoundRect(this.x, this.y, panelWidth, panelHeight, cornerRadius, backgroundColor.getValue());
-        roundRectRenderer.addRoundRect(this.x + pad, barY, barWidth, barHeight, barRadius, barBackgroundColor.getValue());
+        roundRectRenderer.addRoundRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, withAlpha(backgroundColor.getValue(), animationScale));
+        roundRectRenderer.addRoundRect(scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barBackgroundColor.getValue(), animationScale));
         if (delayBar.getValue() && delayedHealth > displayedHealth) {
-            roundRectRenderer.addRoundRect(this.x + pad, barY, delayedBarWidth, barHeight, barRadius, delayBarColor.getValue());
+            roundRectRenderer.addRoundRect(scaledPadX, scaledBarY, scaledDelayedBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(delayBarColor.getValue(), animationScale));
         }
-        roundRectRenderer.addRoundRect(this.x + pad, barY, filledBarWidth, barHeight, barRadius, barFillColor.getValue());
+        roundRectRenderer.addRoundRect(scaledPadX, scaledBarY, scaledFilledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barFillColor.getValue(), animationScale));
+        if (!(target instanceof AbstractClientPlayer)) {
+            roundRectRenderer.addRoundRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize, finalHeadRadius, withAlpha(tintColor(new Color(80, 80, 80, 200), damageProgress), animationScale));
+        }
         roundRectRenderer.drawAndClear();
 
-        if (barOutline.getValue()) {
+        if (barOutline.getValue() && scaledBarOutlineWidth > 0.0f) {
             roundRectOutlineRenderer.addOutline(
-                    this.x + pad, barY, barWidth, barHeight, barRadius,
-                    barOutlineWidth.getValue().floatValue() * panelScale, barOutlineColor.getValue()
+                    scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius,
+                    scaledBarOutlineWidth, withAlpha(barOutlineColor.getValue(), animationScale)
             );
             roundRectOutlineRenderer.drawAndClear();
         }
@@ -147,15 +201,13 @@ public class TargetHUD extends HudModule {
             AbstractTexture abstractTexture = mc.getTextureManager().getTexture(player.getSkin().body().texturePath());
             textureRenderer.addPlayerHead(
                     new LuminTexture(abstractTexture.getTexture(), abstractTexture.getTextureView(), abstractTexture.getSampler()),
-                    headX, headY, headSize, headSize * 0.23f, Color.WHITE
+                    finalHeadX, finalHeadY, finalHeadSize, finalHeadRadius, headTintColor
             );
             textureRenderer.drawAndClear();
-        } else {
-            roundRectRenderer.addRoundRect(headX, headY, headSize, headSize, headSize * 0.23f, new Color(80, 80, 80, 200));
         }
 
-        textRenderer.addText(nameText, textStartX, contentY, textScale, textColor.getValue());
-        textRenderer.addText(healthText, healthTextX, contentY, textScale, textColor.getValue());
+        textRenderer.addText(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
+        textRenderer.addText(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
         textRenderer.drawAndClear();
     }
 
@@ -171,6 +223,48 @@ public class TargetHUD extends HudModule {
         return target != null && target.isAlive() && !target.isDeadOrDying();
     }
 
+    private LivingEntity updateRenderedTarget(LivingEntity liveTarget) {
+        long now = System.currentTimeMillis();
+        if (lastVisibilityUpdateMs == 0L) {
+            lastVisibilityUpdateMs = now;
+        }
+
+        float delta = Mth.clamp((now - lastVisibilityUpdateMs) / (float) VISIBILITY_ANIMATION_DURATION_MS, 0.0f, 1.0f);
+        lastVisibilityUpdateMs = now;
+
+        if (liveTarget != null) {
+            renderedTarget = liveTarget;
+            visibilityProgress = Math.min(1.0f, visibilityProgress + delta);
+            return renderedTarget;
+        }
+
+        if (renderedTarget == null) {
+            visibilityProgress = 0.0f;
+            return null;
+        }
+
+        visibilityProgress = Math.max(0.0f, visibilityProgress - delta);
+        if (visibilityProgress <= 0.01f) {
+            renderedTarget = null;
+            resetAnimatedState();
+            return null;
+        }
+        return renderedTarget;
+    }
+
+    private Color tintColor(Color baseColor, float damageProgress) {
+        int greenBlue = Mth.clamp(Math.round(255.0f - 155.0f * damageProgress), 100, 255);
+        int red = Mth.clamp(Math.round(baseColor.getRed() + (255 - baseColor.getRed()) * damageProgress), 0, 255);
+        int green = Mth.clamp(Math.round(baseColor.getGreen() * greenBlue / 255.0f), 0, 255);
+        int blue = Mth.clamp(Math.round(baseColor.getBlue() * greenBlue / 255.0f), 0, 255);
+        return new Color(red, green, blue, baseColor.getAlpha());
+    }
+
+    private Color withAlpha(Color color, float alphaScale) {
+        int alpha = Mth.clamp(Math.round(color.getAlpha() * alphaScale), 0, 255);
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+    }
+
     private float updateAnimatedHealth(LivingEntity target, float currentHealth, float maxHealth, float frameTime) {
         int targetId = target.getId();
         if (targetId != lastTargetId) {
@@ -178,6 +272,7 @@ public class TargetHUD extends HudModule {
             displayedHealth = currentHealth;
             delayedHealth = currentHealth;
             lastKnownHealth = currentHealth;
+            lastKnownMaxHealth = maxHealth;
             lastDamageTimeMs = 0L;
         } else {
             if (lastKnownHealth >= 0.0f && currentHealth < lastKnownHealth) {
@@ -187,6 +282,7 @@ public class TargetHUD extends HudModule {
             displayedHealth = Mth.lerp(speed, displayedHealth, currentHealth);
             delayedHealth = updateDelayedHealth(currentHealth, frameTime);
             lastKnownHealth = currentHealth;
+            lastKnownMaxHealth = maxHealth;
         }
         displayedHealth = Mth.clamp(displayedHealth, 0.0f, maxHealth);
         delayedHealth = Mth.clamp(delayedHealth, 0.0f, maxHealth);
@@ -205,6 +301,15 @@ public class TargetHUD extends HudModule {
         }
         float speed = Mth.clamp(frameTime * delaySpeed.getValue().floatValue() * 2.0f, 0.0f, 1.0f);
         return Mth.lerp(speed, delayedHealth, currentHealth);
+    }
+
+    private void resetAnimatedState() {
+        lastTargetId = Integer.MIN_VALUE;
+        displayedHealth = 0.0f;
+        delayedHealth = 0.0f;
+        lastKnownHealth = -1.0f;
+        lastKnownMaxHealth = 1.0f;
+        lastDamageTimeMs = 0L;
     }
 
 }
