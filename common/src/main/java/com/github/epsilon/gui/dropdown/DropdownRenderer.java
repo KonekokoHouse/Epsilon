@@ -52,7 +52,7 @@ public class DropdownRenderer {
     }
 
     public void setScissor(float guiX, float guiY, float guiW, float guiH, int guiHeight) {
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(guiX, guiY, guiW, guiH, guiHeight);
+        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(guiX, guiY, guiW, guiH);
         int x = scissor.x();
         int y = scissor.y();
         int w = scissor.width();

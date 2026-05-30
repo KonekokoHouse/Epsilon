@@ -135,7 +135,7 @@ public class PanelContentBuffer {
             if (clip == null) {
                 continue;
             }
-            LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(clip.x(), clip.y(), clip.width(), clip.height(), pendingGuiHeight);
+            LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(clip.x(), clip.y(), clip.width(), clip.height());
             int sx = scissor.x();
             int sy = scissor.y();
             int sw = scissor.width();

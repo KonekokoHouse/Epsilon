@@ -330,7 +330,7 @@ public class CategoryRailPanel {
     }
 
     private void applyTextScissor(PanelLayout.Rect rect, int guiHeight) {
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(rect.x(), rect.y(), rect.width(), rect.height(), guiHeight);
+        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(rect.x(), rect.y(), rect.width(), rect.height());
         int x = scissor.x();
         int y = scissor.y();
         int width = scissor.width();
