@@ -49,6 +49,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -88,7 +89,6 @@ public class ZealotCrystalPlus extends Module {
     private final DoubleSetting yawSpeed = doubleSetting("Yaw Speed", 45.0, 5.0, 180.0, 5.0).group(sgGeneral);
     private final DoubleSetting placeRotationRange = doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0).group(sgGeneral);
     private final DoubleSetting breakRotationRange = doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0).group(sgGeneral);
-    private final BoolSetting preRotation = boolSetting("Pre Rotation", false).group(sgGeneral);
     private final BoolSetting eatingPause = boolSetting("Eating Pause", false).group(sgGeneral);
     private final IntSetting updateDelay = intSetting("Update Delay", 5, 0, 250, 1).group(sgGeneral);
     private final IntSetting globalDelay = intSetting("Global Delay", 1_000_000, 1_000, 10_000_000, 1_000).group(sgGeneral);
@@ -182,8 +182,8 @@ public class ZealotCrystalPlus extends Module {
     private volatile PlaceInfo cachedPlaceInfo;
     private volatile BreakPlan cachedRotationBreakPlan;
     private volatile BreakPlan cachedBreakPlan;
-    private volatile Rot2f fallbackRotation;
-    private volatile long fallbackRotationExpireAt;
+    private volatile List<BlockPos> cachedRawPosList = List.of();
+    private volatile long rawPosListExpireAt;
 
     private BlockPos renderBlockPos;
     private Vec3 renderPrevPos;
@@ -201,7 +201,6 @@ public class ZealotCrystalPlus extends Module {
     private int explosionsThisWindow;
 
     private static final int EXPLOSION_SAMPLE_SIZE = 8;
-    private static final long FALLBACK_ROTATION_DURATION_MS = 100L;
 
     @Override
     protected void onEnable() {
@@ -225,8 +224,6 @@ public class ZealotCrystalPlus extends Module {
         cachedPlaceInfo = null;
         cachedRotationBreakPlan = null;
         cachedBreakPlan = null;
-        fallbackRotation = null;
-        fallbackRotationExpireAt = 0L;
         resetRenderState();
         signalWorker();
     }
@@ -244,8 +241,6 @@ public class ZealotCrystalPlus extends Module {
         cachedPlaceInfo = null;
         cachedRotationBreakPlan = null;
         cachedBreakPlan = null;
-        fallbackRotation = null;
-        fallbackRotationExpireAt = 0L;
         target = null;
         explosionSamples.clear();
         explosionsThisWindow = 0;
@@ -266,19 +261,6 @@ public class ZealotCrystalPlus extends Module {
         BreakPlan preBreak = getValidBreakPlan(cachedRotationBreakPlan);
         PlaceInfo prePlace = getValidPlaceInfo(cachedRotationPlaceInfo, false);
         target = resolveCurrentTarget(result, prePlace);
-
-        if (preRotation.getValue()) {
-            if (preBreak != null) {
-                RotationManager.INSTANCE.setRotations(RotationUtils.calculate(preBreak.pos()), getRotationSpeed(), Priority.Lowest);
-            } else if (prePlace != null) {
-                RotationManager.INSTANCE.setRotations(prePlace.rotation(), getRotationSpeed(), Priority.Lowest);
-            } else {
-                Rot2f rotation = getFallbackRotation();
-                if (rotation != null) {
-                    RotationManager.INSTANCE.setRotations(rotation, getRotationSpeed(), Priority.Lowest);
-                }
-            }
-        }
 
         boolean acted = false;
         BreakPlan actionBreak = getActionBreakPlan();
@@ -516,12 +498,12 @@ public class ZealotCrystalPlus extends Module {
         SelfSnapshot self = captureSelfSnapshot(player, settings.armorMode());
         List<TargetSnapshot> targets = captureTargets(settings.armorMode());
         if (targets.isEmpty()) {
-            return new SnapshotData(System.nanoTime(), settings, self, List.of(), List.of(), List.of(), Set.of(), System.currentTimeMillis());
+            return new SnapshotData(System.nanoTime(), settings, self, List.of(), List.of(), List.of(), ResistantBlockCache.EMPTY, System.currentTimeMillis());
         }
 
         List<BlockPos> placePositions = capturePlacePositions();
         List<CrystalSnapshot> crystals = captureCrystals();
-        Set<Long> resistantBlocks = captureResistantBlocks(targets, placePositions, crystals, player.blockPosition());
+        ResistantBlockCache resistantBlocks = new ResistantBlockCache(mc.level, assumeInstantMine.getValue());
 
         return new SnapshotData(
                 System.nanoTime(),
@@ -530,7 +512,7 @@ public class ZealotCrystalPlus extends Module {
                 List.copyOf(targets),
                 List.copyOf(placePositions),
                 List.copyOf(crystals),
-                Set.copyOf(resistantBlocks),
+                resistantBlocks,
                 System.currentTimeMillis()
         );
     }
@@ -723,9 +705,9 @@ public class ZealotCrystalPlus extends Module {
         BreakPlan breakPlan = evaluateBreak(snapshot, placeInfo, true);
         TargetSnapshot primary = placeInfo != null
                 ? snapshot.targets().stream().filter(targetInfo -> targetInfo.entity() == placeInfo.target()).findFirst().orElse(snapshot.targets().getFirst())
-                : rotationPlaceInfo != null
+                : (rotationPlaceInfo != null
                   ? snapshot.targets().stream().filter(targetInfo -> targetInfo.entity() == rotationPlaceInfo.target()).findFirst().orElse(snapshot.targets().getFirst())
-                  : snapshot.targets().getFirst();
+                  : snapshot.targets().getFirst());
 
         return new AsyncResult(snapshot.id(), rotationPlaceInfo, placeInfo, rotationBreakPlan, breakPlan, primary, System.nanoTime() - startTime);
     }
@@ -1079,7 +1061,6 @@ public class ZealotCrystalPlus extends Module {
             updateRenderTarget(currentCrystal.blockPosition().below(), breakPlan.targetDamage(), breakPlan.selfDamage());
 
             PlaceInfo placeInfo = getActionPlaceInfo();
-            cacheFallbackRotation(placeInfo != null ? placeInfo.rotation() : RotationUtils.calculate(breakPlan.pos()));
             if (packetPlace.getValue().onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos(), currentCrystal.getBoundingBox())) {
                 placeDirect(placeInfo, true);
             }
@@ -1187,22 +1168,22 @@ public class ZealotCrystalPlus extends Module {
         return null;
     }
 
-    private float calcDamage(SelfSnapshot self, Vec3 crystalPos, Set<Long> resistantBlocks) {
+    private float calcDamage(SelfSnapshot self, Vec3 crystalPos, ResistantBlockCache resistantBlocks) {
         return calcDamage(self.pos(), self.box(), self.reduction(), true, self.difficulty(), crystalPos, resistantBlocks);
     }
 
-    private float calcDamage(TargetSnapshot target, Vec3 crystalPos, Set<Long> resistantBlocks, Difficulty difficulty) {
+    private float calcDamage(TargetSnapshot target, Vec3 crystalPos, ResistantBlockCache resistantBlocks, Difficulty difficulty) {
         return calcDamage(target.pos(), target.box(), target.reduction(), target.player(), difficulty, crystalPos, resistantBlocks);
     }
 
-    private float calcDamage(Vec3 entityPos, AABB entityBox, DamageReductionData reduction, boolean playerEntity, Difficulty difficulty, Vec3 crystalPos, Set<Long> resistantBlocks) {
+    private float calcDamage(Vec3 entityPos, AABB entityBox, DamageReductionData reduction, boolean playerEntity, Difficulty difficulty, Vec3 crystalPos, ResistantBlockCache resistantBlocks) {
         if (playerEntity && difficulty == Difficulty.PEACEFUL) {
             return 0.0f;
         }
 
         float damage;
         BlockPos supportPos = BlockPos.containing(crystalPos.x, crystalPos.y - 1.0, crystalPos.z);
-        if (playerEntity && crystalPos.y - entityPos.y > 1.5652173822904127 && resistantBlocks.contains(supportPos.asLong())) {
+        if (playerEntity && crystalPos.y - entityPos.y > 1.5652173822904127 && resistantBlocks.isResistant(supportPos.asLong())) {
             damage = 1.0f;
         } else {
             damage = calcRawDamage(entityPos, entityBox, crystalPos, resistantBlocks);
@@ -1214,7 +1195,7 @@ public class ZealotCrystalPlus extends Module {
         return reduction.apply(damage);
     }
 
-    private float calcRawDamage(Vec3 entityPos, AABB entityBox, Vec3 crystalPos, Set<Long> resistantBlocks) {
+    private float calcRawDamage(Vec3 entityPos, AABB entityBox, Vec3 crystalPos, ResistantBlockCache resistantBlocks) {
         float scaledDist = (float) (entityPos.distanceTo(crystalPos) / DOUBLE_SIZE);
         if (scaledDist > 1.0f) return 0.0f;
 
@@ -1222,7 +1203,7 @@ public class ZealotCrystalPlus extends Module {
         return ((factor * factor + factor) * DAMAGE_FACTOR + 1.0f);
     }
 
-    private float getExposureAmount(AABB entityBox, Vec3 explosionPos, Set<Long> resistantBlocks) {
+    private float getExposureAmount(AABB entityBox, Vec3 explosionPos, ResistantBlockCache resistantBlocks) {
         double width = entityBox.maxX - entityBox.minX;
         double height = entityBox.maxY - entityBox.minY;
         double gridMultiplierXZ = 1.0 / (width * 2.0 + 1.0);
@@ -1251,7 +1232,7 @@ public class ZealotCrystalPlus extends Module {
         return total == 0 ? 0.0f : count / (float) total;
     }
 
-    private boolean rayTraceResistant(Vec3 from, Vec3 to, Set<Long> resistantBlocks) {
+    private boolean rayTraceResistant(Vec3 from, Vec3 to, ResistantBlockCache resistantBlocks) {
         int x = Mth.floor(from.x);
         int y = Mth.floor(from.y);
         int z = Mth.floor(from.z);
@@ -1263,9 +1244,9 @@ public class ZealotCrystalPlus extends Module {
         double dy = to.y - from.y;
         double dz = to.z - from.z;
 
-        int stepX = dx > 0.0 ? 1 : dx < 0.0 ? -1 : 0;
-        int stepY = dy > 0.0 ? 1 : dy < 0.0 ? -1 : 0;
-        int stepZ = dz > 0.0 ? 1 : dz < 0.0 ? -1 : 0;
+        int stepX = dx > 0.0 ? 1 : (dx < 0.0 ? -1 : 0);
+        int stepY = dy > 0.0 ? 1 : (dy < 0.0 ? -1 : 0);
+        int stepZ = dz > 0.0 ? 1 : (dz < 0.0 ? -1 : 0);
 
         double tMaxX = intBound(from.x, dx);
         double tMaxY = intBound(from.y, dy);
@@ -1275,7 +1256,7 @@ public class ZealotCrystalPlus extends Module {
         double tDeltaZ = stepZ == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dz);
 
         for (int i = 0; i < 200; i++) {
-            if (resistantBlocks.contains(BlockPos.asLong(x, y, z))) {
+            if (resistantBlocks.isResistant(BlockPos.asLong(x, y, z))) {
                 return true;
             }
             if (x == endX && y == endY && z == endZ) {
@@ -1331,6 +1312,16 @@ public class ZealotCrystalPlus extends Module {
     }
 
     private List<BlockPos> getRawPosList() {
+        long now = System.currentTimeMillis();
+        List<BlockPos> cached = cachedRawPosList;
+        if (now < rawPosListExpireAt) return cached;
+        cached = buildRawPosList();
+        cachedRawPosList = cached;
+        rawPosListExpireAt = now + 60L;
+        return cached;
+    }
+
+    private List<BlockPos> buildRawPosList() {
         if (nullCheck()) return List.of();
 
         List<BlockPos> list = new ArrayList<>();
@@ -1595,28 +1586,6 @@ public class ZealotCrystalPlus extends Module {
         crystalSpawnMap.values().removeIf(time -> time + 5000L < current);
         attackedCrystalMap.values().removeIf(time -> time < current);
         attackedPosMap.values().removeIf(time -> time < current);
-    }
-
-    private void cacheFallbackRotation(Rot2f rotation) {
-        if (rotation == null) return;
-
-        fallbackRotation = new Rot2f(rotation.getYaw(), rotation.getPitch());
-        fallbackRotationExpireAt = System.currentTimeMillis() + FALLBACK_ROTATION_DURATION_MS;
-    }
-
-    private Rot2f getFallbackRotation() {
-        Rot2f rotation = fallbackRotation;
-        if (rotation == null) {
-            return null;
-        }
-
-        if (System.currentTimeMillis() > fallbackRotationExpireAt) {
-            fallbackRotation = null;
-            fallbackRotationExpireAt = 0L;
-            return null;
-        }
-
-        return new Rot2f(rotation.getYaw(), rotation.getPitch());
     }
 
     private boolean isEatingPaused() {
@@ -1890,6 +1859,45 @@ public class ZealotCrystalPlus extends Module {
     private static final float DOUBLE_SIZE = 12.0f;
     private static final float DAMAGE_FACTOR = 42.0f;
 
+    private static final class ResistantBlockCache {
+        private static final ResistantBlockCache EMPTY = new ResistantBlockCache(null, false);
+
+        private final Level level;
+        private final boolean assumeInstantMine;
+        private final Map<Long, Boolean> cache = new HashMap<>();
+
+        private ResistantBlockCache(Level level, boolean assumeInstantMine) {
+            this.level = level;
+            this.assumeInstantMine = assumeInstantMine;
+        }
+
+        private boolean isResistant(long posLong) {
+            Boolean cached = cache.get(posLong);
+            if (cached != null) return cached;
+            boolean resistant = false;
+            if (level != null) {
+                BlockPos pos = BlockPos.of(posLong);
+                BlockState state = level.getBlockState(pos);
+                resistant = isResistantStateStatic(state) && (!assumeInstantMine || !PacketMine.INSTANCE.isInstantMining(pos));
+            }
+            cache.put(posLong, resistant);
+            return resistant;
+        }
+    }
+
+    private static boolean isResistantStateStatic(BlockState state) {
+        return state.is(Blocks.BEDROCK)
+                || state.is(Blocks.OBSIDIAN)
+                || state.is(Blocks.CRYING_OBSIDIAN)
+                || state.is(Blocks.ENDER_CHEST)
+                || state.is(Blocks.RESPAWN_ANCHOR)
+                || state.is(Blocks.ENCHANTING_TABLE)
+                || state.is(Blocks.ANVIL)
+                || state.is(Blocks.CHIPPED_ANVIL)
+                || state.is(Blocks.DAMAGED_ANVIL)
+                || state.is(Blocks.NETHERITE_BLOCK);
+    }
+
     private record SettingsSnapshot(
             int globalDelayNanos,
             float noSuicide,
@@ -1962,10 +1970,10 @@ public class ZealotCrystalPlus extends Module {
             List<TargetSnapshot> targets,
             List<BlockPos> placePositions,
             List<CrystalSnapshot> crystals,
-            Set<Long> resistantBlocks,
+            ResistantBlockCache resistantBlocks,
             long capturedAt
     ) {
-        private static final SnapshotData EMPTY = new SnapshotData(-1L, null, null, List.of(), List.of(), List.of(), Set.of(), 0L);
+        private static final SnapshotData EMPTY = new SnapshotData(-1L, null, null, List.of(), List.of(), List.of(), ResistantBlockCache.EMPTY, 0L);
     }
 
     private record AsyncResult(

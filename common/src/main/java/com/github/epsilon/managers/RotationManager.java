@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.movement.MovementFix;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
@@ -254,7 +255,7 @@ public class RotationManager {
 
     @EventHandler
     private void onRaytrace(RaytraceEvent event) {
-        if (rotations != null && event.getEntity() == mc.player && active) {
+        if (rotations != null && event.getEntity() == mc.player && active && ClientSetting.INSTANCE.modifyCrosshair.getValue()) {
             event.setYaw(rotations.getYaw());
             event.setPitch(rotations.getPitch());
         }
