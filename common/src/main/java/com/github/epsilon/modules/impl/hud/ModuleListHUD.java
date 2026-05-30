@@ -44,7 +44,7 @@ public class ModuleListHUD extends HudModule {
     private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
     private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
 
-    private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
+    private final BoolSetting backgroundBlur = boolSetting("Background Blur", false); // 好他妈掉帧啊
     private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
 
     private static final float ROW_HEIGHT = 22.0f;
