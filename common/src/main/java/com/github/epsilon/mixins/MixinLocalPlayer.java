@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
+import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.events.impl.SlowdownEvent;
 import com.github.epsilon.events.impl.SwingHandEvent;
@@ -23,17 +24,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @Unique
-    private SendPositionEvent sakura$motionEvent;
+    private SendPositionEvent epsilon$sendPositionEvent;
 
     protected MixinLocalPlayer(ClientLevel level, GameProfile gameProfile) {
         super(level, gameProfile);
     }
 
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
+    private void onTick(CallbackInfo ci) {
+        PlayerTickEvent event = EventBus.INSTANCE.post(new PlayerTickEvent());
+        if (event.isCancelled()) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)
     private void onPreSendPosition(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
-        sakura$motionEvent = EventBus.INSTANCE.post(new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()));
-        if (sakura$motionEvent.isCancelled()) {
+        epsilon$sendPositionEvent = EventBus.INSTANCE.post(new SendPositionEvent(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot(), player.onGround()));
+        if (epsilon$sendPositionEvent.isCancelled()) {
             ci.cancel();
         }
     }
@@ -48,37 +57,37 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;position()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 redirectPosition(LocalPlayer instance, Operation<Vec3> original) {
-        return new Vec3(sakura$motionEvent.getX(), sakura$motionEvent.getY(), sakura$motionEvent.getZ());
+        return new Vec3(epsilon$sendPositionEvent.getX(), epsilon$sendPositionEvent.getY(), epsilon$sendPositionEvent.getZ());
     }
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getX()D"))
     private double redirectGetX(LocalPlayer instance, Operation<Double> original) {
-        return sakura$motionEvent.getX();
+        return epsilon$sendPositionEvent.getX();
     }
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getY()D"))
     private double redirectGetY(LocalPlayer instance, Operation<Double> original) {
-        return sakura$motionEvent.getY();
+        return epsilon$sendPositionEvent.getY();
     }
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getZ()D"))
     private double redirectGetZ(LocalPlayer instance, Operation<Double> original) {
-        return sakura$motionEvent.getZ();
+        return epsilon$sendPositionEvent.getZ();
     }
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getYRot()F"))
     private float redirectGetYRot(LocalPlayer instance, Operation<Float> original) {
-        return sakura$motionEvent.getYaw();
+        return epsilon$sendPositionEvent.getYaw();
     }
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getXRot()F"))
     private float redirectGetXRot(LocalPlayer instance, Operation<Float> original) {
-        return sakura$motionEvent.getPitch();
+        return epsilon$sendPositionEvent.getPitch();
     }
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
     private boolean redirectOnGround(LocalPlayer instance, Operation<Boolean> original) {
-        return sakura$motionEvent.isOnGround();
+        return epsilon$sendPositionEvent.isOnGround();
     }
 
     @Inject(method = "moveTowardsClosestSpace", at = @At("HEAD"), cancellable = true)

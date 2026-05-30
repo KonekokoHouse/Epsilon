@@ -5,10 +5,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
-import com.github.epsilon.events.impl.KeyboardInputEvent;
-import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.events.impl.SendPositionEvent;
-import com.github.epsilon.events.impl.TickEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -221,10 +218,8 @@ public class Scaffold extends Module {
         mc.options.keyShift.setDown(mc.player.onGround() && SafeWalk.INSTANCE.isOnBlockEdge(0.3F));
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
-    private void onTick(TickEvent.Pre event) {
-        if (nullCheck()) return;
-
+    @EventHandler
+    private void onPlayerTick(PlayerTickEvent event) {
         blockResult = swapMode.is(SwapMode.InvSwitch) ? InvUtils.find(this::isValidStack) : InvUtils.findInHotbar(this::isValidStack);
         if (!blockResult.found()) return;
 
@@ -239,6 +234,7 @@ public class Scaffold extends Module {
 
         if (blockPos != null) {
             boolean reachable = true;
+
             if (mc.player.getDeltaMovement().y < -0.1) {
                 FallingPlayer fallingPlayer = new FallingPlayer(mc.player);
                 fallingPlayer.calculate(2);
@@ -246,10 +242,10 @@ public class Scaffold extends Module {
                     reachable = false;
                 }
             }
-            double strength = mc.player.getDeltaMovement().horizontal().length();
-            if ((!reachable || strength >= 1.5D) && rotateCount <= 8 && getBlockCount() >= 1) {
+
+            if ((!reachable || mc.player.getDeltaMovement().horizontal().length() >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
                 Rot2f rotation = getRotation(blockPos, direction);
-                Constants.skipTicks++;
+                event.setCancelled(true);
                 rotateCount++;
                 RotationManager.INSTANCE.rotations = rotation;
                 RotationManager.INSTANCE.setActive(true);
@@ -297,19 +293,10 @@ public class Scaffold extends Module {
         }
     }
 
-    private int findBlockSlot() {
-        for (int i = 0; i < 9; i++) {
-            ItemStack stack = mc.player.getInventory().getItem(i);
-            if (isValidStack(stack)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     private int getBlockCount() {
         int total = 0;
-        for (int i = 0; i < 9; i++) {
+        int maxSlot = swapMode.is(SwapMode.InvSwitch) ? mc.player.getInventory().getContainerSize() : 9;
+        for (int i = 0; i < maxSlot; i++) {
             ItemStack stack = mc.player.getInventory().getItem(i);
             if (isValidStack(stack)) {
                 total += stack.getCount();
