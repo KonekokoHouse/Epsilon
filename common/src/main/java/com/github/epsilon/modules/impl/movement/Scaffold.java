@@ -379,7 +379,7 @@ public class Scaffold extends Module {
             }
 
             if (render.getValue()) {
-                renderBoxes.add(new RenderBox(new AABB(blockPos.offset(direction.getUnitVec3i())), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                renderBoxes.add(new RenderBox(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
             }
         }
 
