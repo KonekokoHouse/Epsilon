@@ -130,7 +130,8 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     private boolean handleFieldClick(int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && getHiddenModeCount() > 0) {
+        if ((button == GLFW.GLFW_MOUSE_BUTTON_RIGHT  || button == GLFW.GLFW_MOUSE_BUTTON_LEFT)
+                && getHiddenModeCount() > 0) {
             expanded = !expanded;
             SoundManager.INSTANCE.playInUi(expanded ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
             return true;
