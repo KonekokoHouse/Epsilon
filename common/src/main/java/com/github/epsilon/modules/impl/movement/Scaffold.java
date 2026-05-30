@@ -111,6 +111,7 @@ public class Scaffold extends Module {
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
     private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
     private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
+    private final BoolSetting skipTicks = boolSetting("Skip Ticks", false);
     private final BoolSetting snap = boolSetting("Snap", false, () -> mode.is(Mode.GodBridge));
     private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace", RaytraceMode.Hypixel);
     private final IntSetting rotateSpeed = intSetting("Rotation Speed", 10, 1, 10, 1, () -> !raytrace.is(RaytraceMode.Hypixel));
@@ -232,7 +233,7 @@ public class Scaffold extends Module {
 
         getBlockInfo();
 
-        if (blockPos != null) {
+        if (skipTicks.getValue() && blockPos != null) {
             boolean reachable = true;
 
             if (mc.player.getDeltaMovement().y < -0.1) {
@@ -246,6 +247,7 @@ public class Scaffold extends Module {
             if ((!reachable || mc.player.getDeltaMovement().horizontal().length() >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
                 Rot2f rotation = getRotation(blockPos, direction);
                 event.setCancelled(true);
+
                 rotateCount++;
                 RotationManager.INSTANCE.rotations = rotation;
                 RotationManager.INSTANCE.setActive(true);

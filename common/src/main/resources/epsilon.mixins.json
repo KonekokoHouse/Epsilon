@@ -7,7 +7,6 @@
     "MixinBlockCollisions",
     "MixinCamera",
     "MixinChatComponent",
-    "MixinClientLevel",
     "MixinClientPacketListener",
     "MixinConnection",
     "MixinEntity",

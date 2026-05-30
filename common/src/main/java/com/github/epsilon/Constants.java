@@ -16,6 +16,4 @@ public class Constants {
 
     public static final Logger LOGGER = LogManager.getLogger(Constants.NAME);
 
-    public static int skipTicks;
-
 }
