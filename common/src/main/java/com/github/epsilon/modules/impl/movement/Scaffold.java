@@ -78,7 +78,10 @@ public class Scaffold extends Module {
                         Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
                         Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
 
-                        AABB renderBox = getRenderBox(box, scale);
+                        AABB renderBox = box.aabb;
+                        if (box.shrink()) {
+                            renderBox = AABB.ofSize(renderBox.getCenter(), renderBox.getXsize() * scale, renderBox.getYsize() * scale, renderBox.getZsize() * scale);
+                        }
 
                         Render3DUtils.drawFilledBox(renderBox, side);
                         Render3DUtils.drawOutlineBox(event.getPoseStack(), renderBox, line);
@@ -86,6 +89,39 @@ public class Scaffold extends Module {
                 }
         ));
     }
+
+    private enum RaytraceMode {
+        Hypixel,
+        Normal,
+        Strict
+    }
+
+    private final BoolSetting telly = boolSetting("Telly", false);
+    //private final BoolSetting spoof = boolSetting("Spoof", false);
+    private final BoolSetting snap = boolSetting("Snap", false, () -> !telly.getValue());
+    private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace", RaytraceMode.Hypixel);
+    private final IntSetting rotateSpeed = intSetting("Rot Speed", 10, 1, 10, 1, () -> !raytrace.is(RaytraceMode.Hypixel));
+    private final IntSetting rotateBackSpeed = intSetting("Back Speed", 10, 1, 10, 1, telly::getValue);
+    private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, telly::getValue);
+    private final BoolSetting safeWalk = boolSetting("Safe Walk", false, () -> !telly.getValue());
+
+    private final BoolSetting swingHand = boolSetting("Swing Hand", true);
+    private final BoolSetting render = boolSetting("Render", true);
+    private final BoolSetting fade = boolSetting("Fade", false, render::getValue);
+    private final IntSetting fadeTime = intSetting("Fade Time", 500, 0, 3000, 50, () -> render.getValue() && fade.getValue());
+    private final BoolSetting shrink = boolSetting("Shrink", true, render::getValue);
+    private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 183, 197, 100), render::getValue);
+    private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
+
+    private int airTick;
+    private int yLevel;
+    private BlockPos blockPos;
+    private Direction enumFacing;
+    private int oldSlot = -1;
+    private Rot2f rotation;
+    private int rotateCount = 0;
+
+    private final List<RenderBox> renderBoxes = new ArrayList<>();
 
     private static final List<Block> BLACKLISTED_BLOCKS = List.of(
             Blocks.AIR,
@@ -136,39 +172,6 @@ public class Scaffold extends Module {
             Blocks.REDSTONE_TORCH,
             Blocks.FLOWER_POT
     );
-
-    private enum RaytraceMode {
-        Hypixel,
-        Normal,
-        Strict
-    }
-
-    private final BoolSetting telly = boolSetting("Telly", false);
-    //private final BoolSetting spoof = boolSetting("Spoof", false);
-    private final BoolSetting snap = boolSetting("Snap", false, () -> !telly.getValue());
-    private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace", RaytraceMode.Hypixel);
-    private final IntSetting rotateSpeed = intSetting("Rot Speed", 10, 1, 10, 1, () -> !raytrace.is(RaytraceMode.Hypixel));
-    private final IntSetting rotateBackSpeed = intSetting("Back Speed", 10, 1, 10, 1, telly::getValue);
-    private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, telly::getValue);
-    private final BoolSetting safeWalk = boolSetting("Safe Walk", false, () -> !telly.getValue());
-
-    private final BoolSetting swingHand = boolSetting("Swing Hand", true);
-    private final BoolSetting render = boolSetting("Render", true);
-    private final BoolSetting fade = boolSetting("Fade", false, render::getValue);
-    private final IntSetting fadeTime = intSetting("Fade Time", 500, 0, 3000, 50, () -> render.getValue() && fade.getValue());
-    private final BoolSetting shrink = boolSetting("Shrink", true, render::getValue);
-    private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 183, 197, 100), render::getValue);
-    private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
-
-    private int airTick;
-    private int yLevel;
-    private BlockPos blockPos;
-    private Direction enumFacing;
-    private int oldSlot = -1;
-    private Rot2f rotation;
-    private int rotateCount = 0;
-
-    private final List<RenderBox> renderBoxes = new ArrayList<>();
 
     @Override
     protected void onEnable() {
@@ -533,11 +536,7 @@ public class Scaffold extends Module {
     }
 
     private static AABB getRenderBox(RenderBox boxes, double scale) {
-        AABB renderBox = boxes.aabb;
-        if (boxes.shrink()) {
-            return AABB.ofSize(renderBox.getCenter(), renderBox.getXsize() * scale, renderBox.getYsize() * scale, renderBox.getZsize() * scale);
-        }
-        return renderBox;
+
     }
 
 
