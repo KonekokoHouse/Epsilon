@@ -1,4 +1,4 @@
-package dev.maru.modules;
+package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventBus;
@@ -9,13 +9,13 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.movement.SafeWalk;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FallingPlayer;
+import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -39,7 +39,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector2f;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -90,36 +89,51 @@ public class Scaffold extends Module {
         ));
     }
 
+    private enum Mode {
+        TellyBridge,
+        GodBridge
+    }
+
     private enum RaytraceMode {
         Hypixel,
         Normal,
         Strict
     }
 
-    private final BoolSetting telly = boolSetting("Telly", false);
-    //private final BoolSetting spoof = boolSetting("Spoof", false);
-    private final BoolSetting snap = boolSetting("Snap", false, () -> !telly.getValue());
+    private enum SwapMode {
+        None,
+        Normal,
+        Silent,
+        InvSwitch
+    }
+
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.TellyBridge);
+    private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.Normal);
+    private final BoolSetting swapBack = boolSetting("Swap Back", true, () -> swapMode.is(SwapMode.Normal));
+    private final BoolSetting snap = boolSetting("Snap", false, () -> mode.is(Mode.GodBridge));
     private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace", RaytraceMode.Hypixel);
-    private final IntSetting rotateSpeed = intSetting("Rot Speed", 10, 1, 10, 1, () -> !raytrace.is(RaytraceMode.Hypixel));
-    private final IntSetting rotateBackSpeed = intSetting("Back Speed", 10, 1, 10, 1, telly::getValue);
-    private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, telly::getValue);
-    private final BoolSetting safeWalk = boolSetting("Safe Walk", false, () -> !telly.getValue());
+    private final IntSetting rotateSpeed = intSetting("Rotation Speed", 10, 1, 10, 1, () -> !raytrace.is(RaytraceMode.Hypixel));
+    private final IntSetting rotateBackSpeed = intSetting("Rotation Back Speed", 10, 1, 10, 1, () -> mode.is(Mode.TellyBridge));
+    private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, () -> mode.is(Mode.TellyBridge));
+    private final BoolSetting safeWalk = boolSetting("Safe Walk", false, () -> mode.is(Mode.GodBridge));
 
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
     private final BoolSetting render = boolSetting("Render", true);
-    private final BoolSetting fade = boolSetting("Fade", false, render::getValue);
+    private final BoolSetting fade = boolSetting("Fade", true, render::getValue);
     private final IntSetting fadeTime = intSetting("Fade Time", 500, 0, 3000, 50, () -> render.getValue() && fade.getValue());
-    private final BoolSetting shrink = boolSetting("Shrink", true, render::getValue);
+    private final BoolSetting shrink = boolSetting("Shrink", false, render::getValue);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 183, 197, 100), render::getValue);
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
 
-    private int airTick;
+    private int airTicks;
     private int yLevel;
     private BlockPos blockPos;
-    private Direction enumFacing;
-    private int oldSlot = -1;
+    private Direction direction;
     private Rot2f rotation;
     private int rotateCount = 0;
+
+    private int blockSlot = -1;
+    private boolean shouldSwapBack;
 
     private final List<RenderBox> renderBoxes = new ArrayList<>();
 
@@ -175,33 +189,31 @@ public class Scaffold extends Module {
 
     @Override
     protected void onEnable() {
-        if (mc.player != null) {
-            oldSlot = mc.player.getInventory().getSelectedSlot();
-        }
-
-        airTick = 0;
+        airTicks = 0;
         blockPos = null;
-        enumFacing = null;
+        direction = null;
         rotation = null;
         rotateCount = 0;
+        blockSlot = -1;
+        shouldSwapBack = false;
     }
 
     @Override
     protected void onDisable() {
-        if (mc.player == null) return;
-
-        boolean isHoldingShift = InputConstants.isKeyDown(mc.getWindow(), mc.options.keyShift.getDefaultKey().getValue());
-        mc.options.keyShift.setDown(isHoldingShift);
-
-        if (oldSlot != -1) {
-            mc.player.getInventory().setSelectedSlot(oldSlot);
-        }
         yLevel = 0;
+        if (!nullCheck()) {
+            if (shouldSwapBack) {
+                InvUtils.swapBack();
+                shouldSwapBack = false;
+            }
+            boolean isHoldingShift = InputConstants.isKeyDown(mc.getWindow(), mc.options.keyShift.getDefaultKey().getValue());
+            mc.options.keyShift.setDown(isHoldingShift);
+        }
     }
 
     @EventHandler
     private void onMotion(SendPositionEvent event) {
-        if (telly.getValue() || !safeWalk.getValue()) return;
+        if (mode.is(Mode.TellyBridge) || !safeWalk.getValue()) return;
         mc.options.keyShift.setDown(mc.player.onGround() && SafeWalk.INSTANCE.isOnBlockEdge(0.3F));
     }
 
@@ -209,16 +221,13 @@ public class Scaffold extends Module {
     private void onTick(TickEvent.Pre event) {
         if (nullCheck()) return;
 
-        int slotId = findBlockSlot();
-        if (slotId != -1 && mc.player.getInventory().getSelectedSlot() != slotId) {
-            mc.player.getInventory().setSelectedSlot(slotId);
-        }
+        blockSlot = findBlockSlot();
 
         if (mc.player.onGround()) {
-            airTick = 0;
+            airTicks = 0;
             yLevel = Mth.floor(mc.player.getY()) - 1;
         } else {
-            airTick++;
+            airTicks++;
         }
 
         getBlockInfo();
@@ -233,25 +242,38 @@ public class Scaffold extends Module {
                 }
             }
             double strength = mc.player.getDeltaMovement().horizontal().length();
-            if ((!reachable || strength >= 1.5D) && rotateCount <= 8 && getBlockCount() >= 1 && isValidStack(mc.player.getInventory().getSelectedItem())) {
-                Rot2f rotation = getRotation(blockPos, enumFacing);
+            if ((!reachable || strength >= 1.5D) && rotateCount <= 8 && getBlockCount() >= 1) {
+                Rot2f rotation = getRotation(blockPos, direction);
                 Constants.skipTicks++;
                 rotateCount++;
                 RotationManager.INSTANCE.rotations = rotation;
                 RotationManager.INSTANCE.setActive(true);
                 mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
-                InteractionResult result = mc.gameMode.useItemOn(
-                        mc.player,
-                        InteractionHand.MAIN_HAND,
-                        new BlockHitResult(getVec3(blockPos, enumFacing), enumFacing, blockPos, false)
-                );
+
+                switch (swapMode.getValue()) {
+                    case Normal -> {
+                        InvUtils.swap(blockSlot,true);
+                        if (swapBack.getValue()) shouldSwapBack = true;
+                    }
+                    case Silent -> InvUtils.swap(blockSlot, true);
+                    case InvSwitch -> InvUtils.invSwap(blockSlot);
+                }
+
+                if (!isValidStack(mc.player.getInventory().getSelectedItem())) return;
+
+                InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
                 if (result.consumesAction()) {
                     if (swingHand.getValue()) mc.player.swing(InteractionHand.MAIN_HAND);
                     else mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
 
                     if (render.getValue()) {
-                        renderBoxes.add(new RenderBox(new AABB(blockPos.relative(enumFacing)), new java.awt.Color(255, 105, 180), new java.awt.Color(255, 183, 197, 100), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                        renderBoxes.add(new RenderBox(new AABB(blockPos.relative(direction)), new java.awt.Color(255, 105, 180), new java.awt.Color(255, 183, 197, 100), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
                     }
+                }
+
+                switch (swapMode.getValue()) {
+                    case Silent -> InvUtils.swapBack();
+                    case InvSwitch -> InvUtils.invSwapBack();
                 }
                 return;
             } else {
@@ -259,16 +281,15 @@ public class Scaffold extends Module {
             }
         }
 
-        if (telly.getValue()) {
-            handleTelly();
-        } else {
-            handleNormal();
+        switch (mode.getValue()) {
+            case TellyBridge -> handleTelly();
+            case GodBridge -> handleNormal();
         }
     }
 
     @EventHandler
     private void onMoveInput(KeyboardInputEvent event) {
-        if (mc.player.onGround() && !mc.options.keyJump.isDown() && MoveUtils.isMoving() && telly.getValue()) {
+        if (mc.player.onGround() && !mc.options.keyJump.isDown() && MoveUtils.isMoving() && mode.is(Mode.TellyBridge)) {
             event.setJump(true);
         }
     }
@@ -300,54 +321,73 @@ public class Scaffold extends Module {
             return;
         }
 
-        rotation = getRotation(blockPos, enumFacing);
+        rotation = getRotation(blockPos, direction);
         int speed = rotateSpeed.getValue();
 
         if (raytrace.is(RaytraceMode.Hypixel)) {
-            speed = airTick <= 1 ? 127 : 35;
+            speed = airTicks <= 1 ? 127 : 35;
         }
 
         RotationManager.INSTANCE.setRotations(rotation, speed);
 
-        if (airTick > tellyTicks.getValue()) {
+        if (airTicks > tellyTicks.getValue()) {
             place();
         }
     }
 
     private void handleNormal() {
         if (onAir() || !snap.getValue()) {
-            rotation = getRotation(blockPos, enumFacing);
+            rotation = getRotation(blockPos, direction);
             RotationManager.INSTANCE.setRotations(rotation, rotateSpeed.getValue());
         }
         place();
     }
 
     private void place() {
-        if (!onAir() || blockPos == null || enumFacing == null || !isValidStack(mc.player.getInventory().getSelectedItem())) {
+        if (!onAir() || blockPos == null || direction == null) {
             return;
         }
 
         if (switch (raytrace.getValue()) {
             case Hypixel -> !RotationManager.INSTANCE.isDone();
             case Normal -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), blockPos);
-            case Strict -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), blockPos, enumFacing);
+            case Strict -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), blockPos, direction);
         }) {
             return;
         }
 
-        InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(getVec3(blockPos, enumFacing), enumFacing, blockPos, false));
+        switch (swapMode.getValue()) {
+            case Normal -> {
+                InvUtils.swap(blockSlot,true);
+                if (swapBack.getValue()) shouldSwapBack = true;
+            }
+            case Silent -> InvUtils.swap(blockSlot, true);
+            case InvSwitch -> InvUtils.invSwap(blockSlot);
+        }
+
+        if (!isValidStack(mc.player.getInventory().getSelectedItem())) return;
+
+        InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
         if (result.consumesAction()) {
-            if (swingHand.getValue()) mc.player.swing(InteractionHand.MAIN_HAND);
-            else mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+            if (swingHand.getValue()) {
+                mc.player.swing(InteractionHand.MAIN_HAND);
+            } else {
+                mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+            }
 
             if (render.getValue()) {
-                renderBoxes.add(new RenderBox(new AABB(blockPos.offset(enumFacing.getUnitVec3i())), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                renderBoxes.add(new RenderBox(new AABB(blockPos.offset(direction.getUnitVec3i())), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
             }
+        }
+
+        switch (swapMode.getValue()) {
+            case Silent -> InvUtils.swapBack();
+            case InvSwitch -> InvUtils.invSwapBack();
         }
     }
 
     private int getYLevel() {
-        if (!mc.options.keyJump.isDown() && MoveUtils.isMoving() && mc.player.fallDistance <= 0.25F && telly.getValue()) {
+        if (!mc.options.keyJump.isDown() && MoveUtils.isMoving() && mc.player.fallDistance <= 0.25F && mode.is(Mode.TellyBridge)) {
             return yLevel;
         }
         return Mth.floor(mc.player.getY()) - 1;
@@ -355,7 +395,7 @@ public class Scaffold extends Module {
 
     private void getBlockInfo() {
         blockPos = null;
-        enumFacing = null;
+        direction = null;
 
         Vec3 baseVec = mc.player.getEyePosition();
         BlockPos base = BlockPos.containing(baseVec.x, getYLevel(), baseVec.z);
@@ -404,11 +444,10 @@ public class Scaffold extends Module {
             return false;
         }
 
-        Vec3 center = new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-        for (Direction direction : Direction.values()) {
-            Vec3 normal = new Vec3(direction.getStepX(), direction.getStepY(), direction.getStepZ());
-            Vec3 hit = center.add(normal.scale(0.5));
-            BlockPos baseBlockPos = pos.offset(direction.getStepX(), direction.getStepY(), direction.getStepZ());
+        for (Direction dir : Direction.values()) {
+            Vec3 normal = new Vec3(dir.getStepX(), dir.getStepY(), dir.getStepZ());
+            Vec3 hit = pos.getBottomCenter().add(normal.scale(0.5));
+            BlockPos baseBlockPos = pos.offset(dir.getStepX(), dir.getStepY(), dir.getStepZ());
 
             if (!isSolidAndNonInteractive(mc.level.getBlockState(baseBlockPos), mc.level, baseBlockPos)) {
                 continue;
@@ -416,12 +455,12 @@ public class Scaffold extends Module {
 
             Vec3 relevant = hit.subtract(baseVec);
             if (relevant.lengthSqr() <= 4.5D * 4.5D && relevant.dot(normal) >= 0.0D) {
-                if (direction.getOpposite() == Direction.UP && MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
+                if (dir.getOpposite() == Direction.UP && MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
                     continue;
                 }
 
                 blockPos = baseBlockPos;
-                enumFacing = direction.getOpposite();
+                direction = dir.getOpposite();
                 return true;
             }
         }
@@ -535,13 +574,8 @@ public class Scaffold extends Module {
         return !(block instanceof SlabBlock) && !BLACKLISTED_BLOCKS.contains(block);
     }
 
-    private static AABB getRenderBox(RenderBox boxes, double scale) {
 
-    }
-
-
-    private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
-                             boolean shrink) {
+    private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade, boolean shrink) {
     }
 
 }
