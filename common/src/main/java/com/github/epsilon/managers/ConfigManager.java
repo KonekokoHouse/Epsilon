@@ -49,6 +49,7 @@ public class ConfigManager {
     private final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     private String activeConfigName = DEFAULT_CONFIG_NAME;
+    private boolean rootDirectoriesEnsured = false;
 
     private ConfigManager() {
     }
@@ -549,10 +550,14 @@ public class ConfigManager {
     }
 
     private void ensureRootDirectories() throws IOException {
+        if (rootDirectoriesEnsured) {
+            return;
+        }
         Files.createDirectories(configDir);
         Files.createDirectories(configsDir);
         Files.createDirectories(importsDir);
         Files.createDirectories(exportsDir);
+        rootDirectoriesEnsured = true;
     }
 
     private void ensureConfigExists(String configName) throws IOException {
