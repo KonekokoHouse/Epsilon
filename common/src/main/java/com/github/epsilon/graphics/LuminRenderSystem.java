@@ -37,8 +37,6 @@ public class LuminRenderSystem {
     public static final Projection guiOrthoProjection = new Projection();
 
     private static final ProjectionMatrixBuffer guiProjectionMatrixBuffer = new ProjectionMatrixBuffer("lumin-gui");
-    private static final QuadIndexBuffer quadIndexBuffer = new QuadIndexBuffer();
-    private static final TransformUniformBuffer transformUniformBuffer = new TransformUniformBuffer();
 
     @Nullable
     private static LuminRenderTarget activeTarget = null;
@@ -49,8 +47,6 @@ public class LuminRenderSystem {
 
     public static void destroyAll() {
         guiProjectionMatrixBuffer.close();
-        quadIndexBuffer.close();
-        transformUniformBuffer.close();
         RenderTargetHolder.INSTANCE.destroyAll();
         RendererHolder.INSTANCE.destroyAll();
     }
@@ -176,15 +172,21 @@ public class LuminRenderSystem {
     }
 
     public static GpuBuffer getQuadIndexBuffer(int indexCount) {
-        return quadIndexBuffer.getBuffer(indexCount);
+        RenderSystem.AutoStorageIndexBuffer autoIndices =
+                RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
+        return autoIndices.getBuffer(indexCount);
     }
 
     public static VertexFormat.IndexType getQuadIndexType() {
-        return quadIndexBuffer.type();
+        RenderSystem.AutoStorageIndexBuffer autoIndices =
+                RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
+        return autoIndices.type();
     }
 
     public static GpuBufferSlice writeTransform(Matrix4fc modelView, Vector4fc colorModulator, Vector3fc modelOffset, Matrix4fc textureMatrix) {
-        return transformUniformBuffer.write(modelView, colorModulator, modelOffset, textureMatrix);
+        return RenderSystem.getDynamicUniforms().writeTransform(
+                modelView, colorModulator, modelOffset, textureMatrix
+        );
     }
 
     public record ScissorRect(int x, int y, int width, int height) {
@@ -198,138 +200,6 @@ public class LuminRenderSystem {
             int indexCount,
             GpuBufferSlice dynamicUniforms
     ) {
-    }
-
-
-
-    private static final class TransformUniformBuffer implements AutoCloseable {
-        private static final int TRANSFORM_UBO_SIZE = new Std140SizeCalculator().putMat4f().putVec4().putVec3().putMat4f().get();
-        private static final int INITIAL_CAPACITY = 256;
-
-        private LuminRingBuffer buffer;
-        private ByteBuffer stagingBuffer;
-        private int blockSize;
-        private int capacity = INITIAL_CAPACITY;
-        private int nextBlock;
-
-        public GpuBufferSlice write(Matrix4fc modelView, Vector4fc colorModulator, Vector3fc modelOffset, Matrix4fc textureMatrix) {
-            ensureBuffer();
-            if (nextBlock >= capacity) {
-                buffer.rotate();
-                nextBlock = 0;
-            }
-
-            int offset = nextBlock * blockSize;
-            stagingBuffer.clear();
-            stagingBuffer.limit(blockSize);
-            Std140Builder.intoBuffer(stagingBuffer)
-                    .putMat4f(modelView)
-                    .putVec4(colorModulator)
-                    .putVec3(modelOffset)
-                    .putMat4f(textureMatrix);
-            stagingBuffer.position(0);
-            stagingBuffer.limit(blockSize);
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(buffer.getGpuBuffer().slice(offset, blockSize), stagingBuffer);
-            nextBlock++;
-            return buffer.getGpuBuffer().slice(offset, blockSize);
-        }
-
-        private void ensureBuffer() {
-            if (buffer != null) {
-                return;
-            }
-            blockSize = roundToward(TRANSFORM_UBO_SIZE, RenderSystem.getDevice().getUniformOffsetAlignment());
-            buffer = new LuminRingBuffer((long) blockSize * capacity, GpuBuffer.USAGE_UNIFORM);
-            stagingBuffer = MemoryUtil.memAlloc(blockSize);
-        }
-
-        private int roundToward(int value, int multiple) {
-            return (value + multiple - 1) / multiple * multiple;
-        }
-
-        @Override
-        public void close() {
-            if (buffer != null) {
-                buffer.close();
-                buffer = null;
-            }
-            if (stagingBuffer != null) {
-                MemoryUtil.memFree(stagingBuffer);
-                stagingBuffer = null;
-            }
-        }
-    }
-
-    private static final class QuadIndexBuffer implements AutoCloseable {
-        private static final int VERTEX_STRIDE = 4;
-        private static final int INDEX_STRIDE = 6;
-
-        private GpuBuffer buffer;
-        private VertexFormat.IndexType type = VertexFormat.IndexType.SHORT;
-        private int indexCount;
-
-        public GpuBuffer getBuffer(int requestedIndexCount) {
-            ensureStorage(requestedIndexCount);
-            return buffer;
-        }
-
-        public VertexFormat.IndexType type() {
-            return type;
-        }
-
-        private void ensureStorage(int requestedIndexCount) {
-            if (requestedIndexCount <= indexCount) {
-                return;
-            }
-
-            int newIndexCount = roundToward(requestedIndexCount * 2, INDEX_STRIDE);
-            int primitiveCount = newIndexCount / INDEX_STRIDE;
-            int vertexCount = primitiveCount * VERTEX_STRIDE;
-            VertexFormat.IndexType newType = VertexFormat.IndexType.least(vertexCount);
-            int bufferSize = roundToward(newIndexCount * newType.bytes, 4);
-            ByteBuffer data = MemoryUtil.memAlloc(bufferSize);
-
-            try {
-                for (int index = 0; index < newIndexCount; index += INDEX_STRIDE) {
-                    int vertex = index * VERTEX_STRIDE / INDEX_STRIDE;
-                    putIndex(data, newType, vertex);
-                    putIndex(data, newType, vertex + 1);
-                    putIndex(data, newType, vertex + 2);
-                    putIndex(data, newType, vertex + 2);
-                    putIndex(data, newType, vertex + 3);
-                    putIndex(data, newType, vertex);
-                }
-                data.flip();
-                if (buffer != null) {
-                    buffer.close();
-                }
-                buffer = RenderSystem.getDevice().createBuffer(() -> "lumin-quad-index-buffer", GpuBuffer.USAGE_INDEX, data);
-                type = newType;
-                indexCount = newIndexCount;
-            } finally {
-                MemoryUtil.memFree(data);
-            }
-        }
-
-        private void putIndex(ByteBuffer buffer, VertexFormat.IndexType type, int value) {
-            if (type == VertexFormat.IndexType.SHORT) {
-                buffer.putShort((short) value);
-            } else {
-                buffer.putInt(value);
-            }
-        }
-
-        private int roundToward(int value, int multiple) {
-            return (value + multiple - 1) / multiple * multiple;
-        }
-
-        @Override
-        public void close() {
-            if (buffer != null) {
-                buffer.close();
-                buffer = null;
-            }
-        }
     }
 
     public static final class LuminRenderTarget implements AutoCloseable {
