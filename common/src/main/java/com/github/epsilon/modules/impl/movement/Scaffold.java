@@ -5,7 +5,10 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
-import com.github.epsilon.events.impl.*;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.events.impl.SendPositionEvent;
+import com.github.epsilon.events.impl.TickEvent;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -252,7 +255,7 @@ public class Scaffold extends Module {
 
                 switch (swapMode.getValue()) {
                     case Normal -> {
-                        InvUtils.swap(blockSlot,true);
+                        InvUtils.swap(blockSlot, true);
                         if (swapBack.getValue()) shouldSwapBack = true;
                     }
                     case Silent -> InvUtils.swap(blockSlot, true);
@@ -358,7 +361,7 @@ public class Scaffold extends Module {
 
         switch (swapMode.getValue()) {
             case Normal -> {
-                InvUtils.swap(blockSlot,true);
+                InvUtils.swap(blockSlot, true);
                 if (swapBack.getValue()) shouldSwapBack = true;
             }
             case Silent -> InvUtils.swap(blockSlot, true);
@@ -575,7 +578,8 @@ public class Scaffold extends Module {
     }
 
 
-    private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade, boolean shrink) {
+    private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
+                             boolean shrink) {
     }
 
 }
