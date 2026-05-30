@@ -63,6 +63,8 @@ public class ClientSetting extends Module {
         case Dropdown -> DropdownScreen.INSTANCE;
     })).group(sgGeneral);
 
+    private final DoubleSetting renderScale = doubleSetting("Render Scale", 2.0, 1.0, 6.0, 0.5).group(sgGeneral);
+
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
         TranslateHolder.INSTANCE.refresh();
         PanelUiTree.clearMemoCache();
@@ -106,5 +108,9 @@ public class ClientSetting extends Module {
     public final ColorSetting chatPrefixColorEnd = colorSetting("Chat Prefix Color End", new Color(150, 220, 255), animatedChatPrefix::getValue).group(sgNotification);
 
     public final DoubleSetting chatPrefixGradientSpeed = doubleSetting("Chat Prefix Gradient Speed", 0.5, 0.1, 1, 0.1, animatedChatPrefix::getValue).group(sgNotification);
+
+    public double getScale() {
+        return renderScale.getValue();
+    }
 
 }

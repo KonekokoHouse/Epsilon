@@ -1,5 +1,7 @@
 package com.github.epsilon.utils.render;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
+
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -56,7 +58,7 @@ public class WorldToScreen {
         final Vector4d projection = projectEntity(viewport, viewProjectionMatrix, absoluteBoundingBox, cameraPos);
         if (projection == null) return null;
 
-        double guiScale = mc.getWindow().getGuiScale();
+        double guiScale = LuminRenderSystem.getGuiScale();
         projection.x /= guiScale;
         projection.y /= guiScale;
         projection.z /= guiScale;

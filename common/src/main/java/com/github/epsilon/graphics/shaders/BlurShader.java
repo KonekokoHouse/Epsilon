@@ -94,11 +94,12 @@ public class BlurShader {
             return;
         }
 
-        float scale = (float) mc.getWindow().getGuiScale();
-        float pxX = x * scale;
-        float pxY = (-y + mc.getWindow().getGuiScaledHeight() - height) * scale;
-        float pxW = width * scale;
-        float pxH = height * scale;
+        LuminRenderSystem.ScissorRect blurRect = LuminRenderSystem.toFramebufferScissor(x, y, width, height);
+        float scale = (float) LuminRenderSystem.getGuiScale();
+        float pxX = blurRect.x();
+        float pxY = blurRect.y();
+        float pxW = blurRect.width();
+        float pxH = blurRect.height();
 
         float rTLPx = Math.max(0.0f, rTL * scale);
         float rTRPx = Math.max(0.0f, rTR * scale);

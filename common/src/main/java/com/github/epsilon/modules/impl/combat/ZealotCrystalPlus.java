@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.TickEvent;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.managers.target.TargetManager;
@@ -1705,14 +1706,14 @@ public class ZealotCrystalPlus extends Module {
 
     private Vector2f projectToScreen(Vec3 pos) {
         Vector3f projected = WorldToScreen.getWorldPositionToScreen(pos);
-        float guiScale = mc.getWindow().getGuiScale();
+        float guiScale = (float) LuminRenderSystem.getGuiScale();
         if (projected.z < 0.0f || projected.z > 1.0f) return null;
 
         float centerX = projected.x / guiScale;
         float centerY = projected.y / guiScale;
         if (centerX < 0.0f || centerY < 0.0f
-                || centerX > mc.getWindow().getGuiScaledWidth()
-                || centerY > mc.getWindow().getGuiScaledHeight()) {
+                || centerX > LuminRenderSystem.getScaledWidth()
+                || centerY > LuminRenderSystem.getScaledHeight()) {
             return null;
         }
         return new Vector2f(centerX, centerY);

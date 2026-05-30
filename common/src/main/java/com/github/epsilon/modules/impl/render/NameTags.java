@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.renderers.RectRenderer;
@@ -73,8 +74,8 @@ public class NameTags extends Module {
             Vector4d projected = WorldToScreen.getEntityPositionsOn2D(target, partialTick);
             if (projected == null) continue;
 
-            float screenWidth = mc.getWindow().getGuiScaledWidth();
-            float screenHeight = mc.getWindow().getGuiScaledHeight();
+            float screenWidth = LuminRenderSystem.getScaledWidth();
+            float screenHeight = LuminRenderSystem.getScaledHeight();
             if (projected.z < 0 || projected.w < 0 || projected.x > screenWidth || projected.y > screenHeight) continue;
 
             float projectedHeight = (float) Math.max(1.0, projected.w - projected.y);
@@ -106,7 +107,7 @@ public class NameTags extends Module {
             final var projectedPosition = WorldToScreen.getWorldPositionToScreen(currentPosition.add(0.0f, 0.5f + target.getEyeHeight(), 0.0f));
             if (projectedPosition.z > 1.0f || projectedPosition.z < 0.0f) continue;
 
-            float guiScale = mc.getWindow().getGuiScale();
+            float guiScale = (float) LuminRenderSystem.getGuiScale();
 
             float centerX = projectedPosition.x / guiScale;
             float x = centerX - boxWidth / 2.0f;

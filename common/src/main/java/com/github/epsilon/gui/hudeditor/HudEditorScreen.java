@@ -71,12 +71,12 @@ public class HudEditorScreen extends Screen {
 
         var delta = minecraft.getDeltaTracker();
 
-        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+        int screenWidth = LuminRenderSystem.getScaledWidthInt();
+        int screenHeight = LuminRenderSystem.getScaledHeightInt();
         List<HudModule> hudModules = HudEditorModules.collectEnabledHudModules();
         syncSelectionState(hudModules);
 
-        HudModule hovered = HudEditorModules.findTopmost(hudModules, mouseX, mouseY);
+        HudModule hovered = HudEditorModules.findTopmost(hudModules, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
         HudModule focus = dragging != null ? dragging : (selected != null ? selected : hovered);
         boolean draggingFocus = focus != null && focus == dragging;
 
@@ -110,9 +110,9 @@ public class HudEditorScreen extends Screen {
 
         overlayRenderer.addSnapPreview(snapPreviewX, snapPreviewY, screenWidth, screenHeight);
         overlayRenderer.flushRenderer();
-        inspector.queueRender(graphics, selected, screenWidth, screenHeight, mouseX, mouseY, a, graphics.guiHeight());
+        inspector.queueRender(graphics, selected, screenWidth, screenHeight, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), a, screenHeight);
 
-        inspector.renderPopups(graphics, mouseX, mouseY, a);
+        inspector.renderPopups(graphics, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), a);
 
         LuminRenderSystem.setActiveTarget(null);
 
@@ -126,13 +126,14 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (inspector.mouseClicked(event, isDoubleClick)) {
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        if (inspector.mouseClicked(epsilonEvent, isDoubleClick)) {
             return true;
         }
 
         if (event.button() == 0) {
-            double mx = event.x();
-            double my = event.y();
+            double mx = epsilonEvent.x();
+            double my = epsilonEvent.y();
             List<HudModule> hudModules = HudEditorModules.collectEnabledHudModules();
             syncSelectionState(hudModules);
             HudModule hovered = HudEditorModules.findTopmost(hudModules, mx, my);
@@ -150,22 +151,25 @@ public class HudEditorScreen extends Screen {
             return true;
         }
 
-        return super.mouseClicked(event, isDoubleClick);
+        return super.mouseClicked(epsilonEvent, isDoubleClick);
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
-        if (inspector.mouseDragged(event, mouseX, mouseY)) {
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (inspector.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
             return true;
         }
 
-        if (dragging != null && event.button() == 0) {
-            int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-            int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+        if (dragging != null && epsilonEvent.button() == 0) {
+            int screenWidth = LuminRenderSystem.getScaledWidthInt();
+            int screenHeight = LuminRenderSystem.getScaledHeightInt();
             List<HudModule> hudModules = HudEditorModules.collectEnabledHudModules();
-            float targetX = (float) (event.x() - dragOffsetX);
-            float targetY = (float) (event.y() - dragOffsetY);
-            HudEditorSnapper.SnapPosition snap = event.hasAltDown() ? new HudEditorSnapper.SnapPosition(targetX, targetY, null, null) : HudEditorSnapper.snapPosition(dragging, targetX, targetY, screenWidth, screenHeight, hudModules);
+            float targetX = (float) (epsilonEvent.x() - dragOffsetX);
+            float targetY = (float) (epsilonEvent.y() - dragOffsetY);
+            HudEditorSnapper.SnapPosition snap = epsilonEvent.hasAltDown() ? new HudEditorSnapper.SnapPosition(targetX, targetY, null, null) : HudEditorSnapper.snapPosition(dragging, targetX, targetY, screenWidth, screenHeight, hudModules);
 
             dragging.moveTo(snap.renderX(), snap.renderY());
             snapPreviewX = snap.guideX();
@@ -173,30 +177,33 @@ public class HudEditorScreen extends Screen {
             return true;
         }
 
-        return super.mouseDragged(event, mouseX, mouseY);
+        return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (inspector.mouseReleased(event)) {
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        if (inspector.mouseReleased(epsilonEvent)) {
             return true;
         }
 
-        if (dragging != null && event.button() == 0) {
+        if (dragging != null && epsilonEvent.button() == 0) {
             dragging = null;
             clearSnapPreview();
             return true;
         }
 
-        return super.mouseReleased(event);
+        return super.mouseReleased(epsilonEvent);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (inspector.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (inspector.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY);
     }
 
     @Override

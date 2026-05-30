@@ -131,24 +131,26 @@ public class PanelScreen extends Screen {
 
         MD3Theme.syncFromSettings();
         float railWidth = categoryRailPanel.getAnimatedWidth();
-        PanelLayout.Layout layout = PanelLayout.compute(width, height, railWidth);
+        PanelLayout.Layout layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), railWidth);
         popupHost.setOverlayBounds(layout.panel());
 
         drawChrome(layout);
-        categoryRailPanel.render(guiGraphics, layout.rail(), mouseX, mouseY, partialTick);
+        int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        categoryRailPanel.render(guiGraphics, layout.rail(), epsilonMouseX, epsilonMouseY, partialTick);
         if (state.isClientSettingMode()) {
             PanelLayout.Rect clientSettingsBounds = new PanelLayout.Rect(
                     layout.modules().x(), layout.modules().y(),
                     layout.detail().right() - layout.modules().x(),
                     layout.modules().height()
             );
-            clientSettingPanel.render(guiGraphics, clientSettingsBounds, mouseX, mouseY, partialTick);
+            clientSettingPanel.render(guiGraphics, clientSettingsBounds, epsilonMouseX, epsilonMouseY, partialTick);
         } else {
-            moduleListPanel.render(guiGraphics, layout.modules(), mouseX, mouseY, partialTick);
-            moduleDetailPanel.render(guiGraphics, layout.detail(), mouseX, mouseY, partialTick);
+            moduleListPanel.render(guiGraphics, layout.modules(), epsilonMouseX, epsilonMouseY, partialTick);
+            moduleDetailPanel.render(guiGraphics, layout.detail(), epsilonMouseX, epsilonMouseY, partialTick);
         }
 
-        popupHost.render(guiGraphics, mouseX, mouseY, partialTick);
+        popupHost.render(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
 
         flushQueuedRenderers();
 
@@ -193,29 +195,30 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        double mouseX = event.x();
-        double mouseY = event.y();
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        double mouseX = epsilonEvent.x();
+        double mouseY = epsilonEvent.y();
         if (event.button() != 0) {
-            if (state.getListeningKeyBindModule() != null && moduleDetailPanel.mouseClicked(event, isDoubleClick)) {
+            if (state.getListeningKeyBindModule() != null && moduleDetailPanel.mouseClicked(epsilonEvent, isDoubleClick)) {
                 dirtyState.markAllDirty();
                 return true;
             }
             if (state.getListeningKeybindSetting() != null) {
-                boolean handledListening = state.isClientSettingMode() ? clientSettingPanel.mouseClicked(event, isDoubleClick) : moduleDetailPanel.mouseClicked(event, isDoubleClick);
+                boolean handledListening = state.isClientSettingMode() ? clientSettingPanel.mouseClicked(epsilonEvent, isDoubleClick) : moduleDetailPanel.mouseClicked(epsilonEvent, isDoubleClick);
                 if (handledListening) {
                     dirtyState.markAllDirty();
                     return true;
                 }
             }
-            return super.mouseClicked(event, isDoubleClick);
+            return super.mouseClicked(epsilonEvent, isDoubleClick);
         }
 
         if (popupHost.getActivePopup() != null) {
-            return inputRouter.routeMouseClicked(event, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel, categoryRailPanel, clientSettingPanel, state.isClientSettingMode())
-                    || super.mouseClicked(event, isDoubleClick);
+            return inputRouter.routeMouseClicked(epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel, categoryRailPanel, clientSettingPanel, state.isClientSettingMode())
+                    || super.mouseClicked(epsilonEvent, isDoubleClick);
         }
 
-        PanelLayout.Layout layout = PanelLayout.compute(width, height, categoryRailPanel.getAnimatedWidth());
+        PanelLayout.Layout layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), categoryRailPanel.getAnimatedWidth());
         if (!layout.panel().contains(mouseX, mouseY)) {
             if (ClientSetting.INSTANCE.closeOnOutside.getValue()) minecraft.setScreen(null);
             return true;
@@ -223,53 +226,59 @@ public class PanelScreen extends Screen {
         if (!state.isClientSettingMode()) {
             moduleListPanel.handleGlobalClick(mouseX, mouseY);
         }
-        boolean handled = inputRouter.routeMouseClicked(event, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel, categoryRailPanel, clientSettingPanel, state.isClientSettingMode());
+        boolean handled = inputRouter.routeMouseClicked(epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel, categoryRailPanel, clientSettingPanel, state.isClientSettingMode());
         if (handled) {
             dirtyState.markAllDirty();
         }
-        return handled || super.mouseClicked(event, isDoubleClick);
+        return handled || super.mouseClicked(epsilonEvent, isDoubleClick);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (popupHost.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             dirtyState.markAllDirty();
             return true;
         }
         if (state.isClientSettingMode()) {
-            if (clientSettingPanel.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+            if (clientSettingPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
                 dirtyState.markClientSettingDirty();
                 return true;
             }
         } else {
-            if (moduleListPanel.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+            if (moduleListPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
                 dirtyState.markModuleListDirty();
                 return true;
             }
-            if (moduleDetailPanel.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+            if (moduleDetailPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
                 dirtyState.markDetailDirty();
                 return true;
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        if (inputRouter.routeMouseReleased(event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        if (inputRouter.routeMouseReleased(epsilonEvent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
         }
-        return super.mouseReleased(event);
+        return super.mouseReleased(epsilonEvent);
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
-        if (inputRouter.routeMouseDragged(event, mouseX, mouseY, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (inputRouter.routeMouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
         }
-        return super.mouseDragged(event, mouseX, mouseY);
+        return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.github.epsilon.utils.render;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -85,7 +86,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     private final SubmitNodeCollector submitNodeCollector;
     private final FeatureRenderDispatcher featureRenderDispatcher;
     private GuiItemAtlas itemAtlas;
-    private int cachedGuiScale;
+    private double cachedGuiScale = Double.NaN;
     private final CubeMap cubeMap = new CubeMap(Identifier.withDefaultNamespace("textures/gui/title/background/panorama"));
     private ScreenRectangle previousScissorArea = null;
     private RenderPipeline previousPipeline = null;
@@ -177,9 +178,8 @@ public class EpsilonGuiRenderer implements AutoCloseable {
 
     private void draw(GpuBufferSlice fogBuffer) {
         if (!this.draws.isEmpty()) {
-            WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
             this.guiProjection
-                    .setupOrtho(1000.0F, 11000.0F, (float) windowState.width / windowState.guiScale, (float) windowState.height / windowState.guiScale, true);
+                    .setupOrtho(1000.0F, 11000.0F, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), true);
             RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
             RenderTarget mainRenderTarget = mc.getMainRenderTarget();
             int maxIndexCount = 0;
@@ -303,7 +303,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         Set<Object> itemsInFrame = this.renderState.getItemModelIdentities();
         if (!itemsInFrame.isEmpty()) {
             int guiScale = this.getGuiScaleInvalidatingItemAtlasIfChanged();
-            GuiItemAtlas itemAtlas = this.prepareItemAtlas(itemsInFrame, 16 * guiScale);
+            GuiItemAtlas itemAtlas = this.prepareItemAtlas(itemsInFrame, Math.max(1, (int) Math.ceil(DEFAULT_ITEM_SIZE * LuminRenderSystem.getGuiScale())));
             MutableBoolean hasOversizedItems = new MutableBoolean(false);
             this.renderState.forEachItem(itemState -> {
                 if (itemState.oversizedItemBounds() != null) {
@@ -382,8 +382,8 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     }
 
     private int getGuiScaleInvalidatingItemAtlasIfChanged() {
-        int guiScale = mc.gameRenderer.getGameRenderState().windowRenderState.guiScale;
-        if (guiScale != this.cachedGuiScale) {
+        double guiScale = LuminRenderSystem.getGuiScale();
+        if (Double.compare(guiScale, this.cachedGuiScale) != 0) {
             this.invalidateItemAtlas();
 
             for (OversizedItemRenderer renderer : this.oversizedItemRenderers.values()) {
@@ -393,7 +393,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             this.cachedGuiScale = guiScale;
         }
 
-        return guiScale;
+        return Math.max(1, (int) Math.ceil(guiScale));
     }
 
     private void invalidateItemAtlas() {
@@ -522,14 +522,8 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     }
 
     private void enableScissor(ScreenRectangle rectangle, RenderPass renderPass) {
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
-        int windowHeight = windowState.height;
-        int guiScale = windowState.guiScale;
-        double left = rectangle.left() * guiScale;
-        double bottom = windowHeight - rectangle.bottom() * guiScale;
-        double width = rectangle.width() * guiScale;
-        double height = rectangle.height() * guiScale;
-        renderPass.enableScissor((int) left, (int) bottom, Math.max(0, (int) width), Math.max(0, (int) height));
+        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(rectangle.left(), rectangle.top(), rectangle.width(), rectangle.height());
+        renderPass.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
     }
 
     public void registerPanoramaTextures(TextureManager textureManager) {

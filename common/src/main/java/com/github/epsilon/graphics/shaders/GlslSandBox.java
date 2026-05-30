@@ -82,8 +82,8 @@ public class GlslSandBox implements AutoCloseable {
 
         if (targetWidth <= 0 || targetHeight <= 0) return;
 
-        float scaleX = targetWidth / (float) mc.getWindow().getGuiScaledWidth();
-        float scaleY = targetHeight / (float) mc.getWindow().getGuiScaledHeight();
+        float scaleX = targetWidth / LuminRenderSystem.getScaledWidth();
+        float scaleY = targetHeight / LuminRenderSystem.getScaledHeight();
 
         float mousePxX = (float) mouseX * scaleX;
         float mousePxY = (float) mouseY * scaleY;

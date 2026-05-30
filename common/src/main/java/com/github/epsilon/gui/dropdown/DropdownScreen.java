@@ -73,7 +73,7 @@ public class DropdownScreen extends Screen {
         LuminRenderSystem.setActiveTarget(renderTarget);
 
         MD3Theme.syncFromSettings();
-        drawGui(mouseX, mouseY);
+        drawGui(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
 
         LuminRenderSystem.setActiveTarget(null);
         if (preeditOverlay != null) {
@@ -90,7 +90,7 @@ public class DropdownScreen extends Screen {
         renderer.beginPass();
         Color scrim = DropdownTheme.scrim();
         float scrimAlpha = scrimAnim.getValue();
-        renderer.rect().addRect(0, 0, width, height, new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
+        renderer.rect().addRect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
         renderer.flush();
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
@@ -124,7 +124,7 @@ public class DropdownScreen extends Screen {
             renderer.setScissor(
                     panel.getX() - shadowPad, panel.getY() - shadowPad,
                     panel.getWidth() + shadowPad * 2, revealedH + shadowPad * 2,
-                    height);
+                    LuminRenderSystem.getScaledHeightInt());
             panel.drawBackground(renderer);
             renderer.flush();
             renderer.clearScissor();
@@ -135,7 +135,7 @@ public class DropdownScreen extends Screen {
             float actualClipH = Math.min(clipH, revealedBottom - clipY);
             if (actualClipH > 0.5f) {
                 renderer.beginPass();
-                renderer.setScissor(panel.getX(), clipY, panel.getWidth(), actualClipH, height);
+                renderer.setScissor(panel.getX(), clipY, panel.getWidth(), actualClipH, LuminRenderSystem.getScaledHeightInt());
                 int hoverMouseX = panel == topmostHovered ? mouseX : -1;
                 int hoverMouseY = panel == topmostHovered ? mouseY : -1;
                 panel.drawContent(renderer, hoverMouseX, hoverMouseY);
@@ -159,9 +159,10 @@ public class DropdownScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        double mx = event.x();
-        double my = event.y();
-        int button = event.button();
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        double mx = epsilonEvent.x();
+        double my = epsilonEvent.y();
+        int button = epsilonEvent.button();
 
         if (button == 0 && searchField.focusIfContains(mx, my, getSearchX(), getSearchY(), getSearchWidth(), getSearchHeight())) {
             return true;
@@ -181,14 +182,15 @@ public class DropdownScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseClicked(event, isDoubleClick);
+        return super.mouseClicked(epsilonEvent, isDoubleClick);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        double mx = event.x();
-        double my = event.y();
-        int button = event.button();
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        double mx = epsilonEvent.x();
+        double my = epsilonEvent.y();
+        int button = epsilonEvent.button();
 
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
@@ -197,17 +199,17 @@ public class DropdownScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseReleased(event);
+        return super.mouseReleased(epsilonEvent);
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
-            panel.mouseDragged(event.x(), event.y());
+            panel.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
         }
         DropdownLayoutState.save(panels);
-        return super.mouseDragged(event, event.x(), event.y());
+        return super.mouseDragged(event, LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
     }
 
     @Override
@@ -216,11 +218,11 @@ public class DropdownScreen extends Screen {
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
-            if (panel.mouseScrolled(mouseX, mouseY, scrollY)) {
+            if (panel.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollY)) {
                 return true;
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return super.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY);
     }
 
     @Override
@@ -351,7 +353,7 @@ public class DropdownScreen extends Screen {
     }
 
     private float resolveMaxPanelHeight(DropdownPanel panel) {
-        float screenLimited = height * 0.72f;
+        float screenLimited = LuminRenderSystem.getScaledHeight() * 0.72f;
         return switch (panel.getId()) {
             case "main", "addon" -> Math.min(screenLimited, 260.0f);
             case "friend", "config" -> Math.min(screenLimited, 220.0f);
@@ -373,11 +375,11 @@ public class DropdownScreen extends Screen {
     }
 
     private float getSearchY() {
-        return height - DropdownTheme.PANEL_MARGIN_Y - getSearchHeight();
+        return LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y - getSearchHeight();
     }
 
     private float getSearchWidth() {
-        return Mth.clamp(width - DropdownTheme.PANEL_MARGIN_X * 2.0f, 140.0f, 200.0f);
+        return Mth.clamp(LuminRenderSystem.getScaledWidth() - DropdownTheme.PANEL_MARGIN_X * 2.0f, 140.0f, 200.0f);
     }
 
     private float getSearchHeight() {

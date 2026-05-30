@@ -1,5 +1,6 @@
 package com.github.epsilon.modules;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -126,14 +127,14 @@ public abstract class HudModule extends Module {
         if (mc.getWindow() == null) {
             return 0;
         }
-        return mc.getWindow().getGuiScaledWidth();
+        return LuminRenderSystem.getScaledWidthInt();
     }
 
     private int getScreenHeight() {
         if (mc.getWindow() == null) {
             return 0;
         }
-        return mc.getWindow().getGuiScaledHeight();
+        return LuminRenderSystem.getScaledHeightInt();
     }
 
     public abstract void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker);

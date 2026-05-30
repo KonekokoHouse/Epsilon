@@ -81,7 +81,7 @@ public class MainMenuScreen extends Screen {
             case PLANET -> GlslSandBox.PLANET;
         };
 
-        GlslSandBox.INSTANCE.render(background, mouseX, mouseY);
+        GlslSandBox.INSTANCE.render(background, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(backgroundRenderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
@@ -98,7 +98,7 @@ public class MainMenuScreen extends Screen {
         uiRenderTarget.resize(window.getWidth(), window.getHeight());
         LuminRenderSystem.setActiveTarget(uiRenderTarget);
 
-        drawMenu(mouseX, mouseY);
+        drawMenu(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(uiRenderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
@@ -106,7 +106,7 @@ public class MainMenuScreen extends Screen {
 
     private void drawMenu(int mouseX, int mouseY) {
         float introProgress = easeOutCubic(Mth.clamp((Util.getMillis() - introStartMs) / 650.0f, 0.0f, 1.0f));
-        Layout layout = Layout.resolve(width, height, entries.size());
+        Layout layout = Layout.resolve(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), entries.size());
 
         Color titleColor = applyAlpha(new Color(230, 224, 233), 0.96f);
         Color subtitleColor = applyAlpha(new Color(202, 196, 208), 0.90f);
@@ -199,13 +199,14 @@ public class MainMenuScreen extends Screen {
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == 0) {
             for (MenuEntry entry : entries) {
-                if (entry.isHovered(event.x(), event.y())) {
+                MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+                if (entry.isHovered(epsilonEvent.x(), epsilonEvent.y())) {
                     entry.action.run();
                     return true;
                 }
             }
         }
-        return super.mouseClicked(event, doubleClick);
+        return super.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick);
     }
 
     @Override

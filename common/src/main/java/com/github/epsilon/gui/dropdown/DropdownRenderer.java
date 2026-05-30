@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.dropdown;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.*;
-
-import static com.github.epsilon.Constants.mc;
 
 public class DropdownRenderer {
 
@@ -53,11 +52,11 @@ public class DropdownRenderer {
     }
 
     public void setScissor(float guiX, float guiY, float guiW, float guiH, int guiHeight) {
-        int scale = mc.getWindow().getGuiScale();
-        int x = Math.round(guiX * scale);
-        int y = Math.round((guiHeight - guiY - guiH) * scale);
-        int w = Math.round(guiW * scale);
-        int h = Math.round(guiH * scale);
+        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(guiX, guiY, guiW, guiH, guiHeight);
+        int x = scissor.x();
+        int y = scissor.y();
+        int w = scissor.width();
+        int h = scissor.height();
         Slot slot = current();
         setScissorOn(slot.shadow, x, y, w, h);
         setScissorOn(slot.roundRect, x, y, w, h);

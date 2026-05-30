@@ -3,6 +3,7 @@ package com.github.epsilon.graphics;
 import com.github.epsilon.assets.holders.RenderTargetHolder;
 import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -10,6 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.*;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.Projection;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
 import net.minecraft.client.renderer.state.WindowRenderState;
@@ -46,13 +48,80 @@ public class LuminRenderSystem {
         return activeTarget;
     }
 
-    public static void applyOrthoProjection() {
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
+    public static double getGuiScale() {
+        return ClientSetting.INSTANCE.getScale();
+    }
 
+    public static float getScaledWidth() {
+        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
+        return (float) (windowState.width / getGuiScale());
+    }
+
+    public static float getScaledHeight() {
+        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
+        return (float) (windowState.height / getGuiScale());
+    }
+
+    public static int getScaledWidthInt() {
+        return (int) Math.ceil(getScaledWidth());
+    }
+
+    public static int getScaledHeightInt() {
+        return (int) Math.ceil(getScaledHeight());
+    }
+
+    public static double toEpsilonMouseX(double mouseX) {
+        return mouseX * mc.getWindow().getGuiScale() / getGuiScale();
+    }
+
+    public static double toEpsilonMouseY(double mouseY) {
+        return mouseY * mc.getWindow().getGuiScale() / getGuiScale();
+    }
+
+    public static int toEpsilonMouseX(int mouseX) {
+        return (int) Math.round(toEpsilonMouseX((double) mouseX));
+    }
+
+    public static int toEpsilonMouseY(int mouseY) {
+        return (int) Math.round(toEpsilonMouseY((double) mouseY));
+    }
+
+    public static MouseButtonEvent toEpsilonMouseEvent(MouseButtonEvent event) {
+        return new MouseButtonEvent(toEpsilonMouseX(event.x()), toEpsilonMouseY(event.y()), event.buttonInfo());
+    }
+
+    public static ScissorRect toFramebufferScissor(float x, float y, float width, float height) {
+        double scale = getGuiScale();
+        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
+        int sx = (int) Math.round(x * scale);
+        int sy = (int) Math.round(windowState.height - (y + height) * scale);
+        int sw = Math.max(0, (int) Math.round(width * scale));
+        int sh = Math.max(0, (int) Math.round(height * scale));
+        return new ScissorRect(sx, sy, sw, sh);
+    }
+
+    public static ScissorRect toFramebufferScissor(float x, float y, float width, float height, float guiHeight) {
+        double scale = getGuiScale();
+        int sx = (int) Math.round(x * scale);
+        int sy = (int) Math.round((guiHeight - y - height) * scale);
+        int sw = Math.max(0, (int) Math.round(width * scale));
+        int sh = Math.max(0, (int) Math.round(height * scale));
+        return new ScissorRect(sx, sy, sw, sh);
+    }
+
+    public static ScissorRect toFramebufferScissor(float x, float y, float width, float height, int guiHeight) {
+        return toFramebufferScissor(x, y, width, height, (float) guiHeight);
+    }
+
+    public static ScissorRect toFramebufferScissor(float x, float y, float width, float height, double guiHeight) {
+        return toFramebufferScissor(x, y, width, height, (float) guiHeight);
+    }
+
+    public static void applyOrthoProjection() {
         guiOrthoProjection
                 .setupOrtho(-1000.0F, 1000.0F,
-                        (float) windowState.width / windowState.guiScale,
-                        (float) windowState.height / windowState.guiScale,
+                        getScaledWidth(),
+                        getScaledHeight(),
                         true
                 );
         RenderSystem.setProjectionMatrix(
@@ -95,6 +164,9 @@ public class LuminRenderSystem {
         );
 
         return new QuadRenderingInfo(colorView, depthView, autoIndices, ibo, indexCount, dynamicUniforms);
+    }
+
+    public record ScissorRect(int x, int y, int width, int height) {
     }
 
     public record QuadRenderingInfo(

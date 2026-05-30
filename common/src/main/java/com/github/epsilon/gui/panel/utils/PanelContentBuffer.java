@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.utils;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -8,7 +9,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.epsilon.Constants.mc;
 
 /**
  * 面板视口内容缓冲。
@@ -130,16 +130,16 @@ public class PanelContentBuffer {
             marqueeDraws.clear();
             return;
         }
-        int guiScale = mc.getWindow().getGuiScale();
         for (MarqueeTextDraw draw : marqueeDraws) {
             PanelLayout.Rect clip = intersect(draw.clip(), pendingViewport);
             if (clip == null) {
                 continue;
             }
-            int sx = Math.round(clip.x() * guiScale);
-            int sy = Math.round((pendingGuiHeight - clip.bottom()) * guiScale);
-            int sw = Math.round(clip.width() * guiScale);
-            int sh = Math.round(clip.height() * guiScale);
+            LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(clip.x(), clip.y(), clip.width(), clip.height(), pendingGuiHeight);
+            int sx = scissor.x();
+            int sy = scissor.y();
+            int sw = scissor.width();
+            int sh = scissor.height();
             if (sw <= 0 || sh <= 0) {
                 continue;
             }

@@ -2,6 +2,7 @@ package com.github.epsilon.gui.panel.panel;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
@@ -329,11 +330,11 @@ public class CategoryRailPanel {
     }
 
     private void applyTextScissor(PanelLayout.Rect rect, int guiHeight) {
-        int scale = mc.getWindow().getGuiScale();
-        int x = Math.round(rect.x() * scale);
-        int y = Math.round((guiHeight - rect.bottom()) * scale);
-        int width = Math.round(rect.width() * scale);
-        int height = Math.round(rect.height() * scale);
+        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(rect.x(), rect.y(), rect.width(), rect.height(), guiHeight);
+        int x = scissor.x();
+        int y = scissor.y();
+        int width = scissor.width();
+        int height = scissor.height();
         clippedTextRenderer.setScissor(x, y, width, height);
     }
 
