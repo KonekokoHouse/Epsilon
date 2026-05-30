@@ -54,6 +54,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     private float lastScroll = Float.NaN;
     private List<String> lastFriendList = List.of();
     private long lastContentSignature = Long.MIN_VALUE;
+    private float scrollVelocity = 0;
 
     public FriendClientSettingTab(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer) {
         this.state = state;
@@ -65,6 +66,15 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     @Override
     public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
+
+        if (Math.abs(scrollVelocity) > 0.01f) {
+            state.scrollFriend(scrollVelocity * partialTick);
+            scrollVelocity *= 0.86f;
+            if (Math.abs(scrollVelocity) < 0.3f) {
+                scrollVelocity = 0;
+            }
+            markDirty();
+        }
 
         PanelLayout.Rect inputBounds = getInputBounds(bounds);
         PanelLayout.Rect listViewport = getListViewport(bounds);
@@ -148,6 +158,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
             return false;
         }
 
+        scrollVelocity = 0;
+
         PanelLayout.Rect listViewport = getListViewport(bounds);
         float maxScroll = state.getMaxFriendScroll();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), listViewport, state.getFriendScroll(), maxScroll)) {
@@ -208,7 +220,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         }
         PanelLayout.Rect listViewport = getListViewport(bounds);
         if (listViewport.contains(mouseX, mouseY)) {
-            state.scrollFriend(-scrollY * 20.0f);
+            scrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
             return true;
         }
@@ -253,6 +265,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     @Override
     public void onDeactivated() {
         scrollBarDrag.reset();
+        scrollVelocity = 0;
         inputField.blur();
         markDirty();
     }

@@ -47,6 +47,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
     private List<String> lastVisibleSettings = List.of();
     private String lastListeningKey = "";
     private long lastContentSignature = Long.MIN_VALUE;
+    private float scrollVelocity = 0;
 
     public GeneralClientSettingTab(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
@@ -59,6 +60,15 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
     @Override
     public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
+
+        if (Math.abs(scrollVelocity) > 0.01f) {
+            state.scrollClientSetting(scrollVelocity * partialTick);
+            scrollVelocity *= 0.86f;
+            if (Math.abs(scrollVelocity) < 0.3f) {
+                scrollVelocity = 0;
+            }
+            markDirty();
+        }
 
         List<Setting<?>> settings = ClientSetting.INSTANCE.getSettings().stream()
                 .filter(Setting::isAvailable)
@@ -128,6 +138,8 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
             return false;
         }
 
+        scrollVelocity = 0;
+
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null);
             markDirty();
@@ -189,7 +201,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (bounds != null && bounds.contains(mouseX, mouseY)) {
-            state.scrollClientSetting(-scrollY * 20.0f);
+            scrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
             return true;
         }
@@ -240,6 +252,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
     @Override
     public void onDeactivated() {
         scrollBarDrag.reset();
+        scrollVelocity = 0;
         settingListController.clearFocus();
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null);

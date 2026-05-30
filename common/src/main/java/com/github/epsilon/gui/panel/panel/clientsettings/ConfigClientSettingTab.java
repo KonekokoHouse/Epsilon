@@ -89,6 +89,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     private List<String> lastConfigList = List.of();
     private String lastActiveConfig = "";
     private long lastContentSignature = Long.MIN_VALUE;
+    private float scrollVelocity = 0;
 
     public ConfigClientSettingTab(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
@@ -101,6 +102,15 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     @Override
     public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
+
+        if (Math.abs(scrollVelocity) > 0.01f) {
+            state.scrollConfig(scrollVelocity * partialTick);
+            scrollVelocity *= 0.86f;
+            if (Math.abs(scrollVelocity) < 0.3f) {
+                scrollVelocity = 0;
+            }
+            markDirty();
+        }
 
         List<String> configs = ConfigManager.INSTANCE.listConfigs();
         String activeConfig = ConfigManager.INSTANCE.getActiveConfigName();
@@ -197,6 +207,8 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             return false;
         }
 
+        scrollVelocity = 0;
+
         PanelLayout.Rect listViewport = getListViewport(bounds);
         float maxScroll = state.getMaxConfigScroll();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), listViewport, state.getConfigScroll(), maxScroll)) {
@@ -272,7 +284,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         }
         PanelLayout.Rect listViewport = getListViewport(bounds);
         if (listViewport.contains(mouseX, mouseY)) {
-            state.scrollConfig(-scrollY * 20.0f);
+            scrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
             return true;
         }
@@ -314,6 +326,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     @Override
     public void onDeactivated() {
         scrollBarDrag.reset();
+        scrollVelocity = 0;
         inputField.blur();
         markDirty();
     }

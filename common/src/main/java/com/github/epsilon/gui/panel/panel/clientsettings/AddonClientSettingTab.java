@@ -71,6 +71,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     private List<String> lastVisibleSettings = List.of();
     private String lastListeningKey = "";
     private long lastContentSignature = Long.MIN_VALUE;
+    private float listScrollVelocity = 0;
+    private float detailScrollVelocity = 0;
 
     public AddonClientSettingTab(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
@@ -83,6 +85,23 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     @Override
     public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
+
+        if (Math.abs(listScrollVelocity) > 0.01f) {
+            state.scrollAddonList(listScrollVelocity * partialTick);
+            listScrollVelocity *= 0.86f;
+            if (Math.abs(listScrollVelocity) < 0.3f) {
+                listScrollVelocity = 0;
+            }
+            markDirty();
+        }
+        if (Math.abs(detailScrollVelocity) > 0.01f) {
+            state.scrollAddonDetail(detailScrollVelocity * partialTick);
+            detailScrollVelocity *= 0.86f;
+            if (Math.abs(detailScrollVelocity) < 0.3f) {
+                detailScrollVelocity = 0;
+            }
+            markDirty();
+        }
 
         List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
         EpsilonAddon selectedAddon = resolveSelectedAddon(addons);
@@ -221,6 +240,9 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             return false;
         }
 
+        listScrollVelocity = 0;
+        detailScrollVelocity = 0;
+
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null);
             markDirty();
@@ -318,13 +340,13 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         }
         PanelLayout.Rect listViewport = getListViewport(getListPanelBounds(bounds));
         if (listViewport.contains(mouseX, mouseY)) {
-            state.scrollAddonList(-scrollY * 20.0f);
+            listScrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
             return true;
         }
         PanelLayout.Rect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonManager.INSTANCE.getAddons()));
         if (settingsViewport.contains(mouseX, mouseY)) {
-            state.scrollAddonDetail(-scrollY * 20.0f);
+            detailScrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
             return true;
         }
@@ -382,6 +404,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     public void onDeactivated() {
         listScrollBarDrag.reset();
         detailScrollBarDrag.reset();
+        listScrollVelocity = 0;
+        detailScrollVelocity = 0;
         settingListController.clearFocus();
         if (state.getListeningKeybindSetting() != null) {
             state.setListeningKeybindSetting(null);
