@@ -18,6 +18,7 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FallingPlayer;
+import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.render.Render3DUtils;
@@ -135,7 +136,7 @@ public class Scaffold extends Module {
     private Rot2f rotation;
     private int rotateCount = 0;
 
-    private int blockSlot = -1;
+    private FindItemResult blockResult;
     private boolean shouldSwapBack;
 
     private final List<RenderBox> renderBoxes = new ArrayList<>();
@@ -197,7 +198,7 @@ public class Scaffold extends Module {
         direction = null;
         rotation = null;
         rotateCount = 0;
-        blockSlot = -1;
+        blockResult = null;
         shouldSwapBack = false;
     }
 
@@ -224,7 +225,8 @@ public class Scaffold extends Module {
     private void onTick(TickEvent.Pre event) {
         if (nullCheck()) return;
 
-        blockSlot = findBlockSlot();
+        blockResult = swapMode.is(SwapMode.InvSwitch) ? InvUtils.find(this::isValidStack) : InvUtils.findInHotbar(this::isValidStack);
+        if (!blockResult.found()) return;
 
         if (mc.player.onGround()) {
             airTicks = 0;
@@ -255,14 +257,12 @@ public class Scaffold extends Module {
 
                 switch (swapMode.getValue()) {
                     case Normal -> {
-                        InvUtils.swap(blockSlot, true);
+                        InvUtils.swap(blockResult.slot(), true);
                         if (swapBack.getValue()) shouldSwapBack = true;
                     }
-                    case Silent -> InvUtils.swap(blockSlot, true);
-                    case InvSwitch -> InvUtils.invSwap(blockSlot);
+                    case Silent -> InvUtils.swap(blockResult.slot(), true);
+                    case InvSwitch -> InvUtils.invSwap(blockResult.slot());
                 }
-
-                if (!isValidStack(mc.player.getInventory().getSelectedItem())) return;
 
                 InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
                 if (result.consumesAction()) {
@@ -361,11 +361,11 @@ public class Scaffold extends Module {
 
         switch (swapMode.getValue()) {
             case Normal -> {
-                InvUtils.swap(blockSlot, true);
+                InvUtils.swap(blockResult.slot(), true);
                 if (swapBack.getValue()) shouldSwapBack = true;
             }
-            case Silent -> InvUtils.swap(blockSlot, true);
-            case InvSwitch -> InvUtils.invSwap(blockSlot);
+            case Silent -> InvUtils.swap(blockResult.slot(), true);
+            case InvSwitch -> InvUtils.invSwap(blockResult.slot());
         }
 
         if (!isValidStack(mc.player.getInventory().getSelectedItem())) return;
@@ -448,24 +448,18 @@ public class Scaffold extends Module {
         }
 
         for (Direction dir : Direction.values()) {
-            Vec3 normal = new Vec3(dir.getStepX(), dir.getStepY(), dir.getStepZ());
-            Vec3 hit = pos.getBottomCenter().add(normal.scale(0.5));
-            BlockPos baseBlockPos = pos.offset(dir.getStepX(), dir.getStepY(), dir.getStepZ());
+            BlockPos baseBlockPos = pos.relative(dir);
+            if (!isSolidAndNonInteractive(mc.level.getBlockState(baseBlockPos), mc.level, baseBlockPos)) continue;
 
-            if (!isSolidAndNonInteractive(mc.level.getBlockState(baseBlockPos), mc.level, baseBlockPos)) {
-                continue;
-            }
+            Vec3 normal = dir.getUnitVec3();
+            Vec3 relevant = pos.getBottomCenter().relative(dir, 0.5).subtract(baseVec);
+            Direction placeDirection = dir.getOpposite();
+            if (relevant.lengthSqr() > 4.5D * 4.5D || relevant.dot(normal) < 0.0D) continue;
+            if (placeDirection == Direction.UP && MoveUtils.isMoving() && !mc.options.keyJump.isDown()) continue;
 
-            Vec3 relevant = hit.subtract(baseVec);
-            if (relevant.lengthSqr() <= 4.5D * 4.5D && relevant.dot(normal) >= 0.0D) {
-                if (dir.getOpposite() == Direction.UP && MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
-                    continue;
-                }
-
-                blockPos = baseBlockPos;
-                direction = dir.getOpposite();
-                return true;
-            }
+            blockPos = baseBlockPos;
+            direction = placeDirection;
+            return true;
         }
 
         return false;
