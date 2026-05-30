@@ -29,7 +29,7 @@ public class NotificationsHUD extends HudModule {
     private final IntSetting backgroundAlpha = intSetting("Background Alpha", 200, 0, 255, 1);
     public final IntSetting displayTime = intSetting("Display Time", 2000, 500, 5000, 100);
 
-    private static final float MIN_BOX_WIDTH = 160.0f;
+    private static final float MIN_BOX_WIDTH = 150.0f;
     private static final float ACCENT_BAR_WIDTH = 3.2f;
     private static final float TEXT_PADDING = 3.5f;
 
@@ -47,8 +47,7 @@ public class NotificationsHUD extends HudModule {
 
         float s = scale.getValue().floatValue();
         float anchorWidth = MIN_BOX_WIDTH * s;
-        float textHeight = textRenderer.getHeight(s);
-        float boxHeight = textHeight * 4.0f;
+        float boxHeight = textRenderer.getHeight(s) * 3.0f;
         float spacing = boxHeight + TEXT_PADDING * s;
         int bgAlpha = backgroundAlpha.getValue();
 
@@ -77,7 +76,7 @@ public class NotificationsHUD extends HudModule {
 
         for (RenderEntry entry : entries) {
             float renderX = getRenderX(anchorWidth, entry.boxWidth);
-            renderNotification(rectRenderer, textRenderer, entry.notification, entry.frame, renderX, currentY, anchorWidth, entry.boxWidth, boxHeight, s, textHeight, bgAlpha);
+            renderNotification(rectRenderer, textRenderer, entry.notification, entry.frame, renderX, currentY, anchorWidth, entry.boxWidth, boxHeight, s, bgAlpha);
             currentY += entry.frame.occupiedHeight;
         }
 
@@ -133,13 +132,13 @@ public class NotificationsHUD extends HudModule {
         return new RenderFrame(RenderStage.HIDDEN, 0.0f, 0.0f);
     }
 
-    private void renderNotification(RectRenderer rectRenderer, TextRenderer textRenderer, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, float textHeight, int bgAlpha) {
+    private void renderNotification(RectRenderer rectRenderer, TextRenderer textRenderer, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, int bgAlpha) {
         switch (frame.stage) {
             case ENTER_BAR, EXIT_BAR -> {
                 renderStage1(rectRenderer, notification, x, y, anchorWidth, boxWidth, boxHeight, frame.progress);
             }
             case ENTER_CONTENT, EXIT_CONTENT, SHOW -> {
-                renderStage2(rectRenderer, textRenderer, notification, x, y, boxWidth, boxHeight, scale, textHeight, bgAlpha, frame.progress);
+                renderStage2(rectRenderer, textRenderer, notification, x, y, boxWidth, boxHeight, scale, bgAlpha, frame.progress);
             }
             case HIDDEN -> {
             }
@@ -152,15 +151,15 @@ public class NotificationsHUD extends HudModule {
         rectRenderer.addRect(renderX, y, width, boxHeight, notification.getMode().getColor());
     }
 
-    private void renderStage2(RectRenderer rectRenderer, TextRenderer textRenderer, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, float textHeight, int bgAlpha, float progress) {
+    private void renderStage2(RectRenderer rectRenderer, TextRenderer textRenderer, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, int bgAlpha, float progress) {
         rectRenderer.addRect(x, y, boxWidth, boxHeight, new Color(0, 0, 0, bgAlpha));
-        renderText(textRenderer, notification, x, y, boxHeight, scale, textHeight, Math.round(255.0f * progress));
+        renderText(textRenderer, notification, x, y, boxHeight, scale, Math.round(255.0f * progress));
         float accentWidth = ACCENT_BAR_WIDTH * scale + (boxWidth - ACCENT_BAR_WIDTH * scale) * (1.0f - progress);
         float accentX = isLeftDocked() ? x + boxWidth - accentWidth : x;
         rectRenderer.addRect(accentX, y, accentWidth, boxHeight, notification.getMode().getColor());
     }
 
-    private void renderText(TextRenderer textRenderer, Notification n, float x, float y, float boxHeight, float s, float textHeight, int alpha) {
+    private void renderText(TextRenderer textRenderer, Notification n, float x, float y, float boxHeight, float s, int alpha) {
         float textY = y + boxHeight / 2.0f - s - textRenderer.getLineHeight(s) / 2.0f;
         float textX = x + (isLeftDocked() ? TEXT_PADDING * s : TEXT_PADDING * 2.0f * s);
         textRenderer.addText(n.getTitle(), textX, textY, s, new Color(255, 255, 255, alpha));
