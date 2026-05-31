@@ -98,9 +98,9 @@ public class ScaffoldBlockHUD extends HudModule {
         float dotGap = 6.0f * s;
         float labelGap = 6.0f * s;
         float numberColumnWidth = getNumberColumnWidth(textRenderer, numberScale);
-        float labelWidth = textRenderer.getWidth("Block", labelScale);
+        float labelWidth = textRenderer.getWidth("Blocks", labelScale);
         float totalWidth = padX * 2.0f + dotSize + dotGap + numberColumnWidth + labelGap + labelWidth;
-        float renderX = computeRenderX(totalWidth);
+        float renderX = this.x;
         float centerX = renderX + totalWidth / 2.0f;
         float centerY = this.y + pillHeight / 2.0f;
         float animatedWidth = totalWidth * animationProgress;
@@ -139,18 +139,10 @@ public class ScaffoldBlockHUD extends HudModule {
         float labelX = numberColumnX + numberColumnWidth + labelGap;
         float animatedLabelX = Mth.lerp(animationProgress, centerX - labelWidth / 2.0f, labelX);
         float labelY = this.y + (pillHeight - textRenderer.getHeight(labelScale)) / 2.0f - 0.5f * s;
-        textRenderer.addText("Block", animatedLabelX, labelY, labelScale, withAlpha(textSecondary.getValue(), contentAlpha));
+        textRenderer.addText("Blocks", animatedLabelX, labelY, labelScale, withAlpha(textSecondary.getValue(), contentAlpha));
         textRenderer.drawAndClear();
 
         setBounds(totalWidth, pillHeight);
-    }
-
-    private float computeRenderX(float totalWidth) {
-        return switch (getHorizontalAnchor()) {
-            case Right -> this.x + this.width - totalWidth;
-            case Center -> this.x + (this.width - totalWidth) / 2.0f;
-            default -> this.x;
-        };
     }
 
     private void syncNumberAnimation(int blockCount, DeltaTracker deltaTracker) {
