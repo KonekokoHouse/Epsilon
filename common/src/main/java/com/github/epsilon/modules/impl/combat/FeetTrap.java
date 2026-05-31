@@ -1,21 +1,28 @@
 package com.github.epsilon.modules.impl.combat;
 
+import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.render.Render3DUtils;
+import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Items;
@@ -23,6 +30,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import java.awt.*;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -39,6 +47,42 @@ public class FeetTrap extends Module {
 
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
+        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class,
+                event -> {
+                    if (!render.getValue() || renderBoxes.isEmpty()) return;
+
+                    long time = System.currentTimeMillis();
+                    long fadeTime = this.fadeTime.getValue().longValue();
+
+                    renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
+
+                    for (Scaffold.RenderBox box : renderBoxes) {
+                        float progress = Mth.clamp((float) (time - box.startTime()) / fadeTime, 0.0f, 1.0f);
+
+                        double scale = 1.0;
+                        if (box.shrink()) {
+                            scale = 1.0 - Easing.EASE_IN_OUT_EXPO.getFunction().apply(progress);
+                            if (scale < 0) scale = 0;
+                        }
+
+                        float alphaFactor = box.fade() ? Mth.clamp(1.0f - progress, 0.0f, 1.0f) : 1.0f;
+
+                        Color sideColor = box.sideColor();
+                        Color lineColor = box.lineColor();
+
+                        Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
+                        Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
+
+                        AABB renderBox = box.aabb;
+                        if (box.shrink()) {
+                            renderBox = AABB.ofSize(renderBox.getCenter(), renderBox.getXsize() * scale, renderBox.getYsize() * scale, renderBox.getZsize() * scale);
+                        }
+
+                        Render3DUtils.drawFilledBox(renderBox, side);
+                        Render3DUtils.drawOutlineBox(event.getPoseStack(), renderBox, line);
+                    }
+                }
+        ));
     }
 
     private enum SwitchMode {

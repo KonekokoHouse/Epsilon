@@ -25,7 +25,7 @@ public class SoundFX extends Module {
         OFF
     }
 
-    public final IntSetting volume = intSetting("Volume", 100, 1, 100, 5);
+    private final IntSetting volume = intSetting("Volume", 100, 1, 100, 5);
     private final EnumSetting<HitSound> hitSound = enumSetting("Hit Sound", HitSound.OFF);
 
     @EventHandler
