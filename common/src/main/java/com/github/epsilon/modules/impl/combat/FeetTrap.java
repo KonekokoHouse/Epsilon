@@ -8,7 +8,6 @@ import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -257,7 +256,8 @@ public class FeetTrap extends Module {
     private record PlaceInfo(BlockPos neighbor, Direction side) {
     }
 
-    private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade, boolean shrink) {
+    private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
+                              boolean shrink) {
     }
 
 }
