@@ -62,7 +62,7 @@ public class Scaffold extends Module {
 
                     renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
 
-                    for (RenderBox box : renderBoxes) {
+                    for (RenderInfo box : renderBoxes) {
                         float progress = Mth.clamp((float) (time - box.startTime()) / fadeTime, 0.0f, 1.0f);
 
                         double scale = 1.0;
@@ -143,7 +143,7 @@ public class Scaffold extends Module {
     private FindItemResult blockResult;
     private boolean shouldSwapBack;
 
-    private final List<RenderBox> renderBoxes = new ArrayList<>();
+    private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
     private static final List<Block> BLACKLISTED_BLOCKS = List.of(
             Blocks.AIR,
@@ -274,7 +274,7 @@ public class Scaffold extends Module {
                     else mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
 
                     if (render.getValue()) {
-                        renderBoxes.add(new RenderBox(new AABB(blockPos.relative(direction)), new java.awt.Color(255, 105, 180), new java.awt.Color(255, 183, 197, 100), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                        renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
                     }
                 }
 
@@ -373,7 +373,7 @@ public class Scaffold extends Module {
             }
 
             if (render.getValue()) {
-                renderBoxes.add(new RenderBox(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
             }
         }
 
@@ -562,8 +562,7 @@ public class Scaffold extends Module {
     }
 
 
-    private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
-                             boolean shrink) {
+    private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade, boolean shrink) {
     }
 
 }

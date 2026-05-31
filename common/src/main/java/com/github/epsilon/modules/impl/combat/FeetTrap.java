@@ -10,6 +10,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
@@ -22,6 +23,7 @@ import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -31,7 +33,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class FeetTrap extends Module {
@@ -56,7 +60,7 @@ public class FeetTrap extends Module {
 
                     renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
 
-                    for (Scaffold.RenderBox box : renderBoxes) {
+                    for (RenderInfo box : renderBoxes) {
                         float progress = Mth.clamp((float) (time - box.startTime()) / fadeTime, 0.0f, 1.0f);
 
                         double scale = 1.0;
@@ -103,7 +107,17 @@ public class FeetTrap extends Module {
     private final IntSetting delay = intSetting("Delay", 0, 0, 20, 1);
     private final BoolSetting toggleWhenDone = boolSetting("Toggle When Done", false);
 
+    private final BoolSetting swingHand = boolSetting("Swing Hand", true);
+    private final BoolSetting render = boolSetting("Render", true);
+    private final BoolSetting fade = boolSetting("Fade", true, render::getValue);
+    private final IntSetting fadeTime = intSetting("Fade Time", 500, 0, 3000, 50, () -> render.getValue() && fade.getValue());
+    private final BoolSetting shrink = boolSetting("Shrink", false, render::getValue);
+    private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 183, 197, 100), render::getValue);
+    private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
+
     private int timer;
+
+    private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
     @Override
     protected void onEnable() {
@@ -218,7 +232,15 @@ public class FeetTrap extends Module {
 
         InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hitResult);
         if (result.consumesAction()) {
-            mc.player.swing(InteractionHand.MAIN_HAND);
+            if (swingHand.getValue()) {
+                mc.player.swing(InteractionHand.MAIN_HAND);
+            } else {
+                mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+            }
+
+            if (render.getValue()) {
+                renderBoxes.add(new RenderInfo(new AABB(placeInfo.neighbor.relative(placeInfo.side)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+            }
         }
 
         if (switchMode.is(SwitchMode.Visible)) {
@@ -234,4 +256,8 @@ public class FeetTrap extends Module {
 
     private record PlaceInfo(BlockPos neighbor, Direction side) {
     }
+
+    private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade, boolean shrink) {
+    }
+
 }
