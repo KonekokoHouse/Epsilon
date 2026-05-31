@@ -86,7 +86,7 @@ public class CrystalAura extends Module {
 
         if (stopOnKill.getValue() && isDeadBodyNearby()) return;
 
-        int randomInt = MathUtils.getRandom(1, 101);
+        int randomInt = MathUtils.getRandom(1, 100);
 
         if (dontPlace) placeClock--;
         if (dontBreak) breakClock--;
@@ -143,7 +143,7 @@ public class CrystalAura extends Module {
             }
         }
 
-        randomInt = MathUtils.getRandom(1, 101);
+        randomInt = MathUtils.getRandom(1, 100);
 
         if (mc.hitResult instanceof EntityHitResult hit) {
             if (!dontBreak && randomInt <= breakChance.getValue().intValue()) {

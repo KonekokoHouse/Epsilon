@@ -88,6 +88,7 @@ public class ModuleManager {
                 MultiTask.INSTANCE,
                 NoRotate.INSTANCE,
                 PacketEat.INSTANCE,
+                SoundFX.INSTANCE,
                 Stealer.INSTANCE,
                 UseCooldown.INSTANCE,
 

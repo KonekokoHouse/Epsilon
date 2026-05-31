@@ -147,14 +147,14 @@ public class AutoClicker extends Module {
 
     private boolean shouldMiss() {
         if (!enableMiss.getValue()) return false;
-        return MathUtils.getRandom(0, 100) < missChance.getValue();
+        return MathUtils.getRandom(1, 100) <= missChance.getValue();
     }
 
     private void scheduleDoubleClick(ButtonState state, long currentTime) {
         if (!enableDoubleClick.getValue()) return;
         if (state.pendingDoubleClick) return;
 
-        if (MathUtils.getRandom(0, 100) < doubleClickChance.getValue()) {
+        if (MathUtils.getRandom(1, 100) <= doubleClickChance.getValue()) {
             state.pendingDoubleClick = true;
             state.doubleClickTime = currentTime + doubleClickDelay.getValue();
         }
@@ -233,7 +233,7 @@ public class AutoClicker extends Module {
                     isInDecay = false;
                 }
             } else {
-                if (MathUtils.getRandom(0, 100) < burstChance.getValue()) {
+                if (MathUtils.getRandom(1, 100) <= burstChance.getValue()) {
                     isInBurst = true;
                     burstStartTime = currentTime;
                     burstEndTime = currentTime + burstDuration.getValue();

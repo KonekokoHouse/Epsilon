@@ -70,7 +70,7 @@ public class TriggerBot extends Module {
         mc.gameMode.attack(mc.player, target);
         mc.player.swing(InteractionHand.MAIN_HAND);
 
-        delay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue() + 1);
+        delay = MathUtils.getRandom(minDelay.getValue(), maxDelay.getValue());
     }
 
     private Entity getCrosshairTarget() {

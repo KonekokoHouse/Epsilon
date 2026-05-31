@@ -23,5 +23,30 @@
     "sounds": [
       "epsilon:shutdown"
     ]
+  },
+  "uwu": {
+    "sounds": [
+      "epsilon:uwu"
+    ]
+  },
+  "moan1": {
+    "sounds": [
+      "epsilon:moan1"
+    ]
+  },
+  "moan2": {
+    "sounds": [
+      "epsilon:moan2"
+    ]
+  },
+  "moan3": {
+    "sounds": [
+      "epsilon:moan3"
+    ]
+  },
+  "moan4": {
+    "sounds": [
+      "epsilon:moan4"
+    ]
   }
 }

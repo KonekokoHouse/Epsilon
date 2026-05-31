@@ -19,10 +19,10 @@ public class SoundManager {
     }
 
     public void playInUi(SoundKey key) {
-        playInUi(key, 0.75f, 1.2f);
+        playSound(key, 0.75f, 1.2f);
     }
 
-    public void playInUi(SoundKey key, float pitch, float volume) {
+    public void playSound(SoundKey key, float pitch, float volume) {
         long now = System.currentTimeMillis();
         if (now - lastUiPlayTimeMs < UI_DEBOUNCE_MS) return;
         lastUiPlayTimeMs = now;
