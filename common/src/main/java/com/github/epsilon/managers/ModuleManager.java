@@ -128,6 +128,7 @@ public class ModuleManager {
                 InventoryHUD.INSTANCE,
                 ModuleListHUD.INSTANCE,
                 PotionHUD.INSTANCE,
+                ScaffoldBlockHUD.INSTANCE,
                 TargetHUD.INSTANCE,
                 WatermarkHUD.INSTANCE
 
