@@ -11,6 +11,7 @@ public enum SoundKey {
     SETTINGS_CLOSE("settings_close"),
     SHUTDOWN("shutdown"),
     UWU("uwu"),
+    NYA("nya"),
     MOAN1("moan1"),
     MOAN2("moan2"),
     MOAN3("moan3"),

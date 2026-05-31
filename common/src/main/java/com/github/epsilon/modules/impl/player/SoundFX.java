@@ -19,8 +19,9 @@ public class SoundFX extends Module {
     }
 
     private enum HitSound {
-        UWU,
-        MOAN,
+        UwU,
+        Nya,
+        Moan,
         OFF
     }
 
@@ -34,8 +35,9 @@ public class SoundFX extends Module {
 
     private void playHitSound(HitSound value) {
         switch (value) {
-            case UWU -> playSound(SoundKey.UWU);
-            case MOAN -> {
+            case UwU -> playSound(SoundKey.UWU);
+            case Nya -> playSound(SoundKey.NYA);
+            case Moan -> {
                 SoundKey sound = switch (MathUtils.getRandom(0, 3)) {
                     case 0 -> SoundKey.MOAN1;
                     case 1 -> SoundKey.MOAN2;
