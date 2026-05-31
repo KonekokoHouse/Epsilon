@@ -49,7 +49,7 @@ public class ScaffoldBlockHUD extends HudModule {
     private static final String LABEL = "Blocks";
     private static final float BASE_HEIGHT = 28.0f;
     private static final float BASE_PAD_X = 8.0f;
-    private static final float BASE_LABEL_GAP = 6.0f;
+    private static final float BASE_LABEL_GAP = 2.8f;
 
     private boolean initialized;
     private String previousCountText = "0";

@@ -6,11 +6,6 @@ import java.awt.*;
 
 public class ColorUtils {
 
-    public static Color applyOpacity(Color color, float opacity) {
-        opacity = Mth.clamp(opacity, 0.0f, 1.0f);
-        return new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (color.getAlpha() * opacity));
-    }
-
     public static Color interpolateColor(Color color1, Color color2, float fraction) {
         fraction = Mth.clamp(fraction, 0.0f, 1.0f);
 
