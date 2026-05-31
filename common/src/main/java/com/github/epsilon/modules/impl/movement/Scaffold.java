@@ -292,7 +292,7 @@ public class Scaffold extends Module {
         }
     }
 
-    private int getBlockCount() {
+    public int getBlockCount() {
         int total = 0;
         if (isValidStack(mc.player.getOffhandItem())) {
             total += mc.player.getOffhandItem().getCount();
