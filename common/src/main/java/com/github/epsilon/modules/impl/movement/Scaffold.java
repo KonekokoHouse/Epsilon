@@ -227,7 +227,7 @@ public class Scaffold extends Module {
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent event) {
-        blockResult = swapMode.is(SwapMode.InvSwitch) ? InvUtils.find(this::isValidStack) : InvUtils.findInHotbar(this::isValidStack);
+        blockResult = findBlockResult();
         if (!blockResult.found()) return;
 
         if (mc.player.onGround()) {
@@ -259,29 +259,20 @@ public class Scaffold extends Module {
                 RotationManager.INSTANCE.setActive(true);
                 mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
 
-                switch (swapMode.getValue()) {
-                    case Normal -> {
-                        InvUtils.swap(blockResult.slot(), true);
-                        if (swapBack.getValue()) shouldSwapBack = true;
-                    }
-                    case Silent -> InvUtils.swap(blockResult.slot(), true);
-                    case InvSwitch -> InvUtils.invSwap(blockResult.slot());
-                }
+                swap();
 
-                InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
+                InteractionHand hand = blockResult.getHand();
+                InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
                 if (result.consumesAction()) {
-                    if (swingHand.getValue()) mc.player.swing(InteractionHand.MAIN_HAND);
-                    else mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                    if (swingHand.getValue()) mc.player.swing(hand);
+                    else mc.getConnection().send(new ServerboundSwingPacket(hand));
 
                     if (render.getValue()) {
                         renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
                     }
                 }
 
-                switch (swapMode.getValue()) {
-                    case Silent -> InvUtils.swapBack();
-                    case InvSwitch -> InvUtils.invSwapBack();
-                }
+                swapBack();
                 return;
             } else {
                 rotateCount = 0;
@@ -303,6 +294,10 @@ public class Scaffold extends Module {
 
     private int getBlockCount() {
         int total = 0;
+        if (isValidStack(mc.player.getOffhandItem())) {
+            total += mc.player.getOffhandItem().getCount();
+        }
+
         int maxSlot = swapMode.is(SwapMode.InvSwitch) ? mc.player.getInventory().getContainerSize() : 9;
         for (int i = 0; i < maxSlot; i++) {
             ItemStack stack = mc.player.getInventory().getItem(i);
@@ -353,23 +348,20 @@ public class Scaffold extends Module {
             return;
         }
 
-        switch (swapMode.getValue()) {
-            case Normal -> {
-                InvUtils.swap(blockResult.slot(), true);
-                if (swapBack.getValue()) shouldSwapBack = true;
-            }
-            case Silent -> InvUtils.swap(blockResult.slot(), true);
-            case InvSwitch -> InvUtils.invSwap(blockResult.slot());
+        swap();
+
+        InteractionHand hand = blockResult.getHand();
+        if (!isValidStack(mc.player.getItemInHand(hand))) {
+            swapBack();
+            return;
         }
 
-        if (!isValidStack(mc.player.getInventory().getSelectedItem())) return;
-
-        InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
+        InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(getVec3(blockPos, direction), direction, blockPos, false));
         if (result.consumesAction()) {
             if (swingHand.getValue()) {
-                mc.player.swing(InteractionHand.MAIN_HAND);
+                mc.player.swing(hand);
             } else {
-                mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
+                mc.getConnection().send(new ServerboundSwingPacket(hand));
             }
 
             if (render.getValue()) {
@@ -377,10 +369,7 @@ public class Scaffold extends Module {
             }
         }
 
-        switch (swapMode.getValue()) {
-            case Silent -> InvUtils.swapBack();
-            case InvSwitch -> InvUtils.invSwapBack();
-        }
+        swapBack();
     }
 
     private int getYLevel() {
@@ -537,6 +526,43 @@ public class Scaffold extends Module {
         }
 
         return new Vec3(x, y, z);
+    }
+
+    private FindItemResult findBlockResult() {
+        ItemStack offhandStack = mc.player.getOffhandItem();
+        if (isValidStack(offhandStack)) {
+            return new FindItemResult(40, offhandStack.getCount(), offhandStack.getMaxStackSize());
+        }
+        return swapMode.is(SwapMode.InvSwitch) ? InvUtils.find(this::isValidStack) : InvUtils.findInHotbar(this::isValidStack);
+    }
+
+    private void swap() {
+        if (blockResult.isOffhand()) {
+            return;
+        }
+
+        switch (swapMode.getValue()) {
+            case Normal -> {
+                int selectedSlot = mc.player.getInventory().getSelectedSlot();
+                InvUtils.swap(blockResult.slot(), true);
+                if (swapBack.getValue() && blockResult.slot() != selectedSlot) {
+                    shouldSwapBack = true;
+                }
+            }
+            case Silent -> InvUtils.swap(blockResult.slot(), true);
+            case InvSwitch -> InvUtils.invSwap(blockResult.slot());
+        }
+    }
+
+    private void swapBack() {
+        if (blockResult.isOffhand()) {
+            return;
+        }
+
+        switch (swapMode.getValue()) {
+            case Silent -> InvUtils.swapBack();
+            case InvSwitch -> InvUtils.invSwapBack();
+        }
     }
 
     private boolean isValidStack(ItemStack stack) {
