@@ -41,13 +41,6 @@ public class FeetTrap extends Module {
 
     public static final FeetTrap INSTANCE = new FeetTrap();
 
-    private static final Direction[] HORIZONTAL_DIRECTIONS = {
-            Direction.NORTH,
-            Direction.SOUTH,
-            Direction.WEST,
-            Direction.EAST
-    };
-
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
         EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class,
@@ -185,8 +178,9 @@ public class FeetTrap extends Module {
 
         Set<BlockPos> targets = new LinkedHashSet<>();
         for (BlockPos feetPos : feetPositions) {
-            for (Direction direction : HORIZONTAL_DIRECTIONS) {
-                BlockPos target = feetPos.relative(direction);
+            for (Direction dir : Direction.values()) {
+                if (dir == Direction.UP || dir == Direction.DOWN) continue;
+                BlockPos target = feetPos.relative(dir);
                 if (!isInsideFeet(target, feetPositions) && BlockUtils.canPlaceAt(target)) {
                     targets.add(target);
                 }
