@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.impl.movement.Scaffold;
@@ -62,13 +63,14 @@ public class ScaffoldBlockHUD extends HudModule {
             return;
         }
 
-        if (!Scaffold.INSTANCE.isEnabled()) {
+        boolean preview = mc.screen instanceof HudEditorScreen;
+        if (!Scaffold.INSTANCE.isEnabled() && !preview) {
             resetAnimation();
             return;
         }
 
-        int blockCount = Math.max(0, Scaffold.INSTANCE.getBlockCount());
-        if (blockCount <= 0) {
+        int blockCount = preview ? Math.max(64, Scaffold.INSTANCE.getBlockCount()) : Math.max(0, Scaffold.INSTANCE.getBlockCount());
+        if (blockCount <= 0 && !preview) {
             resetAnimation();
             return;
         }
