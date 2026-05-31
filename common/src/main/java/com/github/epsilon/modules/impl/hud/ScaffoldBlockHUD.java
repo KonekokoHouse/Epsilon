@@ -12,6 +12,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -55,6 +56,8 @@ public class ScaffoldBlockHUD extends HudModule {
     private String pendingCountText = "0";
     private float numberAnimProgress = 1.0f;
     private float delayTimer;
+    private float visibilityProgress;
+    private long lastVisibilityUpdateMs;
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
@@ -64,18 +67,22 @@ public class ScaffoldBlockHUD extends HudModule {
         }
 
         boolean preview = mc.screen instanceof HudEditorScreen;
-        if (!Scaffold.INSTANCE.isEnabled() && !preview) {
+        int liveBlockCount = Math.max(0, Scaffold.INSTANCE.getBlockCount());
+        boolean shouldShow = preview || (Scaffold.INSTANCE.isEnabled() && liveBlockCount > 0);
+        int blockCount = preview ? Math.max(64, liveBlockCount) : liveBlockCount;
+
+        updateVisibilityAnimation(shouldShow);
+        float easedVisibility = (float) Math.pow(Mth.clamp(visibilityProgress, 0.0f, 1.0f), 3.0);
+        float animationProgress = Easing.EASE_OUT_SINE.getFunction().apply(easedVisibility);
+        if (!shouldShow && animationProgress <= 0.01f) {
             resetAnimation();
             return;
         }
-
-        int blockCount = preview ? Math.max(64, Scaffold.INSTANCE.getBlockCount()) : Math.max(0, Scaffold.INSTANCE.getBlockCount());
-        if (blockCount <= 0 && !preview) {
-            resetAnimation();
+        if (shouldShow) {
+            syncNumberAnimation(blockCount, deltaTracker);
+        } else if (!initialized) {
             return;
         }
-
-        syncNumberAnimation(blockCount, deltaTracker);
 
         RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
         ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
@@ -94,37 +101,45 @@ public class ScaffoldBlockHUD extends HudModule {
         float labelWidth = textRenderer.getWidth("Block", labelScale);
         float totalWidth = padX * 2.0f + dotSize + dotGap + numberColumnWidth + labelGap + labelWidth;
         float renderX = computeRenderX(totalWidth);
+        float centerX = renderX + totalWidth / 2.0f;
         float centerY = this.y + pillHeight / 2.0f;
+        float animatedWidth = totalWidth * animationProgress;
+        float animatedX = Mth.lerp(animationProgress, centerX, renderX);
+        float animatedRadius = Math.min(radius, animatedWidth / 2.0f);
+        float contentAlpha = animationProgress;
 
         if (backgroundBlur.getValue()) {
-            BlurShader.INSTANCE.render(renderX, this.y, totalWidth, pillHeight, radius, blurStrength.getValue());
+            BlurShader.INSTANCE.render(animatedX, this.y, animatedWidth, pillHeight, animatedRadius, blurStrength.getValue());
         }
 
         if (drawShadow.getValue()) {
-            shadowRenderer.addShadow(renderX, this.y, totalWidth, pillHeight, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
+            shadowRenderer.addShadow(animatedX, this.y, animatedWidth, pillHeight, animatedRadius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), contentAlpha));
             shadowRenderer.drawAndClear();
         }
 
-        roundRectRenderer.addRoundRect(renderX, this.y, totalWidth, pillHeight, radius, backgroundColor.getValue());
+        roundRectRenderer.addRoundRect(animatedX, this.y, animatedWidth, pillHeight, animatedRadius, withAlpha(backgroundColor.getValue(), contentAlpha));
 
         float dotRadius = dotSize / 2.0f;
         float dotX = renderX + padX;
-        roundRectRenderer.addRoundRect(dotX, centerY - dotRadius, dotSize, dotSize, dotRadius, accentColor.getValue());
+        float animatedDotX = Mth.lerp(animationProgress, centerX - dotRadius, dotX);
+        roundRectRenderer.addRoundRect(animatedDotX, centerY - dotRadius, dotSize, dotSize, dotRadius, withAlpha(accentColor.getValue(), contentAlpha));
         roundRectRenderer.drawAndClear();
 
         float numberColumnX = dotX + dotSize + dotGap;
         float numberTextHeight = textRenderer.getHeight(numberScale);
         float numberY = this.y + (pillHeight - numberTextHeight) / 2.0f - 1.0f * s;
+        float animatedNumberColumnX = Mth.lerp(animationProgress, centerX - numberColumnWidth / 2.0f, numberColumnX);
 
         if (smoothNumber.getValue()) {
-            drawRollingNumber(textRenderer, numberScale, numberColumnX, numberColumnWidth, numberY);
+            drawRollingNumber(textRenderer, numberScale, animatedNumberColumnX, numberColumnWidth, numberY, contentAlpha);
         } else {
-            textRenderer.addText(targetCountText, numberColumnX, numberY, numberScale, textColor.getValue());
+            textRenderer.addText(targetCountText, animatedNumberColumnX, numberY, numberScale, withAlpha(textColor.getValue(), contentAlpha));
         }
 
         float labelX = numberColumnX + numberColumnWidth + labelGap;
+        float animatedLabelX = Mth.lerp(animationProgress, centerX - labelWidth / 2.0f, labelX);
         float labelY = this.y + (pillHeight - textRenderer.getHeight(labelScale)) / 2.0f - 0.5f * s;
-        textRenderer.addText("Block", labelX, labelY, labelScale, textSecondary.getValue());
+        textRenderer.addText("Block", animatedLabelX, labelY, labelScale, withAlpha(textSecondary.getValue(), contentAlpha));
         textRenderer.drawAndClear();
 
         setBounds(totalWidth, pillHeight);
@@ -181,6 +196,22 @@ public class ScaffoldBlockHUD extends HudModule {
         }
     }
 
+    private void updateVisibilityAnimation(boolean shouldShow) {
+        long now = System.currentTimeMillis();
+        if (lastVisibilityUpdateMs == 0L) {
+            lastVisibilityUpdateMs = now;
+        }
+
+        float delta = Mth.clamp((now - lastVisibilityUpdateMs) / (float) 220L, 0.0f, 1.0f);
+        lastVisibilityUpdateMs = now;
+
+        if (shouldShow) {
+            visibilityProgress = Math.min(1.0f, visibilityProgress + delta);
+        } else {
+            visibilityProgress = Math.max(0.0f, visibilityProgress - delta);
+        }
+    }
+
     private float getNumberColumnWidth(TextRenderer textRenderer, float numberScale) {
         float width = Math.max(
                 textRenderer.getWidth(previousCountText, numberScale),
@@ -189,7 +220,7 @@ public class ScaffoldBlockHUD extends HudModule {
         return width + 4.0f * scale.getValue().floatValue();
     }
 
-    private void drawRollingNumber(TextRenderer textRenderer, float numberScale, float columnX, float columnWidth, float textY) {
+    private void drawRollingNumber(TextRenderer textRenderer, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
         String previous = previousCountText;
         String target = targetCountText;
         int maxLen = Math.max(previous.length(), target.length());
@@ -214,17 +245,17 @@ public class ScaffoldBlockHUD extends HudModule {
 
             if (previousChar == targetChar) {
                 if (targetChar != '\0') {
-                    textRenderer.addText(String.valueOf(targetChar), charX, textY, numberScale, textColor.getValue());
+                    textRenderer.addText(String.valueOf(targetChar), charX, textY, numberScale, withAlpha(textColor.getValue(), alphaMul));
                 }
             } else {
                 float oldAlpha = 1.0f - numberAnimProgress;
                 float newAlpha = numberAnimProgress;
 
                 if (previousChar != '\0' && oldAlpha > 0.01f) {
-                    textRenderer.addText(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha));
+                    textRenderer.addText(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha * alphaMul));
                 }
                 if (targetChar != '\0' && newAlpha > 0.01f) {
-                    textRenderer.addText(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha));
+                    textRenderer.addText(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha * alphaMul));
                 }
             }
 
@@ -239,6 +270,8 @@ public class ScaffoldBlockHUD extends HudModule {
         pendingCountText = "0";
         numberAnimProgress = 1.0f;
         delayTimer = 0.0f;
+        visibilityProgress = 0.0f;
+        lastVisibilityUpdateMs = 0L;
     }
 
     private static Color withAlpha(Color color, float alphaMul) {
