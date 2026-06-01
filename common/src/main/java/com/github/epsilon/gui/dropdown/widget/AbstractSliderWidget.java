@@ -59,7 +59,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             float kr = DropdownTheme.SLIDER_KNOB_RADIUS;
             renderer.roundRect().addRoundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());
 
-            if (dragging) {
+            if (dragging && mouseX >= 0) {
                 float rawRatio = Mth.clamp((float) (mouseX - trackX) / trackW, 0.0f, 1.0f);
                 updateValueFromRatio(rawRatio);
             }
