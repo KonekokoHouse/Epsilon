@@ -1,10 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.SendPositionEvent;
-import com.github.epsilon.events.impl.SlowdownEvent;
-import com.github.epsilon.events.impl.SwingHandEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -13,6 +10,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -98,9 +96,18 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     }
 
     @WrapOperation(method = "modifyInput", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
-    public boolean onSlowdown(LocalPlayer localPlayer, Operation<Boolean> original) {
+    private boolean onSlowdown(LocalPlayer localPlayer, Operation<Boolean> original) {
         SlowdownEvent event = EventBus.INSTANCE.post(new SlowdownEvent(original.call(localPlayer)));
         return event.isSlowdown();
+    }
+
+    @Inject(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V"), cancellable = true)
+    private void onMove(MoverType moverType, Vec3 delta, CallbackInfo ci) {
+        MoveEvent event = EventBus.INSTANCE.post(new MoveEvent(delta.x, delta.y, delta.z));
+        if (event.isCancelled()) {
+            super.move(moverType, new Vec3(event.getX(), event.getY(), event.getZ()));
+            ci.cancel();
+        }
     }
 
 }

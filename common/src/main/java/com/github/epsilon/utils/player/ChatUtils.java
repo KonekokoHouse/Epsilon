@@ -20,7 +20,12 @@ public class ChatUtils {
     }
 
     public static void addChatMessage(boolean prefix, String message) {
-        mc.gui.getChat().addClientSystemMessage(buildClientMessage(prefix, message));
+        Component component = buildClientMessage(prefix, message);
+        if (mc.isSameThread()) {
+            mc.gui.getChat().addClientSystemMessage(component);
+        } else {
+            mc.execute(() -> mc.gui.getChat().addClientSystemMessage(component));
+        }
     }
 
     public static Component buildClientMessage(boolean prefix, String message) {

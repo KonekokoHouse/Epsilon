@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "MixinAvatarRenderer",
+    "MixinBlock",
     "MixinBlockCollisions",
+    "MixinBlockStateBase",
     "MixinCamera",
     "MixinChatComponent",
     "MixinClientPacketListener",
@@ -40,7 +42,8 @@
     "MixinScreenEffectRenderer",
     "MixinTitleScreen",
     "MixinWebBlock",
-    "MixinWindow"
+    "MixinWindow",
+    "sodium.MixinSodiumAbstractBlockRenderContext"
   ],
   "injectors": {
     "defaultRequire": 1
