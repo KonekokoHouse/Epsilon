@@ -180,14 +180,14 @@ public class Xray extends Module {
         if (toCheck.isEmpty() || !brutForce.getValue()) return;
 
         if (mc.isSingleplayer()) {
-            log("Bro, you're in singleplayer");
+            log("单人游戏你反你老冯呢");
             toggle();
             return;
         }
 
         if (mc.player.getMainHandItem().is(ItemTags.PICKAXES)) {
             if (mc.player.tickCount % 8 == 0) {
-                log("Remove pickaxe from ur hand!");
+                log("别在主手放镐子");
                 toggle();
             }
             return;

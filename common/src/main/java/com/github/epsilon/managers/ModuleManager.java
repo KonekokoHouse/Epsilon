@@ -47,7 +47,7 @@ public class ModuleManager {
         addModule(ClientSetting.INSTANCE);
 
         // Combat
-        addModule(AimAssist.INSTANCE);
+        addModule(AimBot.INSTANCE);
         addModule(AnchorBlast.INSTANCE);
         addModule(AntiBot.INSTANCE);
         addModule(AutoClicker.INSTANCE);

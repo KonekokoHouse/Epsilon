@@ -141,13 +141,13 @@ public class RotationUtils {
         }
     }
 
-    public static boolean isInFov(LivingEntity entity, float fov) {
+    public static boolean isInFov(Entity entity, float fov) {
         if (fov >= 360.0) return true;
         float yawDiff = Math.abs(Mth.wrapDegrees(RotationUtils.getRotationsToEntity(entity).getYaw() - mc.player.getYRot()));
         return yawDiff <= fov / 2.0;
     }
 
-    public static Rot2f getRotationsToEntity(LivingEntity entity) {
+    public static Rot2f getRotationsToEntity(Entity entity) {
         Vec3 eyePos = mc.player.getEyePosition();
         Vec3 targetPos = entity.position().add(0, entity.getBbHeight() / 2.0, 0);
         double dx = targetPos.x - eyePos.x;
