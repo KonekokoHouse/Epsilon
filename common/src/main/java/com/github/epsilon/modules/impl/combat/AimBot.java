@@ -45,6 +45,7 @@ public class AimBot extends Module {
     private final IntSetting aimSmooth = intSetting("Aim Smooth", 45, 1, 180, 1, () -> mode.is(Mode.AimAssist));
     private final IntSetting aimTime = intSetting("Aim Time", 2, 1, 10, 1, () -> mode.is(Mode.AimAssist));
     private final BoolSetting onlyWeapon = boolSetting("Only Weapon", false, () -> mode.is(Mode.AimAssist));
+    private final BoolSetting lmbActivation = boolSetting("LMB Activation", false, () -> mode.is(Mode.AimAssist));
     private final BoolSetting ignoreWalls = boolSetting("Ignore Walls", true, () -> mode.is(Mode.AimAssist));
     private final IntSetting reactionTime = intSetting("Reaction Time", 80, 1, 500, 1, () -> mode.is(Mode.AimAssist) && !ignoreWalls.getValue());
     private final BoolSetting ignoreInvisible = boolSetting("Ignore Invis", false, () -> mode.is(Mode.AimAssist));
@@ -136,10 +137,13 @@ public class AimBot extends Module {
     }
 
     private void updateAimAssist() {
+        if (lmbActivation.getValue() && !mc.options.keyAttack.isDown()) {
+            resetAimAssist();
+            return;
+        }
+
         if (onlyWeapon.getValue() && !mc.player.getMainHandItem().has(DataComponents.WEAPON)) {
-            rotationYaw = Float.NaN;
-            assistAcceleration = 0.0f;
-            aimTicks = 0;
+            resetAimAssist();
             return;
         }
 
@@ -182,6 +186,12 @@ public class AimBot extends Module {
         } else {
             rotationYaw = Float.NaN;
         }
+    }
+
+    private void resetAimAssist() {
+        rotationYaw = Float.NaN;
+        assistAcceleration = 0.0f;
+        aimTicks = 0;
     }
 
     private float calculateArc(Player target, double duration) {
