@@ -74,7 +74,7 @@ public class AimBot extends Module {
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onUseItem(UseItemEvent event) {
-        if (mode.is(Mode.BowAim) && (target != null || mode.is(Mode.BowAim) && isUsingBow()) && !Float.isNaN(rotationYaw) && !Float.isNaN(rotationPitch)) {
+        if (mode.is(Mode.BowAim) && isUsingBow() && !Float.isNaN(rotationYaw) && !Float.isNaN(rotationPitch)) {
             event.setYaw(rotationYaw);
             event.setPitch(rotationPitch);
         }
@@ -90,7 +90,7 @@ public class AimBot extends Module {
         }
 
         float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        if (target != null && (mc.player.hasLineOfSight(target) || ignoreWalls.getValue())) {
+        if (isUsingBow() && target != null && (mc.player.hasLineOfSight(target) || ignoreWalls.getValue())) {
             if (rotation.is(Rotation.Client)) {
                 mc.player.setYRot(Mth.lerp(tickDelta, mc.player.yRotO, rotationYaw));
                 mc.player.setXRot(Mth.lerp(tickDelta, mc.player.xRotO, rotationPitch));
@@ -159,7 +159,7 @@ public class AimBot extends Module {
         }
 
         Player nearestTarget = getNearestTarget(5.0f);
-        assistAcceleration += aimStrength.getValue() / 10000.0f;
+        assistAcceleration = Mth.clamp(assistAcceleration + aimStrength.getValue() / 10000.0f, 0.0f, 1.0f);
 
         if (nearestTarget != null) {
             if (!mc.player.hasLineOfSight(nearestTarget) && !ignoreWalls.getValue()) {
@@ -184,7 +184,7 @@ public class AimBot extends Module {
             double gcdFix = Math.pow(mc.options.sensitivity().get() * 0.6 + 0.2, 3.0) * 1.2;
             rotationYaw = (float) (newYaw - (newYaw - rotationYaw) % gcdFix);
         } else {
-            rotationYaw = Float.NaN;
+            resetAimAssist();
         }
     }
 
