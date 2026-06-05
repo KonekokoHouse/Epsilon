@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl;
 
 import com.github.epsilon.assets.holders.TextureCacheHolder;
 import com.github.epsilon.assets.holders.TranslateHolder;
+import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
@@ -12,7 +13,9 @@ import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.awt.*;
 import java.io.IOException;
@@ -122,6 +125,24 @@ public class ClientSetting extends Module {
 
     public double getScale() {
         return renderScale.getValue();
+    }
+
+    public BackgroundTexture getTexture() {
+        return switch (ClientSetting.INSTANCE.screenBackground.getValue()) {
+            case Vanilla -> null;
+            case Jello -> getTexture("jello", 1920, 1080);
+            case Miku -> getTexture("miku", 1904, 1080);
+            case KrulTepes -> getTexture("krultepes", 1920, 1080);
+            case Shiroko -> getTexture("shiroko", 1920, 1080);
+            case BlueArchive -> getTexture("bluearchive", 2880, 1620);
+        };
+    }
+
+    private BackgroundTexture getTexture(String name, int width, int height) {
+        return new BackgroundTexture(ResourceLocationUtils.getIdentifier("textures/background/" + name + ".png"), width, height);
+    }
+
+    public record BackgroundTexture(Identifier id, int width, int height) {
     }
 
 }
