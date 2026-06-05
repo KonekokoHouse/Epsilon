@@ -107,7 +107,7 @@ public class ClientSetting extends Module {
 
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
 
-    public final EnumSetting<ScreenBackground> screenBackground = enumSetting("Screen Background", ScreenBackground.Vanilla).group(sgAppearance);
+    public final EnumSetting<ScreenBackground> screenBackground = enumSetting("Screen Background", ScreenBackground.BlueArchive).group(sgAppearance);
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
