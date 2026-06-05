@@ -14,6 +14,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.Items;
 
 public class HandsView extends Module {
 
@@ -28,7 +30,7 @@ public class HandsView extends Module {
         Flux
     }
 
-    public enum BlockMode {
+    private enum BlockMode {
         V1_7,
         Pushdown,
         Scale,
@@ -53,28 +55,31 @@ public class HandsView extends Module {
 
     public boolean isBlocking() {
         KillAura killAura = KillAura.INSTANCE;
-        if (killAura.isEnabled() && killAura.target != null) {
-            return true;
-        }
-        if (mc.player.getMainHandItem().is(ItemTags.WEAPON_ENCHANTABLE) && mc.options.keyUse.isDown()) {
-            return true;
-        }
-        return false;
+        return (killAura.isEnabled() && killAura.target != null) || (isBlockableWeapon(mc.player.getMainHandItem()) && mc.options.keyUse.isDown());
     }
 
     public boolean shouldApplyBlockingAnimation(InteractionHand hand, ItemStack itemStack) {
-        if (!isEnabled() || !blockingAnimation.getValue() || hand != InteractionHand.MAIN_HAND || itemStack.isEmpty() || mc.player.isUsingItem()) {
-            return false;
-        }
-        return isBlocking() && itemStack.is(ItemTags.WEAPON_ENCHANTABLE);
+        return hand == InteractionHand.MAIN_HAND && canRenderMainHand(itemStack) && isBlocking();
     }
 
-    public boolean shouldApplyThirdPersonBlockingAnimation(Avatar avatar, HumanoidArm arm) {
-        if (avatar != mc.player || !isEnabled() || !blockingAnimation.getValue() || avatar.getMainArm() != arm) {
+    public boolean shouldApplyThirdPersonBlockingAnim(Avatar avatar, HumanoidArm arm) {
+        ItemStack itemStack = avatar.getItemInHand(InteractionHand.MAIN_HAND);
+        return avatar == mc.player && avatar.getMainArm() == arm && canRenderMainHand(itemStack) && isBlocking();
+    }
+
+    private boolean canRenderMainHand(ItemStack itemStack) {
+        return isEnabled() && blockingAnimation.getValue() && isBlockableWeapon(itemStack) && !isOffhandBlocking();
+    }
+
+    private boolean isBlockableWeapon(ItemStack itemStack) {
+        return !itemStack.isEmpty() && itemStack.is(ItemTags.WEAPON_ENCHANTABLE);
+    }
+
+    private boolean isOffhandBlocking() {
+        if (!mc.options.keyUse.isDown() || !mc.player.getOffhandItem().is(Items.SHIELD)) {
             return false;
         }
-        ItemStack itemStack = avatar.getItemInHand(InteractionHand.MAIN_HAND);
-        return !itemStack.isEmpty() && isBlocking() && itemStack.is(ItemTags.WEAPON_ENCHANTABLE);
+        return !mc.player.isUsingItem() ? mc.player.getMainHandItem().getUseAnimation() == ItemUseAnimation.NONE : mc.player.getUsedItemHand() == InteractionHand.OFF_HAND;
     }
 
     public void applyBlockingTransform(PoseStack poseStack, HumanoidArm arm, float attack) {

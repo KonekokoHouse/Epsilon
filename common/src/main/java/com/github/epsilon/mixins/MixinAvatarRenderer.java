@@ -21,10 +21,10 @@ public class MixinAvatarRenderer {
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("RETURN"))
     private void applyThirdPersonBlockingPose(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
         HandsView handsView = HandsView.INSTANCE;
-        if (handsView.shouldApplyThirdPersonBlockingAnimation(entity, HumanoidArm.RIGHT)) {
+        if (handsView.shouldApplyThirdPersonBlockingAnim(entity, HumanoidArm.RIGHT)) {
             state.rightArmPose = HumanoidModel.ArmPose.BLOCK;
         }
-        if (handsView.shouldApplyThirdPersonBlockingAnimation(entity, HumanoidArm.LEFT)) {
+        if (handsView.shouldApplyThirdPersonBlockingAnim(entity, HumanoidArm.LEFT)) {
             state.leftArmPose = HumanoidModel.ArmPose.BLOCK;
         }
     }
