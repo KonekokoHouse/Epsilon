@@ -15,7 +15,6 @@ import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
-import org.spongepowered.asm.mixin.Unique;
 
 import java.awt.*;
 import java.io.IOException;
