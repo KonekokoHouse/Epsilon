@@ -46,7 +46,6 @@ public class AimBot extends Module {
     private final IntSetting aimTime = intSetting("Aim Time", 2, 1, 10, 1, () -> mode.is(Mode.AimAssist));
     private final BoolSetting onlyWeapon = boolSetting("Only Weapon", false, () -> mode.is(Mode.AimAssist));
     private final BoolSetting ignoreWalls = boolSetting("Ignore Walls", true, () -> mode.is(Mode.AimAssist));
-    private final BoolSetting ignoreTeam = boolSetting("Ignore Team", true, () -> mode.is(Mode.AimAssist));
     private final IntSetting reactionTime = intSetting("Reaction Time", 80, 1, 500, 1, () -> mode.is(Mode.AimAssist) && !ignoreWalls.getValue());
     private final BoolSetting ignoreInvisible = boolSetting("Ignore Invis", false, () -> mode.is(Mode.AimAssist));
     private final IntSetting predictTicks = intSetting("Predict Ticks", 2, 0, 20, 1, () -> mode.is(Mode.BowAim));
@@ -207,7 +206,7 @@ public class AimBot extends Module {
         Player best = null;
         float bestFov = maxFov;
         for (Entity entity : mc.level.entitiesForRendering()) {
-            if (!(entity instanceof Player player) || skipPlayerForAssist(player)) continue;
+            if (!(entity instanceof Player player) || shouldSkipPlayer(player)) continue;
             float yawDiff = Math.abs(Mth.wrapDegrees(getYawBetween(mc.player.getYRot(), mc.player.getX(), mc.player.getZ(), player.getX(), player.getZ()) - mc.player.getYRot()));
             if (yawDiff < bestFov) {
                 best = player;
@@ -221,7 +220,7 @@ public class AimBot extends Module {
         Player nearest = null;
         double bestDistance = range * range;
         for (Entity entity : mc.level.entitiesForRendering()) {
-            if (!(entity instanceof Player player) || skipPlayerForAssist(player)) continue;
+            if (!(entity instanceof Player player) || shouldSkipPlayer(player)) continue;
             if (entity.isInvisible() && ignoreInvisible.getValue()) continue;
             if (!ignoreWalls.getValue() && !mc.player.hasLineOfSight(player)) continue;
             double distance = mc.player.distanceToSqr(player);
@@ -233,11 +232,11 @@ public class AimBot extends Module {
         return nearest;
     }
 
-    private boolean skipPlayerForAssist(Player player) {
+    private boolean shouldSkipPlayer(Player player) {
         if (player == mc.player || !player.isAlive() || player.isDeadOrDying()) return true;
         if (AntiBot.INSTANCE.isBot(player)) return true;
         if (FriendManager.INSTANCE.isFriend(player)) return true;
-        return player.getTeamColor() == mc.player.getTeamColor() && ignoreTeam.getValue() && mc.player.getTeamColor() != 0xFFFFFF;
+        return false;
     }
 
     private float getYawBetween(float yaw, double srcX, double srcZ, double destX, double destZ) {
