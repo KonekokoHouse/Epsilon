@@ -47,6 +47,15 @@ public class ClientSetting extends Module {
         Light
     }
 
+    public enum ScreenBackground {
+        Vanilla,
+        Jello,
+        Miku,
+        KrulTepes,
+        Shiroko,
+        BlueArchive
+    }
+
     private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
@@ -95,6 +104,8 @@ public class ClientSetting extends Module {
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
+
+    public final EnumSetting<ScreenBackground> screenBackground = enumSetting("Screen Background", ScreenBackground.Vanilla).group(sgAppearance);
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
