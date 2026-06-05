@@ -23,6 +23,9 @@ public abstract class HudModule extends Module {
     public float x, y, width, height;
     private float anchorX, anchorY;
 
+    private final float defaultX, defaultY;
+    private final float defaultAnchorX, defaultAnchorY;
+
     private HorizontalAnchor horizontalAnchor = HorizontalAnchor.Left;
     private VerticalAnchor verticalAnchor = VerticalAnchor.Top;
 
@@ -39,6 +42,24 @@ public abstract class HudModule extends Module {
         this.height = height;
         this.anchorX = x;
         this.anchorY = y;
+        this.defaultX = x;
+        this.defaultY = y;
+        this.defaultAnchorX = x;
+        this.defaultAnchorY = y;
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        resetLayout();
+    }
+
+    private void resetLayout() {
+        horizontalAnchor = HorizontalAnchor.Left;
+        verticalAnchor = VerticalAnchor.Top;
+        anchorX = defaultAnchorX;
+        anchorY = defaultAnchorY;
+        applyRenderPosition(defaultX, defaultY, false);
     }
 
     public final void updateLayout() {
@@ -65,10 +86,9 @@ public abstract class HudModule extends Module {
     public final void loadLegacyPosition(float renderX, float renderY) {
         horizontalAnchor = HorizontalAnchor.Left;
         verticalAnchor = VerticalAnchor.Top;
+        anchorX = renderX;
+        anchorY = renderY;
         applyRenderPosition(renderX, renderY, false);
-
-        this.anchorX = this.x;
-        this.anchorY = this.y;
     }
 
     public final void setAnchorState(HorizontalAnchor horizontalAnchor, VerticalAnchor verticalAnchor, float anchorX, float anchorY) {
