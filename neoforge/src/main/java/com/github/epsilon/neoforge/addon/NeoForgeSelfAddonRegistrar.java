@@ -4,7 +4,7 @@ import com.github.epsilon.neoforge.NeoForgePlatformAddon;
 import net.neoforged.neoforge.common.NeoForge;
 
 /**
- * Registers Sakura's built-in NeoForge addon via NeoForge.EVENT_BUS.
+ * Registers Epsilon's built-in NeoForge addon via NeoForge.EVENT_BUS.
  */
 public class NeoForgeSelfAddonRegistrar {
 
