@@ -21,8 +21,8 @@ public class MixinSodiumAbstractBlockRenderContext {
     @Inject(method = "isFaceCulled", at = @At("HEAD"), cancellable = true)
     private void hookIsFaceCulled(Direction face, CallbackInfoReturnable<Boolean> cir) {
         Xray xray = Xray.INSTANCE;
-        if (xray.isWallHackActive()) {
-            cir.setReturnValue(!xray.shouldRenderXray(this.state));
+        if (xray.isEnabled() && xray.wallHack.getValue()) {
+            cir.setReturnValue(!xray.isCheckableOre(this.state.getBlock()));
         }
     }
 
