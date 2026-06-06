@@ -96,6 +96,7 @@ public class ModuleManager {
         addModule(ElytraFly.INSTANCE);
         addModule(FastWeb.INSTANCE);
         addModule(GUIMove.INSTANCE);
+        addModule(KeepSprint.INSTANCE);
         addModule(MovementFix.INSTANCE);
         addModule(NoFall.INSTANCE);
         addModule(NoSlow.INSTANCE);
