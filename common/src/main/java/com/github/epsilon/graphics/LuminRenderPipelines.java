@@ -4,7 +4,6 @@ import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -24,15 +23,20 @@ public class LuminRenderPipelines {
             .withCull(false)
             .build();
 
-    private final static RenderPipeline.Snippet TTF_SNIPPET = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
-            .withUniform("TtfInfo", UniformType.UNIFORM_BUFFER)
-            .buildSnippet();
-
-    public final static RenderPipeline TTF_FONT = RenderPipeline.builder(TTF_SNIPPET)
-            .withLocation(ResourceLocationUtils.getIdentifier("pipelines/ttf_font"))
+    public final static RenderPipeline TTF_FONT_AA = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipelines/ttf_font_aa"))
             .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
             .withVertexShader(ResourceLocationUtils.getIdentifier("ttf_font"))
-            .withFragmentShader(ResourceLocationUtils.getIdentifier("ttf_font"))
+            .withFragmentShader(ResourceLocationUtils.getIdentifier("ttf_font_aa"))
+            .withSampler("Sampler0")
+            .withCull(false)
+            .build();
+
+    public final static RenderPipeline TTF_FONT_NO_AA = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipelines/ttf_font_no_aa"))
+            .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+            .withVertexShader(ResourceLocationUtils.getIdentifier("ttf_font"))
+            .withFragmentShader(ResourceLocationUtils.getIdentifier("ttf_font_no_aa"))
             .withSampler("Sampler0")
             .withCull(false)
             .build();

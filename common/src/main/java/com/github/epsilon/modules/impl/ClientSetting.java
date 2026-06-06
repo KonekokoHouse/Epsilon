@@ -82,6 +82,8 @@ public class ClientSetting extends Module {
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
 
+    public final BoolSetting replaceMinecraftFont = boolSetting("Replace Minecraft Font", false).group(sgGeneral);
+
     public final BoolSetting closeOnOutside = boolSetting("Close Gui On Outside", false, () -> guiMode.is(GuiMode.Panel)).group(sgGeneral);
 
     // Anti Cheat

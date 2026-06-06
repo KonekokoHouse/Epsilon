@@ -9,8 +9,6 @@ import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -34,8 +32,6 @@ public class TtfTextRenderer implements ITextRenderer {
     private final long bufferSize;
 
     private final Map<TtfGlyphAtlas, Batch> batches = new LinkedHashMap<>();
-
-    private GpuBuffer ttfInfoUniformBuf = null;
 
     private boolean scissorEnabled = false;
     private int scissorX, scissorY, scissorW, scissorH;
@@ -102,15 +98,6 @@ public class TtfTextRenderer implements ITextRenderer {
 
         LuminRenderSystem.applyOrthoProjection();
 
-        if (ttfInfoUniformBuf == null) {
-            final var size = new Std140SizeCalculator().putFloat().putFloat().get();
-            ttfInfoUniformBuf = RenderSystem.getDevice().createBuffer(() -> "Lumin TTF UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, size);
-        }
-
-        try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder().mapBuffer(ttfInfoUniformBuf, false, true)) {
-            Std140Builder.intoBuffer(mappedView.data()).putFloat(0.5f).putFloat(ClientSetting.INSTANCE.fontAntiAliasing.getValue() ? 1.0f : 0.0f);
-        }
-
         GpuTextureView colorView = LuminRenderSystem.resolveColorView();
         GpuTextureView depthView = LuminRenderSystem.resolveDepthView();
         if (colorView == null) return;
@@ -140,14 +127,15 @@ public class TtfTextRenderer implements ITextRenderer {
                     colorView, OptionalInt.empty(),
                     depthView, OptionalDouble.empty())
             ) {
-                pass.setPipeline(LuminRenderPipelines.TTF_FONT);
+                pass.setPipeline(ClientSetting.INSTANCE.fontAntiAliasing.getValue()
+                        ? LuminRenderPipelines.TTF_FONT_AA
+                        : LuminRenderPipelines.TTF_FONT_NO_AA);
                 if (scissorEnabled) {
                     pass.enableScissor(scissorX, scissorY, scissorW, scissorH);
                 }
 
                 RenderSystem.bindDefaultUniforms(pass);
                 pass.setUniform("DynamicTransforms", dynamicUniforms);
-                pass.setUniform("TtfInfo", ttfInfoUniformBuf);
 
                 pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
                 pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
@@ -178,7 +166,6 @@ public class TtfTextRenderer implements ITextRenderer {
             batch.buffer.close();
         }
         batches.clear();
-        if (ttfInfoUniformBuf != null) ttfInfoUniformBuf.close();
     }
 
     @Override

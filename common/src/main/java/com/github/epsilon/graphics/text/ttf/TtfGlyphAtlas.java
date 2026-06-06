@@ -1,6 +1,8 @@
 package com.github.epsilon.graphics.text.ttf;
 
 import com.github.epsilon.graphics.LuminTexture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.AddressMode;
@@ -9,17 +11,22 @@ import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.TextureFormat;
 
 import java.util.OptionalDouble;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TtfGlyphAtlas {
 
     private static final int SIZE = 512;
+    private static final AtomicInteger NEXT_TEXTURE_ID = new AtomicInteger();
     private final LuminTexture texture;
+    private final Identifier textureId;
 
     private int currentX = 0;
     private int currentY = 0;
     private int currentRowHeight = 0;
 
     public TtfGlyphAtlas(int atlasId) {
+        this.textureId = Identifier.fromNamespaceAndPath("epsilon", "ttf_atlas/" + NEXT_TEXTURE_ID.getAndIncrement());
+
         final var texture = RenderSystem.getDevice().createTexture(
                 () -> "Lumin-TtfGlyphAtlas",
                 GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_DST,
@@ -36,6 +43,7 @@ public class TtfGlyphAtlas {
         );
 
         this.texture = new LuminTexture(texture, textureView, sampler);
+        Minecraft.getInstance().getTextureManager().register(this.textureId, this.texture);
     }
 
     /**
@@ -87,8 +95,12 @@ public class TtfGlyphAtlas {
         return texture;
     }
 
+    public Identifier getTextureId() {
+        return textureId;
+    }
+
     public void destroy() {
-        texture.close();
+        Minecraft.getInstance().getTextureManager().release(this.textureId);
     }
 
     public record GlyphUV(float u0, float v0, float u1, float v1) {

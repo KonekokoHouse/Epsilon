@@ -245,6 +245,7 @@
   "epsilon.modules.client setting.custom icon": "Custom Icon",
   "epsilon.modules.client setting.custom title": "Custom Title",
   "epsilon.modules.client setting.font anti aliasing": "Font Anti-Aliasing",
+  "epsilon.modules.client setting.replace minecraft font": "Replace Minecraft Font",
   "epsilon.modules.client setting.anti cheat": "Anti Cheat",
   "epsilon.modules.client setting.modify crosshair": "Modify Crosshair",
   "epsilon.modules.client setting.general": "General",
