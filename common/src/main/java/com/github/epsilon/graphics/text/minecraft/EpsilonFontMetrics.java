@@ -15,7 +15,7 @@ public final class EpsilonFontMetrics {
     private static final float VANILLA_LINE_HEIGHT = 9.0f;
     private static final Identifier FONT_ID = ResourceLocationUtils.getIdentifier("fonts/font.ttf");
 
-    public static final float GLYPH_SPACING = 1.0f;
+    public static final float LETTER_SPACING = 0f;
     public static final float SPACE_WIDTH = 3.0f;
 
     private static @Nullable TtfFontLoader font;
@@ -58,7 +58,7 @@ public final class EpsilonFontMetrics {
             return 0.0f;
         }
 
-        return descriptor.advance() * minecraftScale(font) + GLYPH_SPACING + (style.isBold() ? 1.0f : 0.0f);
+        return descriptor.advance() * minecraftScale(font) + LETTER_SPACING + (style.isBold() ? 1.0f : 0.0f);
     }
 
     public static @Nullable Float width(String text) {
