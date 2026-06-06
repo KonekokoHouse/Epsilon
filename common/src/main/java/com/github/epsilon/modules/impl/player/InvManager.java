@@ -163,7 +163,7 @@ public class InvManager extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (InvHelper.shouldDisableFeatures()) return;
         if (MoveUtils.isMoving()) this.noMoveTicks = 0;
         else this.noMoveTicks++;

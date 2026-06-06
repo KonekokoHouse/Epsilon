@@ -180,7 +180,7 @@ public class RotationManager {
     }
 
     @EventHandler(priority = -1000)
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (!active || rotations == null || lastRotations == null || targetRotations == null) {
             rotations = lastRotations = targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         }

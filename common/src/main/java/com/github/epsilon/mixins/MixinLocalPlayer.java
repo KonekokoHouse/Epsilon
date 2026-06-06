@@ -29,11 +29,16 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
-    private void onTick(CallbackInfo ci) {
-        PlayerTickEvent event = EventBus.INSTANCE.post(new PlayerTickEvent());
+    private void onPreTick(CallbackInfo ci) {
+        PlayerTickEvent.Pre event = EventBus.INSTANCE.post(new PlayerTickEvent.Pre());
         if (event.isCancelled()) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.AFTER, ordinal = 0))
+    private void onPostTick(CallbackInfo ci) {
+        EventBus.INSTANCE.post(new PlayerTickEvent.Post());
     }
 
     @Inject(method = "sendPosition", at = @At("HEAD"), cancellable = true)

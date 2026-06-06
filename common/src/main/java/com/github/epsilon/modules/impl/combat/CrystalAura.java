@@ -78,7 +78,7 @@ public class CrystalAura extends Module {
     }
 
     @EventHandler
-    public void onTick(PlayerTickEvent event) {
+    public void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.screen != null) return;
 
         boolean dontPlace = placeClock != 0;

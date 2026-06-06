@@ -101,7 +101,7 @@ public class NoSlow extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || !mode.is(Mode.GrimC0F)) return;
 
         if (step != Step.EATING) {

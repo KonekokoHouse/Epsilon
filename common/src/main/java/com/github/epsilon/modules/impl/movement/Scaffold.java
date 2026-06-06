@@ -226,7 +226,7 @@ public class Scaffold extends Module {
     }
 
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         blockResult = findBlockResult();
         if (!blockResult.found()) return;
 

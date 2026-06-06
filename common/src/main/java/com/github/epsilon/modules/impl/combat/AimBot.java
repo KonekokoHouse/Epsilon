@@ -56,8 +56,19 @@ public class AimBot extends Module {
     private int aimTicks;
     private final TimerUtils visibleTime = new TimerUtils();
 
+    @Override
+    protected void onEnable() {
+        if (mc.player == null) return;
+        target = null;
+        rotationYaw = mc.player.getYRot();
+        rotationPitch = mc.player.getXRot();
+        assistAcceleration = 0.0f;
+        aimTicks = 0;
+        visibleTime.reset();
+    }
+
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         switch (mode.getValue()) {
             case AimAssist -> updateAimAssist();
             case BowAim -> updateBowAim();
@@ -101,17 +112,6 @@ public class AimBot extends Module {
             mc.player.setYRot(Mth.lerp(tickDelta, mc.player.yRotO, rotationYaw));
             mc.player.setXRot(Mth.lerp(tickDelta, mc.player.xRotO, rotationPitch));
         }
-    }
-
-    @Override
-    protected void onEnable() {
-        if (mc.player == null) return;
-        target = null;
-        rotationYaw = mc.player.getYRot();
-        rotationPitch = mc.player.getXRot();
-        assistAcceleration = 0.0f;
-        aimTicks = 0;
-        visibleTime.reset();
     }
 
     private void updateBowAim() {

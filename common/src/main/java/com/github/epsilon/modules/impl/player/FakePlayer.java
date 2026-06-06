@@ -74,7 +74,7 @@ public class FakePlayer extends Module {
     }
 
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (record.getValue()) {
             positions.add(new PlayerState(mc.player.getX(), mc.player.getY(), mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot()));
             return;

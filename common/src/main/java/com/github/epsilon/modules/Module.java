@@ -173,7 +173,7 @@ public class Module {
         return translateComponent != null ? translateComponent.getTranslatedName() : name;
     }
 
-    public String hudInfo() {
+    public String getInfo() {
         return null;
     }
 

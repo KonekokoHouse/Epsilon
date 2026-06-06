@@ -57,7 +57,7 @@ public class CrystalBlocker extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (!mc.player.onGround()) return;
 
         if (waitingSwapBack) {

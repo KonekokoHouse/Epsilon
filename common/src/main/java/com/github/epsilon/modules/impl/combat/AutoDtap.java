@@ -59,7 +59,7 @@ public class AutoDtap extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (step != 0) {
             while (mc.options.keyUse.consumeClick()) {
             }

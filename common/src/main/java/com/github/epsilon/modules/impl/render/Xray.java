@@ -89,6 +89,16 @@ public class Xray extends Module {
     }
 
     @EventHandler
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (plugin.is(Plugin.New)) {
+            checked.forEach(blockMemory -> {
+                if (blockMemory.isDelayed() && !ores.contains(blockMemory.blockPos))
+                    ores.add(blockMemory.blockPos);
+            });
+        }
+    }
+
+    @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (event.getPacket() instanceof ClientboundBlockUpdatePacket pac) {
             if (isCheckableOre(pac.getBlockState().getBlock()) && !ores.contains(pac.getPos())) {
@@ -118,16 +128,6 @@ public class Xray extends Module {
                     done = 0;
                 }
             }
-        }
-    }
-
-    @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
-        if (plugin.is(Plugin.New)) {
-            checked.forEach(blockMemory -> {
-                if (blockMemory.isDelayed() && !ores.contains(blockMemory.blockPos))
-                    ores.add(blockMemory.blockPos);
-            });
         }
     }
 

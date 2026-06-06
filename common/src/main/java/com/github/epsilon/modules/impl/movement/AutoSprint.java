@@ -19,7 +19,7 @@ public class AutoSprint extends Module {
     }
 
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         mc.options.keySprint.setDown(true);
     }
 

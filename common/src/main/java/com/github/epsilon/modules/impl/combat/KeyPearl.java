@@ -41,7 +41,7 @@ public class KeyPearl extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.screen != null) return;
 
         boolean pressed = KeybindUtils.isPressed(activateKey.getValue());

@@ -145,7 +145,7 @@ public class Phase extends Module {
     }
 
     @EventHandler
-    public void onClientTickPre(PlayerTickEvent event) {
+    public void onClientTickPre(PlayerTickEvent.Pre event) {
         if (clipTimer > 0) clipTimer--;
         if (afterPearlTime > 0) afterPearlTime--;
 

@@ -58,7 +58,7 @@ public class AutoKouZi extends Module {
     }
 
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (!canSend()) return;
 
         if (mode.getValue() == Mode.TXT) {

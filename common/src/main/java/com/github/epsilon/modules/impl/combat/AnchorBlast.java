@@ -53,7 +53,7 @@ public class AnchorBlast extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         int key = triggerKey.getValue();
         if (key == -1) return;
 

@@ -250,7 +250,7 @@ public class ZealotCrystalPlus extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         updateTimeouts();
         updateExplosionSamples();
         if (isEatingPaused()) return;
@@ -359,7 +359,7 @@ public class ZealotCrystalPlus extends Module {
 
 
     @Override
-    public String hudInfo() {
+    public String getInfo() {
         return switch (hudInfo.getValue()) {
             case Off -> "";
             case Speed -> String.format(Locale.ROOT, "%.1f", getExplosionSpeed());

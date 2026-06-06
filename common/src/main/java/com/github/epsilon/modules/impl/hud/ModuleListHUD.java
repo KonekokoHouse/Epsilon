@@ -227,7 +227,7 @@ public class ModuleListHUD extends HudModule {
             float textWidth = textRenderer.getWidth(text, renderScale);
             float boxWidth = padX + textWidth + padX;
 
-            String hudInfo = module.hudInfo();
+            String hudInfo = module.getInfo();
             float hudInfoWidth = 0;
             if (showIcon.getValue() && hudInfo != null && !hudInfo.isEmpty()) {
                 hudInfoWidth = HUD_INFO_PADDING * moduleScale + textRenderer.getWidth(hudInfo, renderScale) + HUD_INFO_PADDING * moduleScale;
@@ -255,7 +255,7 @@ public class ModuleListHUD extends HudModule {
         float textWidth = textRenderer.getWidth(getFormattedName(module), renderScale);
         float boxWidth = padX + textWidth + padX;
 
-        String hudInfo = module.hudInfo();
+        String hudInfo = module.getInfo();
         float hudInfoWidth = 0;
         if (showIcon.getValue() && hudInfo != null && !hudInfo.isEmpty()) {
             hudInfoWidth = HUD_INFO_PADDING * moduleScale + textRenderer.getWidth(hudInfo, renderScale) + HUD_INFO_PADDING * moduleScale;

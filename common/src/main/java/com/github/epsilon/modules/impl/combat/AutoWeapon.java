@@ -122,7 +122,7 @@ public class AutoWeapon extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (!awaitingBack) return;
         if (backTimer.passedMillise(swapBackDelay.getValue())) {
             InvUtils.swapBack();

@@ -43,8 +43,16 @@ public class SafeCrystal extends Module {
         placeCooldown = 0;
     }
 
+    @Override
+    public String getInfo() {
+        if (autoBreak.getValue() && autoPlace.getValue()) return "Break+Place";
+        if (autoBreak.getValue()) return "Break";
+        if (autoPlace.getValue()) return "Place";
+        return "None";
+    }
+
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (autoBreak.getValue()) {
             handleAutoCrystalBreak();
         }
@@ -146,11 +154,4 @@ public class SafeCrystal extends Module {
         return null;
     }
 
-
-    public String getInfo() {
-        if (autoBreak.getValue() && autoPlace.getValue()) return "Break+Place";
-        if (autoBreak.getValue()) return "Break";
-        if (autoPlace.getValue()) return "Place";
-        return "None";
-    }
 }

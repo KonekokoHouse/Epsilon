@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.AttackSlowDownEvent;
 import com.github.epsilon.events.impl.AttackYawEvent;
 import com.github.epsilon.events.impl.TravelEvent;
+import com.github.epsilon.modules.impl.movement.KeepSprint;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -39,6 +40,23 @@ public class MixinPlayer {
         AttackSlowDownEvent event = EventBus.INSTANCE.post(new AttackSlowDownEvent(entity, knockbackAmount));
         if (event.isCancelled()) {
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "attack", at = @At("RETURN"))
+    private void onAfterAttack(Entity entity, CallbackInfo ci) {
+        KeepSprint keepSprint = KeepSprint.INSTANCE;
+        if ((Player) (Object) this == mc.player && keepSprint.isEnabled() && keepSprint.shouldKeepSprint()) {
+            // Re-enable sprint if vanilla attack stopped it
+            if (!mc.player.isSprinting()) {
+                mc.player.setSprinting(true);
+            }
+            // Apply custom slowdown factor (matching LeaderClient formula)
+            double slowdownPercent = keepSprint.slowdown.getValue().doubleValue() / 100.0;
+            if (slowdownPercent > 0.0) {
+                double customFactor = 0.6 + 0.4 * (1.0 - slowdownPercent);
+                mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(customFactor, 1.0, customFactor));
+            }
         }
     }
 

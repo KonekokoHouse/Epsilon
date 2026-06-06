@@ -41,7 +41,7 @@ public class AutoFirework extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         boolean pressed = KeybindUtils.isPressed(activateKey.getValue());
         if (!pressed) {
             isKeyDown = false;

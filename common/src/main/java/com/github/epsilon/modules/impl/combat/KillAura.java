@@ -111,7 +111,7 @@ public class KillAura extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (mc.player.isUsingItem() || mc.player.isBlocking()) return;
 
         List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(TargetRequest.of(

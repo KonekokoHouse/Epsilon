@@ -42,7 +42,7 @@ public class SilentAim extends Module {
     private LivingEntity target;
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || !redirecting) return;
 
         if (

@@ -38,7 +38,7 @@ public class Fullbright extends Module {
     }
 
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (mode.is(Mode.Potion)) mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, -1, 0));
     }
 

@@ -63,7 +63,7 @@ public class ElytraFly extends Module {
     }
 
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         redirectRotation(); // 让你转你就受着
 
         switch (mode.getValue()) {

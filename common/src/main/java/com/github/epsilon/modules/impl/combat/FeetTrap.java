@@ -122,7 +122,7 @@ public class FeetTrap extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (timer > 0) {
             timer--;
             return;

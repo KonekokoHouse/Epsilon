@@ -36,7 +36,7 @@ public class AutoTool extends Module {
     private final List<Integer> lastItem = new ArrayList<>();
 
     @EventHandler
-    public void onClientTick(PlayerTickEvent event) {
+    public void onClientTick(PlayerTickEvent.Pre event) {
         if (!(mc.hitResult instanceof BlockHitResult result)) return;
 
         BlockPos pos = result.getBlockPos();

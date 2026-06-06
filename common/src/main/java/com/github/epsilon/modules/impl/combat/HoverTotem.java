@@ -52,7 +52,7 @@ public class HoverTotem extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (mc.screen instanceof InventoryScreen inv) {
             Slot hoveredSlot = inv.hoveredSlot;
 

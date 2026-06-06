@@ -174,7 +174,7 @@ public class SafeAnchor extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         // Yield only before SafeAnchor starts. Once the cover/explode sequence is running,
         // keep ownership so a manual anchor blast cannot cancel the damage-block placement.
         if ((AnchorBlast.INSTANCE.isActive() || DoubleAnchor.INSTANCE.isActive()) && stage == Stage.None) {

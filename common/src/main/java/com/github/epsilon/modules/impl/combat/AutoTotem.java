@@ -24,13 +24,13 @@ public class AutoTotem extends Module {
     }
 
     @Override
-    public String hudInfo() {
+    public String getInfo() {
         if (nullCheck()) return null;
         return String.valueOf(InvHelper.getItemCount(Items.TOTEM_OF_UNDYING));
     }
 
     @EventHandler
-    public void onTick(PlayerTickEvent event) {
+    public void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck() || mc.gameMode == null) return;
 
         if (!shouldHoldTotem()) {

@@ -46,7 +46,7 @@ public class AutoMend extends Module {
     }
 
     @EventHandler
-    private void onClientTick(PlayerTickEvent event) {
+    private void onClientTick(PlayerTickEvent.Pre event) {
         FindItemResult result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
         if (!result.found()) return;
 
