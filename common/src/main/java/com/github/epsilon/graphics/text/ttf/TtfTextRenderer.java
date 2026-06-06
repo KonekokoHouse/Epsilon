@@ -47,7 +47,8 @@ public class TtfTextRenderer implements ITextRenderer {
     @Override
     public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
         final var finalScale = scale * DEFAULT_SCALE;
-        fontLoader.checkAndLoadChars(text);
+        fontLoader.requestChars(text);
+        fontLoader.drainReadyGlyphs();
         int argb = ARGB.toABGR(color.getRGB());
 
         float xOffset = 0f;

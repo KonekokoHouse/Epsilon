@@ -52,7 +52,7 @@ public class TtfFontFile {
 
     }
 
-    public TtfGlyph generateGlyph(char ch) {
+    public synchronized TtfGlyph generateGlyph(char ch) {
         final var glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, ch);
 
         byte onEdgeValue = (byte) 128;
