@@ -1,5 +1,6 @@
 package com.github.epsilon.utils.player;
 
+import com.github.epsilon.interfaces.ChatComponentAccessor;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ColorUtils;
 import net.minecraft.network.chat.Component;
@@ -16,10 +17,18 @@ public class ChatUtils {
     private static final double GRADIENT_CHAR_STEP = 0.55D;
 
     public static void addChatMessage(String message) {
+        addChatMessage(true, Component.literal(message));
+    }
+
+    public static void addChatMessage(Component message) {
         addChatMessage(true, message);
     }
 
     public static void addChatMessage(boolean prefix, String message) {
+        addChatMessage(prefix, Component.literal(message));
+    }
+
+    public static void addChatMessage(boolean prefix, Component message) {
         Component component = buildClientMessage(prefix, message);
         if (mc.isSameThread()) {
             mc.gui.getChat().addClientSystemMessage(component);
@@ -28,12 +37,37 @@ public class ChatUtils {
         }
     }
 
+    public static void addChatMessage(String message, int hash) {
+        addChatMessage(true, Component.literal(message), hash);
+    }
+
+    public static void addChatMessage(Component message, int hash) {
+        addChatMessage(true, message, hash);
+    }
+
+    public static void addChatMessage(boolean prefix, String message, int hash) {
+        addChatMessage(prefix, Component.literal(message), hash);
+    }
+
+    public static void addChatMessage(boolean prefix, Component message, int hash) {
+        Component component = buildClientMessage(prefix, message);
+        if (mc.isSameThread()) {
+            ((ChatComponentAccessor) mc.gui.getChat()).epsilon$addClientSystemMessage(component, hash);
+        } else {
+            mc.execute(() -> ((ChatComponentAccessor) mc.gui.getChat()).epsilon$addClientSystemMessage(component, hash));
+        }
+    }
+
     public static Component buildClientMessage(boolean prefix, String message) {
+        return buildClientMessage(prefix, Component.literal(message));
+    }
+
+    public static Component buildClientMessage(boolean prefix, Component message) {
         MutableComponent component = Component.empty();
         if (prefix) {
             component.append(Component.literal(PREFIX));
         }
-        return component.append(Component.literal(message));
+        return component.append(message);
     }
 
     public static FormattedCharSequence applyAnimatedPrefix(FormattedCharSequence original) {
@@ -61,8 +95,18 @@ public class ChatUtils {
             visualIndex++;
         }
 
-        gradientLine.append(Component.literal(rawLine.substring(PREFIX.length())));
+        appendStyledSuffix(gradientLine, original, PREFIX.length());
         return gradientLine.getVisualOrderText();
+    }
+
+    private static void appendStyledSuffix(MutableComponent component, FormattedCharSequence sequence, int skipCodePoints) {
+        int[] seenCodePoints = {0};
+        sequence.accept((index, style, codePoint) -> {
+            if (seenCodePoints[0]++ >= skipCodePoints) {
+                component.append(Component.literal(new String(Character.toChars(codePoint))).withStyle(style));
+            }
+            return true;
+        });
     }
 
     private static String toPlainString(FormattedCharSequence sequence) {

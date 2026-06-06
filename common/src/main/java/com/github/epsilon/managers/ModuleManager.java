@@ -25,7 +25,9 @@ import com.github.epsilon.utils.client.ClientUtils;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.ChatUtils;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -222,7 +224,12 @@ public class ModuleManager {
                 }
             }
             if (ClientSetting.INSTANCE.chatNotify.getValue()) {
-                ChatUtils.addChatMessage(module.getTranslatedName() + " is now " + (module.isEnabled() ? "enabled" : "disabled"));
+                ChatUtils.addChatMessage(
+                        Component.literal(module.getTranslatedName() + " is now ")
+                                .append(Component.literal(module.isEnabled() ? "enabled" : "disabled")
+                                        .withStyle(module.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED)),
+                        (module.getAddonId() + ":" + module.getName()).hashCode()
+                );
             }
         }
 
