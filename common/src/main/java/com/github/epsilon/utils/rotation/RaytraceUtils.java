@@ -53,7 +53,7 @@ public class RaytraceUtils {
         Vec3 hitVec = null;
         double currentDist = distToBlock;
 
-        AABB searchBox = entity.getBoundingBox().expandTowards(lookVec.scale(range)).inflate(1.0D);
+        AABB searchBox = entity.getBoundingBox().expandTowards(lookVec.scale(range)).inflate(1.0);
 
         List<Entity> list = mc.level.getEntities(entity, searchBox, e -> !e.isSpectator() && e.isPickable());
 
@@ -64,18 +64,18 @@ public class RaytraceUtils {
             Optional<Vec3> intercept = entityBox.clip(eyePos, entitySearchEndVec);
 
             if (entityBox.contains(eyePos)) {
-                if (currentDist >= 0.0D) {
+                if (currentDist >= 0.0) {
                     pointedEntity = candidate;
                     hitVec = intercept.orElse(eyePos);
-                    currentDist = 0.0D;
+                    currentDist = 0.0;
                 }
             } else if (intercept.isPresent()) {
                 Vec3 interceptVec = intercept.get();
                 double d3 = eyePos.distanceTo(interceptVec);
 
-                if (d3 < currentDist || currentDist == 0.0D) {
+                if (d3 < currentDist || currentDist == 0.0) {
                     if (candidate.getRootVehicle() == entity.getRootVehicle()) {
-                        if (currentDist == 0.0D) {
+                        if (currentDist == 0.0) {
                             pointedEntity = candidate;
                             hitVec = interceptVec;
                         }
@@ -98,8 +98,8 @@ public class RaytraceUtils {
     public static boolean overBlock(Rot2f rotation, Direction dir, BlockPos pos, boolean strict) {
         Vec3 lookVec = Vec3.directionFromRotation(rotation.getPitch(), rotation.getYaw());
 
-        Vec3 eyePos = mc.player.getEyePosition(1.0F);
-        double reach = 4.5D;
+        Vec3 eyePos = mc.player.getEyePosition(1.0f);
+        double reach = 4.5;
         Vec3 endVec = eyePos.add(lookVec.scale(reach));
 
         BlockHitResult result = mc.level.clip(new ClipContext(

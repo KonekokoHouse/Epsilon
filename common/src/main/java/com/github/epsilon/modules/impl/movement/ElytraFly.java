@@ -48,6 +48,7 @@ public class ElytraFly extends Module {
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Control);
     private final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.InvSwitch);
     private final BoolSetting armored = boolSetting("Armored", false);
+    private final BoolSetting noSprint = boolSetting("No Sprint", true, () -> mode.is(Mode.Control) && armored.getValue());
     private final BoolSetting useFireworks = boolSetting("Use Fireworks", true, () -> mode.is(Mode.Control));
     private final IntSetting boostDelay = intSetting("Boost Delay", 20, 2, 50, 1, () -> mode.is(Mode.Control) && useFireworks.getValue());
 
@@ -83,8 +84,7 @@ public class ElytraFly extends Module {
 
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
-        event.setSprinting(false);
-        mc.player.setSprinting(false);
+        if (noSprint.getValue()) event.setSprint(false);
         if (shouldJump) {
             event.setJump(true);
             shouldJump = false;
@@ -99,7 +99,7 @@ public class ElytraFly extends Module {
     }
 
     private void updateControl() {
-        if (mc.player.isSprinting()) return;
+        if (noSprint.getValue() && mc.player.isSprinting()) return;
 
         FindItemResult elytra = InvUtils.find(Items.ELYTRA);
 

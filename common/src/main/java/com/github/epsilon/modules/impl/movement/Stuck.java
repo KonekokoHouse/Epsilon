@@ -60,10 +60,8 @@ public class Stuck extends Module {
 
     @EventHandler
     private void onTravel(TravelEvent event) {
-        if (mode.is(Mode.CancelMove)) {
-            if (mc.player.positionReminder < 19) {
+        if (mode.is(Mode.CancelMove) && mc.player.positionReminder < 19) {
                 event.setCancelled(true);
-            }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.github.epsilon.events.impl;
 
+import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.world.entity.player.Input;
 
 public class KeyboardInputEvent {
@@ -8,16 +9,16 @@ public class KeyboardInputEvent {
     private float strafe;
     private boolean jump;
     private boolean sneak;
-    private boolean sprinting;
+    private boolean sprint;
 
-    public KeyboardInputEvent(boolean forward, boolean backward, boolean left, boolean right, boolean jump, boolean sneak, boolean sprinting) {
-        float f = forward == backward ? 0.0F : (forward ? 1.0F : -1.0F);
-        float g = left == right ? 0.0F : (left ? 1.0F : -1.0F);
-        this.forward = f;
-        this.strafe = g;
+    public KeyboardInputEvent(boolean forward, boolean backward, boolean left, boolean right, boolean jump, boolean sneak, boolean sprint) {
+        float forwardImpulse = KeyboardInput.calculateImpulse(forward, backward);
+        float leftImpulse = KeyboardInput.calculateImpulse(left, right);
+        this.forward = forwardImpulse;
+        this.strafe = leftImpulse;
         this.jump = jump;
         this.sneak = sneak;
-        this.sprinting = sprinting;
+        this.sprint = sprint;
     }
 
     public Input toNewInput() {
@@ -28,7 +29,7 @@ public class KeyboardInputEvent {
                 this.strafe < 0,
                 this.jump,
                 this.sneak,
-                this.sprinting
+                this.sprint
         );
     }
 
@@ -64,12 +65,12 @@ public class KeyboardInputEvent {
         this.sneak = sneak;
     }
 
-    public boolean isSprinting() {
-        return sprinting;
+    public boolean isSprint() {
+        return sprint;
     }
 
-    public void setSprinting(boolean sprint) {
-        this.sprinting = sprint;
+    public void setSprint(boolean sprint) {
+        this.sprint = sprint;
     }
 
 }

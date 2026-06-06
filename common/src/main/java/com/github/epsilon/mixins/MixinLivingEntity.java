@@ -30,13 +30,10 @@ public class MixinLivingEntity {
         return original.call(entity);
     }
 
-    @WrapOperation(method = "jumpFromGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
-    private float redirectGetYRotInJumpFromGround(LivingEntity instance, Operation<Float> original) {
-        if (instance == mc.player) {
-            JumpEvent event = EventBus.INSTANCE.post(new JumpEvent(instance.getYRot()));
-            return event.getYaw();
-        }
-        return original.call(instance);
+    @ModifyExpressionValue(method = "jumpFromGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
+    private float modifyJumpYaw(float original) {
+        JumpEvent event = EventBus.INSTANCE.post(new JumpEvent(original));
+        return event.getYaw();
     }
 
     @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))

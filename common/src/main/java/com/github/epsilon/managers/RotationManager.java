@@ -4,7 +4,6 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
-import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.movement.MovementFix;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
@@ -130,6 +129,13 @@ public class RotationManager {
         smoothed = true;
     }
 
+    private void correctDisabledRotations() {
+        Rot2f rotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
+        Rot2f fixedRotations = RotationUtils.resetRotation(RotationUtils.applySensitivityPatch(rotations, lastRotations));
+        mc.player.setYRot(fixedRotations.getYaw());
+        mc.player.setXRot(fixedRotations.getPitch());
+    }
+
     public float getYaw() {
         return getRotation().getYaw();
     }
@@ -144,10 +150,6 @@ public class RotationManager {
 
     public Rot2f getLastRotation() {
         return lastRotations != null ? lastRotations : new Rot2f(mc.player.yRotO, mc.player.xRotO);
-    }
-
-    public boolean isDone() {
-        return Math.abs(Mth.wrapDegrees(rotations.getYaw() - targetRotations.getYaw())) <= 1 && Math.abs(Mth.wrapDegrees(rotations.getPitch() - targetRotations.getPitch())) <= 1;
     }
 
     public boolean isActive() {
@@ -170,6 +172,17 @@ public class RotationManager {
     private void onRespawn(RespawnEvent event) {
         lastRotations = null;
         rotations = null;
+        targetRotations = null;
+        animationRotation = null;
+        lastAnimationRotation = null;
+        active = false;
+        priority = 0;
+        callback = null;
+        smoothed = false;
+        raytrace = null;
+        randomAngle = 0;
+        s08 = false;
+        offset.set(0, 0);
     }
 
     @EventHandler
@@ -211,6 +224,7 @@ public class RotationManager {
         if (active && rotations != null) {
             float yaw = rotations.getYaw();
             float pitch = rotations.getPitch();
+
             if (!Float.isNaN(yaw) && !Float.isNaN(pitch)) {
                 event.setYaw(yaw);
                 event.setPitch(pitch);
@@ -245,7 +259,7 @@ public class RotationManager {
 
     @EventHandler
     private void onRaytrace(RaytraceEvent event) {
-        if (rotations != null && active && ClientSetting.INSTANCE.modifyCrosshair.getValue()) {
+        if (rotations != null && active) {
             event.setYaw(rotations.getYaw());
             event.setPitch(rotations.getPitch());
         }
@@ -301,13 +315,6 @@ public class RotationManager {
         if (rotations != null) {
             event.setYaw(rotations.getYaw());
         }
-    }
-
-    private void correctDisabledRotations() {
-        Rot2f rotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
-        Rot2f fixedRotations = RotationUtils.resetRotation(RotationUtils.applySensitivityPatch(rotations, lastRotations));
-        mc.player.setYRot(fixedRotations.getYaw());
-        mc.player.setXRot(fixedRotations.getPitch());
     }
 
 }

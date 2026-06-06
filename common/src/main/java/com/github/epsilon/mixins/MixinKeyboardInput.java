@@ -13,15 +13,7 @@ public class MixinKeyboardInput {
 
     @ModifyExpressionValue(method = "tick", at = @At(value = "NEW", target = "(ZZZZZZZ)Lnet/minecraft/world/entity/player/Input;"))
     private Input redirectKeyPresses(Input original) {
-        KeyboardInputEvent event = EventBus.INSTANCE.post(new KeyboardInputEvent(
-                original.forward(),
-                original.backward(),
-                original.left(),
-                original.right(),
-                original.jump(),
-                original.shift(),
-                original.sprint())
-        );
+        KeyboardInputEvent event = EventBus.INSTANCE.post(new KeyboardInputEvent(original.forward(), original.backward(), original.left(), original.right(), original.jump(), original.shift(), original.sprint()));
         return event.toNewInput();
     }
 
