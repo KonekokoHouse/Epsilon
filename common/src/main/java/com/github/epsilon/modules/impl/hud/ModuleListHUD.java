@@ -33,25 +33,27 @@ public class ModuleListHUD extends HudModule {
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
     private final DoubleSetting textScaleOffset = doubleSetting("Text Scale Offset", -0.2, -0.5, 0.5, 0.05);
-    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 7.0, 0.0, 14.0, 0.5);
+    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 4.0, 0.0, 14.0, 0.5);
     private final DoubleSetting animSpeed = doubleSetting("Animation Speed", 10.0, 1.0, 20.0, 0.5);
 
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 200));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 145));
     private final BoolSetting showCategory = boolSetting("Show Category", false);
     private final BoolSetting showIcon = boolSetting("Show Icon", true);
 
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), drawShadow::getValue);
 
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", false); // 好他妈掉帧啊
-    private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
+    private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 
-    private static final float ROW_HEIGHT = 22.0f;
-    private static final float ROW_SPACING = 4.0f;
-    private static final float INNER_PADDING_X = 8.0f;
-    private static final float ICON_GAP = 4.0f;
-    private static final float HUD_INFO_PADDING = 5.0f;
+    private static final float ROW_HEIGHT = 18.0f;
+    private static final float ROW_SPACING = 2.0f;
+    private static final float NAME_PADDING_START = 3.5f;
+    private static final float NAME_PADDING_END = 5.0f;
+    private static final float ICON_GAP = 2.0f;
+    private static final float HUD_INFO_PADDING_START = 2.5f;
+    private static final float HUD_INFO_PADDING_END = 3.5f;
 
     private final Map<Module, Float> moduleAlphaMap = new HashMap<>();
 
@@ -72,7 +74,8 @@ public class ModuleListHUD extends HudModule {
 
         float moduleScale = scale.getValue().floatValue();
         float renderScale = moduleScale + textScaleOffset.getValue().floatValue();
-        float padX = INNER_PADDING_X * moduleScale;
+        float namePadStart = NAME_PADDING_START * moduleScale;
+        float hudInfoPadStart = HUD_INFO_PADDING_START * moduleScale;
         float radius = cornerRadius.getValue().floatValue() * moduleScale;
         float rowHeight = ROW_HEIGHT * moduleScale;
         float spacing = ROW_SPACING * moduleScale;
@@ -152,8 +155,7 @@ public class ModuleListHUD extends HudModule {
                     }
                     roundRectRenderer.addRoundRect(hudInfoBoxX, currentY, item.hudInfoWidth(), rowHeight, radius, withAlpha(backgroundColor.getValue(), alpha));
 
-                    float hudTextWidth = textRenderer.getWidth(item.hudInfo(), renderScale);
-                    float hudTextX = hudInfoBoxX + (item.hudInfoWidth() - hudTextWidth) / 2.0f;
+                    float hudTextX = hudInfoBoxX + hudInfoPadStart;
                     float hudTextY = currentY + (rowHeight - textRenderer.getHeight(renderScale)) / 2.0f;
                     textRenderer.addText(item.hudInfo(), hudTextX, hudTextY - 1, renderScale, textColor);
                 }
@@ -170,7 +172,7 @@ public class ModuleListHUD extends HudModule {
             }
             roundRectRenderer.addRoundRect(textBoxX, currentY, boxWidth, rowHeight, radius, withAlpha(backgroundColor.getValue(), alpha));
 
-            float textX = textBoxX + padX;
+            float textX = textBoxX + namePadStart;
             float textY = currentY + (rowHeight - textRenderer.getHeight(renderScale)) / 2.0f;
             textRenderer.addText(item.text(), textX, textY - 1, renderScale, textColor);
 
@@ -217,7 +219,10 @@ public class ModuleListHUD extends HudModule {
         TextRenderer textRenderer = textRendererSupplier.get();
         float moduleScale = scale.getValue().floatValue();
         float renderScale = moduleScale + textScaleOffset.getValue().floatValue();
-        float padX = INNER_PADDING_X * moduleScale;
+        float namePadStart = NAME_PADDING_START * moduleScale;
+        float namePadEnd = NAME_PADDING_END * moduleScale;
+        float hudInfoPadStart = HUD_INFO_PADDING_START * moduleScale;
+        float hudInfoPadEnd = HUD_INFO_PADDING_END * moduleScale;
 
         List<ItemInfo> items = new ArrayList<>();
         for (Module module : activeModules) {
@@ -225,12 +230,12 @@ public class ModuleListHUD extends HudModule {
             float alpha = moduleAlphaMap.get(module);
 
             float textWidth = textRenderer.getWidth(text, renderScale);
-            float boxWidth = padX + textWidth + padX;
+            float boxWidth = namePadStart + textWidth + namePadEnd;
 
             String hudInfo = module.getInfo();
             float hudInfoWidth = 0;
             if (showIcon.getValue() && hudInfo != null && !hudInfo.isEmpty()) {
-                hudInfoWidth = HUD_INFO_PADDING * moduleScale + textRenderer.getWidth(hudInfo, renderScale) + HUD_INFO_PADDING * moduleScale;
+                hudInfoWidth = hudInfoPadStart + textRenderer.getWidth(hudInfo, renderScale) + hudInfoPadEnd;
             }
 
             float totalWidth = boxWidth;
@@ -251,14 +256,17 @@ public class ModuleListHUD extends HudModule {
         TextRenderer textRenderer = textRendererSupplier.get();
         float moduleScale = scale.getValue().floatValue();
         float renderScale = moduleScale + textScaleOffset.getValue().floatValue();
-        float padX = INNER_PADDING_X * moduleScale;
+        float namePadStart = NAME_PADDING_START * moduleScale;
+        float namePadEnd = NAME_PADDING_END * moduleScale;
+        float hudInfoPadStart = HUD_INFO_PADDING_START * moduleScale;
+        float hudInfoPadEnd = HUD_INFO_PADDING_END * moduleScale;
         float textWidth = textRenderer.getWidth(getFormattedName(module), renderScale);
-        float boxWidth = padX + textWidth + padX;
+        float boxWidth = namePadStart + textWidth + namePadEnd;
 
         String hudInfo = module.getInfo();
         float hudInfoWidth = 0;
         if (showIcon.getValue() && hudInfo != null && !hudInfo.isEmpty()) {
-            hudInfoWidth = HUD_INFO_PADDING * moduleScale + textRenderer.getWidth(hudInfo, renderScale) + HUD_INFO_PADDING * moduleScale;
+            hudInfoWidth = hudInfoPadStart + textRenderer.getWidth(hudInfo, renderScale) + hudInfoPadEnd;
         }
 
         float total = boxWidth;

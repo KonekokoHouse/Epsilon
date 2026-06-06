@@ -33,28 +33,28 @@ public class TargetHUD extends HudModule {
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 0.9, 0.5, 2.0, 0.1);
-    private final DoubleSetting width = doubleSetting("Width", 160.0, 100.0, 300.0, 1.0);
-    private final DoubleSetting height = doubleSetting("Height", 60.0, 30.0, 100.0, 1.0);
-    private final DoubleSetting radius = doubleSetting("Radius", 10.0, 0.0, 20.0, 1.0);
-    private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 8.0, 1.0, 20.0, 1.0);
-    private final DoubleSetting healthBarHeight = doubleSetting("Bar Height", 4.0, 2.0, 20.0, 1.0);
-    private final DoubleSetting healthBarRadius = doubleSetting("Bar Radius", 1.8, 0.0, 15.0, 1.0);
-    private final DoubleSetting nameSize = doubleSetting("Name Size", 11.5, 8.0, 18.0, 0.5);
+    private final DoubleSetting width = doubleSetting("Width", 150.0, 100.0, 300.0, 1.0);
+    private final DoubleSetting height = doubleSetting("Height", 52.0, 30.0, 100.0, 1.0);
+    private final DoubleSetting radius = doubleSetting("Radius", 5.0, 0.0, 20.0, 1.0);
+    private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 1.0, 20.0, 1.0);
+    private final DoubleSetting healthBarHeight = doubleSetting("Bar Height", 3.0, 2.0, 20.0, 1.0);
+    private final DoubleSetting healthBarRadius = doubleSetting("Bar Radius", 1.2, 0.0, 15.0, 1.0);
+    private final DoubleSetting nameSize = doubleSetting("Name Size", 10.5, 8.0, 18.0, 0.5);
     private final BoolSetting delayBar = boolSetting("Delay Bar", true);
     private final BoolSetting delayWait = boolSetting("Delay Wait", true, delayBar::getValue);
     private final DoubleSetting delayTime = doubleSetting("Delay Time", 250.0, 0.0, 500.0, 50.0, () -> delayBar.getValue() && delayWait.getValue());
     private final DoubleSetting delaySpeed = doubleSetting("Delay Speed", 2.0, 0.1, 10.0, 0.1, delayBar::getValue);
     private final BoolSetting barOutline = boolSetting("Bar Outline", true);
     private final DoubleSetting barOutlineWidth = doubleSetting("Bar Outline Width", 1.0, 0.5, 5.0, 0.5, barOutline::getValue);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 200));
-    private final ColorSetting barBackgroundColor = colorSetting("Bar Background Color", new Color(255, 255, 255, 70));
-    private final ColorSetting barFillColor = colorSetting("Bar Fill Color", new Color(255, 236, 248, 245));
-    private final ColorSetting delayBarColor = colorSetting("Delay Bar Color", new Color(190, 190, 190, 130), delayBar::getValue);
-    private final ColorSetting barOutlineColor = colorSetting("Bar Outline Color", new Color(255, 255, 255, 120), barOutline::getValue);
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 145));
+    private final ColorSetting barBackgroundColor = colorSetting("Bar Background Color", new Color(255, 255, 255, 55));
+    private final ColorSetting barFillColor = colorSetting("Bar Fill Color", new Color(255, 236, 248, 235));
+    private final ColorSetting delayBarColor = colorSetting("Delay Bar Color", new Color(190, 190, 190, 100), delayBar::getValue);
+    private final ColorSetting barOutlineColor = colorSetting("Bar Outline Color", new Color(255, 255, 255, 85), barOutline::getValue);
     private final ColorSetting textColor = colorSetting("Text Color", new Color(255, 255, 255, 235));
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), drawShadow::getValue);
 
     private static final long VISIBILITY_ANIMATION_DURATION_MS = 300L;
     private static final float HEAD_DAMAGE_SCALE_FACTOR = 0.15f;
@@ -111,7 +111,7 @@ public class TargetHUD extends HudModule {
         }
         float delayHealthPercent = Mth.clamp(delayedHealth / maxHealth, 0.0f, 1.0f);
 
-        float pad = 6.0f * panelScale;
+        float pad = 5.0f * panelScale;
         float cornerRadius = radius.getValue().floatValue() * panelScale;
         float barHeight = healthBarHeight.getValue().floatValue() * panelScale;
         float barRadius = healthBarRadius.getValue().floatValue() * panelScale;
@@ -121,7 +121,7 @@ public class TargetHUD extends HudModule {
 
         float innerHeight = Math.max(1.0f, panelHeight - pad * 2.0f);
         float contentAreaHeight = Math.max(1.0f, innerHeight - pad - barHeight);
-        float headSize = Math.min(contentAreaHeight, Math.max(30.0f * panelScale, panelHeight * 0.6f) * 1.1f);
+        float headSize = Math.min(contentAreaHeight, Math.max(26.0f * panelScale, panelHeight * 0.6f) * 1.05f);
         float textScale = Math.max(0.45f, nameSize.getValue().floatValue() / 14.0f) * panelScale;
         float textHeight = textRenderer.getHeight(textScale);
         float contentRowHeight = Math.max(headSize, textHeight);

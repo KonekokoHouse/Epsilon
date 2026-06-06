@@ -30,25 +30,25 @@ public class BPSHUD extends HudModule {
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
-    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 8.0, 0.0, 14.0, 0.5);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 210));
+    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 4.0, 0.0, 14.0, 0.5);
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 150));
     private final ColorSetting accentColor = colorSetting("Accent Color", new Color(130, 180, 255, 255));
     private final ColorSetting textColor = colorSetting("Text Color", new Color(248, 249, 252, 245));
     private final ColorSetting textSecondary = colorSetting("Text Secondary", new Color(210, 214, 225, 165));
     private final ColorSetting textMuted = colorSetting("Text Muted", new Color(180, 184, 194, 145));
 
-    private final DoubleSetting graphHeight = doubleSetting("Graph Height", 34.0, 20.0, 60.0, 1.0);
+    private final DoubleSetting graphHeight = doubleSetting("Graph Height", 28.0, 20.0, 60.0, 1.0);
     private final ColorSetting graphBgColor = colorSetting("Graph Background", new Color(255, 255, 255, 10));
     private final ColorSetting graphMidlineColor = colorSetting("Graph Midline", new Color(255, 255, 255, 10));
     private final ColorSetting graphLineColor = colorSetting("Graph Line Color", new Color(130, 180, 255, 235));
-    private final ColorSetting graphGlowColor = colorSetting("Graph Glow Color", new Color(130, 180, 255, 70));
+    private final ColorSetting graphGlowColor = colorSetting("Graph Glow Color", new Color(130, 180, 255, 45));
 
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), drawShadow::getValue);
 
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
-    private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
+    private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 
     private final BoolSetting smoothNumber = boolSetting("Smooth Number", true);
     private final DoubleSetting numberDelay = doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, smoothNumber::getValue);
@@ -99,8 +99,8 @@ public class BPSHUD extends HudModule {
         float s = scale.getValue().floatValue();
         float radius = cornerRadius.getValue().floatValue() * s;
 
-        float panelW = 158f * s;
-        float panelH = 68f * s;
+        float panelW = 148f * s;
+        float panelH = 58f * s;
 
         if (backgroundBlur.getValue()) {
             BlurShader.INSTANCE.render(this.x, this.y, panelW, panelH, radius, blurStrength.getValue());
@@ -113,17 +113,17 @@ public class BPSHUD extends HudModule {
 
         roundRectRenderer.addRoundRect(this.x, this.y, panelW, panelH, radius, backgroundColor.getValue());
 
-        float dotSize = 6f * s;
+        float dotSize = 5f * s;
         float dotRadius = dotSize / 2f;
-        roundRectRenderer.addRoundRect(this.x + 9f * s, this.y + 11f * s, dotSize, dotSize, dotRadius, accentColor.getValue());
+        roundRectRenderer.addRoundRect(this.x + 8f * s, this.y + 9f * s, dotSize, dotSize, dotRadius, accentColor.getValue());
 
-        float titleScale = 0.7f * s;
-        textRenderer.addText("Movement", this.x + 22f * s, this.y + 9f * s, titleScale, textColor.getValue());
+        float titleScale = 0.62f * s;
+        textRenderer.addText("Movement", this.x + 18f * s, this.y + 7f * s, titleScale, textColor.getValue());
 
         String bpsText = formatBps(animatedBps);
-        float numberScale = 1.2f * s;
-        float unitScale = 0.65f * s;
-        float peakScale = 0.5f * s;
+        float numberScale = 1.08f * s;
+        float unitScale = 0.6f * s;
+        float peakScale = 0.46f * s;
 
         if (smoothNumber.getValue()) {
             float frameTime = deltaTracker == null ? 0.05f : deltaTracker.getGameTimeDeltaTicks() / 20.0f;
@@ -147,19 +147,19 @@ public class BPSHUD extends HudModule {
             }
             drawRollingNumber(textRenderer, numberScale, s);
             float targetWidth = textRenderer.getWidth(targetBpsText, numberScale);
-            textRenderer.addText("bps", this.x + 10f * s + targetWidth + 3f * s, this.y + 33f * s, unitScale, textSecondary.getValue());
+            textRenderer.addText("bps", this.x + 9f * s + targetWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
         } else {
-            textRenderer.addText(bpsText, this.x + 10f * s, this.y + 27f * s, numberScale, textColor.getValue());
+            textRenderer.addText(bpsText, this.x + 9f * s, this.y + 23f * s, numberScale, textColor.getValue());
             float numberWidth = textRenderer.getWidth(bpsText, numberScale);
-            textRenderer.addText("bps", this.x + 10f * s + numberWidth + 3f * s, this.y + 33f * s, unitScale, textSecondary.getValue());
+            textRenderer.addText("bps", this.x + 9f * s + numberWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
         }
 
         String peakText = "Maximum " + formatBps(highestBps);
-        textRenderer.addText(peakText, this.x + 10f * s, this.y + 52f * s, peakScale, textMuted.getValue());
+        textRenderer.addText(peakText, this.x + 9f * s, this.y + 44f * s, peakScale, textMuted.getValue());
 
-        float graphX = this.x + 68f * s;
-        float graphY = this.y + 20f * s;
-        float graphW = 82f * s;
+        float graphX = this.x + 62f * s;
+        float graphY = this.y + 15f * s;
+        float graphW = 78f * s;
         float graphH = graphHeight.getValue().floatValue() * s;
         drawGraph(roundRectRenderer, graphX, graphY, graphW, graphH, s);
 
@@ -170,12 +170,12 @@ public class BPSHUD extends HudModule {
     }
 
     private void drawGraph(RoundRectRenderer rr, float x, float y, float w, float h, float s) {
-        float graphRadius = 6f * s;
+        float graphRadius = 4f * s;
 
         rr.addRoundRect(x, y, w, h, graphRadius, graphBgColor.getValue());
 
-        float paddingX = 6f * s;
-        float paddingY = 4f * s;
+        float paddingX = 5f * s;
+        float paddingY = 3f * s;
         float innerX = x + paddingX;
         float innerY = y + paddingY;
         float innerW = w - paddingX * 2f;
@@ -188,7 +188,7 @@ public class BPSHUD extends HudModule {
 
         float refLineY = baseline - usableH * 0.22f;
         float refThickness = Math.max(0.45f * s, 0.5f);
-        rr.addRoundRect(x + 5f * s, refLineY - refThickness / 2f, w - 10f * s, refThickness, refThickness / 2f, graphMidlineColor.getValue());
+        rr.addRoundRect(x + 4f * s, refLineY - refThickness / 2f, w - 8f * s, refThickness, refThickness / 2f, graphMidlineColor.getValue());
 
         float max = getGraphMax();
         if (max < 0.1f) max = 1f;
@@ -315,8 +315,8 @@ public class BPSHUD extends HudModule {
         String target = targetBpsText;
 
         int maxLen = Math.max(prev.length(), target.length());
-        float charX = this.x + 10f * s;
-        float baseY = this.y + 27f * s;
+        float charX = this.x + 9f * s;
+        float baseY = this.y + 23f * s;
         float slideOffset = 4f * s;
 
         for (int i = 0; i < maxLen; i++) {

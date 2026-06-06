@@ -35,37 +35,37 @@ public class PotionHUD extends HudModule {
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.5, 0.05);
-    private final DoubleSetting nameScale = doubleSetting("Name Text Scale", 0.85, 0.5, 1.5, 0.05);
-    private final DoubleSetting durationScale = doubleSetting("Duration Text Scale", 0.7, 0.4, 1.5, 0.05);
-    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 7.0, 0.0, 14.0, 0.5);
+    private final DoubleSetting nameScale = doubleSetting("Name Text Scale", 0.78, 0.5, 1.5, 0.05);
+    private final DoubleSetting durationScale = doubleSetting("Duration Text Scale", 0.62, 0.4, 1.5, 0.05);
+    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 4.0, 0.0, 14.0, 0.5);
     private final DoubleSetting animSpeed = doubleSetting("Animation Speed", 10.0, 1.0, 20.0, 0.5);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 200));
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 145));
     private final BoolSetting showIcon = boolSetting("Show Icon", true);
     private final BoolSetting showPill = boolSetting("Show Progress Bar", true);
     private final BoolSetting tintNameWithEffect = boolSetting("Tint Name With Effect Color", true);
     private final BoolSetting hideAmbient = boolSetting("Hide Ambient", false);
 
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), drawShadow::getValue);
 
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
-    private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
+    private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
     private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
     private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
     private final Supplier<TextureRenderer> textureRendererSupplier = Suppliers.memoize(TextureRenderer::create);
 
-    private static final float ROW_HEIGHT = 28.0f;
-    private static final float ROW_SPACING = 4.0f;
-    private static final float INNER_PADDING_X = 8.0f;
-    private static final float INNER_PADDING_Y = 6.0f;
-    private static final float ICON_SIZE = 16.0f;
-    private static final float ICON_TEXT_GAP = 8.0f;
-    private static final float PILL_WIDTH = 4.0f;
-    private static final float PILL_GAP = 8.0f;
-    private static final float NAME_DURATION_GAP = 2.0f;
+    private static final float ROW_HEIGHT = 22.0f;
+    private static final float ROW_SPACING = 2.0f;
+    private static final float INNER_PADDING_X = 6.0f;
+    private static final float INNER_PADDING_Y = 4.0f;
+    private static final float ICON_SIZE = 14.0f;
+    private static final float ICON_TEXT_GAP = 6.0f;
+    private static final float PILL_WIDTH = 3.0f;
+    private static final float PILL_GAP = 6.0f;
+    private static final float NAME_DURATION_GAP = 1.0f;
 
     private final Map<Holder<MobEffect>, Float> alphaMap = new HashMap<>();
     private final Map<Holder<MobEffect>, Integer> maxDurationMap = new HashMap<>();

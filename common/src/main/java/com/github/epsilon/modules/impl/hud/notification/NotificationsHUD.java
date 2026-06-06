@@ -26,12 +26,12 @@ public class NotificationsHUD extends HudModule {
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
-    private final IntSetting backgroundAlpha = intSetting("Background Alpha", 200, 0, 255, 1);
+    private final IntSetting backgroundAlpha = intSetting("Background Alpha", 145, 0, 255, 1);
     public final IntSetting displayTime = intSetting("Display Time", 2000, 500, 5000, 100);
 
-    private static final float MIN_BOX_WIDTH = 150.0f;
-    private static final float ACCENT_BAR_WIDTH = 3.2f;
-    private static final float TEXT_PADDING = 3.5f;
+    private static final float MIN_BOX_WIDTH = 138.0f;
+    private static final float ACCENT_BAR_WIDTH = 2.4f;
+    private static final float TEXT_PADDING = 3.0f;
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
     private final Supplier<RectRenderer> rectRendererSupplier = Suppliers.memoize(RectRenderer::create);
@@ -47,7 +47,7 @@ public class NotificationsHUD extends HudModule {
 
         float s = scale.getValue().floatValue();
         float anchorWidth = MIN_BOX_WIDTH * s;
-        float boxHeight = textRenderer.getHeight(s) * 3.0f;
+        float boxHeight = textRenderer.getHeight(s) * 2.5f;
         float spacing = boxHeight + TEXT_PADDING * s;
         int bgAlpha = backgroundAlpha.getValue();
 

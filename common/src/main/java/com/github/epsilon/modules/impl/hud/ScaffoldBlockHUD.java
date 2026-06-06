@@ -31,25 +31,25 @@ public class ScaffoldBlockHUD extends HudModule {
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
-    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 14.0, 0.0, 20.0, 0.5);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 210));
+    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 5.0, 0.0, 20.0, 0.5);
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 150));
     private final ColorSetting textColor = colorSetting("Text Color", new Color(248, 249, 252, 245));
     private final ColorSetting textSecondary = colorSetting("Text Secondary", new Color(210, 214, 225, 170));
 
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), drawShadow::getValue);
 
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
-    private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
+    private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 
     private final BoolSetting smoothNumber = boolSetting("Smooth Number", true);
     private final DoubleSetting numberDelay = doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, smoothNumber::getValue);
 
     private static final String LABEL = "Blocks";
-    private static final float BASE_HEIGHT = 28.0f;
-    private static final float BASE_PAD_X = 8.0f;
-    private static final float BASE_LABEL_GAP = 2.8f;
+    private static final float BASE_HEIGHT = 24.0f;
+    private static final float BASE_PAD_X = 7.0f;
+    private static final float BASE_LABEL_GAP = 2.6f;
 
     private boolean initialized;
     private String previousCountText = "0";

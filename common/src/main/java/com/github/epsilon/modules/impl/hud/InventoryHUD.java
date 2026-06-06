@@ -26,23 +26,23 @@ public class InventoryHUD extends HudModule {
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
-    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 5.0, 0.0, 14.0, 0.5);
-    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 200));
-    private final ColorSetting slotColor = colorSetting("Slot Color", new Color(0, 0, 0, 120));
+    private final DoubleSetting cornerRadius = doubleSetting("Corner Radius", 3.0, 0.0, 14.0, 0.5);
+    private final ColorSetting backgroundColor = colorSetting("Background Color", new Color(15, 15, 15, 135));
+    private final ColorSetting slotColor = colorSetting("Slot Color", new Color(0, 0, 0, 70));
     private final BoolSetting drawShadow = boolSetting("Drop Shadow", true);
-    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 4.5, 0.1, 32.0, 0.5, drawShadow::getValue);
-    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 150), drawShadow::getValue);
+    private final DoubleSetting shadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, drawShadow::getValue);
+    private final ColorSetting shadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), drawShadow::getValue);
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
-    private final IntSetting blurStrength = intSetting("Blur Strength", 8, 1, 16, 1);
+    private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 
     private final BoolSetting showCount = boolSetting("Show Count", true);
 
     private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
     private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
 
-    private static final float SLOT_SIZE = 18.0f;
-    private static final float SLOT_GAP = 2.0f;
-    private static final float PADDING = 6.0f;
+    private static final float SLOT_SIZE = 17.0f;
+    private static final float SLOT_GAP = 1.5f;
+    private static final float PADDING = 4.5f;
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
