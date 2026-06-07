@@ -687,6 +687,8 @@
   "epsilon.modules.fullbright.mode": "模式",
   "epsilon.modules.fullbright.mode.gamma": "伽马",
   "epsilon.modules.fullbright.mode.potion": "夜视效果",
+  "epsilon.modules.game animation": "游戏动画",
+  "epsilon.modules.game animation.hotbar": "快捷栏",
   "epsilon.modules.hands view": "手部视图",
   "epsilon.modules.hands view.disable swap main": "禁用主手交换",
   "epsilon.modules.hands view.disable swap off": "禁用副手交换",

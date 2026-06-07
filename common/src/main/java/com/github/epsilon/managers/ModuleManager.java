@@ -118,6 +118,7 @@ public class ModuleManager {
         addModule(ESP.INSTANCE);
         addModule(Filter.INSTANCE);
         addModule(Fullbright.INSTANCE);
+        addModule(GameAnimation.INSTANCE);
         addModule(HandsView.INSTANCE);
         addModule(Hat.INSTANCE);
         addModule(NameTags.INSTANCE);

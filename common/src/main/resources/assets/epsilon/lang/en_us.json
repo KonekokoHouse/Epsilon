@@ -363,6 +363,8 @@
   "epsilon.modules.fullbright.mode": "Mode",
   "epsilon.modules.fullbright.mode.gamma": "Gamma",
   "epsilon.modules.fullbright.mode.potion": "Potion",
+  "epsilon.modules.game animation": "Game Animation",
+  "epsilon.modules.game animation.hotbar": "Hotbar",
   "epsilon.modules.ghost hand": "Ghost Hand",
   "epsilon.modules.hands view": "Hands View",
   "epsilon.modules.hands view.blocking animation": "Blocking Animation",
