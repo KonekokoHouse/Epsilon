@@ -5,6 +5,7 @@ import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.widget.ColorWidget;
 import com.github.epsilon.gui.dropdown.widget.KeybindWidget;
 import com.github.epsilon.gui.dropdown.widget.SettingWidget;
 import com.github.epsilon.gui.dropdown.widget.StringWidget;
@@ -172,6 +173,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (widget instanceof KeybindWidget kw && kw.isListening()) return true;
             if (widget instanceof StringWidget sw && sw.isFocused()) return true;
+            if (widget instanceof ColorWidget cw && cw.hasFocusedInput()) return true;
         }
         return false;
     }

@@ -50,6 +50,30 @@ public class DropdownTextField {
         }
     }
 
+    public void drawCentered(DropdownRenderer renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
+        renderer.roundRect().addRoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
+        renderer.outline().addOutline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
+
+        boolean showPlaceholder = text.isEmpty() && !focused;
+        String display = showPlaceholder ? placeholder : text;
+        if (focused && System.currentTimeMillis() % 1000 > 500) {
+            int safeCursor = Math.min(cursor, display.length());
+            display = display.substring(0, safeCursor) + "|" + display.substring(safeCursor);
+        }
+
+        float textY = y + (height - renderer.text().getLineHeight(textScale)) / 2.0f;
+        String visibleText = trimToWidth(display, textScale, width - 8.0f, renderer);
+        float textX = x + (width - renderer.text().getWidth(visibleText, textScale)) * 0.5f;
+        renderer.text().addText(visibleText, textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
+
+        if (focused) {
+            int safeCursor = Math.min(cursor, text.length());
+            String beforeCursor = text.substring(0, safeCursor);
+            float caretX = x + (width - renderer.text().getWidth(text, textScale)) * 0.5f + renderer.text().getWidth(beforeCursor, textScale);
+            IMEFocusHelper.updateCursorPos(caretX, textY);
+        }
+    }
+
     public boolean focusIfContains(double mouseX, double mouseY, float x, float y, float width, float height) {
         if (mouseX < x || mouseX > x + width || mouseY < y || mouseY > y + height) {
             return false;

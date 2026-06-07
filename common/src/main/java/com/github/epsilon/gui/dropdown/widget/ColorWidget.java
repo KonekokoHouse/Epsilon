@@ -2,20 +2,44 @@ package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.util.Mth;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 
 public class ColorWidget extends SettingWidget<ColorSetting> {
 
+    private static final float CHANNEL_ROW_HEIGHT = 15.0f;
+    private static final float CHANNEL_LABEL_WIDTH = 8.0f;
+    private static final float CHANNEL_BOX_WIDTH = 24.0f;
+    private static final float CHANNEL_BOX_HEIGHT = 12.0f;
+    private static final float CHANNEL_TRACK_HEIGHT = 4.0f;
+    private static final float CHANNEL_GAP = 2.0f;
+    private static final float CHANNEL_TEXT_SCALE = 0.44f;
+    private static final float PICKER_HEIGHT = 48.0f;
+    private static final float HUE_HEIGHT = 6.0f;
+    private static final float PICKER_TO_HUE_GAP = 3.0f;
+    private static final float HUE_TO_CHANNEL_GAP = 6.0f;
+    private static final float BOTTOM_PADDING = 2.0f;
+
     private final Animation openAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_EXPAND);
+
+    private static final Channel[] RGB_CHANNELS = { Channel.RED, Channel.GREEN, Channel.BLUE };
+    private static final Channel[] RGBA_CHANNELS = { Channel.RED, Channel.GREEN, Channel.BLUE, Channel.ALPHA };
+
+    private final DropdownTextField redField = new DropdownTextField(3, value -> value.matches("[0-9]"));
+    private final DropdownTextField greenField = new DropdownTextField(3, value -> value.matches("[0-9]"));
+    private final DropdownTextField blueField = new DropdownTextField(3, value -> value.matches("[0-9]"));
+    private final DropdownTextField alphaField = new DropdownTextField(3, value -> value.matches("[0-9]"));
+
     private boolean opened;
     private boolean pickingSB;
     private boolean pickingHue;
-    private boolean pickingAlpha;
+    private Channel pickingChannel;
 
     public ColorWidget(ColorSetting setting) {
         super(setting);
@@ -24,12 +48,17 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
     @Override
     public float getHeight() {
         openAnim.run(opened ? 1.0f : 0.0f);
-        float expandedHeight = DropdownTheme.COLOR_PICKER_HEIGHT + DropdownTheme.COLOR_HUE_HEIGHT + (setting.isAllowAlpha() ? DropdownTheme.COLOR_ALPHA_HEIGHT + 4.0f : 0.0f) + 10.0f;
+        int channelCount = getChannels().length;
+        float expandedHeight = PICKER_HEIGHT + PICKER_TO_HUE_GAP + HUE_HEIGHT + HUE_TO_CHANNEL_GAP
+                + channelCount * CHANNEL_ROW_HEIGHT
+                + Math.max(0, channelCount - 1) * CHANNEL_GAP
+                + BOTTOM_PADDING;
         return DropdownTheme.SETTING_HEIGHT + expandedHeight * openAnim.getValue();
     }
 
     @Override
     public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+        syncAlphaAvailability();
         openAnim.run(opened ? 1.0f : 0.0f);
         float t = openAnim.getValue();
 
@@ -48,59 +77,47 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float gradX = x + padX;
         float gradY = y + DropdownTheme.SETTING_HEIGHT + 2.0f;
         float gradW = width - padX * 2.0f;
-        float gradH = DropdownTheme.COLOR_PICKER_HEIGHT * t;
+        float gradH = PICKER_HEIGHT * t;
 
         Color hueColor = Color.getHSBColor(hsb[0], 1.0f, 1.0f);
         drawSaturationBrightnessPalette(renderer, gradX, gradY, gradW, gradH, hueColor);
 
-        float hueY = gradY + gradH + 3.0f;
-        float hueH = DropdownTheme.COLOR_HUE_HEIGHT * t;
+        float hueY = gradY + gradH + PICKER_TO_HUE_GAP;
+        float hueH = HUE_HEIGHT * t;
         for (int i = 0; i < (int) gradW; i++) {
             Color c = Color.getHSBColor(i / gradW, 1.0f, 1.0f);
             renderer.rect().addRect(gradX + i, hueY, 1.0f, hueH, c);
         }
         drawSliderPicker(renderer, gradX + gradW * hsb[0], hueY, hueH);
 
-        if (setting.isAllowAlpha()) {
-            float alphaY = hueY + hueH + 4.0f;
-            float alphaH = DropdownTheme.COLOR_ALPHA_HEIGHT * t;
-            for (int i = 0; i < (int) gradW; i++) {
-                float a = i / gradW;
-                Color c = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (a * 255));
-                renderer.rect().addRect(gradX + i, alphaY, 1.0f, alphaH, c);
-            }
-            drawSliderPicker(renderer, gradX + gradW * (color.getAlpha() / 255.0f), alphaY, alphaH);
-
-            if (pickingAlpha) {
-                float newAlpha = Mth.clamp((mouseX - gradX) / gradW, 0.0f, 1.0f);
-                Color current = setting.getValue();
-                setting.setValue(new Color(current.getRed(), current.getGreen(), current.getBlue(), (int) (newAlpha * 255)));
-            }
-        }
-
         if (pickingSB) {
             float newSat = Mth.clamp((mouseX - gradX) / gradW, 0.0f, 1.0f);
-            float newBri = 1.0f - Mth.clamp((mouseY - gradY) / (DropdownTheme.COLOR_PICKER_HEIGHT * t), 0.0f, 1.0f);
+            float newBri = 1.0f - Mth.clamp((mouseY - gradY) / (PICKER_HEIGHT * t), 0.0f, 1.0f);
             Color newColor = Color.getHSBColor(hsb[0], newSat, newBri);
-            if (setting.isAllowAlpha()) {
-                newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
-            }
+            newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
             setting.setValue(newColor);
         }
 
         if (pickingHue) {
             float newHue = Mth.clamp((mouseX - gradX) / gradW, 0.0f, 1.0f);
             Color newColor = Color.getHSBColor(newHue, hsb[1], hsb[2]);
-            if (setting.isAllowAlpha()) {
-                newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
-            }
+            newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
             setting.setValue(newColor);
         }
+
+        if (pickingChannel != null) {
+            updateChannelFromMouse(pickingChannel, mouseX);
+        }
+
+        color = setting.getValue();
+        hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
 
         float pickerCx = gradX + gradW * hsb[1];
         float pickerCy = gradY + gradH * (1.0f - hsb[2]);
         renderer.rect().addRect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, new Color(0, 0, 0, 135));
         renderer.rect().addRect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE);
+
+        drawChannelRows(renderer, mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t);
     }
 
     private void drawSaturationBrightnessPalette(DropdownRenderer renderer, float x, float y, float width, float height, Color hueColor) {
@@ -113,6 +130,55 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float pickerW = 3.0f;
         renderer.rect().addRect(centerX - pickerW * 0.5f - 1.0f, y - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
         renderer.rect().addRect(centerX - pickerW * 0.5f, y - 1.0f, pickerW, height + 2.0f, Color.WHITE);
+    }
+
+    private void drawChannelRows(DropdownRenderer renderer, int mouseX, int mouseY, float startY, float alphaProgress) {
+        syncFieldsFromColor();
+        Channel[] channels = getChannels();
+        for (int i = 0; i < channels.length; i++) {
+            Channel channel = channels[i];
+            float rowY = startY + i * (CHANNEL_ROW_HEIGHT + CHANNEL_GAP) * alphaProgress;
+            float rowAlpha = alphaProgress;
+            drawChannelRow(renderer, mouseX, mouseY, channel, rowY, rowAlpha);
+        }
+    }
+
+    private void drawChannelRow(DropdownRenderer renderer, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
+        int value = getChannelValue(channel);
+        float textY = rowY + (CHANNEL_ROW_HEIGHT - renderer.text().getHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
+        Color textColor = MD3Theme.withAlpha(DropdownTheme.settingLabel(), (int) (DropdownTheme.settingLabel().getAlpha() * alphaProgress));
+        renderer.text().addText(channel.label, x + DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor);
+
+        float boxX = x + width - DropdownTheme.SETTING_PADDING_X - CHANNEL_BOX_WIDTH;
+        float boxY = rowY + (CHANNEL_ROW_HEIGHT - CHANNEL_BOX_HEIGHT) * 0.5f;
+        float trackX = x + DropdownTheme.SETTING_PADDING_X + CHANNEL_LABEL_WIDTH + 4.0f;
+        float trackY = rowY + (CHANNEL_ROW_HEIGHT - CHANNEL_TRACK_HEIGHT) * 0.5f;
+        float trackW = boxX - trackX - 5.0f;
+        drawChannelTrack(renderer, channel, trackX, trackY, trackW, CHANNEL_TRACK_HEIGHT, alphaProgress);
+
+        float knobX = trackX + trackW * (value / 255.0f);
+        float knobR = 2.75f;
+        renderer.roundRect().addRoundRect(knobX - knobR, trackY + CHANNEL_TRACK_HEIGHT * 0.5f - knobR, knobR * 2.0f, knobR * 2.0f, knobR, DropdownTheme.sliderKnob());
+
+        DropdownTextField field = getField(channel);
+        field.drawCentered(renderer, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY, Integer.toString(value), CHANNEL_TEXT_SCALE);
+    }
+
+    private void drawChannelTrack(DropdownRenderer renderer, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
+        Color current = setting.getValue();
+        Color start = switch (channel) {
+            case RED -> new Color(0, current.getGreen(), current.getBlue());
+            case GREEN -> new Color(current.getRed(), 0, current.getBlue());
+            case BLUE -> new Color(current.getRed(), current.getGreen(), 0);
+            case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), 0);
+        };
+        Color end = switch (channel) {
+            case RED -> new Color(255, current.getGreen(), current.getBlue());
+            case GREEN -> new Color(current.getRed(), 255, current.getBlue());
+            case BLUE -> new Color(current.getRed(), current.getGreen(), 255);
+            case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), 255);
+        };
+        renderer.roundRect().addHorizontalGradient(trackX, trackY, trackW, trackH, trackH * 0.5f, MD3Theme.withAlpha(start, (int) (start.getAlpha() * alphaProgress)), MD3Theme.withAlpha(end, (int) (end.getAlpha() * alphaProgress)));
     }
 
     @Override
@@ -132,9 +198,25 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float gradX = x + padX;
         float gradY = y + DropdownTheme.SETTING_HEIGHT + 2.0f;
         float gradW = width - padX * 2.0f;
-        float gradH = DropdownTheme.COLOR_PICKER_HEIGHT * openAnim.getValue();
-        float hueY = gradY + gradH + 3.0f;
-        float hueH = DropdownTheme.COLOR_HUE_HEIGHT * openAnim.getValue();
+        float gradH = PICKER_HEIGHT * openAnim.getValue();
+        float hueY = gradY + gradH + PICKER_TO_HUE_GAP;
+        float hueH = HUE_HEIGHT * openAnim.getValue();
+
+        for (Channel channel : getChannels()) {
+            float fieldY = getChannelY(channel) + (CHANNEL_ROW_HEIGHT - CHANNEL_BOX_HEIGHT) * 0.5f;
+            if (isHovered(mouseX, mouseY, getFieldX(), fieldY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT)) {
+                blurFields();
+                DropdownTextField field = getField(channel);
+                field.setText(Integer.toString(getChannelValue(channel)));
+                field.focus();
+                field.setCursorToEnd();
+                return true;
+            }
+        }
+        if (hasFocusedInput()) {
+            commitFocusedInput();
+            blurFields();
+        }
 
         if (isHovered(mouseX, mouseY, gradX, gradY, gradW, gradH)) {
             pickingSB = true;
@@ -144,11 +226,13 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             pickingHue = true;
             return true;
         }
-        if (setting.isAllowAlpha()) {
-            float alphaY = hueY + hueH + 4.0f;
-            float alphaH = DropdownTheme.COLOR_ALPHA_HEIGHT * openAnim.getValue();
-            if (isHovered(mouseX, mouseY, gradX, alphaY, gradW, alphaH)) {
-                pickingAlpha = true;
+        for (Channel channel : getChannels()) {
+            float trackX = getTrackX();
+            float trackY = getChannelY(channel) + (CHANNEL_ROW_HEIGHT - CHANNEL_TRACK_HEIGHT) * 0.5f;
+            float trackW = getTrackWidth();
+            if (isHovered(mouseX, mouseY, trackX, trackY - 3.0f, trackW, CHANNEL_TRACK_HEIGHT + 6.0f)) {
+                pickingChannel = channel;
+                updateChannelFromMouse(channel, mouseX);
                 return true;
             }
         }
@@ -157,13 +241,208 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0 && (pickingSB || pickingHue || pickingAlpha)) {
+        if (button == 0 && (pickingSB || pickingHue || pickingChannel != null)) {
             pickingSB = false;
             pickingHue = false;
-            pickingAlpha = false;
+            pickingChannel = null;
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        DropdownTextField focused = getFocusedField();
+        if (focused == null) return false;
+        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+            commitFocusedInput();
+            focused.blur();
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            syncFieldsFromColor(true);
+            focused.blur();
+            return true;
+        }
+        if (focused.keyPressed(keyCode)) {
+            syncFocusedInput();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(String typedText) {
+        DropdownTextField focused = getFocusedField();
+        if (focused == null) return false;
+        if (focused.charTyped(typedText)) {
+            syncFocusedInput();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean hasFocusedInput() {
+        return getFocusedField() != null;
+    }
+
+    private float getChannelY(Channel channel) {
+        float expanded = openAnim.getValue();
+        float baseY = y + DropdownTheme.SETTING_HEIGHT + 2.0f
+                + PICKER_HEIGHT * expanded
+                + PICKER_TO_HUE_GAP
+                + HUE_HEIGHT * expanded
+                + HUE_TO_CHANNEL_GAP;
+        return baseY + getChannelIndex(channel) * (CHANNEL_ROW_HEIGHT + CHANNEL_GAP) * expanded;
+    }
+
+    private float getFieldX() {
+        return x + width - DropdownTheme.SETTING_PADDING_X - CHANNEL_BOX_WIDTH;
+    }
+
+    private float getTrackX() {
+        return x + DropdownTheme.SETTING_PADDING_X + CHANNEL_LABEL_WIDTH + 4.0f;
+    }
+
+    private float getTrackWidth() {
+        return getFieldX() - getTrackX() - 5.0f;
+    }
+
+    private void updateChannelFromMouse(Channel channel, double mouseX) {
+        float trackX = getTrackX();
+        float trackW = getTrackWidth();
+        int value = Mth.clamp(Math.round(Mth.clamp((float) (mouseX - trackX) / trackW, 0.0f, 1.0f) * 255.0f), 0, 255);
+        setChannelValue(channel, value);
+    }
+
+    private int getChannelValue(Channel channel) {
+        Color color = setting.getValue();
+        return switch (channel) {
+            case RED -> color.getRed();
+            case GREEN -> color.getGreen();
+            case BLUE -> color.getBlue();
+            case ALPHA -> color.getAlpha();
+        };
+    }
+
+    private void setChannelValue(Channel channel, int value) {
+        Color current = setting.getValue();
+        int clamped = Mth.clamp(value, 0, 255);
+        Color updated = switch (channel) {
+            case RED -> new Color(clamped, current.getGreen(), current.getBlue(), current.getAlpha());
+            case GREEN -> new Color(current.getRed(), clamped, current.getBlue(), current.getAlpha());
+            case BLUE -> new Color(current.getRed(), current.getGreen(), clamped, current.getAlpha());
+            case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), clamped);
+        };
+        setting.setValue(updated);
+        syncFieldsFromColor();
+    }
+
+    private DropdownTextField getField(Channel channel) {
+        return switch (channel) {
+            case RED -> redField;
+            case GREEN -> greenField;
+            case BLUE -> blueField;
+            case ALPHA -> alphaField;
+        };
+    }
+
+    private DropdownTextField getFocusedField() {
+        for (Channel channel : getChannels()) {
+            DropdownTextField field = getField(channel);
+            if (field.isFocused()) return field;
+        }
+        return null;
+    }
+
+    private Channel getFocusedChannel() {
+        for (Channel channel : getChannels()) {
+            if (getField(channel).isFocused()) return channel;
+        }
+        return null;
+    }
+
+    private void syncFocusedInput() {
+        Channel channel = getFocusedChannel();
+        if (channel == null) return;
+        String value = getField(channel).getText();
+        if (value.isEmpty()) return;
+        setChannelValue(channel, parseChannel(value));
+    }
+
+    private void commitFocusedInput() {
+        Channel channel = getFocusedChannel();
+        if (channel == null) return;
+        DropdownTextField field = getField(channel);
+        int value = field.getText().isEmpty() ? getChannelValue(channel) : parseChannel(field.getText());
+        setChannelValue(channel, value);
+        field.setText(Integer.toString(getChannelValue(channel)));
+        field.setCursorToEnd();
+    }
+
+    private int parseChannel(String value) {
+        try {
+            return Mth.clamp(Integer.parseInt(value), 0, 255);
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
+    }
+
+    private void syncFieldsFromColor() {
+        syncFieldsFromColor(false);
+    }
+
+    private void syncFieldsFromColor(boolean force) {
+        for (Channel channel : getChannels()) {
+            DropdownTextField field = getField(channel);
+            if (!force && field.isFocused()) continue;
+            String value = Integer.toString(getChannelValue(channel));
+            if (!value.equals(field.getText())) {
+                field.setText(value);
+                field.setCursorToEnd();
+            }
+        }
+    }
+
+    private void blurFields() {
+        for (Channel channel : RGBA_CHANNELS) {
+            getField(channel).blur();
+        }
+    }
+
+    private Channel[] getChannels() {
+        return setting.isAllowAlpha() ? RGBA_CHANNELS : RGB_CHANNELS;
+    }
+
+    private int getChannelIndex(Channel channel) {
+        Channel[] channels = getChannels();
+        for (int i = 0; i < channels.length; i++) {
+            if (channels[i] == channel) return i;
+        }
+        return 0;
+    }
+
+    private void syncAlphaAvailability() {
+        if (setting.isAllowAlpha()) return;
+        if (pickingChannel == Channel.ALPHA) {
+            pickingChannel = null;
+        }
+        alphaField.blur();
+    }
+
+    private enum Channel {
+
+        RED("R"),
+        GREEN("G"),
+        BLUE("B"),
+        ALPHA("A");
+
+        private final String label;
+
+        Channel(String label) {
+            this.label = label;
+        }
+
     }
 
 }

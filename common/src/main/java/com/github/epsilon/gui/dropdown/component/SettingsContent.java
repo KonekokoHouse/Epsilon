@@ -175,6 +175,7 @@ public class SettingsContent {
                 if (widget instanceof StringWidget sw && sw.isFocused()) return true;
                 if (widget instanceof IntSliderWidget iw && iw.isFocused()) return true;
                 if (widget instanceof DoubleSliderWidget dw && dw.isFocused()) return true;
+                if (widget instanceof ColorWidget cw && cw.hasFocusedInput()) return true;
             }
         }
         return false;
