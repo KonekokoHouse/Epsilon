@@ -208,8 +208,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
                 blurFields();
                 DropdownTextField field = getField(channel);
                 field.setText(Integer.toString(getChannelValue(channel)));
-                field.focus();
-                field.setCursorToEnd();
+                field.focusIfContainsCentered(mouseX, mouseY, getFieldX(), fieldY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT);
                 return true;
             }
         }
