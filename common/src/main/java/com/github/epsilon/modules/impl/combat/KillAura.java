@@ -18,6 +18,7 @@ import com.github.epsilon.utils.rotation.RotationUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.HitResult;
 
@@ -159,15 +160,17 @@ public class KillAura extends Module {
     }
 
     private void clickTargets(List<LivingEntity> targets) {
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
         if (targetMode.is(TargetMode.Multiple)) {
             for (LivingEntity target : targets) {
-                if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && mc.hitResult.getType() == HitResult.Type.ENTITY) {
+                if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && hitResult.getType() == HitResult.Type.ENTITY) {
                     doAttack();
                 }
             }
             switchIndex++;
         } else {
-            if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && mc.hitResult.getType() == HitResult.Type.ENTITY && mc.crosshairPickEntity.is(target)) {
+            Entity crosshairPickEntity = RotationManager.INSTANCE.getCrosshairPickEntity();
+            if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && hitResult.getType() == HitResult.Type.ENTITY && crosshairPickEntity != null && crosshairPickEntity.is(target)) {
                 doAttack();
             }
             if (targetMode.is(TargetMode.Switch)) {

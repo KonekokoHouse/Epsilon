@@ -2,6 +2,7 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -92,7 +93,7 @@ public class DoubleAnchor extends Module {
     }
 
     private void doPlaceAnchor() {
-        HitResult hit = mc.hitResult;
+        HitResult hit = RotationManager.INSTANCE.getHitResult();
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return;
 
         if (mc.level.getBlockState(blockHit.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) {
@@ -115,7 +116,7 @@ public class DoubleAnchor extends Module {
     }
 
     private void doCharge() {
-        HitResult hit = mc.hitResult;
+        HitResult hit = RotationManager.INSTANCE.getHitResult();
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return;
         if (!mc.level.getBlockState(blockHit.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) return;
 
@@ -134,7 +135,7 @@ public class DoubleAnchor extends Module {
     }
 
     private void doAirplace() {
-        HitResult hit = mc.hitResult;
+        HitResult hit = RotationManager.INSTANCE.getHitResult();
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return;
         if (!mc.level.getBlockState(blockHit.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) return;
 
@@ -154,7 +155,7 @@ public class DoubleAnchor extends Module {
     }
 
     private void doCharge2() {
-        HitResult hit = mc.hitResult;
+        HitResult hit = RotationManager.INSTANCE.getHitResult();
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return;
         if (!mc.level.getBlockState(blockHit.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) return;
 
@@ -173,7 +174,7 @@ public class DoubleAnchor extends Module {
     }
 
     private void doDetonate() {
-        HitResult hit = mc.hitResult;
+        HitResult hit = RotationManager.INSTANCE.getHitResult();
         if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return;
         if (!mc.level.getBlockState(blockHit.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) return;
 

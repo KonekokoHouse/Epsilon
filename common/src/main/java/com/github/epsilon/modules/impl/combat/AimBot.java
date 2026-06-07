@@ -7,6 +7,7 @@ import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.events.impl.UseItemEvent;
 import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -147,7 +148,8 @@ public class AimBot extends Module {
             return;
         }
 
-        if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.ENTITY) {
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+        if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {
             aimTicks++;
         } else {
             aimTicks = 0;

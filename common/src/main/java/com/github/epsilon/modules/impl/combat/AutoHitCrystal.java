@@ -6,6 +6,7 @@ import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -106,8 +107,9 @@ public class AutoHitCrystal extends Module {
 
         boolean pressed = KeybindUtils.isPressed(activateKey.getValue());
         if (pressed) {
-            if (mc.hitResult instanceof BlockHitResult hitResult2) {
-                if (mc.hitResult.getType() == HitResult.Type.BLOCK && !this.active && !mc.level.getBlockState(hitResult2.getBlockPos()).canBeReplaced() && this.checkPlace.getValue()) {
+            HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+            if (hitResult instanceof BlockHitResult hitResult2) {
+                if (hitResult.getType() == HitResult.Type.BLOCK && !this.active && !mc.level.getBlockState(hitResult2.getBlockPos()).canBeReplaced() && this.checkPlace.getValue()) {
                     return;
                 }
             }
@@ -124,7 +126,7 @@ public class AutoHitCrystal extends Module {
 
             this.active = true;
 
-            if (!this.crystalling && mc.hitResult instanceof BlockHitResult hit) {
+            if (!this.crystalling && hitResult instanceof BlockHitResult hit) {
                 if (hit.getType() == HitResult.Type.MISS) {
                     return;
                 }
@@ -193,7 +195,7 @@ public class AutoHitCrystal extends Module {
         if (nullCheck() || !this.active) return;
 
         var mainHandStack = mc.player.getMainHandItem();
-        HitResult crosshairTarget = mc.hitResult;
+        HitResult crosshairTarget = RotationManager.INSTANCE.getHitResult();
 
         if (this.swordSwap.getValue() && mainHandStack.is(ItemTags.SWORDS) && crosshairTarget instanceof BlockHitResult hit) {
             if (mc.level.getBlockState(hit.getBlockPos()).is(Blocks.OBSIDIAN) && !mc.player.isHolding(Items.END_CRYSTAL)) {

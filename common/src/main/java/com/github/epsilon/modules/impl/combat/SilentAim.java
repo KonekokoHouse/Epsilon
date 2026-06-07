@@ -56,7 +56,8 @@ public class SilentAim extends Module {
         Rot2f rotations = RotationUtils.calculate(target.getEyePosition());
         RotationManager.INSTANCE.setRotations(rotations, 10, Priority.High);
 
-        if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.ENTITY) {
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+        if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {
             mc.gameMode.attack(mc.player, target);
             mc.player.swing(InteractionHand.MAIN_HAND);
             redirecting = false;
@@ -71,7 +72,8 @@ public class SilentAim extends Module {
             return;
         }
 
-        if (mc.hitResult == null || mc.hitResult.getType() != HitResult.Type.MISS) {
+        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+        if (hitResult == null || hitResult.getType() != HitResult.Type.MISS) {
             return;
         }
 
