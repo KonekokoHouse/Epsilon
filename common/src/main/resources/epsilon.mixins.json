@@ -6,7 +6,6 @@
     "MixinAvatarRenderer",
     "MixinBlock",
     "MixinBlockCollisions",
-    "MixinBlockStateBase",
     "MixinCamera",
     "MixinChatComponent",
     "MixinChatComponentHash",
