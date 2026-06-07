@@ -50,6 +50,7 @@ public class PanelScreen extends Screen {
     private String lastSelectedCategory = "";
     private String lastSelectedModule = "";
     private String lastSearchQuery = "";
+    private ClientSetting.ModuleSort lastModuleSort;
     private boolean lastSidebarExpanded;
     private boolean lastClientSettingMode;
     private long lastI18nRevision = Long.MIN_VALUE;
@@ -88,12 +89,14 @@ public class PanelScreen extends Screen {
         String currentCategory = state.getSelectedCategory().name();
         String currentModule = state.getSelectedModule() == null ? "" : state.getSelectedModule().getName();
         String currentQuery = state.getSearchQuery();
+        ClientSetting.ModuleSort currentModuleSort = ClientSetting.INSTANCE.moduleSort.getValue();
         boolean sidebarExpanded = state.isSidebarExpanded();
         boolean clientSettingMode = state.isClientSettingMode();
         long currentI18nRevision = TranslateHolder.INSTANCE.getRevision();
         if (!lastSelectedCategory.equals(currentCategory)
                 || !lastSelectedModule.equals(currentModule)
                 || !lastSearchQuery.equals(currentQuery)
+                || lastModuleSort != currentModuleSort
                 || lastSidebarExpanded != sidebarExpanded
                 || lastClientSettingMode != clientSettingMode
                 || lastI18nRevision != currentI18nRevision) {
@@ -101,6 +104,7 @@ public class PanelScreen extends Screen {
             lastSelectedCategory = currentCategory;
             lastSelectedModule = currentModule;
             lastSearchQuery = currentQuery;
+            lastModuleSort = currentModuleSort;
             lastSidebarExpanded = sidebarExpanded;
             lastClientSettingMode = clientSettingMode;
             lastI18nRevision = currentI18nRevision;

@@ -3,18 +3,15 @@ package com.github.epsilon.gui.panel;
 import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public class PanelState {
-
-    public enum SortMode {
-        NAME,
-        ENABLED_FIRST
-    }
 
     public enum ActivePopup {
         NONE,
@@ -33,7 +30,6 @@ public class PanelState {
     private Category selectedCategory = Category.COMBAT;
     private Module selectedModule;
     private String searchQuery = "";
-    private SortMode sortMode = SortMode.NAME;
     private ActivePopup activePopup = ActivePopup.NONE;
     private Module listeningKeyBindModule;
     private boolean sidebarExpanded;
@@ -88,14 +84,6 @@ public class PanelState {
         this.searchQuery = searchQuery == null ? "" : searchQuery;
         moduleScroll = 0.0f;
         ensureValidSelection();
-    }
-
-    public SortMode getSortMode() {
-        return sortMode;
-    }
-
-    public void setSortMode(SortMode sortMode) {
-        this.sortMode = sortMode == null ? SortMode.NAME : sortMode;
     }
 
     public ActivePopup getActivePopup() {
@@ -196,17 +184,33 @@ public class PanelState {
     }
 
     private Comparator<Module> getComparator() {
-        Comparator<Module> comparator = Comparator.comparing(Module::getName);
-        if (sortMode == SortMode.ENABLED_FIRST) {
-            comparator = Comparator.comparing(Module::isEnabled).reversed().thenComparing(Module::getName);
-        }
-        return comparator;
+        Comparator<Module> nameComparator = Comparator.comparing(this::normalizedName, String.CASE_INSENSITIVE_ORDER);
+        return switch (ClientSetting.INSTANCE.moduleSort.getValue()) {
+            case EnabledFirst -> Comparator.comparing(Module::isEnabled).reversed()
+                    .thenComparing(nameComparator);
+            case Addon -> Comparator.comparing(this::normalizedAddon, String.CASE_INSENSITIVE_ORDER)
+                    .thenComparing(nameComparator);
+            case Name -> nameComparator;
+        };
+    }
+
+    private String normalizedName(Module module) {
+        String translated = module.getTranslatedName();
+        if (translated != null && !translated.isBlank()) return translated;
+        String name = module.getName();
+        return name == null ? "" : name;
+    }
+
+    private String normalizedAddon(Module module) {
+        String addonId = module.getAddonId();
+        return addonId == null || addonId.isBlank() ? "unknown" : addonId.toLowerCase(Locale.ROOT);
     }
 
     private boolean matchesSearch(Module module, String loweredSearch) {
         return module.getName().toLowerCase().contains(loweredSearch)
                 || module.getTranslatedName().toLowerCase().contains(loweredSearch)
-                || module.getCategory().getName().toLowerCase().contains(loweredSearch);
+                || module.getCategory().getName().toLowerCase().contains(loweredSearch)
+                || normalizedAddon(module).contains(loweredSearch);
     }
 
     public boolean isClientSettingMode() {

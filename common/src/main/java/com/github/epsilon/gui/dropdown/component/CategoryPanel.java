@@ -5,14 +5,18 @@ import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.managers.ModuleManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.ClientSetting;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public class CategoryPanel extends AbstractDropdownPanel {
 
     private final Category category;
     private final List<ModuleButton> moduleButtons = new ArrayList<>();
+    private List<ModuleButton> sortedModuleButtons = List.of();
     private String searchQuery = "";
 
     public CategoryPanel(Category category, int panelIndex) {
@@ -24,13 +28,15 @@ public class CategoryPanel extends AbstractDropdownPanel {
         for (Module module : modules) {
             moduleButtons.add(new ModuleButton(module));
         }
+        refreshSortedModuleButtons();
     }
 
     @Override
     protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
+        refreshSortedModuleButtons();
         float expand = openAnim.getValue();
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll;
-        for (ModuleButton button : moduleButtons) {
+        for (ModuleButton button : sortedModuleButtons) {
             if (!matchesSearch(button)) continue;
             button.setPosition(x, currentY, width);
             float btnH = button.getHeight();
@@ -47,8 +53,9 @@ public class CategoryPanel extends AbstractDropdownPanel {
 
     @Override
     protected float computeContentHeight() {
+        refreshSortedModuleButtons();
         float total = 0.0f;
-        for (ModuleButton button : moduleButtons) {
+        for (ModuleButton button : sortedModuleButtons) {
             if (!matchesSearch(button)) continue;
             total += button.getHeight();
         }
@@ -62,7 +69,8 @@ public class CategoryPanel extends AbstractDropdownPanel {
 
     @Override
     protected boolean mouseClickedContent(double mouseX, double mouseY, int button) {
-        for (ModuleButton mb : moduleButtons) {
+        refreshSortedModuleButtons();
+        for (ModuleButton mb : sortedModuleButtons) {
             if (!matchesSearch(mb)) continue;
             if (mb.mouseClicked(mouseX, mouseY, button)) {
                 return true;
@@ -73,7 +81,8 @@ public class CategoryPanel extends AbstractDropdownPanel {
 
     @Override
     protected boolean mouseReleasedContent(double mouseX, double mouseY, int button) {
-        for (ModuleButton mb : moduleButtons) {
+        refreshSortedModuleButtons();
+        for (ModuleButton mb : sortedModuleButtons) {
             if (!matchesSearch(mb)) continue;
             if (mb.mouseReleased(mouseX, mouseY, button)) {
                 return true;
@@ -84,7 +93,8 @@ public class CategoryPanel extends AbstractDropdownPanel {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        for (ModuleButton mb : moduleButtons) {
+        refreshSortedModuleButtons();
+        for (ModuleButton mb : sortedModuleButtons) {
             if (!matchesSearch(mb)) continue;
             if (mb.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
@@ -95,7 +105,8 @@ public class CategoryPanel extends AbstractDropdownPanel {
 
     @Override
     public boolean charTyped(String typedText) {
-        for (ModuleButton mb : moduleButtons) {
+        refreshSortedModuleButtons();
+        for (ModuleButton mb : sortedModuleButtons) {
             if (!matchesSearch(mb)) continue;
             if (mb.charTyped(typedText)) {
                 return true;
@@ -115,11 +126,42 @@ public class CategoryPanel extends AbstractDropdownPanel {
 
     @Override
     public boolean hasActiveInput() {
-        for (ModuleButton mb : moduleButtons) {
+        refreshSortedModuleButtons();
+        for (ModuleButton mb : sortedModuleButtons) {
             if (!matchesSearch(mb)) continue;
             if (mb.hasListeningKeybind() || mb.hasFocusedInput()) return true;
         }
         return false;
+    }
+
+    private void refreshSortedModuleButtons() {
+        ClientSetting.ModuleSort sortMode = ClientSetting.INSTANCE.moduleSort.getValue();
+        sortedModuleButtons = moduleButtons.stream()
+                .sorted(getComparator(sortMode))
+                .toList();
+    }
+
+    private Comparator<ModuleButton> getComparator(ClientSetting.ModuleSort sortMode) {
+        Comparator<ModuleButton> nameComparator = Comparator.comparing(button -> normalizedName(button.getModule()), String.CASE_INSENSITIVE_ORDER);
+        return switch (sortMode) {
+            case EnabledFirst -> Comparator.comparing((ModuleButton button) -> button.getModule().isEnabled()).reversed()
+                    .thenComparing(nameComparator);
+            case Addon -> Comparator.comparing((ModuleButton button) -> normalizedAddon(button.getModule()), String.CASE_INSENSITIVE_ORDER)
+                    .thenComparing(nameComparator);
+            case Name -> nameComparator;
+        };
+    }
+
+    private String normalizedName(Module module) {
+        String translated = module.getTranslatedName();
+        if (translated != null && !translated.isBlank()) return translated;
+        String name = module.getName();
+        return name == null ? "" : name;
+    }
+
+    private String normalizedAddon(Module module) {
+        String addonId = module.getAddonId();
+        return addonId == null || addonId.isBlank() ? "unknown" : addonId.toLowerCase(Locale.ROOT);
     }
 
     private boolean matchesSearch(ModuleButton button) {

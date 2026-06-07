@@ -28,6 +28,7 @@ public class ModuleButton extends Component {
 
     private static final TranslateComponent visibleComponent = EpsilonTranslateComponent.create("module", "visible");
     private static final TranslateComponent hiddenComponent = EpsilonTranslateComponent.create("module", "hidden");
+    private static final TranslateComponent fromComponent = EpsilonTranslateComponent.create("module", "from");
 
     private final Module module;
     private final List<SettingSection> sections = new ArrayList<>();
@@ -86,8 +87,7 @@ public class ModuleButton extends Component {
     }
 
     private float computeSettingsHeight() {
-        if (sections.isEmpty()) return 0.0f;
-        float height = DropdownTheme.SETTING_GAP;
+        float height = DropdownTheme.SETTING_GAP + DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
         for (SettingSection section : sections) {
             if (section.isGroup()) {
                 height += DropdownTheme.GROUP_HEADER_HEIGHT;
@@ -151,7 +151,11 @@ public class ModuleButton extends Component {
 
         Color textColor = MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle);
         float textY = y + (DropdownTheme.MODULE_HEIGHT - renderer.text().getHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f;
-        renderer.text().addText(module.getTranslatedName(), x + DropdownTheme.MODULE_PADDING_X, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor);
+        float leftX = x + DropdownTheme.MODULE_PADDING_X;
+        float hiddenButtonW = 18.0f;
+        float controlsLeftX = x + width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - hiddenButtonW;
+        float nameMaxWidth = Math.max(12.0f, controlsLeftX - leftX - DropdownTheme.MODULE_ADDON_GAP);
+        renderer.text().addText(trimToWidth(module.getTranslatedName(), DropdownTheme.MODULE_TEXT_SCALE, nameMaxWidth, renderer), leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor);
 
         drawKeybindButton(renderer, mouseX, mouseY, toggle);
         drawHiddenButton(renderer, mouseX, mouseY);
@@ -166,6 +170,10 @@ public class ModuleButton extends Component {
 
         if (expand > 0.01f) {
             float settingY = y + DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
+            if (expand > 0.5f) {
+                drawAddonInfo(renderer, settingY);
+            }
+            settingY += DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
             for (SettingSection section : sections) {
                 float sectionH = getSectionHeight(section);
                 if (section.isGroup()) {
@@ -191,6 +199,18 @@ public class ModuleButton extends Component {
         SettingGroup group = section.group();
         Animation expandAnimG = groupExpandAnimations.computeIfAbsent(group, k -> createGroupAnimation(180L, group.isCollapsed() ? 0.0f : 1.0f));
         expandAnimG.run(group.isCollapsed() ? 0.0f : 1.0f);
+    }
+
+    private void drawAddonInfo(DropdownRenderer renderer, float infoY) {
+        float infoX = x + DropdownTheme.SETTING_INDENT;
+        float infoW = width - DropdownTheme.SETTING_INDENT * 2.0f;
+        float infoH = DropdownTheme.MODULE_ADDON_INFO_HEIGHT;
+
+        float scale = DropdownTheme.MODULE_ADDON_INFO_TEXT_SCALE;
+        String addonLabel = fromComponent.getTranslatedName() + " " + getAddonLabel();
+        addonLabel = trimToWidth(addonLabel, scale, infoW - DropdownTheme.SETTING_PADDING_X * 2.0f, renderer);
+        float textY = infoY + (infoH - renderer.text().getHeight(scale)) * 0.5f - 0.5f;
+        renderer.text().addText(addonLabel, infoX + DropdownTheme.SETTING_PADDING_X, textY, scale, DropdownTheme.moduleAddonInfoText());
     }
 
     private void drawGroupSection(DropdownRenderer renderer, int mouseX, int mouseY, SettingSection section, float sectionY) {
@@ -259,6 +279,11 @@ public class ModuleButton extends Component {
             if (renderer.text().getWidth(candidate, scale) <= maxWidth) return candidate;
         }
         return ellipsis;
+    }
+
+    private String getAddonLabel() {
+        String addonId = module.getAddonId();
+        return addonId == null || addonId.isBlank() ? "unknown" : addonId;
     }
 
     private void drawKeybindButton(DropdownRenderer renderer, int mouseX, int mouseY, float toggle) {
@@ -403,6 +428,7 @@ public class ModuleButton extends Component {
 
         if (expanded && expandAnim.getValue() > 0.5f) {
             float settingY = y + DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
+            settingY += DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
             for (SettingSection section : sections) {
                 if (section.isGroup()) {
                     float headerX = x + DropdownTheme.SETTING_INDENT;

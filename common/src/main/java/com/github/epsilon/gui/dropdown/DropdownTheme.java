@@ -24,6 +24,9 @@ public class DropdownTheme {
     public static final float MODULE_HEIGHT = 19.0f;
     public static final float MODULE_PADDING_X = 7.0f;
     public static final float MODULE_TEXT_SCALE = 0.62f;
+    public static final float MODULE_ADDON_GAP = 4.0f;
+    public static final float MODULE_ADDON_INFO_HEIGHT = 15.0f;
+    public static final float MODULE_ADDON_INFO_TEXT_SCALE = 0.50f;
 
     public static final float SETTING_PADDING_X = 6.0f;
     public static final float SETTING_HEIGHT = 16.0f;
@@ -93,6 +96,10 @@ public class DropdownTheme {
 
     public static Color moduleTextDisabled(float hoverProgress) {
         return MD3Theme.lerp(MD3Theme.TEXT_SECONDARY, MD3Theme.TEXT_PRIMARY, hoverProgress);
+    }
+
+    public static Color moduleAddonInfoText() {
+        return MD3Theme.TEXT_MUTED;
     }
 
     public static Color settingLabel() {

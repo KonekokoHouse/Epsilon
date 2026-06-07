@@ -30,6 +30,12 @@ public class ClientSetting extends Module {
         Panel
     }
 
+    public enum ModuleSort {
+        Name,
+        EnabledFirst,
+        Addon
+    }
+
     public enum ThemePreset {
         TonalSpot,
         Neutral,
@@ -71,6 +77,8 @@ public class ClientSetting extends Module {
         case Panel -> PanelScreen.INSTANCE;
         case Dropdown -> DropdownScreen.INSTANCE;
     })).group(sgGeneral);
+
+    public final EnumSetting<ModuleSort> moduleSort = enumSetting("Module Sort", ModuleSort.Name).group(sgGeneral);
 
     private final DoubleSetting renderScale = doubleSetting("Render Scale", 2.0, 1.0, 6.0, 0.5).group(sgGeneral);
 
