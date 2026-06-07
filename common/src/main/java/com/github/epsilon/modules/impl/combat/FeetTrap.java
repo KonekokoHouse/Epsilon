@@ -164,7 +164,7 @@ public class FeetTrap extends Module {
     private Set<BlockPos> getTargets() {
         Set<BlockPos> feetPositions = new LinkedHashSet<>();
         AABB box = mc.player.getBoundingBox().deflate(0.001);
-        int y = BlockPos.containing(mc.player.position()).getY();
+        int y = BlockPos.containing(box.minX, box.minY, box.minZ).getY();
         int minX = BlockPos.containing(box.minX, mc.player.getY(), box.minZ).getX();
         int maxX = BlockPos.containing(box.maxX, mc.player.getY(), box.maxZ).getX();
         int minZ = BlockPos.containing(box.minX, mc.player.getY(), box.minZ).getZ();
