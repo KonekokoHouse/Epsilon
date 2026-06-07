@@ -3,6 +3,31 @@ plugins {
     `maven-publish`
 }
 
+val baseVersion = providers.gradleProperty("version")
+val currentCommitTags = providers.exec {
+    commandLine("git", "tag", "--points-at", "HEAD")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map { output ->
+    output.lineSequence()
+        .map(String::trim)
+        .filter(String::isNotEmpty)
+        .toSet()
+}
+val shortCommitId = providers.exec {
+    commandLine("git", "rev-parse", "--short", "HEAD")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map(String::trim)
+
+version = baseVersion.zip(currentCommitTags.zip(shortCommitId) { tags, shortCommit ->
+    tags to shortCommit
+}) { configuredVersion, (tags, shortCommit) ->
+    if (tags.any { it != "nightly" } || shortCommit.isBlank()) {
+        configuredVersion
+    } else {
+        "$configuredVersion-$shortCommit"
+    }
+}.get()
+
 val modId = project.property("mod_id").toString()
 val minecraftVersion = project.property("minecraft_version").toString()
 val javaVersion = project.property("java_version").toString()
@@ -18,6 +43,10 @@ val credits = project.findProperty("credits")?.toString() ?: ""
 
 base {
     archivesName.set("${modId}-${project.name}-${minecraftVersion}")
+}
+
+tasks.withType<Jar>().configureEach {
+    archiveVersion.set(project.version.toString())
 }
 
 java {

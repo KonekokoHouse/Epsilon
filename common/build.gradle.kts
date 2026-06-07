@@ -8,7 +8,14 @@ buildConfig {
     packageName("com.github.epsilon")
     useJavaOutput()
     buildConfigField("String", "MOD_ID", "\"${project.property("mod_id")}\"")
-    buildConfigField("String", "VERSION", "\"${project.version}\"")
+    val effectiveVersion = project.version.toString()
+    buildConfigField("String", "VERSION", "new String(\"${effectiveVersion.replace("\\", "\\\\").replace("\"", "\\\"")}\")")
+}
+
+tasks.named("generateBuildConfigClasses") {
+    inputs.file(rootProject.layout.projectDirectory.file("gradle.properties"))
+        .withPropertyName("gradleProperties")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 neoForge {

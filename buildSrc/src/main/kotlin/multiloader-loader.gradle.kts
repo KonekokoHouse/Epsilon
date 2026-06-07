@@ -9,6 +9,10 @@ val commonResources by configurations.creating {
     isCanBeResolved = true
 }
 
+val commonProject = project(":common")
+val commonBuildConfig = commonProject.tasks.named("generateBuildConfigClasses")
+val commonBuildConfigJava = commonProject.layout.buildDirectory.dir("generated/sources/buildConfig/main")
+
 dependencies {
     val loaderAttribute = Attribute.of("io.github.mcgradleconventions.loader", String::class.java)
     compileOnly(project(":common")) {
@@ -21,8 +25,9 @@ dependencies {
 }
 
 tasks.named<JavaCompile>("compileJava") {
-    dependsOn(commonJava)
+    dependsOn(commonJava, commonBuildConfig)
     source(commonJava)
+    source(commonBuildConfigJava)
 }
 
 tasks.named<ProcessResources>("processResources") {
@@ -31,13 +36,16 @@ tasks.named<ProcessResources>("processResources") {
 }
 
 tasks.named<Javadoc>("javadoc") {
-    dependsOn(commonJava)
+    dependsOn(commonJava, commonBuildConfig)
     source(commonJava)
+    source(commonBuildConfigJava)
 }
 
 tasks.named<Jar>("sourcesJar") {
     dependsOn(commonJava)
     from(commonJava)
+    dependsOn(commonBuildConfig)
+    from(commonBuildConfigJava)
     dependsOn(commonResources)
     from(commonResources)
 }
