@@ -89,7 +89,6 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             if (isEditorHitboxHovered(mouseX, mouseY)) {
                 inputField.setText(formatPlainValue());
                 inputField.focusIfContains(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight());
-                inputField.setCursorToEnd();
                 dragging = false;
                 return true;
             }
@@ -97,6 +96,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         if (button == 0) {
             if (inputField.isFocused()) {
                 if (isEditorBoundsHovered(mouseX, mouseY)) {
+                    inputField.focusIfContains(mouseX, mouseY, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight());
                     return true;
                 }
                 commitInput();

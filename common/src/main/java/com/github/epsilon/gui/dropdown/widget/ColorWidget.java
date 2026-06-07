@@ -28,8 +28,8 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
     private final Animation openAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_EXPAND);
 
-    private static final Channel[] RGB_CHANNELS = { Channel.RED, Channel.GREEN, Channel.BLUE };
-    private static final Channel[] RGBA_CHANNELS = { Channel.RED, Channel.GREEN, Channel.BLUE, Channel.ALPHA };
+    private static final Channel[] RGB_CHANNELS = {Channel.RED, Channel.GREEN, Channel.BLUE};
+    private static final Channel[] RGBA_CHANNELS = {Channel.RED, Channel.GREEN, Channel.BLUE, Channel.ALPHA};
 
     private final DropdownTextField redField = new DropdownTextField(3, value -> value.matches("[0-9]"));
     private final DropdownTextField greenField = new DropdownTextField(3, value -> value.matches("[0-9]"));

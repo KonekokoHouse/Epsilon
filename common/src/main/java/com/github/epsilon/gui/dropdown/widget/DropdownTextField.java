@@ -77,7 +77,9 @@ public class DropdownTextField {
         if (mouseX < x || mouseX > x + width || mouseY < y || mouseY > y + height) {
             return false;
         }
-        focus();
+        focused = true;
+        cursor = resolveCursor(mouseX);
+        IMEFocusHelper.activate();
         return true;
     }
 
@@ -245,7 +247,9 @@ public class DropdownTextField {
     }
 
     private void drawCaret(DropdownRenderer renderer, float x, float y, float textScale) {
-        if (System.currentTimeMillis() % 1000 > 500) renderer.rect().addRect(x, y, 0.8f, renderer.text().getLineHeight(textScale), MD3Theme.TEXT_PRIMARY);
+        if (System.currentTimeMillis() % 1000 > 500) {
+            renderer.rect().addRect(x, y, 0.8f, renderer.text().getLineHeight(textScale), MD3Theme.TEXT_PRIMARY);
+        }
     }
 
     private String trimToWidth(String value, float scale, float maxWidth, DropdownRenderer renderer) {

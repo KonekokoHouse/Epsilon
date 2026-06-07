@@ -59,6 +59,9 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         float contentW = width - PADDING * 2.0f;
 
         String placeholder = ConfigManager.INSTANCE.getActiveConfigName();
+        if (!inputField.isFocused() && inputField.getText().isEmpty()) {
+            inputField.setText(placeholder);
+        }
         inputField.draw(renderer, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY, placeholder, DropdownTheme.SETTING_TEXT_SCALE);
         currentY += FIELD_HEIGHT + GAP;
 
@@ -123,10 +126,6 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
         if (inputField.focusIfContains(mouseX, mouseY, contentX, currentY, contentW, FIELD_HEIGHT)) {
-            if (inputField.getText().isEmpty()) {
-                inputField.setText(ConfigManager.INSTANCE.getActiveConfigName());
-                inputField.setCursorToEnd();
-            }
             return true;
         }
         inputField.blur();

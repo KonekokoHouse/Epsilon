@@ -41,7 +41,6 @@ public class StringWidget extends SettingWidget<StringSetting> {
 
         if (button == 0 && inputField.focusIfContains(mouseX, mouseY, fieldX, fieldY, fieldW, fieldH)) {
             inputField.setText(setting.getValue());
-            inputField.setCursorToEnd();
             return true;
         }
         if (inputField.isFocused()) {
