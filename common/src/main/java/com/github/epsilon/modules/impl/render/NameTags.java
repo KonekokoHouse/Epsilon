@@ -36,7 +36,8 @@ public class NameTags extends Module {
     public static final NameTags INSTANCE = new NameTags();
 
     private final DoubleSetting range = doubleSetting("Range", 64.0, 4.0, 128.0, 1.0);
-    private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.1, 1.5, 0.1);
+    private final DoubleSetting scale = doubleSetting("Scale", 0.4, 0.1, 1.5, 0.1);
+    private final DoubleSetting heightOffset = doubleSetting("Height Offset", 0.15, -0.5, 1.0, 0.05);
     private final ColorSetting backgroundColor = colorSetting("Background Color", TAG_BACKGROUND);
     public final BoolSetting vanillaNameTags = boolSetting("Vanilla Name Tags", false);
     private final BoolSetting showEquipment = boolSetting("Show Equipment", true);
@@ -104,7 +105,7 @@ public class NameTags extends Module {
 
             final var currentPosition = WorldToScreen.interpolate(target, partialTick);
 
-            final var projectedPosition = WorldToScreen.getWorldPositionToScreen(currentPosition.add(0.0f, 0.5f + target.getEyeHeight(), 0.0f));
+            final var projectedPosition = WorldToScreen.getWorldPositionToScreen(currentPosition.add(0.0f, heightOffset.getValue() + target.getEyeHeight(), 0.0f));
             if (projectedPosition.z > 1.0f || projectedPosition.z < 0.0f) continue;
 
             float guiScale = (float) LuminRenderSystem.getGuiScale();

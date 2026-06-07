@@ -552,6 +552,7 @@
   "epsilon.modules.name tags": "Name Tags",
   "epsilon.modules.name tags.background color": "Background Color",
   "epsilon.modules.name tags.range": "Range",
+  "epsilon.modules.name tags.height offset": "Height Offset",
   "epsilon.modules.name tags.scale": "Scale",
   "epsilon.modules.name tags.show equipment": "Show Equipment",
   "epsilon.modules.name tags.show hands": "Show Hands",
