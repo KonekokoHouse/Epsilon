@@ -29,9 +29,12 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -145,9 +148,9 @@ public class FeetTrap extends Module {
             if (placeInfo == null) continue;
 
             if (rotate.is(RotateMode.Silent)) {
-                Rot2f rotation = RotationUtils.calculate(placeInfo.neighbor(), placeInfo.side());
+                Rot2f rotation = RotationUtils.calculate(placeInfo.hitVec());
                 RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue());
-                if (!RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), placeInfo.side(), placeInfo.neighbor(), sideCheck.getValue())) {
+                if (!isLookingAtPlaceInfo(placeInfo)) {
                     break;
                 }
             }
@@ -204,22 +207,94 @@ public class FeetTrap extends Module {
     }
 
     private PlaceInfo getPlaceInfo(BlockPos pos) {
+        PlaceInfo placeInfo = getDirectPlaceInfo(pos);
+        if (placeInfo != null) return placeInfo;
+
+        for (Direction direction : Direction.values()) {
+            if (direction == Direction.UP) continue;
+
+            BlockPos helper = pos.relative(direction);
+            PlaceInfo helperInfo = getDirectPlaceInfo(helper);
+            if (helperInfo != null) return helperInfo;
+        }
+
+        return null;
+    }
+
+    private PlaceInfo getDirectPlaceInfo(BlockPos pos) {
+        if (!BlockUtils.canPlaceAt(pos)) return null;
+
         for (Direction direction : Direction.values()) {
             BlockPos neighbor = pos.relative(direction);
-            if (!mc.level.getBlockState(neighbor).canBeReplaced()) {
-                return new PlaceInfo(neighbor, direction.getOpposite());
+            Direction side = direction.getOpposite();
+            if (!mc.level.getBlockState(neighbor).canBeReplaced() && isValidPlaceSide(neighbor, side)) {
+                return new PlaceInfo(pos, neighbor, side, getHitVec(neighbor, side));
             }
         }
         return null;
     }
 
+    private boolean isValidPlaceSide(BlockPos neighbor, Direction side) {
+        return !mc.level.getBlockState(neighbor).canBeReplaced() && RotationUtils.isGrimDirection(neighbor, side);
+    }
+
+    private boolean isLookingAtPlaceInfo(PlaceInfo placeInfo) {
+        HitResult result = RaytraceUtils.raytrace(RotationManager.INSTANCE.getRotation(), 4.5, 0.0f);
+        if (!(result instanceof BlockHitResult blockHitResult)) {
+            return isLookingNearHitVec(placeInfo);
+        }
+
+        if (blockHitResult.getBlockPos().equals(placeInfo.neighbor())) {
+            return !sideCheck.getValue() || blockHitResult.getDirection() == placeInfo.side() || isLookingNearHitVec(placeInfo);
+        }
+
+        return isLookingNearHitVec(placeInfo);
+    }
+
+    private boolean isLookingNearHitVec(PlaceInfo placeInfo) {
+        Vec3 eyePos = mc.player.getEyePosition(1.0f);
+        Vec3 lookVec = Vec3.directionFromRotation(RotationManager.INSTANCE.getPitch(), RotationManager.INSTANCE.getYaw());
+        Vec3 hitVec = placeInfo.hitVec();
+        Vec3 eyeToHit = hitVec.subtract(eyePos);
+
+        double projected = eyeToHit.dot(lookVec);
+        if (projected < 0.0 || projected > 4.5) return false;
+
+        Vec3 closest = eyePos.add(lookVec.scale(projected));
+        return closest.distanceToSqr(hitVec) <= 0.12 * 0.12;
+    }
+
+    private Vec3 getHitVec(BlockPos pos, Direction side) {
+        BlockState state = mc.level.getBlockState(pos);
+        VoxelShape shape = state.getShape(mc.level, pos);
+
+        if (shape.isEmpty()) {
+            return pos.getCenter().add(side.getStepX() * 0.5, side.getStepY() * 0.5, side.getStepZ() * 0.5);
+        }
+
+        AABB bounds = shape.bounds();
+        double x = (bounds.minX + bounds.maxX) * 0.5;
+        double y = (bounds.minY + bounds.maxY) * 0.5;
+        double z = (bounds.minZ + bounds.maxZ) * 0.5;
+
+        switch (side) {
+            case EAST -> x = bounds.maxX;
+            case WEST -> x = bounds.minX;
+            case UP -> y = bounds.maxY;
+            case DOWN -> y = bounds.minY;
+            case SOUTH -> z = bounds.maxZ;
+            case NORTH -> z = bounds.minZ;
+        }
+
+        return new Vec3(pos.getX() + x, pos.getY() + y, pos.getZ() + z);
+    }
+
     private boolean placeBlock(PlaceInfo placeInfo, FindItemResult item) {
-        Vec3 hitVec = Vec3.atCenterOf(placeInfo.neighbor()).add(
-                placeInfo.side().getStepX() * 0.5,
-                placeInfo.side().getStepY() * 0.5,
-                placeInfo.side().getStepZ() * 0.5
-        );
-        BlockHitResult hitResult = new BlockHitResult(hitVec, placeInfo.side(), placeInfo.neighbor(), false);
+        if (!BlockUtils.canPlaceAt(placeInfo.placedPos()) || !isValidPlaceSide(placeInfo.neighbor(), placeInfo.side())) {
+            return false;
+        }
+
+        BlockHitResult hitResult = new BlockHitResult(placeInfo.hitVec(), placeInfo.side(), placeInfo.neighbor(), false);
 
         int oldSlot = mc.player.getInventory().getSelectedSlot();
         Input oldInput = mc.player.input.keyPresses;
@@ -243,7 +318,7 @@ public class FeetTrap extends Module {
             }
 
             if (render.getValue()) {
-                renderBoxes.add(new RenderInfo(new AABB(placeInfo.neighbor.relative(placeInfo.side)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                renderBoxes.add(new RenderInfo(new AABB(placeInfo.placedPos()), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
             }
         }
 
@@ -271,7 +346,7 @@ public class FeetTrap extends Module {
         mc.getConnection().send(new ServerboundPlayerInputPacket(input));
     }
 
-    private record PlaceInfo(BlockPos neighbor, Direction side) {
+    private record PlaceInfo(BlockPos placedPos, BlockPos neighbor, Direction side, Vec3 hitVec) {
     }
 
     private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
