@@ -86,6 +86,7 @@ public class DropdownScreen extends Screen {
     private void drawGui(int mouseX, int mouseY) {
         scrimAnim.run(1.0f);
         renderer.beginFrame();
+        updatePanelHeightLimits();
 
         renderer.beginPass();
         Color scrim = DropdownTheme.scrim();
@@ -359,6 +360,12 @@ public class DropdownScreen extends Screen {
             case "friend", "config" -> Math.min(screenLimited, 220.0f);
             default -> Math.min(screenLimited, 350.0f);
         };
+    }
+
+    private void updatePanelHeightLimits() {
+        for (DropdownPanel panel : panels) {
+            panel.setMaxPanelHeight(resolveMaxPanelHeight(panel));
+        }
     }
 
     private void syncSearchQuery() {
