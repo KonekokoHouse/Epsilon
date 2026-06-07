@@ -299,6 +299,14 @@ public class RotationManager {
     }
 
     @EventHandler
+    private void onItemRaytrace(UseItemRaytraceEvent event) {
+        if (ClientSetting.INSTANCE.modifyCrosshair.getValue() && active && rotations != null) {
+            event.setYaw(rotations.getYaw());
+            event.setPitch(rotations.getPitch());
+        }
+    }
+
+    @EventHandler
     private void onStrafe(StrafeEvent event) {
         if (MovementFix.INSTANCE.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
             event.setYaw(rotations.getYaw());

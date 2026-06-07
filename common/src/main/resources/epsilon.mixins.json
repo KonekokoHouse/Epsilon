@@ -23,6 +23,7 @@
     "MixinGuiRenderer",
     "MixinGlyphRenderState",
     "MixinHumanoidMobRenderer",
+    "MixinItem",
     "MixinItemInHandRenderer",
     "MixinKeyboardHandler",
     "MixinKeyboardInput",
