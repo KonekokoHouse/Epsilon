@@ -9,6 +9,7 @@ dependencies {
     minecraft(libs.minecraft)
     implementation(libs.fabric.loader)
     implementation(libs.fabric.api)
+    compileOnly(libs.sodium.fabric)
     compileOnly(libs.jsr305)
 }
 

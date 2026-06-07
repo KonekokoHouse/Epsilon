@@ -65,6 +65,15 @@ repositories {
         }
         filter { includeGroupAndSubgroups("org.spongepowered") }
     }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "CaffeineMC"
+                url = uri("https://maven.caffeinemc.net/releases")
+            }
+        }
+        filter { includeGroup("net.caffeinemc") }
+    }
 }
 
 val licenseFileName = "LICENSE_${modName}"

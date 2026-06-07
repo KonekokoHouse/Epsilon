@@ -15,6 +15,7 @@ mixin = "0.8.5"
 mixinextras = "0.5.3"
 asm = "9.8"
 jsr305 = "3.0.2"
+sodium = "0.8.12+mc26.1.2"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft" }
@@ -24,6 +25,8 @@ mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
 mixinextras-common = { module = "io.github.llamalad7:mixinextras-common", version.ref = "mixinextras" }
 asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
+sodium-fabric = { module = "net.caffeinemc:sodium-fabric", version.ref = "sodium" }
+sodium-neoforge = { module = "net.caffeinemc:sodium-neoforge", version.ref = "sodium" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

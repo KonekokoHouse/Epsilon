@@ -45,8 +45,7 @@
     "MixinScreenEffectRenderer",
     "MixinTitleScreen",
     "MixinWebBlock",
-    "MixinWindow",
-    "sodium.MixinSodiumAbstractBlockRenderContext"
+    "MixinWindow"
   ],
   "injectors": {
     "defaultRequire": 1

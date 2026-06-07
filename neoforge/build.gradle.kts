@@ -6,7 +6,31 @@ plugins {
 val neoforgeVersion = project.property("neoforge_version").toString()
 val modId = project.property("mod_id").toString()
 
+val sodiumNeoForgeOuterJar by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+val extractSodiumNeoForgeModJar by tasks.registering(Copy::class) {
+    from({ zipTree(sodiumNeoForgeOuterJar.singleFile) }) {
+        include("META-INF/jarjar/*-mod.jar")
+        eachFile {
+            path = name
+        }
+        includeEmptyDirs = false
+    }
+    into(layout.buildDirectory.dir("extracted-sodium-neoforge"))
+}
+
+val extractedSodiumNeoForgeModJar = files(
+    layout.buildDirectory.dir("extracted-sodium-neoforge")
+        .map { it.asFileTree.matching { include("*.jar") } }
+).builtBy(extractSodiumNeoForgeModJar)
+
 dependencies {
+    compileOnly(libs.sodium.neoforge)
+    sodiumNeoForgeOuterJar(libs.sodium.neoforge)
+    compileOnly(extractedSodiumNeoForgeModJar)
 }
 
 neoForge {
