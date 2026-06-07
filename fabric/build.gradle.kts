@@ -1,18 +1,15 @@
 plugins {
     id("multiloader-loader")
-    id("net.fabricmc.fabric-loom")
+    alias(libs.plugins.fabric.loom)
 }
 
-val minecraftVersion = project.property("minecraft_version").toString()
-val fabricLoaderVersion = project.property("fabric_loader_version").toString()
-val fabricVersion = project.property("fabric_version").toString()
 val modId = project.property("mod_id").toString()
 
 dependencies {
-    minecraft("com.mojang:minecraft:${minecraftVersion}")
-    implementation("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
-    implementation("net.fabricmc.fabric-api:fabric-api:${fabricVersion}")
-    compileOnly(group = "com.google.code.findbugs", name = "jsr305", version = "3.0.2")
+    minecraft(libs.minecraft)
+    implementation(libs.fabric.loader)
+    implementation(libs.fabric.api)
+    compileOnly(libs.jsr305)
 }
 
 loom {

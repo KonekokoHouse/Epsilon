@@ -1,6 +1,6 @@
 plugins {
     id("multiloader-loader")
-    id("net.neoforged.moddev")
+    alias(libs.plugins.neoforged.moddev)
 }
 
 val neoforgeVersion = project.property("neoforge_version").toString()

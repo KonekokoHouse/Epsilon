@@ -1,7 +1,7 @@
 plugins {
     id("multiloader-common")
-    id("net.neoforged.moddev")
-    id("com.github.gmazzo.buildconfig") version "6.0.9"
+    alias(libs.plugins.neoforged.moddev)
+    alias(libs.plugins.buildconfig)
 }
 
 buildConfig {
@@ -27,11 +27,11 @@ neoForge {
 }
 
 dependencies {
-    compileOnly(group = "org.spongepowered", name = "mixin", version = "0.8.5")
-    compileOnly(group = "io.github.llamalad7", name = "mixinextras-common", version = "0.5.3")
-    annotationProcessor(group = "io.github.llamalad7", name = "mixinextras-common", version = "0.5.3")
-    compileOnly(group = "org.ow2.asm", name = "asm", version = "9.8")
-    compileOnly(group = "com.google.code.findbugs", name = "jsr305", version = "3.0.2")
+    compileOnly(libs.mixin)
+    compileOnly(libs.mixinextras.common)
+    annotationProcessor(libs.mixinextras.common)
+    compileOnly(libs.asm)
+    compileOnly(libs.jsr305)
 }
 
 configurations {
