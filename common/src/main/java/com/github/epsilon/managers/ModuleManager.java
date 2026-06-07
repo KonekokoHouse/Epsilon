@@ -226,10 +226,10 @@ public class ModuleManager {
                 }
             }
             if (ClientSetting.INSTANCE.chatNotify.getValue()) {
+                Component state = Component.translatable(module.isEnabled() ? "epsilon.module.state.enabled" : "epsilon.module.state.disabled")
+                        .withStyle(module.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED);
                 ChatUtils.addChatMessage(
-                        Component.literal(module.getTranslatedName() + " is now ")
-                                .append(Component.literal(module.isEnabled() ? "enabled" : "disabled")
-                                        .withStyle(module.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED)),
+                        Component.translatable("epsilon.module.chat_notify", module.getTranslatedName(), state),
                         (module.getAddonId() + ":" + module.getName()).hashCode()
                 );
             }

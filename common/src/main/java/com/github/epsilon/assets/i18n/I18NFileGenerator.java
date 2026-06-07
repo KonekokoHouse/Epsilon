@@ -33,6 +33,9 @@ public class I18NFileGenerator {
 
         root.addProperty(PREFIX + "module.visible", "");
         root.addProperty(PREFIX + "module.hidden", "");
+        root.addProperty(PREFIX + "module.chat_notify", "");
+        root.addProperty(PREFIX + "module.state.enabled", "");
+        root.addProperty(PREFIX + "module.state.disabled", "");
 
         root.addProperty(PREFIX + "gui.search", "");
         root.addProperty(PREFIX + "gui.clientsettings", "");
