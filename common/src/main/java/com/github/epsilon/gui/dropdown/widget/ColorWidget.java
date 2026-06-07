@@ -43,7 +43,6 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
         Color color = setting.getValue();
         float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
-        float alpha = color.getAlpha() / 255.0f;
 
         float padX = DropdownTheme.SETTING_PADDING_X;
         float gradX = x + padX;
@@ -52,7 +51,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float gradH = DropdownTheme.COLOR_PICKER_HEIGHT * t;
 
         Color hueColor = Color.getHSBColor(hsb[0], 1.0f, 1.0f);
-        renderer.roundRect().addRoundRectGradient(gradX, gradY, gradW, gradH, DropdownTheme.COLOR_RADIUS, DropdownTheme.COLOR_RADIUS, DropdownTheme.COLOR_RADIUS, DropdownTheme.COLOR_RADIUS, Color.WHITE, Color.BLACK, Color.BLACK, hueColor);
+        drawSaturationBrightnessPalette(renderer, gradX, gradY, gradW, gradH, hueColor);
 
         float hueY = gradY + gradH + 3.0f;
         float hueH = DropdownTheme.COLOR_HUE_HEIGHT * t;
@@ -60,6 +59,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             Color c = Color.getHSBColor(i / gradW, 1.0f, 1.0f);
             renderer.rect().addRect(gradX + i, hueY, 1.0f, hueH, c);
         }
+        drawSliderPicker(renderer, gradX + gradW * hsb[0], hueY, hueH);
 
         if (setting.isAllowAlpha()) {
             float alphaY = hueY + hueH + 4.0f;
@@ -69,17 +69,18 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
                 Color c = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (a * 255));
                 renderer.rect().addRect(gradX + i, alphaY, 1.0f, alphaH, c);
             }
+            drawSliderPicker(renderer, gradX + gradW * (color.getAlpha() / 255.0f), alphaY, alphaH);
 
             if (pickingAlpha) {
-                float newAlpha = Mth.clamp((float) (mouseX - gradX) / gradW, 0.0f, 1.0f);
+                float newAlpha = Mth.clamp((mouseX - gradX) / gradW, 0.0f, 1.0f);
                 Color current = setting.getValue();
                 setting.setValue(new Color(current.getRed(), current.getGreen(), current.getBlue(), (int) (newAlpha * 255)));
             }
         }
 
         if (pickingSB) {
-            float newSat = Mth.clamp((float) (mouseX - gradX) / gradW, 0.0f, 1.0f);
-            float newBri = 1.0f - Mth.clamp((float) (mouseY - gradY) / (DropdownTheme.COLOR_PICKER_HEIGHT * t), 0.0f, 1.0f);
+            float newSat = Mth.clamp((mouseX - gradX) / gradW, 0.0f, 1.0f);
+            float newBri = 1.0f - Mth.clamp((mouseY - gradY) / (DropdownTheme.COLOR_PICKER_HEIGHT * t), 0.0f, 1.0f);
             Color newColor = Color.getHSBColor(hsb[0], newSat, newBri);
             if (setting.isAllowAlpha()) {
                 newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
@@ -88,7 +89,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         }
 
         if (pickingHue) {
-            float newHue = Mth.clamp((float) (mouseX - gradX) / gradW, 0.0f, 1.0f);
+            float newHue = Mth.clamp((mouseX - gradX) / gradW, 0.0f, 1.0f);
             Color newColor = Color.getHSBColor(newHue, hsb[1], hsb[2]);
             if (setting.isAllowAlpha()) {
                 newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
@@ -98,7 +99,20 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
         float pickerCx = gradX + gradW * hsb[1];
         float pickerCy = gradY + gradH * (1.0f - hsb[2]);
-        renderer.roundRect().addRoundRect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, 2.0f, Color.WHITE);
+        renderer.rect().addRect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, new Color(0, 0, 0, 135));
+        renderer.rect().addRect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE);
+    }
+
+    private void drawSaturationBrightnessPalette(DropdownRenderer renderer, float x, float y, float width, float height, Color hueColor) {
+        renderer.rect().addRect(x - 1.0f, y - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
+        renderer.rect().addRectGradient(x, y, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
+        renderer.rect().addRectGradient(x, y, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
+    }
+
+    private void drawSliderPicker(DropdownRenderer renderer, float centerX, float y, float height) {
+        float pickerW = 3.0f;
+        renderer.rect().addRect(centerX - pickerW * 0.5f - 1.0f, y - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
+        renderer.rect().addRect(centerX - pickerW * 0.5f, y - 1.0f, pickerW, height + 2.0f, Color.WHITE);
     }
 
     @Override
