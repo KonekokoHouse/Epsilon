@@ -117,14 +117,14 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button != 0) return false;
-
         float previewX = x + width - DropdownTheme.SETTING_PADDING_X - DropdownTheme.COLOR_PREVIEW_SIZE;
         float previewY = y + (DropdownTheme.SETTING_HEIGHT - DropdownTheme.COLOR_PREVIEW_SIZE) * 0.5f;
-        if (isHovered(mouseX, mouseY, previewX - 2, previewY - 2, DropdownTheme.COLOR_PREVIEW_SIZE + 4, DropdownTheme.COLOR_PREVIEW_SIZE + 4)) {
+        if ((button == 0 || button == 1) && isHovered(mouseX, mouseY, previewX - 2, previewY - 2, DropdownTheme.COLOR_PREVIEW_SIZE + 4, DropdownTheme.COLOR_PREVIEW_SIZE + 4)) {
             opened = !opened;
             return true;
         }
+
+        if (button != 0) return false;
 
         if (!opened || openAnim.getValue() < 0.5f) return false;
 
