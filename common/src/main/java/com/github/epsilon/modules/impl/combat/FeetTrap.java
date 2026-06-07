@@ -22,10 +22,12 @@ import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -164,15 +166,20 @@ public class FeetTrap extends Module {
     private Set<BlockPos> getTargets() {
         Set<BlockPos> feetPositions = new LinkedHashSet<>();
         AABB box = mc.player.getBoundingBox().deflate(0.001);
-        int y = BlockPos.containing(box.minX, box.minY, box.minZ).getY();
         int minX = BlockPos.containing(box.minX, mc.player.getY(), box.minZ).getX();
         int maxX = BlockPos.containing(box.maxX, mc.player.getY(), box.maxZ).getX();
         int minZ = BlockPos.containing(box.minX, mc.player.getY(), box.minZ).getZ();
         int maxZ = BlockPos.containing(box.maxX, mc.player.getY(), box.maxZ).getZ();
 
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                feetPositions.add(new BlockPos(x, y, z));
+        Set<Integer> yLevels = new LinkedHashSet<>();
+        yLevels.add(BlockPos.containing(mc.player.position()).getY());
+        yLevels.add(BlockPos.containing(mc.player.getX(), mc.player.getY() + 0.8, mc.player.getZ()).getY());
+
+        for (int y : yLevels) {
+            for (int x = minX; x <= maxX; x++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    feetPositions.add(new BlockPos(x, y, z));
+                }
             }
         }
 
@@ -213,7 +220,9 @@ public class FeetTrap extends Module {
                 placeInfo.side().getStepZ() * 0.5
         );
         BlockHitResult hitResult = new BlockHitResult(hitVec, placeInfo.side(), placeInfo.neighbor(), false);
+
         int oldSlot = mc.player.getInventory().getSelectedSlot();
+        Input oldInput = mc.player.input.keyPresses;
 
         if (switchMode.is(SwitchMode.Visible)) {
             if (oldSlot != item.slot()) {
@@ -222,6 +231,8 @@ public class FeetTrap extends Module {
         } else {
             InvUtils.invSwap(item.slot());
         }
+
+        setShiftState(true);
 
         InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hitResult);
         if (result.consumesAction()) {
@@ -236,6 +247,8 @@ public class FeetTrap extends Module {
             }
         }
 
+        setShiftState(oldInput);
+
         if (switchMode.is(SwitchMode.Visible)) {
             if (oldSlot != item.slot()) {
                 InvUtils.swapBack();
@@ -245,6 +258,17 @@ public class FeetTrap extends Module {
         }
 
         return result.consumesAction();
+    }
+
+    private void setShiftState(boolean state) {
+        Input current = mc.player.input.keyPresses;
+        setShiftState(new Input(current.forward(), current.backward(), current.left(), current.right(), current.jump(), state, current.sprint()));
+    }
+
+    private void setShiftState(Input input) {
+        mc.player.input.keyPresses = input;
+        mc.player.setShiftKeyDown(input.shift());
+        mc.getConnection().send(new ServerboundPlayerInputPacket(input));
     }
 
     private record PlaceInfo(BlockPos neighbor, Direction side) {
