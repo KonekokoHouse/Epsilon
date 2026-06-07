@@ -519,6 +519,7 @@
   "epsilon.modules.kill aura.target mode.multiple": "Multiple",
   "epsilon.modules.kill aura.target mode.single": "Single",
   "epsilon.modules.kill aura.target mode.switch": "Switch",
+  "epsilon.modules.kill aura.through walls": "Through Walls",
   "epsilon.modules.kill aura.villagers": "Villagers",
   "epsilon.modules.kill aura.wave speed": "Wave Speed",
   "epsilon.modules.mace aura": "Mace Aura",

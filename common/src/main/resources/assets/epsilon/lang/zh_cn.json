@@ -343,6 +343,7 @@
   "epsilon.modules.kill aura.player": "玩家",
   "epsilon.modules.kill aura.mob": "怪物",
   "epsilon.modules.kill aura.animal": "动物",
+  "epsilon.modules.kill aura.through walls": "穿墙",
   "epsilon.modules.kill aura.invisible": "隐身",
   "epsilon.modules.kill aura.esp": "ESP",
   "epsilon.modules.kill aura.esp mode": "ESP模式",

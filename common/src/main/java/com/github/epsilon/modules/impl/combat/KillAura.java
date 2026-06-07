@@ -70,6 +70,8 @@ public class KillAura extends Module {
     private final BoolSetting villagers = boolSetting("Villagers", false);
     private final BoolSetting invisible = boolSetting("Invisible", true);
 
+    private final BoolSetting throughWalls = boolSetting("Through Walls", false);
+
     private final BoolSetting swingHand = boolSetting("SwingHand", true);
 
     private final BoolSetting esp = boolSetting("ESP", true);
@@ -160,18 +162,22 @@ public class KillAura extends Module {
     }
 
     private void clickTargets(List<LivingEntity> targets) {
-        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+        boolean shouldCheckHitResult = !throughWalls.getValue();
+        HitResult hitResult = shouldCheckHitResult ? RotationManager.INSTANCE.getHitResult() : null;
+
         if (targetMode.is(TargetMode.Multiple)) {
             for (LivingEntity target : targets) {
-                if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && hitResult.getType() == HitResult.Type.ENTITY) {
-                    doAttack();
+                if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue()
+                        && (!shouldCheckHitResult || hitResult.getType() == HitResult.Type.ENTITY)) {
+                    doAttack(target);
                 }
             }
             switchIndex++;
         } else {
-            Entity crosshairPickEntity = RotationManager.INSTANCE.getCrosshairPickEntity();
-            if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && hitResult.getType() == HitResult.Type.ENTITY && crosshairPickEntity != null && crosshairPickEntity.is(target)) {
-                doAttack();
+            Entity crosshairPickEntity = shouldCheckHitResult ? RotationManager.INSTANCE.getCrosshairPickEntity() : null;
+            if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue()
+                    && (!shouldCheckHitResult || hitResult.getType() == HitResult.Type.ENTITY && crosshairPickEntity != null && crosshairPickEntity.is(target))) {
+                doAttack(target);
             }
             if (targetMode.is(TargetMode.Switch)) {
                 switchIndex++;
@@ -179,7 +185,7 @@ public class KillAura extends Module {
         }
     }
 
-    private void doAttack() {
+    private void doAttack(LivingEntity target) {
         mc.gameMode.attack(mc.player, target);
         if (swingHand.getValue()) {
             mc.player.swing(InteractionHand.MAIN_HAND);
