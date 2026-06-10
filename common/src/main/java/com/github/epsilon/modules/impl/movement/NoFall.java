@@ -20,7 +20,7 @@ public class NoFall extends Module {
     private enum Mode {
         GroundSpoof,
         Packet,
-        GrimMotion
+        GrimSimulation
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.GroundSpoof);
@@ -41,7 +41,7 @@ public class NoFall extends Module {
             switch (mode.getValue()) {
                 case GroundSpoof -> event.setOnGround(false);
                 case Packet -> mc.getConnection().send(new ServerboundMovePlayerPacket.StatusOnly(false, false));
-                case GrimMotion -> {
+                case GrimSimulation -> {
                     event.setY(event.getY() + 0.1);
                     jump = true;
                 }
