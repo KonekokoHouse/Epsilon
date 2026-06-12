@@ -6,6 +6,7 @@ import com.github.epsilon.modules.impl.hud.notification.NotificationManager;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
+import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 
 import java.awt.*;
@@ -117,6 +118,7 @@ public class Module {
         keyBind = -1;
         bindMode = BindMode.Toggle;
         hidden = defaultHidden;
+        resetCustomState();
         for (Setting<?> setting : settings) {
             setting.reset();
         }
@@ -279,6 +281,16 @@ public class Module {
 
     protected ButtonSetting buttonSetting(String name, Runnable func) {
         return addSetting(new ButtonSetting(name, func, () -> true));
+    }
+
+    protected void resetCustomState() {
+    }
+
+    public JsonObject saveCustomState() {
+        return null;
+    }
+
+    public void loadCustomState(JsonObject state) {
     }
 
 }

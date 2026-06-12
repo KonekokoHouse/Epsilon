@@ -327,6 +327,12 @@ public class ConfigManager {
             }
         }
 
+        try {
+            module.loadCustomState(getObject(moduleObj, "state"));
+        } catch (Exception e) {
+            Constants.LOGGER.error("读取模块自定义状态失败: {}", module.getName(), e);
+        }
+
         // Apply enabled state last so onEnable/onDisable fire after settings are set
         if (moduleObj.has("enabled") && moduleObj.get("enabled").isJsonPrimitive()) {
             module.setEnabled(moduleObj.get("enabled").getAsBoolean());
@@ -370,6 +376,13 @@ public class ConfigManager {
             if (value != null) settingsObj.add(setting.getName(), value);
         }
         obj.add("settings", settingsObj);
+
+        try {
+            JsonObject stateObj = module.saveCustomState();
+            if (stateObj != null) obj.add("state", stateObj);
+        } catch (Exception e) {
+            Constants.LOGGER.error("写入模块自定义状态失败: {}", module.getName(), e);
+        }
 
         return obj;
     }

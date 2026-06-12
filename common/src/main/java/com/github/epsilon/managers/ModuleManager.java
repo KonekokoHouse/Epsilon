@@ -96,6 +96,7 @@ public class ModuleManager {
         addModule(AutoSprint.INSTANCE);
         addModule(Blink.INSTANCE);
         addModule(ElytraFly.INSTANCE);
+        addModule(AutoMap.INSTANCE);
         addModule(FastWeb.INSTANCE);
         addModule(GUIMove.INSTANCE);
         addModule(JumpReset.INSTANCE);

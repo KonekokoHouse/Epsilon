@@ -136,12 +136,13 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
 
     @Override
     public void onFallFlying(FallFlyingEvent event) {
+        event.setYaw(elytraFly.getPitch40Yaw(event.getYaw()));
         event.setPitch(pitch);
     }
 
     @Override
     public void onFireworkUpdate(FireworkUpdateEvent event) {
-        event.setYaw(mc.player.getYRot());
+        event.setYaw(elytraFly.getPitch40Yaw(mc.player.getYRot()));
         event.setPitch(pitch);
     }
 
@@ -191,7 +192,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
     }
 
     private void redirectRotation() {
-        RotationManager.INSTANCE.setRotations(new Rot2f(mc.player.getYRot(), pitch), 10, Priority.Highest);
+        RotationManager.INSTANCE.setRotations(new Rot2f(elytraFly.getPitch40Yaw(mc.player.getYRot()), pitch), 10, Priority.Highest);
     }
 
     private void finishTakeoff() {

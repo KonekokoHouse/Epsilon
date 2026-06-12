@@ -37,6 +37,17 @@ public class ElytraFly extends Module {
         InvSwitch
     }
 
+    public record Pitch40ControlState(
+            boolean enabled,
+            ElytraFlightModes mode,
+            double lowerBounds,
+            boolean autoTakeoff,
+            double takeoffTargetHeight,
+            boolean autoFirework,
+            Float yawOverride
+    ) {
+    }
+
     private final Map<ElytraFlightModes, ElytraFlightMode> modes = new EnumMap<>(ElytraFlightModes.class);
 
     public final EnumSetting<ElytraFlightModes> mode = enumSetting("Mode", ElytraFlightModes.Control, this::onModeChanged);
@@ -59,6 +70,7 @@ public class ElytraFly extends Module {
     public final IntSetting pitch40FireworkCooldown = intSetting("Pitch40 Firework Cooldown", 10, 0, 100, 1, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoTakeoff.getValue() && pitch40AutoFirework.getValue());
 
     private ElytraFlightModes activeModeType;
+    private Float pitch40YawOverride;
 
     @Override
     protected void onEnable() {
@@ -79,6 +91,56 @@ public class ElytraFly extends Module {
 
     public boolean isArmorMode() {
         return isEnabled() && mode.is(ElytraFlightModes.Control) && armored.getValue();
+    }
+
+    public Pitch40ControlState capturePitch40ControlState() {
+        return new Pitch40ControlState(
+                isEnabled(),
+                mode.getValue(),
+                pitch40lowerBounds.getValue(),
+                pitch40AutoTakeoff.getValue(),
+                pitch40TakeoffTargetHeight.getValue(),
+                pitch40AutoFirework.getValue(),
+                pitch40YawOverride
+        );
+    }
+
+    public void applyPitch40Control(boolean autoTakeoff, boolean autoFirework, double lowerBounds, double takeoffTargetHeight) {
+        applyPitch40Control(autoTakeoff, autoFirework, lowerBounds, takeoffTargetHeight, null);
+    }
+
+    public void applyPitch40Control(boolean autoTakeoff, boolean autoFirework, double lowerBounds, double takeoffTargetHeight, Float yawOverride) {
+        pitch40AutoTakeoff.setValue(autoTakeoff);
+        pitch40AutoFirework.setValue(autoFirework);
+        pitch40lowerBounds.setValue(lowerBounds);
+        pitch40TakeoffTargetHeight.setValue(takeoffTargetHeight);
+        pitch40YawOverride = yawOverride;
+
+        if (!mode.is(ElytraFlightModes.Pitch40)) {
+            mode.setMode(ElytraFlightModes.Pitch40);
+        }
+        if (!isEnabled()) {
+            setEnabled(true);
+        }
+    }
+
+    public void restorePitch40Control(Pitch40ControlState state) {
+        if (state == null) return;
+
+        pitch40lowerBounds.setValue(state.lowerBounds());
+        pitch40AutoTakeoff.setValue(state.autoTakeoff());
+        pitch40TakeoffTargetHeight.setValue(state.takeoffTargetHeight());
+        pitch40AutoFirework.setValue(state.autoFirework());
+        pitch40YawOverride = state.yawOverride();
+        mode.setMode(state.mode());
+
+        if (!state.enabled() && isEnabled()) {
+            setEnabled(false);
+        }
+    }
+
+    public float getPitch40Yaw(float fallback) {
+        return pitch40YawOverride != null ? pitch40YawOverride : fallback;
     }
 
     @EventHandler

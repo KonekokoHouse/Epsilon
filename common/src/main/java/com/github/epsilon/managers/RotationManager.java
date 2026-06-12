@@ -319,6 +319,7 @@ public class RotationManager {
     @EventHandler
     private void onFallFlying(FallFlyingEvent event) {
         if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
+            event.setYaw(rotations.getYaw());
             event.setPitch(rotations.getPitch());
         }
     }
