@@ -46,7 +46,7 @@ public class DoubleSliderWidget extends AbstractSliderWidget<DoubleSetting, Doub
         }
         try {
             double value = Double.parseDouble(text);
-            setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+            setting.setUnboundedValue(value);
         } catch (NumberFormatException ignored) {
         }
         inputField.setText(formatPlainValue());
@@ -59,7 +59,7 @@ public class DoubleSliderWidget extends AbstractSliderWidget<DoubleSetting, Doub
         if (text == null || text.isBlank() || "-".equals(text) || ".".equals(text)) return;
         try {
             double value = Double.parseDouble(text);
-            setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+            setting.setUnboundedValue(value);
         } catch (NumberFormatException ignored) {
         }
     }

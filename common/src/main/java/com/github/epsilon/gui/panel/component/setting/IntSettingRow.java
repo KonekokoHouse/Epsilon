@@ -15,6 +15,9 @@ import net.minecraft.client.input.MouseButtonEvent;
 
 public class IntSettingRow extends SettingRow<IntSetting> {
 
+    private static final float FIELD_TEXT_SCALE = 0.60f;
+    private static final float FIELD_TEXT_PADDING = 5.0f;
+
     private final Animation hoverAnimation = new Animation(Easing.EASE_OUT_QUART, 150L);
     private final Animation pressAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private final Animation indicatorAnimation = new Animation(Easing.EASE_OUT_QUART, 150L);
@@ -49,12 +52,13 @@ public class IntSettingRow extends SettingRow<IntSetting> {
         PanelLayout.Rect trackBounds = getTrackBounds(bounds);
         PanelLayout.Rect fieldBounds = getFieldBounds(bounds);
         float progress = getProgress();
+        float visualProgress = Math.clamp(progress, 0.0f, 1.0f);
         float handleWidth = 2.0f - animatedPress * 2.0f;
         float handleHeight = 14.0f;
-        float handleX = trackBounds.x() + trackBounds.width() * progress - handleWidth / 2.0f;
+        float handleX = trackBounds.x() + trackBounds.width() * visualProgress - handleWidth / 2.0f;
         float handleGap = 2.5f;
 
-        scope.slider(trackBounds, progress, 3.0f,
+        scope.slider(trackBounds, visualProgress, 3.0f,
                 MD3Theme.SECONDARY_CONTAINER,
                 handleGap, 2.0f, MD3Theme.PRIMARY,
                 handleWidth, handleHeight, 1.0f, MD3Theme.PRIMARY);
@@ -77,7 +81,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
 
         float fieldHover = animatedHover * 0.85f;
         String display = focused ? getDisplayBuffer() : formatValue();
-        float displayScale = 0.60f;
+        float displayScale = getFieldTextScale(textRenderer, display, fieldBounds);
         float textWidth = textRenderer.getWidth(display, displayScale);
         float textX = fieldBounds.x() + (fieldBounds.width() - textWidth) / 2.0f;
         scope.input(fieldBounds, focused, fieldHover,
@@ -243,7 +247,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
             return;
         }
         try {
-            setting.setValue(Integer.parseInt(inputBuffer));
+            setting.setUnboundedValue(Integer.parseInt(inputBuffer));
         } catch (NumberFormatException ignored) {
         }
         inputBuffer = formatPlainValue();
@@ -252,7 +256,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
 
     private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds) {
         String text = getDisplayBuffer();
-        float scale = 0.60f;
+        float scale = getFieldTextScale(measureTextRenderer, text, fieldBounds);
         float textWidth = measureTextRenderer.getWidth(text, scale);
         float textStart = fieldBounds.x() + (fieldBounds.width() - textWidth) / 2.0f;
         for (int i = 0; i <= text.length(); i++) {
@@ -262,6 +266,15 @@ public class IntSettingRow extends SettingRow<IntSetting> {
             }
         }
         return text.length();
+    }
+
+    private float getFieldTextScale(TextRenderer textRenderer, String text, PanelLayout.Rect fieldBounds) {
+        float textWidth = textRenderer.getWidth(text, FIELD_TEXT_SCALE);
+        float maxTextWidth = Math.max(1.0f, fieldBounds.width() - FIELD_TEXT_PADDING * 2.0f);
+        if (textWidth <= maxTextWidth || textWidth <= 0.0f) {
+            return FIELD_TEXT_SCALE;
+        }
+        return FIELD_TEXT_SCALE * maxTextWidth / textWidth;
     }
 
 }

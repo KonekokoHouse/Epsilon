@@ -25,6 +25,10 @@ public class IntSetting extends Setting<Integer> {
         super.setValue(Mth.clamp(value, min, max));
     }
 
+    public void setUnboundedValue(Integer value) {
+        super.setValue(value);
+    }
+
     public int getMin() {
         return min;
     }

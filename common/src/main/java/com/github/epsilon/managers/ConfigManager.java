@@ -498,8 +498,8 @@ public class ConfigManager {
         try {
             if (setting instanceof BoolSetting s) s.setValue(value.getAsBoolean());
             else if (setting instanceof KeybindSetting s) s.setValue(value.getAsInt());
-            else if (setting instanceof IntSetting s) s.setValue(value.getAsInt());
-            else if (setting instanceof DoubleSetting s) s.setValue(value.getAsDouble());
+            else if (setting instanceof IntSetting s) s.setUnboundedValue(value.getAsInt());
+            else if (setting instanceof DoubleSetting s) s.setUnboundedValue(value.getAsDouble());
             else if (setting instanceof StringSetting s) s.setValue(value.getAsString());
             else if (setting == ClientSetting.INSTANCE.guiMode && setting instanceof EnumSetting s)
                 s.setModeSilently(value.getAsString());

@@ -41,7 +41,7 @@ public class IntSliderWidget extends AbstractSliderWidget<IntSetting, Integer> {
         }
         try {
             int value = Integer.parseInt(text);
-            setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+            setting.setUnboundedValue(value);
         } catch (NumberFormatException ignored) {
         }
         inputField.setText(formatPlainValue());
@@ -54,7 +54,7 @@ public class IntSliderWidget extends AbstractSliderWidget<IntSetting, Integer> {
         if (text == null || text.isBlank() || "-".equals(text)) return;
         try {
             int value = Integer.parseInt(text);
-            setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+            setting.setUnboundedValue(value);
         } catch (NumberFormatException ignored) {
         }
     }

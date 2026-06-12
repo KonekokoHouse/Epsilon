@@ -25,6 +25,10 @@ public class DoubleSetting extends Setting<Double> {
         super.setValue(Mth.clamp(value, min, max));
     }
 
+    public void setUnboundedValue(Double value) {
+        super.setValue(value);
+    }
+
     public double getMin() {
         return min;
     }
