@@ -2,6 +2,8 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.FallFlyingEvent;
+import com.github.epsilon.events.impl.FireworkUpdateEvent;
 import com.github.epsilon.events.impl.MousePressEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.TravelEvent;
@@ -47,18 +49,14 @@ public class ElytraFly extends Module {
     public final BoolSetting useFireworks = boolSetting("Use Fireworks", true, () -> mode.is(ElytraFlightModes.Control));
     public final IntSetting boostDelay = intSetting("Boost Delay", 20, 2, 50, 1, () -> mode.is(ElytraFlightModes.Control) && useFireworks.getValue());
 
-    public final DoubleSetting pitch40lowerBounds = doubleSetting("Pitch40 Lower Bounds", 180.0, -128.0, 360.0, 1.0, () -> mode.is(ElytraFlightModes.Pitch40));
-    public final DoubleSetting pitch40upperBounds = doubleSetting("Pitch40 Upper Bounds", 220.0, -128.0, 360.0, 1.0, () -> mode.is(ElytraFlightModes.Pitch40));
+    public final DoubleSetting pitch40lowerBounds = doubleSetting("Pitch40 Lower Bounds", 180.0, -128.0, 1024.0, 1.0, () -> mode.is(ElytraFlightModes.Pitch40));
     public final DoubleSetting pitch40rotationSpeedUp = doubleSetting("Pitch40 Rotate Speed Up", 5.45, 1.0, 20.0, 0.05, () -> mode.is(ElytraFlightModes.Pitch40));
     public final DoubleSetting pitch40rotationSpeedDown = doubleSetting("Pitch40 Rotate Speed Down", 0.90, 0.5, 2.0, 0.05, () -> mode.is(ElytraFlightModes.Pitch40));
     public final IntSetting pitch40PacketDelay = intSetting("Pitch40 Packet Delay", 3, 1, 20, 1, () -> mode.is(ElytraFlightModes.Pitch40) && armored.getValue());
-    public final BoolSetting pitch40AutoAdjustBounds = boolSetting("Pitch40 Auto Adjust Bounds", true, () -> mode.is(ElytraFlightModes.Pitch40));
-    public final DoubleSetting pitch40BoundGap = doubleSetting("Pitch40 Bound Gap", 60.0, 40.0, 120.0, 1.0, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoAdjustBounds.getValue());
     public final BoolSetting pitch40AutoTakeoff = boolSetting("Pitch40 Auto Takeoff", true, () -> mode.is(ElytraFlightModes.Pitch40));
-    public final DoubleSetting pitch40TakeoffTargetHeight = doubleSetting("Pitch40 Takeoff Target Height", 220.0, -128.0, 360.0, 1.0, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoTakeoff.getValue());
-    public final BoolSetting pitch40AutoFirework = boolSetting("Pitch40 Auto Firework", true, () -> mode.is(ElytraFlightModes.Pitch40));
-    public final DoubleSetting pitch40VelocityThreshold = doubleSetting("Pitch40 Velocity Threshold", -0.05, -0.5, 1.0, 0.01, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoFirework.getValue());
-    public final IntSetting pitch40FireworkCooldown = intSetting("Pitch40 Firework Cooldown", 60, 0, 100, 1, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoFirework.getValue());
+    public final DoubleSetting pitch40TakeoffTargetHeight = doubleSetting("Pitch40 Takeoff Target Height", 300.0, -128.0, 1024.0, 1.0, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoTakeoff.getValue());
+    public final BoolSetting pitch40AutoFirework = boolSetting("Pitch40 Auto Firework", true, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoTakeoff.getValue());
+    public final IntSetting pitch40FireworkCooldown = intSetting("Pitch40 Firework Cooldown", 10, 0, 100, 1, () -> mode.is(ElytraFlightModes.Pitch40) && pitch40AutoTakeoff.getValue() && pitch40AutoFirework.getValue());
 
     private ElytraFlightModes activeModeType;
 
@@ -102,6 +100,18 @@ public class ElytraFly extends Module {
     private void onKeyboardInput(KeyboardInputEvent event) {
         if (nullCheck()) return;
         getActiveMode().onKeyboardInput(event);
+    }
+
+    @EventHandler
+    private void onFallFlying(FallFlyingEvent event) {
+        if (nullCheck()) return;
+        getActiveMode().onFallFlying(event);
+    }
+
+    @EventHandler
+    private void onFireworkUpdate(FireworkUpdateEvent event) {
+        if (nullCheck()) return;
+        getActiveMode().onFireworkUpdate(event);
     }
 
     @EventHandler

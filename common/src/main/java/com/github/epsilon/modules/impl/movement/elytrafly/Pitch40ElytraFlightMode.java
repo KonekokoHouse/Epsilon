@@ -2,6 +2,8 @@ package com.github.epsilon.modules.impl.movement.elytrafly;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.events.impl.FallFlyingEvent;
+import com.github.epsilon.events.impl.FireworkUpdateEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.impl.hud.notification.NotificationManager;
@@ -18,19 +20,19 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
 
     private static final float DESCEND_PITCH = 37.72F;
     private static final float ASCEND_PITCH = -54.77F;
-    private static final float RESET_PITCH = -40.0F;
-    private static final float TAKEOFF_PITCH = -40.0F;
+    private static final float TAKEOFF_PITCH = ASCEND_PITCH;
+    private static final double TARGET_REACH_MARGIN = 4.0;
 
     private static final TranslateComponent TAKEOFF_COMPLETE = EpsilonTranslateComponent.create("modules.elytra fly", "pitch40_takeoff_complete");
-    private static final TranslateComponent BELOW_UPPER_BOUNDS = EpsilonTranslateComponent.create("modules.elytra fly", "pitch40_below_upper_bounds");
     private static final TranslateComponent TOO_CLOSE_TO_LOWER_BOUNDS = EpsilonTranslateComponent.create("modules.elytra fly", "pitch40_too_close_to_lower_bounds");
     private static final TranslateComponent NO_USABLE_ELYTRA = EpsilonTranslateComponent.create("modules.elytra fly", "pitch40_no_usable_elytra");
 
     private boolean pitchingDown = true;
-    private boolean goingUp = true;
+    private boolean pendingActivationCheck;
     private boolean takingOff;
     private boolean shouldJump;
     private int packetDelayTicks;
+    private double completedTakeoffTarget;
     private float pitch;
     private final TimerUtils fireworkTimer = new TimerUtils();
 
@@ -40,46 +42,82 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
 
     @Override
     public void onEnable() {
-        pitchingDown = true;
-        goingUp = true;
-        takingOff = false;
-        shouldJump = false;
-        packetDelayTicks = 0;
-        pitch = DESCEND_PITCH;
-        fireworkTimer.setMs(917813L);
+        resetState();
 
-        if (elytraFly.pitch40AutoTakeoff.getValue() && mc.player.getY() < getTakeoffTargetHeight()) {
-            takingOff = true;
-            pitch = TAKEOFF_PITCH;
+        if (mc.player == null || mc.level == null) {
+            pendingActivationCheck = true;
             return;
         }
 
-        if (mc.player.getY() < elytraFly.pitch40upperBounds.getValue()) {
-            fail(BELOW_UPPER_BOUNDS);
-        } else if (mc.player.getY() - 40.0 < elytraFly.pitch40lowerBounds.getValue()) {
+        initializeInWorld();
+    }
+
+    private void resetState() {
+        pitchingDown = true;
+        pendingActivationCheck = false;
+        takingOff = false;
+        shouldJump = false;
+        packetDelayTicks = 0;
+        completedTakeoffTarget = Double.NaN;
+        pitch = DESCEND_PITCH;
+        fireworkTimer.setMs(917813L);
+    }
+
+    private void initializeInWorld() {
+        double targetHeight = getTakeoffTargetHeight();
+        if (shouldStartTakeoff(targetHeight)) {
+            startTakeoff();
+            return;
+        }
+        if (elytraFly.pitch40AutoTakeoff.getValue()) {
+            completedTakeoffTarget = targetHeight;
+        }
+
+        if (mc.player.getY() - 40.0 < elytraFly.pitch40lowerBounds.getValue()) {
             fail(TOO_CLOSE_TO_LOWER_BOUNDS);
         }
     }
 
     @Override
     public void onDisable() {
+        pendingActivationCheck = false;
         takingOff = false;
         shouldJump = false;
         packetDelayTicks = 0;
+        completedTakeoffTarget = Double.NaN;
     }
 
     @Override
     public void onPlayerTick() {
+        if (pendingActivationCheck) {
+            pendingActivationCheck = false;
+            initializeInWorld();
+            if (!elytraFly.isEnabled()) return;
+        }
+
         if (takingOff) {
             updateTakeoff();
-            redirectRotation();
+            if (elytraFly.isEnabled()) {
+                redirectRotation();
+            }
+            return;
+        }
+
+        if (mc.player.onGround()) {
+            completedTakeoffTarget = Double.NaN;
+        }
+
+        if (shouldStartTakeoff(getTakeoffTargetHeight())) {
+            startTakeoff();
+            updateTakeoff();
+            if (elytraFly.isEnabled()) {
+                redirectRotation();
+            }
             return;
         }
 
         maintainFallFlying();
-        updateBounds();
         updatePitch();
-        updateFirework();
         redirectRotation();
     }
 
@@ -96,6 +134,17 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
         return false;
     }
 
+    @Override
+    public void onFallFlying(FallFlyingEvent event) {
+        event.setPitch(pitch);
+    }
+
+    @Override
+    public void onFireworkUpdate(FireworkUpdateEvent event) {
+        event.setYaw(mc.player.getYRot());
+        event.setPitch(pitch);
+    }
+
     private void updateTakeoff() {
         pitch = TAKEOFF_PITCH;
 
@@ -110,6 +159,8 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
             return;
         }
 
+        redirectRotation();
+
         if (mc.player.onGround()) {
             shouldJump = true;
             return;
@@ -121,7 +172,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
             shouldJump = true;
         }
 
-        if (mc.player.isFallFlying() && fireworkTimer.hasDelayed(elytraFly.pitch40FireworkCooldown.getValue()) && useFirework()) {
+        if (elytraFly.pitch40AutoFirework.getValue() && mc.player.isFallFlying() && fireworkTimer.hasDelayed(elytraFly.pitch40FireworkCooldown.getValue()) && useFirework()) {
             fireworkTimer.reset();
         }
     }
@@ -145,11 +196,10 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
 
     private void finishTakeoff() {
         takingOff = false;
-        goingUp = false;
         pitchingDown = true;
         packetDelayTicks = 0;
+        completedTakeoffTarget = getTakeoffTargetHeight();
         pitch = DESCEND_PITCH;
-        resetBoundsFromTarget();
         maintainFallFlying();
         NotificationManager.INSTANCE.post(elytraFly.getTranslatedName(), TAKEOFF_COMPLETE.getTranslatedName(), NotificationMode.Success);
     }
@@ -167,26 +217,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
         } else if (mc.player.isFallFlying()) {
             restartFallFlying();
         }
-        if (mc.player.isFallFlying() && fireworkTimer.hasDelayed(elytraFly.pitch40FireworkCooldown.getValue()) && useFirework()) {
-            fireworkTimer.reset();
-        }
         swapArmor(elytra);
-    }
-
-    private void updateBounds() {
-        if (!elytraFly.pitch40AutoAdjustBounds.getValue()) return;
-
-        if (mc.player.getY() <= elytraFly.pitch40lowerBounds.getValue() - 10.0) {
-            resetBounds();
-            return;
-        }
-
-        if (Math.round(pitch) == RESET_PITCH) {
-            goingUp = true;
-        } else if (goingUp && mc.player.getDeltaMovement().y <= 0.0) {
-            goingUp = false;
-            resetBounds();
-        }
     }
 
     private void updatePitch() {
@@ -195,8 +226,6 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
          */
         if (pitchingDown && mc.player.getY() <= elytraFly.pitch40lowerBounds.getValue()) {
             pitchingDown = false;
-        } else if (!pitchingDown && mc.player.getY() >= elytraFly.pitch40upperBounds.getValue()) {
-            pitchingDown = true;
         }
 
         if (!pitchingDown) {
@@ -211,32 +240,19 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
         }
     }
 
-    private void updateFirework() {
-        if (!elytraFly.pitch40AutoFirework.getValue()) return;
-        if (!fireworkTimer.hasDelayed(elytraFly.pitch40FireworkCooldown.getValue())) return;
-        if (Math.round(pitch) != RESET_PITCH) return;
-        if (mc.player.getDeltaMovement().y >= elytraFly.pitch40VelocityThreshold.getValue()) return;
-        if (mc.player.getY() >= elytraFly.pitch40upperBounds.getValue()) return;
-
-        if (useFirework()) {
-            fireworkTimer.reset();
-        }
-    }
-
-    private void resetBounds() {
-        double upper = mc.player.getY() - 5.0;
-        elytraFly.pitch40upperBounds.setValue(upper);
-        elytraFly.pitch40lowerBounds.setValue(upper - elytraFly.pitch40BoundGap.getValue());
-    }
-
-    private void resetBoundsFromTarget() {
-        double upper = Math.max(mc.player.getY() - 5.0, getTakeoffTargetHeight());
-        elytraFly.pitch40upperBounds.setValue(upper);
-        elytraFly.pitch40lowerBounds.setValue(upper - elytraFly.pitch40BoundGap.getValue());
-    }
-
     private double getTakeoffTargetHeight() {
         return elytraFly.pitch40TakeoffTargetHeight.getValue();
+    }
+
+    private void startTakeoff() {
+        takingOff = true;
+        pitch = TAKEOFF_PITCH;
+    }
+
+    private boolean shouldStartTakeoff(double targetHeight) {
+        return elytraFly.pitch40AutoTakeoff.getValue()
+                && mc.player.getY() < targetHeight - TARGET_REACH_MARGIN
+                && (Double.isNaN(completedTakeoffTarget) || targetHeight > completedTakeoffTarget + TARGET_REACH_MARGIN);
     }
 
     private void fail(TranslateComponent message) {
