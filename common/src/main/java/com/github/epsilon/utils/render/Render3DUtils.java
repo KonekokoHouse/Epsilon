@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -57,6 +58,66 @@ public class Render3DUtils {
 
     public static void drawFilledBox(AABB box, int c) {
         drawFilledFadeBox(box, c, c);
+    }
+
+    public static void drawFilledSide(BlockPos blockPos, Color color, Direction direction) {
+        drawFilledSide(new AABB(blockPos), color, direction);
+    }
+
+    public static void drawFilledSide(AABB box, Color color, Direction direction) {
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+
+        Vec3 camPos = mc.getEntityRenderDispatcher().camera.position();
+        float minX = (float) (box.minX - camPos.x);
+        float minY = (float) (box.minY - camPos.y);
+        float minZ = (float) (box.minZ - camPos.z);
+        float maxX = (float) (box.maxX - camPos.x);
+        float maxY = (float) (box.maxY - camPos.y);
+        float maxZ = (float) (box.maxZ - camPos.z);
+        int c = color.getRGB();
+
+        Matrix4f matrix = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
+
+        switch (direction) {
+            case DOWN -> {
+                vertex(buffer, matrix, minX, minY, minZ, c);
+                vertex(buffer, matrix, maxX, minY, minZ, c);
+                vertex(buffer, matrix, maxX, minY, maxZ, c);
+                vertex(buffer, matrix, minX, minY, maxZ, c);
+            }
+            case NORTH -> {
+                vertex(buffer, matrix, minX, minY, minZ, c);
+                vertex(buffer, matrix, minX, maxY, minZ, c);
+                vertex(buffer, matrix, maxX, maxY, minZ, c);
+                vertex(buffer, matrix, maxX, minY, minZ, c);
+            }
+            case EAST -> {
+                vertex(buffer, matrix, maxX, minY, minZ, c);
+                vertex(buffer, matrix, maxX, maxY, minZ, c);
+                vertex(buffer, matrix, maxX, maxY, maxZ, c);
+                vertex(buffer, matrix, maxX, minY, maxZ, c);
+            }
+            case SOUTH -> {
+                vertex(buffer, matrix, minX, minY, maxZ, c);
+                vertex(buffer, matrix, maxX, minY, maxZ, c);
+                vertex(buffer, matrix, maxX, maxY, maxZ, c);
+                vertex(buffer, matrix, minX, maxY, maxZ, c);
+            }
+            case WEST -> {
+                vertex(buffer, matrix, minX, minY, minZ, c);
+                vertex(buffer, matrix, minX, minY, maxZ, c);
+                vertex(buffer, matrix, minX, maxY, maxZ, c);
+                vertex(buffer, matrix, minX, maxY, minZ, c);
+            }
+            case UP -> {
+                vertex(buffer, matrix, minX, maxY, minZ, c);
+                vertex(buffer, matrix, minX, maxY, maxZ, c);
+                vertex(buffer, matrix, maxX, maxY, maxZ, c);
+                vertex(buffer, matrix, maxX, maxY, minZ, c);
+            }
+        }
+
+        FILLED_BOX.draw(buffer.buildOrThrow());
     }
 
     public static void drawFilledFadeBox(AABB box, int c, int c1) {
@@ -115,6 +176,74 @@ public class Render3DUtils {
 
     public static void drawOutlineBox(PoseStack stack, AABB box, Color color, float thickness) {
         drawOutlineBox(stack, box, color.getRGB(), thickness);
+    }
+
+    public static void drawOutlineBox(PoseStack stack, BlockPos blockPos, Color color, float thickness) {
+        drawOutlineBox(stack, new AABB(blockPos), color.getRGB(), thickness);
+    }
+
+    public static void drawSideOutline(PoseStack stack, BlockPos blockPos, Color color, float thickness, Direction direction) {
+        drawSideOutline(stack, new AABB(blockPos), color.getRGB(), thickness, direction);
+    }
+
+    public static void drawSideOutline(PoseStack stack, AABB box, Color color, float thickness, Direction direction) {
+        drawSideOutline(stack, box, color.getRGB(), thickness, direction);
+    }
+
+    public static void drawSideOutline(PoseStack stack, AABB box, int color, float thickness, Direction direction) {
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH);
+
+        Vec3 camPos = mc.getEntityRenderDispatcher().camera.position();
+        float minX = (float) (box.minX - camPos.x);
+        float minY = (float) (box.minY - camPos.y);
+        float minZ = (float) (box.minZ - camPos.z);
+        float maxX = (float) (box.maxX - camPos.x);
+        float maxY = (float) (box.maxY - camPos.y);
+        float maxZ = (float) (box.maxZ - camPos.z);
+
+        PoseStack.Pose entry = stack.last();
+        Matrix4f matrix = entry.pose();
+
+        switch (direction) {
+            case UP -> {
+                vertexLine(buffer, matrix, entry, minX, maxY, minZ, maxX, maxY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, maxY, minZ, maxX, maxY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, maxY, maxZ, minX, maxY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, maxY, maxZ, minX, maxY, minZ, color, thickness);
+            }
+            case DOWN -> {
+                vertexLine(buffer, matrix, entry, minX, minY, minZ, maxX, minY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, minY, minZ, maxX, minY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, minY, maxZ, minX, minY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, minY, maxZ, minX, minY, minZ, color, thickness);
+            }
+            case EAST -> {
+                vertexLine(buffer, matrix, entry, maxX, minY, minZ, maxX, maxY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, minY, maxZ, maxX, maxY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, maxY, maxZ, maxX, maxY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, minY, maxZ, maxX, minY, minZ, color, thickness);
+            }
+            case WEST -> {
+                vertexLine(buffer, matrix, entry, minX, minY, minZ, minX, maxY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, minY, maxZ, minX, maxY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, maxY, maxZ, minX, maxY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, minY, maxZ, minX, minY, minZ, color, thickness);
+            }
+            case NORTH -> {
+                vertexLine(buffer, matrix, entry, maxX, minY, minZ, maxX, maxY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, minY, minZ, minX, maxY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, minY, minZ, minX, minY, minZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, maxY, minZ, minX, maxY, minZ, color, thickness);
+            }
+            case SOUTH -> {
+                vertexLine(buffer, matrix, entry, minX, minY, maxZ, minX, maxY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, maxX, minY, maxZ, maxX, maxY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, minY, maxZ, maxX, minY, maxZ, color, thickness);
+                vertexLine(buffer, matrix, entry, minX, maxY, maxZ, maxX, maxY, maxZ, color, thickness);
+            }
+        }
+
+        LINES.draw(buffer.buildOrThrow());
     }
 
     public static void drawOutlineBox(PoseStack stack, AABB box, int color, float thickness) {

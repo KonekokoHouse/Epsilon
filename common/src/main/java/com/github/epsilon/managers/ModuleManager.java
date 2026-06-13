@@ -112,6 +112,7 @@ public class ModuleManager {
         // Render
         addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);
+        addModule(BlockHighlight.INSTANCE);
         addModule(CameraClip.INSTANCE);
         addModule(Chams.INSTANCE);
         addModule(ESP.INSTANCE);
