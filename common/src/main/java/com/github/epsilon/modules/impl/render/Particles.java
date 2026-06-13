@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.modules.Category;

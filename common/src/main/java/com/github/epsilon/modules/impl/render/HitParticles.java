@@ -2,32 +2,20 @@ package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.settings.impl.ColorSetting;
-import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
-import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.math.MathUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.LayeringTransform;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
@@ -44,12 +32,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.function.Function;
 
 public class HitParticles extends Module {
@@ -118,16 +103,17 @@ public class HitParticles extends Module {
     private void onTick(PlayerTickEvent.Pre event) {
         particles.removeIf(Particle::tick);
 
-        for (AbstractClientPlayer player : mc.level.players()) {
-            if (onlySelf.getValue() && player != mc.player) continue;
-            if (player.hurtTime <= 0) continue;
+        for (Entity entity : mc.level.entitiesForRendering()) {
+            if (!(entity instanceof LivingEntity livingEntity)) continue;
+            if (onlySelf.getValue() && livingEntity != mc.player) continue;
+            if (livingEntity.hurtTime <= 0) continue;
 
             Color particleColor = resolveColor((int) MathUtils.getRandom(1.0f, 228.0f));
             for (int i = 0; i < amount.getValue(); i++) {
                 particles.add(new Particle(
-                        (float) player.getX(),
-                        MathUtils.getRandom((float) player.getY(), (float) (player.getY() + player.getBbHeight())),
-                        (float) player.getZ(),
+                        (float) livingEntity.getX(),
+                        MathUtils.getRandom((float) livingEntity.getY(), (float) (livingEntity.getY() + livingEntity.getBbHeight())),
+                        (float) livingEntity.getZ(),
                         particleColor,
                         MathUtils.getRandom(0.0f, 180.0f),
                         MathUtils.getRandom(10.0f, 60.0f)
@@ -165,10 +151,6 @@ public class HitParticles extends Module {
         float hue = Mth.frac((System.currentTimeMillis() + offset * 20L) / 4500.0f);
         Color rainbow = Color.getHSBColor(hue, 0.65f, 1.0f);
         return new Color(rainbow.getRed(), rainbow.getGreen(), rainbow.getBlue(), 255);
-    }
-
-    private Color withAlpha(Color source, int alpha) {
-        return new Color(source.getRed(), source.getGreen(), source.getBlue(), Mth.clamp(alpha, 0, 255));
     }
 
     private class Particle {
