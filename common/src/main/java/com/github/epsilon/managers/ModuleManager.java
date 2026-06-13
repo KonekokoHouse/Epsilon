@@ -122,6 +122,7 @@ public class ModuleManager {
         addModule(Hat.INSTANCE);
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);
+        addModule(Shaders.INSTANCE);
         addModule(Xray.INSTANCE);
 
         // Hud

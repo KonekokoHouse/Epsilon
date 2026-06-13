@@ -1,12 +1,7 @@
 package com.github.epsilon.modules.impl.movement.elytrafly;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.KeyboardInputEvent;
-import com.github.epsilon.events.impl.FallFlyingEvent;
-import com.github.epsilon.events.impl.FireworkUpdateEvent;
-import com.github.epsilon.events.impl.MousePressEvent;
-import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.TravelEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
