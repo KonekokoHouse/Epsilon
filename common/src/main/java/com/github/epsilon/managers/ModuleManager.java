@@ -19,15 +19,13 @@ import com.github.epsilon.modules.impl.combat.*;
 import com.github.epsilon.modules.impl.hud.*;
 import com.github.epsilon.modules.impl.hud.notification.NotificationsHUD;
 import com.github.epsilon.modules.impl.movement.*;
+import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.modules.impl.player.*;
 import com.github.epsilon.modules.impl.render.*;
 import com.github.epsilon.utils.client.ClientUtils;
 import com.github.epsilon.utils.client.KeybindUtils;
-import com.github.epsilon.utils.player.ChatUtils;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -225,14 +223,6 @@ public class ModuleManager {
                 } else if (isRelease && module.isEnabled()) {
                     module.setEnabled(false);
                 }
-            }
-            if (ClientSetting.INSTANCE.chatNotify.getValue()) {
-                Component state = Component.translatable(module.isEnabled() ? "epsilon.module.state.enabled" : "epsilon.module.state.disabled")
-                        .withStyle(module.isEnabled() ? ChatFormatting.GREEN : ChatFormatting.RED);
-                ChatUtils.addChatMessage(
-                        Component.translatable("epsilon.module.chat_notify", module.getTranslatedName(), state),
-                        (module.getAddonId() + ":" + module.getName()).hashCode()
-                );
             }
         }
 

@@ -8,7 +8,7 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.modules.impl.hud.notification.NotificationManager;
+import com.github.epsilon.managers.NotificationManager;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;

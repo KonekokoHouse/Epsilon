@@ -5,12 +5,12 @@ import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -253,7 +253,7 @@ public class Xray extends Module {
     }
 
     private void log(String message) {
-        ChatUtils.addChatMessage("[Xray] " + message);
+        NotificationManager.INSTANCE.info("Xray", message);
     }
 
     public static class BlockMemory {

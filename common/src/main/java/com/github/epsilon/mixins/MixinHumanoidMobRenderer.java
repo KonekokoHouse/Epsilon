@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.modules.impl.movement.ElytraFly;
+import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;

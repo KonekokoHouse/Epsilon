@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.movement;
+package com.github.epsilon.modules.impl.movement.elytrafly;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
@@ -9,10 +9,6 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.movement.elytrafly.ControlElytraFlightMode;
-import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFlightMode;
-import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFlightModes;
-import com.github.epsilon.modules.impl.movement.elytrafly.Pitch40ElytraFlightMode;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;

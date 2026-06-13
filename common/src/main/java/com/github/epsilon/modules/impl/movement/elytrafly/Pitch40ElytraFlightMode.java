@@ -6,9 +6,7 @@ import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.FireworkUpdateEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.modules.impl.hud.notification.NotificationManager;
-import com.github.epsilon.modules.impl.hud.notification.NotificationMode;
-import com.github.epsilon.modules.impl.movement.ElytraFly;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.rotation.Priority;
@@ -202,7 +200,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
         completedTakeoffTarget = getTakeoffTargetHeight();
         pitch = DESCEND_PITCH;
         maintainFallFlying();
-        NotificationManager.INSTANCE.post(elytraFly.getTranslatedName(), TAKEOFF_COMPLETE.getTranslatedName(), NotificationMode.Success);
+        NotificationManager.INSTANCE.success(elytraFly.getTranslatedName(), TAKEOFF_COMPLETE.getTranslatedName());
     }
 
     private void refreshArmoredFallFlying(int elytraSlot, boolean respectDelay) {
@@ -257,7 +255,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
     }
 
     private void fail(TranslateComponent message) {
-        NotificationManager.INSTANCE.post(elytraFly.getTranslatedName(), message.getTranslatedName(), NotificationMode.Warning);
+        NotificationManager.INSTANCE.error(elytraFly.getTranslatedName(), message.getTranslatedName());
         elytraFly.toggle();
     }
 

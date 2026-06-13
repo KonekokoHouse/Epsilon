@@ -2,7 +2,7 @@ package com.github.epsilon.modules;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.modules.impl.hud.notification.NotificationManager;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
@@ -93,11 +93,11 @@ public class Module {
             this.enabled = enabled;
             if (enabled) {
                 EventBus.INSTANCE.subscribe(this);
-                NotificationManager.INSTANCE.postModuleNotification(this.getTranslatedName(), true);
+                if (!nullCheck()) NotificationManager.INSTANCE.moduleState(this.getTranslatedName(), getNotificationHash(), true);
                 onEnable();
             } else {
                 EventBus.INSTANCE.unsubscribe(this);
-                NotificationManager.INSTANCE.postModuleNotification(this.getTranslatedName(), false);
+                if (!nullCheck()) NotificationManager.INSTANCE.moduleState(this.getTranslatedName(), getNotificationHash(), false);
                 onDisable();
             }
         }
@@ -111,6 +111,11 @@ public class Module {
     protected void setDefaultHidden(boolean defaultHidden) {
         this.defaultHidden = defaultHidden;
         this.hidden = defaultHidden;
+    }
+
+    private int getNotificationHash() {
+        String owner = addonId != null ? addonId : "epsilon";
+        return (owner + ":" + name).hashCode();
     }
 
     public void reset() {

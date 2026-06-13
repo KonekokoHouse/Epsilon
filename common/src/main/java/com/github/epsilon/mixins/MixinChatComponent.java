@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.utils.player.ChatUtils;
+import com.github.epsilon.managers.NotificationManager;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,7 +14,7 @@ public class MixinChatComponent {
 
     @ModifyVariable(method = "handleMessage", at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private FormattedCharSequence sakura$animateClientPrefix(FormattedCharSequence message) {
-        return ChatUtils.applyAnimatedPrefix(message);
+        return NotificationManager.INSTANCE.applyAnimatedPrefix(message);
     }
 
 }

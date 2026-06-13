@@ -7,6 +7,7 @@ import com.github.epsilon.managers.ConfigManager;
 import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ButtonSetting;

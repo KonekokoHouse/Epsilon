@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.hud.notification;
 import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
+import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.settings.impl.DoubleSetting;

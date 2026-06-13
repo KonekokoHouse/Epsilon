@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.movement.elytrafly;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.modules.impl.movement.ElytraFly;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;

@@ -6,7 +6,9 @@ public enum NotificationMode {
 
     Success(118, 185, 0),
 
-    Warning(255, 75, 75);
+    Info(255, 255, 255),
+
+    Error(255, 75, 75);
 
     private final int red;
     private final int green;
@@ -19,7 +21,7 @@ public enum NotificationMode {
     }
 
     public static NotificationMode fromEnabled(boolean enabled) {
-        return enabled ? Success : Warning;
+        return enabled ? Success : Error;
     }
 
     public Color getColor() {

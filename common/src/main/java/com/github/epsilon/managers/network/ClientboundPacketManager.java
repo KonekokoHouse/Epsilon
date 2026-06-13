@@ -3,7 +3,7 @@ package com.github.epsilon.managers.network;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.LevelUpdateEvent;
-import com.github.epsilon.utils.player.ChatUtils;
+import com.github.epsilon.managers.NotificationManager;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 
@@ -36,7 +36,7 @@ public class ClientboundPacketManager {
             try {
                 packets.poll().handle(mc.getConnection().getConnection().getPacketListener());
             } catch (Exception e) {
-                ChatUtils.addChatMessage("Failed to flush clientbound packets: " + e.getMessage());
+                NotificationManager.INSTANCE.error("Clientbound Packet", "Failed to flush packets: " + e.getMessage());
             }
         }
     }

@@ -4,7 +4,6 @@ import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.FireworkUpdateEvent;
 import com.github.epsilon.events.impl.TravelEvent;
-import com.github.epsilon.modules.impl.movement.ElytraFly;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.timer.TimerUtils;

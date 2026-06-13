@@ -9,20 +9,20 @@ public class Notification {
     private String subTitle;
     private NotificationMode mode;
     private long createTime;
-    private final boolean isModule;
+    private final boolean replaceable;
     private boolean skipIntroAnim = false;
 
-    public Notification(int id, String title, String subTitle, NotificationMode mode, boolean isModule) {
+    public Notification(int id, String title, String subTitle, NotificationMode mode, boolean replaceable) {
         this.id = id;
         this.title = title;
         this.subTitle = subTitle;
         this.mode = mode;
         this.createTime = System.currentTimeMillis();
-        this.isModule = isModule;
+        this.replaceable = replaceable;
     }
 
-    public Notification(String title, String subTitle, NotificationMode mode, boolean isModule) {
-        this(0, title, subTitle, mode, isModule);
+    public Notification(String title, String subTitle, NotificationMode mode, boolean replaceable) {
+        this(0, title, subTitle, mode, replaceable);
     }
 
     public void refresh(String newTitle, String newSubTitle, NotificationMode newMode) {
@@ -43,7 +43,7 @@ public class Notification {
 
     @Override
     public int hashCode() {
-        return id;
+        return replaceable ? id : System.identityHashCode(this);
     }
 
     public String getTitle() {
@@ -58,8 +58,8 @@ public class Notification {
         return mode;
     }
 
-    public boolean isModule() {
-        return isModule;
+    public boolean isReplaceable() {
+        return replaceable;
     }
 
     public long getCreateTime() {
@@ -91,7 +91,7 @@ public class Notification {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Notification that = (Notification) obj;
-        return id == that.id;
+        return replaceable && that.replaceable && id == that.id;
     }
 
 }
