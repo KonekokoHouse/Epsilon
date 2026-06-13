@@ -7,6 +7,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 
 public class PacketEat extends Module {
@@ -21,15 +22,14 @@ public class PacketEat extends Module {
 
     @EventHandler
     private void onPostTick(PlayerTickEvent.Post event) {
-        if (mc.player.isUsingItem()) {
-            item = mc.player.getUseItem();
-        }
+        if (mc.player.isUsingItem()) item = mc.player.getUseItem();
     }
 
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
         if (event.getPacket() instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
-            if (item.get(DataComponents.FOOD).canAlwaysEat()) {
+            FoodProperties food = item.get(DataComponents.FOOD);
+            if (food != null && food.canAlwaysEat()) {
                 event.setCancelled(true);
             }
         }
