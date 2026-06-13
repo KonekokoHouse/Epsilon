@@ -19,6 +19,10 @@ import net.minecraft.client.renderer.RenderPipelines;
 import java.awt.*;
 import java.util.OptionalInt;
 
+/**
+ * @author ilove0329P
+ * Thanks to furry client.
+ */
 public class ShaderManager {
 
     public static final ShaderManager INSTANCE = new ShaderManager();
@@ -44,12 +48,15 @@ public class ShaderManager {
     private RenderPipeline copyPipeline;
     private GpuBuffer uniforms;
     private RenderTarget shaderSwap;
+    private RenderTarget handTarget;
+    private boolean renderingHands;
+    private boolean capturedHands;
     private float time;
 
     private ShaderManager() {
     }
 
-    public void processEntityOutlineTarget(RenderTarget target) {
+    public void processEntityOutlineTarget(RenderTarget target, Shader shader) {
         if (target == null || target.width <= 0 || target.height <= 0 || target.getColorTextureView() == null) {
             return;
         }
@@ -58,8 +65,43 @@ public class ShaderManager {
         ensureSwap(target.width, target.height);
         updateUniforms(target.width, target.height);
 
-        renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(Shaders.INSTANCE.getActiveShaderMode()), true);
+        renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), true);
         renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, false);
+    }
+
+    public void beginHandOutlineCapture(int width, int height) {
+        if (Shaders.INSTANCE.shouldRenderHands()) {
+            ensureHandTarget(Math.max(1, width), Math.max(1, height));
+            CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+            encoder.clearColorAndDepthTextures(handTarget.getColorTexture(), 0, handTarget.getDepthTexture(), 1.0);
+            renderingHands = true;
+            capturedHands = true;
+        }
+    }
+
+    public void endHandOutlineCapture() {
+        renderingHands = false;
+    }
+
+    public boolean isRenderingHands() {
+        return renderingHands;
+    }
+
+    public RenderTarget getHandOutlineTarget() {
+        return renderingHands ? handTarget : null;
+    }
+
+    public void processHandOutlineTarget(RenderTarget mainTarget) {
+        if (capturedHands) {
+            capturedHands = false;
+
+            if (!Shaders.INSTANCE.shouldRenderHands() || handTarget == null || mainTarget == null || mainTarget.getColorTextureView() == null) {
+                return;
+            }
+
+            processEntityOutlineTarget(handTarget, Shaders.INSTANCE.handsMode.getValue());
+            handTarget.blitAndBlendToTexture(mainTarget.getColorTextureView());
+        }
     }
 
     private void renderPass(String name, RenderTarget input, RenderTarget output, RenderPipeline pipeline, boolean customUniforms) {
@@ -90,8 +132,8 @@ public class ShaderManager {
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
         Color outline = shaders.outlineColor.getValue();
-        Color smokeOutline1 = shaders.outlineColor1.getValue();
-        Color smokeOutline2 = shaders.outlineColor2.getValue();
+        Color smokeOutline1 = shaders.smokeOutlineColor1.getValue();
+        Color smokeOutline2 = shaders.smokeOutlineColor2.getValue();
         Color fill = shaders.fillColor1.getValue();
         Color smokeFill1 = shaders.fillColor2.getValue();
         Color smokeFill2 = shaders.fillColor3.getValue();
@@ -143,6 +185,16 @@ public class ShaderManager {
 
         if (shaderSwap.width != width || shaderSwap.height != height) {
             shaderSwap.resize(width, height);
+        }
+    }
+
+    private void ensureHandTarget(int width, int height) {
+        if (handTarget == null) {
+            handTarget = new TextureTarget("Epsilon Shader Hands", width, height, true);
+        }
+
+        if (handTarget.width != width || handTarget.height != height) {
+            handTarget.resize(width, height);
         }
     }
 

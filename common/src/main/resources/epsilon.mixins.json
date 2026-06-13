@@ -40,6 +40,7 @@
     "MixinMobEffectFogEnvironment",
     "MixinMouseHandler",
     "MixinMultiPlayerGameMode",
+    "MixinOutputTarget",
     "MixinParticleManager",
     "MixinPlayer",
     "MixinProjection",

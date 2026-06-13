@@ -23,9 +23,11 @@ public class MixinGameRenderer {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;doEntityOutline()V", shift = At.Shift.BEFORE))
     private void processShadersOutline(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
-        if (Shaders.INSTANCE.isEnabled()) {
+        Shaders shaders = Shaders.INSTANCE;
+        if (shaders.isEnabled()) {
             RenderTarget target = ((LevelRendererAccessor) minecraft.levelRenderer).epsilon$getEntityOutlineTarget();
-            ShaderManager.INSTANCE.processEntityOutlineTarget(target);
+            ShaderManager.INSTANCE.processEntityOutlineTarget(target, shaders.mode.getValue());
+            ShaderManager.INSTANCE.processHandOutlineTarget(minecraft.getMainRenderTarget());
         }
     }
 

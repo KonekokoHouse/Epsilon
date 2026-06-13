@@ -34,31 +34,27 @@ public class Shaders extends Module {
     private final BoolSetting others = boolSetting("Others", false).group(select);
 
     public final EnumSetting<ShaderManager.Shader> mode = enumSetting("Mode", ShaderManager.Shader.Default);
-    public final EnumSetting<ShaderManager.Shader> handsMode = enumSetting("HandsMode", ShaderManager.Shader.Default);
+    public final EnumSetting<ShaderManager.Shader> handsMode = enumSetting("Hands Mode", ShaderManager.Shader.Default);
 
-    public final IntSetting maxRange = intSetting("MaxRange", 64, 16, 256, 1, () -> players.getValue() || crystals.getValue() || friends.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue());
-    public final DoubleSetting factor = doubleSetting("GradientFactor", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
+    public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1, () -> players.getValue() || crystals.getValue() || friends.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue());
+    public final DoubleSetting factor = doubleSetting("Gradient Factor", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
     public final DoubleSetting gradient = doubleSetting("Gradient", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
-    public final IntSetting alpha2 = intSetting("GradientAlpha", 170, 0, 255, 1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
-    public final IntSetting lineWidth = intSetting("LineWidth", 2, 0, 500, 1);
+    public final IntSetting alpha2 = intSetting("Gradient Alpha", 170, 0, 255, 1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
+    public final IntSetting lineWidth = intSetting("Line Width", 2, 0, 500, 1);
     public final IntSetting quality = intSetting("Quality", 3, 0, 6, 1);
-    public final IntSetting octaves = intSetting("SmokeOctaves", 10, 5, 30, 1);
-    public final IntSetting fillAlpha = intSetting("FillAlpha", 170, 0, 255, 1);
-    public final BoolSetting glow = boolSetting("SmokeGlow", true);
+    public final IntSetting octaves = intSetting("Smoke Octaves", 10, 5, 30, 1);
+    public final IntSetting fillAlpha = intSetting("Fill Alpha", 170, 0, 255, 1);
+    public final BoolSetting glow = boolSetting("Smoke Glow", true);
 
-    public final ColorSetting outlineColor = colorSetting("Outline", new Color(0x8800FF00, true)).group(colors);
-    public final ColorSetting outlineColor1 = colorSetting("SmokeOutline", new Color(0x8800FF00, true), () -> mode.is(ShaderManager.Shader.Smoke) || handsMode.is(ShaderManager.Shader.Smoke)).group(colors);
-    public final ColorSetting outlineColor2 = colorSetting("SmokeOutline2", new Color(0x8800FF00, true), () -> mode.is(ShaderManager.Shader.Smoke) || handsMode.is(ShaderManager.Shader.Smoke)).group(colors);
-    public final ColorSetting fillColor1 = colorSetting("Fill", new Color(0x8800FF00, true)).group(colors);
-    public final ColorSetting fillColor2 = colorSetting("SmokeFill", new Color(0x8800FF00, true)).group(colors);
-    public final ColorSetting fillColor3 = colorSetting("SmokeFil2", new Color(0x8800FF00, true)).group(colors);
+    public final ColorSetting outlineColor = colorSetting("Outline", new Color(255, 255, 255, 136)).group(colors);
+    public final ColorSetting smokeOutlineColor1 = colorSetting("Smoke Outline", new Color(255, 0, 0, 136), () -> mode.is(ShaderManager.Shader.Smoke) || handsMode.is(ShaderManager.Shader.Smoke)).group(colors);
+    public final ColorSetting smokeOutlineColor2 = colorSetting("Smoke Outline 2", new Color(255, 0, 0, 136), () -> mode.is(ShaderManager.Shader.Smoke) || handsMode.is(ShaderManager.Shader.Smoke)).group(colors);
+    public final ColorSetting fillColor1 = colorSetting("Fill", new Color(255, 255, 255, 136)).group(colors);
+    public final ColorSetting fillColor2 = colorSetting("Smoke Fill", new Color(255, 255, 255, 136)).group(colors);
+    public final ColorSetting fillColor3 = colorSetting("Smoke Fill 2", new Color(255, 255, 255, 136)).group(colors);
 
     public boolean shouldRenderHands() {
         return hands.getValue();
-    }
-
-    public ShaderManager.Shader getActiveShaderMode() {
-        return hasEntityTargets() ? mode.getValue() : handsMode.getValue();
     }
 
     public boolean shouldRender(Entity entity) {
@@ -90,10 +86,6 @@ public class Shaders extends Module {
             case AMBIENT, WATER_AMBIENT -> ambients.getValue();
             default -> others.getValue();
         };
-    }
-
-    private boolean hasEntityTargets() {
-        return players.getValue() || friends.getValue() || crystals.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue();
     }
 
 }

@@ -1,5 +1,6 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.modules.impl.render.HandsView;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -7,6 +8,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.tags.ItemTags;
@@ -48,6 +50,22 @@ public abstract class MixinItemInHandRenderer {
 
     @Shadow
     public ItemStack offHandItem;
+
+    @Inject(method = "renderHandsWithItems", at = @At("HEAD"))
+    private void beginShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
+        Shaders shaders = Shaders.INSTANCE;
+        if (shaders.isEnabled() && shaders.shouldRenderHands()) {
+            ShaderManager.INSTANCE.beginHandOutlineCapture(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
+        }
+    }
+
+    @Inject(method = "renderHandsWithItems", at = @At("RETURN"))
+    private void endShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
+        if (ShaderManager.INSTANCE.isRenderingHands()) {
+            minecraft.renderBuffers().outlineBufferSource().endOutlineBatch();
+        }
+        ShaderManager.INSTANCE.endHandOutlineCapture();
+    }
 
     @Inject(method = "renderArmWithItem", at = @At("HEAD"))
     private void cacheBlockingState(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
