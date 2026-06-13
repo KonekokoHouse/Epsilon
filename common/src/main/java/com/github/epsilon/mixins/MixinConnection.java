@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.managers.network.ClientboundPacketManager;
 import com.github.epsilon.managers.network.ServerboundPacketManager;
+import com.github.epsilon.utils.network.ClientIdentityHider;
 import com.github.epsilon.utils.network.PacketUtils;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -36,11 +37,17 @@ public class MixinConnection {
         }
         if (PacketUtils.bypassedPackets.contains(packet)) {
             PacketUtils.bypassedPackets.remove(packet);
-            original.call(instance, packet, listener, flush);
+            Packet<?> filteredPacket = ClientIdentityHider.filterServerboundPacket(packet);
+            if (filteredPacket != null) {
+                original.call(instance, filteredPacket, listener, flush);
+            }
         } else {
             PacketEvent.Send event = EventBus.INSTANCE.post(new PacketEvent.Send(packet));
             if (!event.isCancelled()) {
-                original.call(instance, event.getPacket(), listener, flush);
+                Packet<?> filteredPacket = ClientIdentityHider.filterServerboundPacket(event.getPacket());
+                if (filteredPacket != null) {
+                    original.call(instance, filteredPacket, listener, flush);
+                }
             }
         }
     }

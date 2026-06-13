@@ -9,6 +9,7 @@
     "MixinCamera",
     "MixinChatComponent",
     "MixinChatComponentHash",
+    "MixinClientBrandRetriever",
     "MixinClientPacketListener",
     "MixinConnection",
     "MixinDataComponentInitializerEntry",

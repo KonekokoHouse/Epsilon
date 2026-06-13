@@ -53,6 +53,12 @@ public class ClientSetting extends Module {
         Light
     }
 
+    public enum HideMode {
+        None,
+        Hide,
+        Vanilla
+    }
+
     private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
@@ -89,6 +95,8 @@ public class ClientSetting extends Module {
 
     // Anti Cheat
     public final BoolSetting modifyCrosshair = boolSetting("Modify Crosshair", true).group(sgAntiCheat);
+
+    public final EnumSetting<HideMode> hideMode = enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat);
 
     // Appearance
     public final EnumSetting<ThemeMode> themeMode = enumSetting("Theme Mode", ThemeMode.Dark).group(sgAppearance);
