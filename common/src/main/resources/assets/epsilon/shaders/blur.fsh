@@ -5,7 +5,6 @@ uniform sampler2D InputSampler;
 layout(std140) uniform BlurUniforms {
     vec3 Params1;
     vec4 Params2;
-    vec4 Color1;
     vec4 Params3;
 };
 
@@ -46,7 +45,7 @@ vec4 blur() {
     }
 
     Color /= 81.0;
-    return (Color + Color1);
+    return Color;
 }
 
 void main() {

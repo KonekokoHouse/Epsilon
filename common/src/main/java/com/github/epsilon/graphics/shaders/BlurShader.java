@@ -23,7 +23,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import java.awt.*;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
@@ -38,7 +37,6 @@ public class BlurShader {
 
     private static final int UNIFORMS_SIZE = new Std140SizeCalculator()
             .putVec3()
-            .putVec4()
             .putVec4()
             .putVec4()
             .get();
@@ -88,7 +86,7 @@ public class BlurShader {
         }
     }
 
-    public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, Color color, float blurStrength) {
+    public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength) {
         this.ensureProgram();
 
         RenderTarget fb = mc.getMainRenderTarget();
@@ -133,7 +131,6 @@ public class BlurShader {
             Std140Builder builder = Std140Builder.intoBuffer(view.data());
             builder.putVec3(fb.width, fb.height, quality);
             builder.putVec4(pxW, pxH, pxX, pxY);
-            builder.putVec4(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, 1.0f);
             builder.putVec4(rTLPx, rTRPx, rBRPx, rBLPx);
         }
 
@@ -152,11 +149,7 @@ public class BlurShader {
     }
 
     public void render(float x, float y, float width, float height, float radius, float blurStrength) {
-        render(x, y, width, height, radius, radius, radius, radius, new Color(0, 0, 0, 0), blurStrength);
-    }
-
-    public void render(float x, float y, float width, float height, float radius, Color color, float blurStrength) {
-        render(x, y, width, height, radius, radius, radius, radius, color, blurStrength);
+        render(x, y, width, height, radius, radius, radius, radius, blurStrength);
     }
 
     public void render3DBox(AABB box, float blurStrength) {
