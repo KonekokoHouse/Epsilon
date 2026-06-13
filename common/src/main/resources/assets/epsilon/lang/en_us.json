@@ -1014,5 +1014,13 @@
   "epsilon.modules.particles.color": "Color",
   "epsilon.modules.particles.physics": "Physics",
   "epsilon.modules.particles.physics.drop": "Drop",
-  "epsilon.modules.particles.physics.fly": "Fly"
+  "epsilon.modules.particles.physics.fly": "Fly",
+  "epsilon.modules.jump circle": "Jump Circle",
+  "epsilon.modules.jump circle.mode": "Mode",
+  "epsilon.modules.jump circle.mode.default": "Default",
+  "epsilon.modules.jump circle.mode.portal": "Portal",
+  "epsilon.modules.jump circle.ease out": "Ease Out",
+  "epsilon.modules.jump circle.rotate speed": "Rotate Speed",
+  "epsilon.modules.jump circle.circle scale": "Circle Scale",
+  "epsilon.modules.jump circle.only self": "Only Self"
 }

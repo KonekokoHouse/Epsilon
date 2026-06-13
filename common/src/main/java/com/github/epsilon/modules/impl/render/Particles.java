@@ -42,11 +42,30 @@ public class Particles extends Module {
         super("Particles", Category.RENDER);
     }
 
+    private enum ColorMode {
+        Custom,
+        Sync
+    }
+
+    private enum Mode {
+        Off,
+        SnowFlake,
+        Stars,
+        Hearts,
+        Dollars,
+        Bloom
+    }
+
+    private enum Physics {
+        Drop,
+        Fly
+    }
+
     private final SettingGroup sgFireFlies = settingGroup("Fire Flies");
 
     private final BoolSetting fireFliesEnabled = boolSetting("Fire Flies", true).group(sgFireFlies);
-    private final IntSetting ffcount = intSetting("FF Count", 30, 20, 200, 1, fireFliesEnabled::getValue).group(sgFireFlies);
-    private final DoubleSetting ffsize = doubleSetting("FF Size", 1.0, 0.1, 2.0, 0.1, fireFliesEnabled::getValue).group(sgFireFlies);
+    private final IntSetting ffCount = intSetting("FF Count", 30, 20, 200, 1, fireFliesEnabled::getValue).group(sgFireFlies);
+    private final DoubleSetting ffSize = doubleSetting("FF Size", 1.0, 0.1, 2.0, 0.1, fireFliesEnabled::getValue).group(sgFireFlies);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.SnowFlake);
     private final IntSetting count = intSetting("Count", 100, 20, 800, 1, () -> !mode.is(Mode.Off));
     private final DoubleSetting size = doubleSetting("Size", 1.0, 0.1, 6.0, 0.1, () -> !mode.is(Mode.Off));
@@ -54,8 +73,8 @@ public class Particles extends Module {
     private final ColorSetting color = colorSetting("Color", new Color(3649978), () -> colorMode.is(ColorMode.Custom));
     private final EnumSetting<Physics> physics = enumSetting("Physics", Physics.Fly, () -> !mode.is(Mode.Off));
 
-    private final ArrayList<ParticleBase> fireFlies = new ArrayList<>();
-    private final ArrayList<ParticleBase> particles = new ArrayList<>();
+    private final List<ParticleBase> fireFlies = new ArrayList<>();
+    private final List<ParticleBase> particles = new ArrayList<>();
 
     private static final Identifier FIREFLY_TEXTURE = ResourceLocationUtils.getIdentifier("textures/particles/firefly.png");
     private static final Identifier SNOWFLAKE_TEXTURE = ResourceLocationUtils.getIdentifier("textures/particles/snowflake.png");
@@ -80,6 +99,12 @@ public class Particles extends Module {
                     .createRenderSetup()
     ));
 
+    @Override
+    protected void onDisable() {
+        fireFlies.clear();
+        particles.clear();
+    }
+
     @EventHandler
     private void onTick(ClientTickEvent.Post event) {
         if (nullCheck()) return;
@@ -87,7 +112,7 @@ public class Particles extends Module {
         fireFlies.removeIf(ParticleBase::tick);
         particles.removeIf(ParticleBase::tick);
 
-        for (int i = fireFlies.size(); i < ffcount.getValue(); i++) {
+        for (int i = fireFlies.size(); i < ffCount.getValue(); i++) {
             if (fireFliesEnabled.getValue()) {
                 fireFlies.add(new FireFly(
                         (float) (mc.player.getX() + MathUtils.getRandom(-25.0f, 25.0f)),
@@ -126,16 +151,6 @@ public class Particles extends Module {
         }
     }
 
-    @Override
-    protected void onDisable() {
-        clearParticles();
-    }
-
-    @Override
-    protected void resetCustomState() {
-        clearParticles();
-    }
-
     private void renderParticleList(PoseStack poseStack, List<ParticleBase> list, Identifier texture) {
         BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (ParticleBase particle : list) {
@@ -159,42 +174,18 @@ public class Particles extends Module {
         };
     }
 
-    private void clearParticles() {
-        fireFlies.clear();
-        particles.clear();
-    }
-
     private Color resolveColor(int offset) {
         return colorMode.is(ColorMode.Sync) ? syncColor(offset) : color.getValue();
     }
 
-    private static Color syncColor(int offset) {
+    private Color syncColor(int offset) {
         float hue = Mth.frac((System.currentTimeMillis() + offset * 20L) / 4500.0f);
         Color rainbow = Color.getHSBColor(hue, 0.65f, 1.0f);
         return new Color(rainbow.getRed(), rainbow.getGreen(), rainbow.getBlue(), 255);
     }
 
-    private static Color withAlpha(Color source, int alpha) {
+    private Color withAlpha(Color source, int alpha) {
         return new Color(source.getRed(), source.getGreen(), source.getBlue(), Mth.clamp(alpha, 0, 255));
-    }
-
-    private enum ColorMode {
-        Custom,
-        Sync
-    }
-
-    private enum Mode {
-        Off,
-        SnowFlake,
-        Stars,
-        Hearts,
-        Dollars,
-        Bloom
-    }
-
-    private enum Physics {
-        Drop,
-        Fly
     }
 
     private class FireFly extends ParticleBase {
@@ -246,7 +237,8 @@ public class Particles extends Module {
             if (trails.isEmpty()) return;
 
             float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-            float particleSize = ffsize.getValue().floatValue();
+            float particleSize = ffSize.getValue().floatValue();
+
             for (Trail trail : trails) {
                 Vec3 position = trail.interpolate(tickDelta);
                 int alpha = (int) (255.0f * ((float) age / (float) maxAge) * trail.animation(tickDelta));
