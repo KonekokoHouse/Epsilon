@@ -3,6 +3,7 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
+import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -86,9 +87,7 @@ public class JumpCircle extends Module {
     }
 
     @EventHandler
-    private void onTick(ClientTickEvent.Post event) {
-        if (nullCheck()) return;
-
+    private void onTick(PlayerTickEvent.Pre event) {
         for (Player player : mc.level.players()) {
             if (!shouldTrack(player)) {
                 groundedCache.remove(player.getUUID());

@@ -58,7 +58,7 @@ public class Shaders extends Module {
     }
 
     public boolean shouldRender(Entity entity) {
-        if (entity == null || mc.player == null) {
+        if (mc.player == null) {
             return false;
         }
 

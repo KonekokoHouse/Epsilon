@@ -120,6 +120,7 @@ public class ModuleManager {
         addModule(GameAnimation.INSTANCE);
         addModule(HandsView.INSTANCE);
         addModule(Hat.INSTANCE);
+        addModule(HitParticles.INSTANCE);
         addModule(JumpCircle.INSTANCE);
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);
