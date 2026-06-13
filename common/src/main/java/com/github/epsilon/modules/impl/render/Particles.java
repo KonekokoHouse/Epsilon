@@ -143,7 +143,11 @@ public class Particles extends Module {
         for (ParticleBase particle : list) {
             particle.render(poseStack, buffer);
         }
-        PARTICLE_LAYER.apply(texture).draw(buffer.buildOrThrow());
+
+        MeshData mesh = buffer.build();
+        if (mesh != null) {
+            PARTICLE_LAYER.apply(texture).draw(mesh);
+        }
     }
 
     private Identifier textureForMode(Mode mode) {
