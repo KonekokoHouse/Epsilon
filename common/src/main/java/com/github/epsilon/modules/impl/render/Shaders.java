@@ -53,6 +53,14 @@ public class Shaders extends Module {
     public final ColorSetting fillColor2 = colorSetting("SmokeFill", new Color(0x8800FF00, true)).group(colors);
     public final ColorSetting fillColor3 = colorSetting("SmokeFil2", new Color(0x8800FF00, true)).group(colors);
 
+    public boolean shouldRenderHands() {
+        return hands.getValue();
+    }
+
+    public ShaderManager.Shader getActiveShaderMode() {
+        return hasEntityTargets() ? mode.getValue() : handsMode.getValue();
+    }
+
     public boolean shouldRender(Entity entity) {
         if (entity == null || mc.player == null) {
             return false;
@@ -82,6 +90,10 @@ public class Shaders extends Module {
             case AMBIENT, WATER_AMBIENT -> ambients.getValue();
             default -> others.getValue();
         };
+    }
+
+    private boolean hasEntityTargets() {
+        return players.getValue() || friends.getValue() || crystals.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue();
     }
 
 }

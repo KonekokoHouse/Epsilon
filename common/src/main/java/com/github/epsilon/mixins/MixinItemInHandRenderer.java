@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.HandsView;
+import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.github.epsilon.Constants.mc;
@@ -110,6 +112,12 @@ public abstract class MixinItemInHandRenderer {
         if (!skip) {
             original.call(poseStack, xo, yo, zo);
         }
+    }
+
+    @ModifyArg(method = "renderItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"), index = 4)
+    private int applyShadersHandOutline(int outlineColor) {
+        Shaders shaders = Shaders.INSTANCE;
+        return shaders.isEnabled() && shaders.shouldRenderHands() ? shaders.outlineColor.getValue().getRGB() : outlineColor;
     }
 
 }

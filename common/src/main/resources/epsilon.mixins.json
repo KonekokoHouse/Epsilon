@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "MixinAvatarRenderer",
+    "MixinBaseEntityRenderer",
     "MixinBlock",
     "MixinBlockCollisions",
     "MixinCamera",
@@ -19,6 +20,7 @@
     "MixinFireworkRocketEntity",
     "MixinFlowingFluid",
     "MixinFont",
+    "MixinGameRenderer",
     "MixinGlDebug",
     "MixinGui",
     "MixinGuiRenderer",
