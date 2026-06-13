@@ -53,15 +53,6 @@ public class ClientSetting extends Module {
         Light
     }
 
-    public enum ScreenBackground {
-        Vanilla,
-        Jello,
-        Miku,
-        KrulTepes,
-        Shiroko,
-        BlueArchive
-    }
-
     private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
@@ -112,8 +103,6 @@ public class ClientSetting extends Module {
     }).group(sgAppearance);
 
     public final BoolSetting customTitle = boolSetting("Custom Title", true, _ -> mc.updateTitle()).group(sgAppearance);
-
-    public final BoolSetting screenBackground = boolSetting("Screen Background", true).group(sgAppearance);
 
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
