@@ -8,6 +8,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.utils.math.MathUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
@@ -31,7 +32,6 @@ import org.joml.Matrix4f;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public class Particles extends Module {
@@ -90,12 +90,12 @@ public class Particles extends Module {
         for (int i = fireFlies.size(); i < ffcount.getValue(); i++) {
             if (fireFliesEnabled.getValue()) {
                 fireFlies.add(new FireFly(
-                        (float) (mc.player.getX() + random(-25.0f, 25.0f)),
-                        (float) (mc.player.getY() + random(2.0f, 15.0f)),
-                        (float) (mc.player.getZ() + random(-25.0f, 25.0f)),
-                        random(-0.2f, 0.2f),
-                        random(-0.1f, 0.1f),
-                        random(-0.2f, 0.2f)
+                        (float) (mc.player.getX() + MathUtils.getRandom(-25.0f, 25.0f)),
+                        (float) (mc.player.getY() + MathUtils.getRandom(2.0f, 15.0f)),
+                        (float) (mc.player.getZ() + MathUtils.getRandom(-25.0f, 25.0f)),
+                        MathUtils.getRandom(-0.2f, 0.2f),
+                        MathUtils.getRandom(-0.1f, 0.1f),
+                        MathUtils.getRandom(-0.2f, 0.2f)
                 ));
             }
         }
@@ -104,12 +104,12 @@ public class Particles extends Module {
             boolean drop = physics.is(Physics.Drop);
             if (!mode.is(Mode.Off)) {
                 particles.add(new ParticleBase(
-                        (float) (mc.player.getX() + random(-48.0f, 48.0f)),
-                        (float) (mc.player.getY() + random(2.0f, 48.0f)),
-                        (float) (mc.player.getZ() + random(-48.0f, 48.0f)),
-                        drop ? 0.0f : random(-0.4f, 0.4f),
-                        drop ? random(-0.2f, -0.05f) : random(-0.1f, 0.1f),
-                        drop ? 0.0f : random(-0.4f, 0.4f)
+                        (float) (mc.player.getX() + MathUtils.getRandom(-48.0f, 48.0f)),
+                        (float) (mc.player.getY() + MathUtils.getRandom(2.0f, 48.0f)),
+                        (float) (mc.player.getZ() + MathUtils.getRandom(-48.0f, 48.0f)),
+                        drop ? 0.0f : MathUtils.getRandom(-0.4f, 0.4f),
+                        drop ? MathUtils.getRandom(-0.2f, -0.05f) : MathUtils.getRandom(-0.1f, 0.1f),
+                        drop ? 0.0f : MathUtils.getRandom(-0.4f, 0.4f)
                 ));
             }
         }
@@ -117,8 +117,6 @@ public class Particles extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (nullCheck()) return;
-
         if (fireFliesEnabled.getValue() && !fireFlies.isEmpty()) {
             renderParticleList(event.getPoseStack(), fireFlies, FIREFLY_TEXTURE);
         }
@@ -152,12 +150,12 @@ public class Particles extends Module {
 
     private Identifier textureForMode(Mode mode) {
         return switch (mode) {
+            case Off -> null;
             case Bloom -> FIREFLY_TEXTURE;
             case SnowFlake -> SNOWFLAKE_TEXTURE;
             case Stars -> STAR_TEXTURE;
             case Hearts -> HEART_TEXTURE;
             case Dollars -> DOLLAR_TEXTURE;
-            case Off -> FIREFLY_TEXTURE;
         };
     }
 
@@ -180,10 +178,6 @@ public class Particles extends Module {
         return new Color(source.getRed(), source.getGreen(), source.getBlue(), Mth.clamp(alpha, 0, 255));
     }
 
-    private static float random(float min, float max) {
-        return (float) ThreadLocalRandom.current().nextDouble(min, max);
-    }
-
     private enum ColorMode {
         Custom,
         Sync
@@ -203,10 +197,10 @@ public class Particles extends Module {
         Fly
     }
 
-    public class FireFly extends ParticleBase {
+    private class FireFly extends ParticleBase {
         private final List<Trail> trails = new ArrayList<>();
 
-        public FireFly(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
+        private FireFly(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
             super(posX, posY, posZ, motionX, motionY, motionZ);
         }
 
@@ -226,16 +220,16 @@ public class Particles extends Module {
 
             trails.removeIf(Trail::update);
 
-            prevposX = posX;
-            prevposY = posY;
-            prevposZ = posZ;
+            prevPosX = posX;
+            prevPosY = posY;
+            prevPosZ = posZ;
 
             posX += motionX;
             posY += motionY;
             posZ += motionZ;
 
             trails.add(new Trail(
-                    new Vec3(prevposX, prevposY, prevposZ),
+                    new Vec3(prevPosX, prevPosY, prevPosZ),
                     new Vec3(posX, posY, posZ),
                     resolveColor(age * 10)
             ));
@@ -251,7 +245,7 @@ public class Particles extends Module {
         public void render(PoseStack poseStack, BufferBuilder buffer) {
             if (trails.isEmpty()) return;
 
-            float tickDelta = getTickDelta();
+            float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             float particleSize = ffsize.getValue().floatValue();
             for (Trail trail : trails) {
                 Vec3 position = trail.interpolate(tickDelta);
@@ -261,10 +255,10 @@ public class Particles extends Module {
         }
     }
 
-    public class ParticleBase {
-        protected float prevposX;
-        protected float prevposY;
-        protected float prevposZ;
+    private class ParticleBase {
+        protected float prevPosX;
+        protected float prevPosY;
+        protected float prevPosZ;
         protected float posX;
         protected float posY;
         protected float posZ;
@@ -274,17 +268,17 @@ public class Particles extends Module {
         protected int age;
         protected int maxAge;
 
-        public ParticleBase(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
+        private ParticleBase(float posX, float posY, float posZ, float motionX, float motionY, float motionZ) {
             this.posX = posX;
             this.posY = posY;
             this.posZ = posZ;
-            this.prevposX = posX;
-            this.prevposY = posY;
-            this.prevposZ = posZ;
+            this.prevPosX = posX;
+            this.prevPosY = posY;
+            this.prevPosZ = posZ;
             this.motionX = motionX;
             this.motionY = motionY;
             this.motionZ = motionZ;
-            this.age = (int) random(100.0f, 300.0f);
+            this.age = (int) MathUtils.getRandom(100.0f, 300.0f);
             this.maxAge = age;
         }
 
@@ -299,9 +293,9 @@ public class Particles extends Module {
                 return true;
             }
 
-            prevposX = posX;
-            prevposY = posY;
-            prevposZ = posZ;
+            prevPosX = posX;
+            prevPosY = posY;
+            prevPosZ = posZ;
 
             posX += motionX;
             posY += motionY;
@@ -323,11 +317,11 @@ public class Particles extends Module {
         }
 
         protected Vec3 interpolatePos() {
-            float tickDelta = getTickDelta();
+            float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
-            double x = Mth.lerp(tickDelta, prevposX, posX) - cameraPos.x;
-            double y = Mth.lerp(tickDelta, prevposY, posY) - cameraPos.y;
-            double z = Mth.lerp(tickDelta, prevposZ, posZ) - cameraPos.z;
+            double x = Mth.lerp(tickDelta, prevPosX, posX) - cameraPos.x;
+            double y = Mth.lerp(tickDelta, prevPosY, posY) - cameraPos.y;
+            double z = Mth.lerp(tickDelta, prevPosZ, posZ) - cameraPos.z;
             return new Vec3(x, y, z);
         }
 
@@ -351,21 +345,21 @@ public class Particles extends Module {
         }
     }
 
-    public static class Trail {
+    private class Trail {
         private final Vec3 from;
         private final Vec3 to;
         private final Color color;
         private int ticks = 10;
         private int prevTicks = 10;
 
-        public Trail(Vec3 from, Vec3 to, Color color) {
+        private Trail(Vec3 from, Vec3 to, Color color) {
             this.from = from;
             this.to = to;
             this.color = color;
         }
 
         public Vec3 interpolate(float tickDelta) {
-            Camera camera = INSTANCE.mc.gameRenderer.getMainCamera();
+            Camera camera = mc.gameRenderer.getMainCamera();
             double x = Mth.lerp(tickDelta, from.x, to.x) - camera.position().x;
             double y = Mth.lerp(tickDelta, from.y, to.y) - camera.position().y;
             double z = Mth.lerp(tickDelta, from.z, to.z) - camera.position().z;
@@ -386,7 +380,4 @@ public class Particles extends Module {
         }
     }
 
-    private static float getTickDelta() {
-        return INSTANCE.mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-    }
 }
