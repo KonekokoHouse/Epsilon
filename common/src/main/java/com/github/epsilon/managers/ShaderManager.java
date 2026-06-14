@@ -19,6 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.util.Util;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
@@ -60,7 +61,8 @@ public class ShaderManager {
     private boolean renderingChests;
     private boolean capturedChests;
     private boolean preparedChests;
-    private float time;
+
+    private final long startTimeMs = Util.getMillis();
 
     public static final int EPSILON_CHEST_OUTLINE_MARKER = 0x01000001;
 
@@ -210,7 +212,7 @@ public class ShaderManager {
                         shaders.glow.getValue() ? -1.0f : alpha(outline),
                         shaders.fillAlpha.getValue() / 255.0f,
                         shaders.alpha2.getValue() / 255.0f,
-                        time,
+                        ((Util.getMillis() - startTimeMs) % 1_000_000L) / 1000.0f,
                         shaders.factor.getValue().floatValue(),
                         shaders.gradient.getValue().floatValue(),
                         shaders.octaves.getValue(),
@@ -222,11 +224,6 @@ public class ShaderManager {
                         smokeFill2
                 )
         );
-
-        time += 0.008f;
-        if (time > 1000.0f) {
-            time = 0.0f;
-        }
         return shaderConfig;
     }
 
