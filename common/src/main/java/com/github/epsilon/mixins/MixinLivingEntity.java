@@ -71,8 +71,8 @@ public class MixinLivingEntity {
     @Inject(method = "getCurrentSwingDuration", at = @At("HEAD"), cancellable = true)
     private void hookGetCurrentSwingDuration(CallbackInfoReturnable<Integer> cir) {
         HandsView handsView = HandsView.INSTANCE;
-        if (handsView.isEnabled()) {
-            cir.setReturnValue(handsView.swingSpeed.getValue());
+        if (handsView.isEnabled() && handsView.modifySwingDuration.getValue()) {
+            cir.setReturnValue(handsView.swingDuration.getValue());
         }
     }
 

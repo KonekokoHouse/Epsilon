@@ -48,7 +48,8 @@ public class HandsView extends Module {
     public final EnumSetting<SwingMode> swingMode = enumSetting("Swing Mode", SwingMode.Vanilla);
     public final BoolSetting onlyWeapon = boolSetting("Only Weapon", true, () -> swingMode.is(SwingMode.Flux));
 
-    public final IntSetting swingSpeed = intSetting("Swing Speed", 6, 0, 20, 1);
+    public final BoolSetting modifySwingDuration = boolSetting("Modify Swing Duration", false);
+    public final IntSetting swingDuration = intSetting("Swing Duration", 6, 0, 20, 1, modifySwingDuration::getValue);
 
     public final BoolSetting swingWhileUsing = boolSetting("Visual Swing On Use", true);
     public final BoolSetting onlyOnBlock = boolSetting("Only On Block", true, swingWhileUsing::getValue);
