@@ -174,9 +174,7 @@ public class KillAura extends Module {
             }
             switchIndex++;
         } else {
-            Entity crosshairPickEntity = shouldCheckHitResult ? mc.crosshairPickEntity : null;
-            if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue()
-                    && (!shouldCheckHitResult || hitResult.getType() == HitResult.Type.ENTITY && crosshairPickEntity != null && crosshairPickEntity.is(target))) {
+            if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && (!shouldCheckHitResult || (hitResult.getType() == HitResult.Type.ENTITY && mc.crosshairPickEntity.is(target)))) {
                 doAttack(target);
             }
             if (targetMode.is(TargetMode.Switch)) {
