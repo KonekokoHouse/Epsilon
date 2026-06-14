@@ -9,6 +9,7 @@ import com.github.epsilon.settings.impl.*;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.BlockPos;
 
 import java.awt.*;
 
@@ -28,6 +29,7 @@ public class Shaders extends Module {
     private final BoolSetting self = boolSetting("Self", true, players::getValue).group(select);
     private final BoolSetting friends = boolSetting("Friends", true).group(select);
     private final BoolSetting crystals = boolSetting("Crystals", true).group(select);
+    private final BoolSetting chests = boolSetting("Chests", true).group(select);
     private final BoolSetting creatures = boolSetting("Creatures", false).group(select);
     private final BoolSetting monsters = boolSetting("Monsters", false).group(select);
     private final BoolSetting ambients = boolSetting("Ambients", false).group(select);
@@ -36,7 +38,7 @@ public class Shaders extends Module {
     public final EnumSetting<ShaderManager.Shader> mode = enumSetting("Mode", ShaderManager.Shader.Default);
     public final EnumSetting<ShaderManager.Shader> handsMode = enumSetting("Hands Mode", ShaderManager.Shader.Default);
 
-    public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1, () -> players.getValue() || crystals.getValue() || friends.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue());
+    public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1, () -> players.getValue() || crystals.getValue() || chests.getValue() || friends.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue());
     public final DoubleSetting factor = doubleSetting("Gradient Factor", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
     public final DoubleSetting gradient = doubleSetting("Gradient", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
     public final IntSetting alpha2 = intSetting("Gradient Alpha", 170, 0, 255, 1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient));
@@ -55,6 +57,14 @@ public class Shaders extends Module {
 
     public boolean shouldRenderHands() {
         return hands.getValue();
+    }
+
+    public boolean shouldRenderChest(BlockPos blockPos) {
+        if (mc.player == null) {
+            return false;
+        }
+
+        return chests.getValue() && mc.player.blockPosition().distSqr(blockPos) <= maxRange.getValue() * maxRange.getValue();
     }
 
     public boolean shouldRender(Entity entity) {
