@@ -6,8 +6,8 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.adapter.ModuleViewModel;
-import com.github.epsilon.gui.panel.dsl.PanelUiCompiler;
-import com.github.epsilon.gui.panel.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.utils.client.KeybindUtils;
 
 import java.awt.*;

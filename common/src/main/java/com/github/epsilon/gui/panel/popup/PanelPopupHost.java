@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;

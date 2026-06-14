@@ -1,4 +1,4 @@
-package com.github.epsilon.gui.panel.dsl;
+package com.github.epsilon.gui.dsl;
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -39,7 +39,7 @@ public class PanelUiTree {
     }
 
     public static void clearMemoCache() {
-        // Memo cache has been removed; keep this method as a compatibility no-op.
+        // memo 缓存已经移除；保留该方法作为兼容空实现。
     }
 
     List<UiNode> nodes() {
@@ -66,6 +66,38 @@ public class PanelUiTree {
 
         private List<UiNode> nodes = new ArrayList<>();
         private boolean hasActiveAnimations;
+
+        /**
+         * 向当前作用域追加单个节点，并在需要时绑定到相对 layer。
+         * <p>
+         * 高频渲染门面会大量调用单节点重载；这里直接包装 {@link LayeredNode}，
+         * 避免为了一个图元额外创建临时 {@link Scope} 和子列表。
+         */
+        private void addNode(int layer, UiNode node) {
+            if (layer == 0) {
+                nodes.add(node);
+            } else {
+                nodes.add(new LayeredNode(layer, node));
+            }
+        }
+
+        /**
+         * 生成当前作用域内容的不可变树快照。
+         * <p>
+         * 长生命周期渲染门面会复用同一个 {@link Scope} 收集整帧内容，
+         * 快照用于把当帧节点稳定地交给批次编译。
+         */
+        public PanelUiTree snapshot() {
+            return new PanelUiTree(List.copyOf(nodes), hasActiveAnimations);
+        }
+
+        /**
+         * 清空当前作用域，便于长生命周期的渲染门面复用。
+         */
+        public void clear() {
+            nodes.clear();
+            hasActiveAnimations = false;
+        }
 
         /**
          * 构建一个普通子分组。
@@ -96,6 +128,20 @@ public class PanelUiTree {
         }
 
         /**
+         * 在一个相对层级中构建子树。
+         * <p>
+         * 层级只影响支持 layer 的批次输出；旧的直接编译入口会把它当作普通分组处理。
+         *
+         * @param layer   相对层级偏移，数值越大越靠上
+         * @param content 子层级内容
+         */
+        public void layer(int layer, Consumer<Scope> content) {
+            CaptureResult capture = capture(content);
+            hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
+            nodes.add(new LayerNode(layer, capture.nodes()));
+        }
+
+        /**
          * 推进一个布尔目标动画，并返回当前值。
          *
          * @param animation 动画实例
@@ -123,14 +169,28 @@ public class PanelUiTree {
             nodes.add(new ShadowNode(x, y, width, height, radius, radius, radius, radius, blurRadius, color));
         }
 
+        public void shadow(int layer, float x, float y, float width, float height, float radius, float blurRadius, Color color) {
+            addNode(layer, new ShadowNode(x, y, width, height, radius, radius, radius, radius, blurRadius, color));
+        }
+
         public void shadow(float x, float y, float width, float height,
                            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                            float blurRadius, Color color) {
             nodes.add(new ShadowNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color));
         }
 
+        public void shadow(int layer, float x, float y, float width, float height,
+                           float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                           float blurRadius, Color color) {
+            addNode(layer, new ShadowNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color));
+        }
+
         public void roundRect(float x, float y, float width, float height, float radius, Color color) {
             nodes.add(new RoundRectNode(x, y, width, height, radius, radius, radius, radius, color));
+        }
+
+        public void roundRect(int layer, float x, float y, float width, float height, float radius, Color color) {
+            addNode(layer, new RoundRectNode(x, y, width, height, radius, radius, radius, radius, color));
         }
 
         public void roundRect(float x, float y, float width, float height,
@@ -139,16 +199,101 @@ public class PanelUiTree {
             nodes.add(new RoundRectNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color));
         }
 
+        public void roundRect(int layer, float x, float y, float width, float height,
+                              float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                              Color color) {
+            addNode(layer, new RoundRectNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color));
+        }
+
+        public void roundRectGradient(float x, float y, float width, float height, float radius,
+                                      Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            roundRectGradient(x, y, width, height, radius, radius, radius, radius, topLeft, bottomLeft, bottomRight, topRight);
+        }
+
+        public void roundRectGradient(float x, float y, float width, float height,
+                                      float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                                      Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            nodes.add(new RoundRectGradientNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                    topLeft, bottomLeft, bottomRight, topRight));
+        }
+
+        public void roundRectGradient(int layer, float x, float y, float width, float height,
+                                      float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                                      Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            addNode(layer, new RoundRectGradientNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                    topLeft, bottomLeft, bottomRight, topRight));
+        }
+
+        public void roundRectVerticalGradient(float x, float y, float width, float height, float radius, Color top, Color bottom) {
+            roundRectGradient(x, y, width, height, radius, top, bottom, bottom, top);
+        }
+
+        public void roundRectHorizontalGradient(float x, float y, float width, float height, float radius, Color left, Color right) {
+            roundRectGradient(x, y, width, height, radius, left, left, right, right);
+        }
+
+        public void roundRectHorizontalGradient(int layer, float x, float y, float width, float height, float radius, Color left, Color right) {
+            roundRectGradient(layer, x, y, width, height, radius, radius, radius, radius, left, left, right, right);
+        }
+
         public void rect(float x, float y, float width, float height, Color color) {
             nodes.add(new RectNode(x, y, width, height, color));
+        }
+
+        public void rect(int layer, float x, float y, float width, float height, Color color) {
+            addNode(layer, new RectNode(x, y, width, height, color));
+        }
+
+        public void rectGradient(float x, float y, float width, float height,
+                                 Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            nodes.add(new RectGradientNode(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight));
+        }
+
+        public void rectGradient(int layer, float x, float y, float width, float height,
+                                 Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            addNode(layer, new RectGradientNode(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight));
+        }
+
+        public void rectVerticalGradient(float x, float y, float width, float height, Color top, Color bottom) {
+            rectGradient(x, y, width, height, top, bottom, bottom, top);
+        }
+
+        public void rectHorizontalGradient(float x, float y, float width, float height, Color left, Color right) {
+            rectGradient(x, y, width, height, left, left, right, right);
+        }
+
+        public void outline(float x, float y, float width, float height, float radius, float outlineWidth, Color color) {
+            outline(x, y, width, height, radius, radius, radius, radius, outlineWidth, color);
+        }
+
+        public void outline(float x, float y, float width, float height,
+                            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                            float outlineWidth, Color color) {
+            nodes.add(new OutlineNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                    outlineWidth, color));
+        }
+
+        public void outline(int layer, float x, float y, float width, float height,
+                            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                            float outlineWidth, Color color) {
+            addNode(layer, new OutlineNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                    outlineWidth, color));
         }
 
         public void text(String text, float x, float y, float scale, Color color) {
             nodes.add(new TextNode(text, x, y, scale, color, null));
         }
 
+        public void text(int layer, String text, float x, float y, float scale, Color color) {
+            addNode(layer, new TextNode(text, x, y, scale, color, null));
+        }
+
         public void text(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
             nodes.add(new TextNode(text, x, y, scale, color, fontLoader));
+        }
+
+        public void text(int layer, String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
+            addNode(layer, new TextNode(text, x, y, scale, color, fontLoader));
         }
 
         /**
@@ -370,6 +515,10 @@ public class PanelUiTree {
             nodes.add(new TriangleNode(centerX, centerY, size, progress, color));
         }
 
+        public void triangle(int layer, float centerX, float centerY, float size, float progress, Color color) {
+            addNode(layer, new TriangleNode(centerX, centerY, size, progress, color));
+        }
+
         /**
          * 在独立视口缓冲中构建一个可裁剪子树。
          * <p>
@@ -394,6 +543,7 @@ public class PanelUiTree {
         private CaptureResult capture(Consumer<Scope> content) {
             List<UiNode> parent = nodes;
             boolean parentAnimations = hasActiveAnimations;
+            // 子树构建期间临时切换收集列表，finally 中恢复父作用域，避免子节点泄露到父层。
             nodes = new ArrayList<>();
             hasActiveAnimations = false;
             try {
@@ -410,7 +560,12 @@ public class PanelUiTree {
     }
 
 
-    sealed interface UiNode permits GroupNode, ShadowNode, RoundRectNode, RectNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    /**
+     * DSL 节点只描述本帧的绘制意图，不持有 renderer 状态。
+     * <p>
+     * 编译阶段会按节点类型把它们分发到具体 renderer 或视口缓冲。
+     */
+    sealed interface UiNode permits GroupNode, LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, OutlineNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -449,6 +604,18 @@ public class PanelUiTree {
     record GroupNode(List<UiNode> children) implements UiNode {
     }
 
+    /**
+     * 子树级 layer 偏移；适合一组节点整体提升或下沉。
+     */
+    record LayerNode(int layer, List<UiNode> children) implements UiNode {
+    }
+
+    /**
+     * 单节点 layer 包装；供高频图元入口使用，减少小列表分配。
+     */
+    record LayeredNode(int layer, UiNode child) implements UiNode {
+    }
+
     record ShadowNode(float x, float y, float width, float height,
                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                       float blurRadius, Color color) implements UiNode {
@@ -459,7 +626,21 @@ public class PanelUiTree {
                          Color color) implements UiNode {
     }
 
+    record RoundRectGradientNode(float x, float y, float width, float height,
+                                 float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                                 Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) implements UiNode {
+    }
+
     record RectNode(float x, float y, float width, float height, Color color) implements UiNode {
+    }
+
+    record RectGradientNode(float x, float y, float width, float height,
+                            Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) implements UiNode {
+    }
+
+    record OutlineNode(float x, float y, float width, float height,
+                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                       float outlineWidth, Color color) implements UiNode {
     }
 
     record TextNode(String text, float x, float y, float scale, Color color,

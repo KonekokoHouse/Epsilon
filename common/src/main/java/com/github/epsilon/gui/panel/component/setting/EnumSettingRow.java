@@ -5,7 +5,7 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
-import com.github.epsilon.gui.panel.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;

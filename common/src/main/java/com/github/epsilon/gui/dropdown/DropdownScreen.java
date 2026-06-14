@@ -160,6 +160,7 @@ public class DropdownScreen extends Screen {
         }
 
         drawSearch(mouseX, mouseY);
+        renderer.endFrame();
     }
 
     private void drawSearch(int mouseX, int mouseY) {

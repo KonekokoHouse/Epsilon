@@ -3,7 +3,8 @@ package com.github.epsilon.gui.panel;
 import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.*;
-import com.github.epsilon.gui.panel.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.input.PanelInputRouter;
 import com.github.epsilon.gui.panel.panel.CategoryRailPanel;
 import com.github.epsilon.gui.panel.panel.ClientSettingPanel;
@@ -168,20 +169,27 @@ public class PanelScreen extends Screen {
     }
 
     private void drawChrome(PanelLayout.Layout layout) {
-        shadowRenderer.addShadow(layout.panel().x(), layout.panel().y(), layout.panel().width(), layout.panel().height(), MD3Theme.PANEL_RADIUS, 18.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
-        roundRectRenderer.addRoundRect(layout.panel().x(), layout.panel().y(), layout.panel().width(), layout.panel().height(), MD3Theme.PANEL_RADIUS, MD3Theme.SURFACE);
-
-        roundRectRenderer.addRoundRect(layout.rail().x(), layout.rail().y(), layout.rail().width(), layout.rail().height(), MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
-        if (state.isClientSettingMode()) {
-            float csX = layout.modules().x();
-            float csY = layout.modules().y();
-            float csW = layout.detail().right() - layout.modules().x();
-            float csH = layout.modules().height();
-            roundRectRenderer.addRoundRect(csX, csY, csW, csH, MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
-        } else {
-            roundRectRenderer.addRoundRect(layout.modules().x(), layout.modules().y(), layout.modules().width(), layout.modules().height(), MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
-            roundRectRenderer.addRoundRect(layout.detail().x(), layout.detail().y(), layout.detail().width(), layout.detail().height(), MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
-        }
+        PanelUiTree tree = PanelUiTree.build(scope -> {
+            scope.shadow(layout.panel().x(), layout.panel().y(), layout.panel().width(), layout.panel().height(),
+                    MD3Theme.PANEL_RADIUS, 18.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
+            scope.roundRect(layout.panel().x(), layout.panel().y(), layout.panel().width(), layout.panel().height(),
+                    MD3Theme.PANEL_RADIUS, MD3Theme.SURFACE);
+            scope.roundRect(layout.rail().x(), layout.rail().y(), layout.rail().width(), layout.rail().height(),
+                    MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+            if (state.isClientSettingMode()) {
+                float csX = layout.modules().x();
+                float csY = layout.modules().y();
+                float csW = layout.detail().right() - layout.modules().x();
+                float csH = layout.modules().height();
+                scope.roundRect(csX, csY, csW, csH, MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+            } else {
+                scope.roundRect(layout.modules().x(), layout.modules().y(), layout.modules().width(), layout.modules().height(),
+                        MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+                scope.roundRect(layout.detail().x(), layout.detail().y(), layout.detail().width(), layout.detail().height(),
+                        MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+            }
+        });
+        renderBatch.render(tree, -20);
     }
 
     private void flushQueuedRenderers() {

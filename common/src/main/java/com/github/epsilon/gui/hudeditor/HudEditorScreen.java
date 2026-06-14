@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.hudeditor;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.managers.NotificationManager;
 import com.github.epsilon.modules.HudModule;
@@ -30,7 +31,7 @@ public class HudEditorScreen extends Screen {
 
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();
 
-    private final RectRenderer rectRenderer = RectRenderer.create();
+    private final PanelRenderBatch renderBatch = new PanelRenderBatch();
     private final HudEditorOverlayRenderer guideOverlayRenderer = new HudEditorOverlayRenderer();
     private final HudEditorOverlayRenderer foregroundOverlayRenderer = new HudEditorOverlayRenderer();
     private final HudEditorInspector inspector = new HudEditorInspector();
@@ -84,20 +85,22 @@ public class HudEditorScreen extends Screen {
             guideOverlayRenderer.flushRenderer();
         }
 
-        for (HudModule hudModule : hudModules) {
-            rectRenderer.addRect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, BOX_COLOR);
-            if (hudModule == selected) {
-                rectRenderer.addRect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, SELECTED_COLOR);
+        PanelUiTree moduleBoxes = PanelUiTree.build(scope -> {
+            for (HudModule hudModule : hudModules) {
+                scope.rect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, BOX_COLOR);
+                if (hudModule == selected) {
+                    scope.rect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, SELECTED_COLOR);
+                }
+                if (hudModule == hovered) {
+                    scope.rect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, HOVER_COLOR);
+                }
+                if (hudModule == dragging) {
+                    scope.rect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, DRAGGING_COLOR);
+                }
             }
-            if (hudModule == hovered) {
-                rectRenderer.addRect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, HOVER_COLOR);
-            }
-            if (hudModule == dragging) {
-                rectRenderer.addRect(hudModule.x, hudModule.y, hudModule.width, hudModule.height, DRAGGING_COLOR);
-            }
-        }
-
-        rectRenderer.drawAndClear();
+        });
+        renderBatch.render(moduleBoxes, 10);
+        renderBatch.flushAndClear();
 
         for (HudModule hudModule : hudModules) {
             hudModule.render(graphics, delta);

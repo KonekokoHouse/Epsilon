@@ -2,15 +2,12 @@ package com.github.epsilon.gui.hudeditor;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.adapter.SettingListController;
-import com.github.epsilon.gui.panel.dsl.PanelUiCompiler;
-import com.github.epsilon.gui.panel.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
@@ -41,9 +38,7 @@ public class HudEditorInspector {
     private static final float CONTENT_TOP = 40.0f;
     private static final float COLLAPSE_BUTTON_SIZE = 12.0f;
 
-    private final RoundRectRenderer roundRectRenderer = RoundRectRenderer.create();
-    private final RectRenderer rectRenderer = RectRenderer.create();
-    private final ShadowRenderer shadowRenderer = ShadowRenderer.create();
+    private final PanelRenderBatch renderBatch = new PanelRenderBatch();
     private final TextRenderer textRenderer = TextRenderer.create();
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
     private final PanelPopupHost popupHost = new PanelPopupHost();
@@ -81,24 +76,27 @@ public class HudEditorInspector {
         float buttonY = bounds.y() + (HEADER_HEIGHT - COLLAPSE_BUTTON_SIZE) * 0.5f;
         this.collapseButtonBounds = new PanelLayout.Rect(buttonX, buttonY, COLLAPSE_BUTTON_SIZE, COLLAPSE_BUTTON_SIZE);
 
-        shadowRenderer.addShadow(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.SECTION_RADIUS, 16.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
-        roundRectRenderer.addRoundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
-        roundRectRenderer.addRoundRect(bounds.x() + 1.0f, bounds.y() + 1.0f, bounds.width() - 2.0f, bounds.height() - 2.0f, MD3Theme.SECTION_RADIUS - 1.0f, MD3Theme.SURFACE_CONTAINER_LOW);
-
         float titleX = bounds.x() + MD3Theme.PANEL_TITLE_INSET;
-        textRenderer.addText(titleComponent.getTranslatedName(), titleX, bounds.y() + HEADER_TOP, TITLE_SCALE, MD3Theme.TEXT_PRIMARY);
 
         boolean collapseHovered = collapseButtonBounds.contains(mouseX, mouseY);
-        roundRectRenderer.addRoundRect(
-                collapseButtonBounds.x(),
-                collapseButtonBounds.y(),
-                collapseButtonBounds.width(),
-                collapseButtonBounds.height(),
-                5.0f,
-                collapseHovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER
-        );
         String collapseGlyph = collapsed ? "+" : "-";
-        textRenderer.addText(collapseGlyph, collapseButtonBounds.x() + 4.0f, collapseButtonBounds.y() + 2.0f, 0.68f, MD3Theme.TEXT_PRIMARY);
+        PanelUiTree chromeTree = PanelUiTree.build(scope -> {
+            scope.layer(0, layer -> {
+                layer.shadow(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.SECTION_RADIUS, 16.0f,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
+                layer.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+                layer.roundRect(bounds.x() + 1.0f, bounds.y() + 1.0f, bounds.width() - 2.0f, bounds.height() - 2.0f,
+                        MD3Theme.SECTION_RADIUS - 1.0f, MD3Theme.SURFACE_CONTAINER_LOW);
+                layer.roundRect(collapseButtonBounds.x(), collapseButtonBounds.y(),
+                        collapseButtonBounds.width(), collapseButtonBounds.height(), 5.0f,
+                        collapseHovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER);
+            });
+            scope.layer(10, layer -> {
+                layer.text(titleComponent.getTranslatedName(), titleX, bounds.y() + HEADER_TOP, TITLE_SCALE, MD3Theme.TEXT_PRIMARY);
+                layer.text(collapseGlyph, collapseButtonBounds.x() + 4.0f, collapseButtonBounds.y() + 2.0f, 0.68f, MD3Theme.TEXT_PRIMARY);
+            });
+        });
+        renderBatch.render(chromeTree);
 
         if (collapsed) {
             flushChrome();
@@ -107,7 +105,8 @@ public class HudEditorInspector {
         }
 
         if (selectedModule == null) {
-            textRenderer.addText(selectComponent.getTranslatedName(), titleX, bounds.y() + HEADER_GAP, SUBTITLE_SCALE, MD3Theme.TEXT_SECONDARY);
+            renderBatch.render(PanelUiTree.build(scope -> scope.layer(10, layer ->
+                    layer.text(selectComponent.getTranslatedName(), titleX, bounds.y() + HEADER_GAP, SUBTITLE_SCALE, MD3Theme.TEXT_SECONDARY))));
             flushChrome();
             clearContentState(true);
             return;
@@ -118,7 +117,8 @@ public class HudEditorInspector {
             selectedModuleName = selectedModule.getName();
         }
 
-        textRenderer.addText(selectedModule.getTranslatedName(), titleX, bounds.y() + HEADER_GAP, SUBTITLE_SCALE, MD3Theme.TEXT_SECONDARY);
+        renderBatch.render(PanelUiTree.build(scope -> scope.layer(10, layer ->
+                layer.text(selectedModule.getTranslatedName(), titleX, bounds.y() + HEADER_GAP, SUBTITLE_SCALE, MD3Theme.TEXT_SECONDARY))));
 
         viewport = new PanelLayout.Rect(
                 bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET,
@@ -130,7 +130,8 @@ public class HudEditorInspector {
         List<Setting<?>> settings = selectedModule.getSettings().stream().filter(Setting::isAvailable).toList();
 
         if (settings.isEmpty()) {
-            textRenderer.addText("This HUD has no settings", titleX, viewport.y(), SUBTITLE_SCALE, MD3Theme.TEXT_MUTED);
+            renderBatch.render(PanelUiTree.build(scope -> scope.layer(10, layer ->
+                    layer.text("This HUD has no settings", titleX, viewport.y(), SUBTITLE_SCALE, MD3Theme.TEXT_MUTED))));
             flushChrome();
             clearContentState(true);
             return;
@@ -151,7 +152,7 @@ public class HudEditorInspector {
                     row.buildUi(content, graphics, textRenderer, rowBounds, hover, effectiveMouseX, effectiveMouseY, partialTick);
                 })
         ));
-        PanelUiCompiler.render(settingsTree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(settingsTree);
 
         flushChrome();
 
@@ -313,10 +314,7 @@ public class HudEditorInspector {
     }
 
     private void flushChrome() {
-        shadowRenderer.drawAndClear();
-        roundRectRenderer.drawAndClear();
-        rectRenderer.drawAndClear();
-        textRenderer.drawAndClear();
+        renderBatch.flushAndClear();
     }
 
     private void clearContentState(boolean resetSelectionState) {

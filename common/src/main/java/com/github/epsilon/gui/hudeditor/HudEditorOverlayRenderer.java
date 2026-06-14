@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.hudeditor;
 
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.modules.HudModule;
 import net.minecraft.util.Mth;
 
@@ -28,8 +28,8 @@ public class HudEditorOverlayRenderer {
     private static final float LABEL_PADDING_Y = 4.0f;
     private static final float LABEL_MARGIN = 6.0f;
 
-    private final RectRenderer rectRenderer = RectRenderer.create();
-    private final TextRenderer textRenderer = TextRenderer.create();
+    private final PanelRenderBatch renderBatch = new PanelRenderBatch();
+    private final PanelUiTree.Scope scope = new PanelUiTree.Scope();
 
     public void addThirdGuides(HudModule focus, boolean draggingFocus, int screenWidth, int screenHeight) {
         float splitX1 = screenWidth / 3.0f;
@@ -40,21 +40,21 @@ public class HudEditorOverlayRenderer {
         Color lineColor = draggingFocus ? DRAG_GUIDE_LINE_COLOR : GUIDE_LINE_COLOR;
 
         switch (focus.getHorizontalAnchor()) {
-            case Left -> rectRenderer.addRect(0.0f, 0.0f, splitX1, screenHeight, bandColor);
-            case Center -> rectRenderer.addRect(splitX1, 0.0f, splitX1, screenHeight, bandColor);
-            case Right -> rectRenderer.addRect(splitX2, 0.0f, screenWidth - splitX2, screenHeight, bandColor);
+            case Left -> scope.rect(0.0f, 0.0f, splitX1, screenHeight, bandColor);
+            case Center -> scope.rect(splitX1, 0.0f, splitX1, screenHeight, bandColor);
+            case Right -> scope.rect(splitX2, 0.0f, screenWidth - splitX2, screenHeight, bandColor);
         }
 
         switch (focus.getVerticalAnchor()) {
-            case Top -> rectRenderer.addRect(0.0f, 0.0f, screenWidth, splitY1, bandColor);
-            case Center -> rectRenderer.addRect(0.0f, splitY1, screenWidth, splitY1, bandColor);
-            case Bottom -> rectRenderer.addRect(0.0f, splitY2, screenWidth, screenHeight - splitY2, bandColor);
+            case Top -> scope.rect(0.0f, 0.0f, screenWidth, splitY1, bandColor);
+            case Center -> scope.rect(0.0f, splitY1, screenWidth, splitY1, bandColor);
+            case Bottom -> scope.rect(0.0f, splitY2, screenWidth, screenHeight - splitY2, bandColor);
         }
 
-        rectRenderer.addRect(splitX1, 0.0f, GUIDE_THICKNESS, screenHeight, lineColor);
-        rectRenderer.addRect(splitX2, 0.0f, GUIDE_THICKNESS, screenHeight, lineColor);
-        rectRenderer.addRect(0.0f, splitY1, screenWidth, GUIDE_THICKNESS, lineColor);
-        rectRenderer.addRect(0.0f, splitY2, screenWidth, GUIDE_THICKNESS, lineColor);
+        scope.rect(splitX1, 0.0f, GUIDE_THICKNESS, screenHeight, lineColor);
+        scope.rect(splitX2, 0.0f, GUIDE_THICKNESS, screenHeight, lineColor);
+        scope.rect(0.0f, splitY1, screenWidth, GUIDE_THICKNESS, lineColor);
+        scope.rect(0.0f, splitY2, screenWidth, GUIDE_THICKNESS, lineColor);
     }
 
     public void addAnchorOverlay(HudModule focus, boolean draggingFocus, int screenWidth, int screenHeight) {
@@ -64,12 +64,12 @@ public class HudEditorOverlayRenderer {
         float outerHalf = ANCHOR_MARKER_OUTER_SIZE / 2.0f;
         float innerHalf = ANCHOR_MARKER_INNER_SIZE / 2.0f;
         Color markerColor = draggingFocus ? DRAG_ANCHOR_MARKER_COLOR : ANCHOR_MARKER_COLOR;
-        rectRenderer.addRect(anchorX - outerHalf, anchorY - outerHalf, ANCHOR_MARKER_OUTER_SIZE, ANCHOR_MARKER_OUTER_SIZE, ANCHOR_MARKER_OUTLINE);
-        rectRenderer.addRect(anchorX - innerHalf, anchorY - innerHalf, ANCHOR_MARKER_INNER_SIZE, ANCHOR_MARKER_INNER_SIZE, markerColor);
+        scope.rect(anchorX - outerHalf, anchorY - outerHalf, ANCHOR_MARKER_OUTER_SIZE, ANCHOR_MARKER_OUTER_SIZE, ANCHOR_MARKER_OUTLINE);
+        scope.rect(anchorX - innerHalf, anchorY - innerHalf, ANCHOR_MARKER_INNER_SIZE, ANCHOR_MARKER_INNER_SIZE, markerColor);
 
         String label = focus.getHorizontalAnchor().name() + " / " + focus.getVerticalAnchor().name();
-        float textWidth = textRenderer.getWidth(label, GUIDE_LABEL_SCALE);
-        float textHeight = textRenderer.getHeight(GUIDE_LABEL_SCALE);
+        float textWidth = renderBatch.textRenderer().getWidth(label, GUIDE_LABEL_SCALE);
+        float textHeight = renderBatch.textRenderer().getHeight(GUIDE_LABEL_SCALE);
         float labelWidth = textWidth + LABEL_PADDING_X * 2.0f;
         float labelHeight = textHeight + LABEL_PADDING_Y * 2.0f;
         float labelX = Mth.clamp(focus.x + focus.width / 2.0f - labelWidth / 2.0f, LABEL_MARGIN, screenWidth - labelWidth - LABEL_MARGIN);
@@ -78,25 +78,26 @@ public class HudEditorOverlayRenderer {
                 ? preferredLabelY
                 : Mth.clamp(focus.y + focus.height + LABEL_MARGIN, LABEL_MARGIN, screenHeight - labelHeight - LABEL_MARGIN);
 
-        rectRenderer.addRect(labelX, labelY, labelWidth, labelHeight, ANCHOR_LABEL_BG);
-        textRenderer.addText(label, labelX + LABEL_PADDING_X, labelY + LABEL_PADDING_Y - 1.0f, GUIDE_LABEL_SCALE, ANCHOR_LABEL_TEXT);
+        scope.layer(0, layer -> layer.rect(labelX, labelY, labelWidth, labelHeight, ANCHOR_LABEL_BG));
+        scope.layer(10, layer -> layer.text(label, labelX + LABEL_PADDING_X, labelY + LABEL_PADDING_Y - 1.0f, GUIDE_LABEL_SCALE, ANCHOR_LABEL_TEXT));
     }
 
     public void addSnapPreview(Float snapPreviewX, Float snapPreviewY, int screenWidth, int screenHeight) {
         if (snapPreviewX != null) {
             float x = Mth.clamp(snapPreviewX, 0.0f, screenWidth - GUIDE_THICKNESS);
-            rectRenderer.addRect(x, 0.0f, GUIDE_THICKNESS, screenHeight, SNAP_PREVIEW_COLOR);
+            scope.rect(x, 0.0f, GUIDE_THICKNESS, screenHeight, SNAP_PREVIEW_COLOR);
         }
 
         if (snapPreviewY != null) {
             float y = Mth.clamp(snapPreviewY, 0.0f, screenHeight - GUIDE_THICKNESS);
-            rectRenderer.addRect(0.0f, y, screenWidth, GUIDE_THICKNESS, SNAP_PREVIEW_COLOR);
+            scope.rect(0.0f, y, screenWidth, GUIDE_THICKNESS, SNAP_PREVIEW_COLOR);
         }
     }
 
     public void flushRenderer() {
-        rectRenderer.drawAndClear();
-        textRenderer.drawAndClear();
+        renderBatch.render(scope.snapshot());
+        renderBatch.flushAndClear();
+        scope.clear();
     }
 
 }
