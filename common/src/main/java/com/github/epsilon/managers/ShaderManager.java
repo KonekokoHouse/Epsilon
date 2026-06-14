@@ -14,6 +14,8 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import java.awt.*;
@@ -49,9 +51,16 @@ public class ShaderManager {
     private GpuBuffer uniforms;
     private RenderTarget shaderSwap;
     private RenderTarget handTarget;
+    private RenderTarget chestTarget;
+    private final OutlineBufferSource chestOutlineBufferSource = new OutlineBufferSource();
     private boolean renderingHands;
     private boolean capturedHands;
+    private boolean renderingChests;
+    private boolean capturedChests;
+    private boolean preparedChests;
     private float time;
+
+    public static final int EPSILON_CHEST_OUTLINE_MARKER = 0x01000001;
 
     private ShaderManager() {
     }
@@ -91,6 +100,30 @@ public class ShaderManager {
         return renderingHands ? handTarget : null;
     }
 
+    public RenderTarget getChestOutlineTarget() {
+        return renderingChests ? chestTarget : null;
+    }
+
+    public OutlineBufferSource getChestOutlineBufferSource() {
+        if (!preparedChests) {
+            RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
+            prepareChestOutlineTarget(mainTarget);
+            preparedChests = true;
+        }
+        capturedChests = true;
+        return chestOutlineBufferSource;
+    }
+
+    public void endChestOutlineBatch() {
+        if (!capturedChests || chestTarget == null) {
+            return;
+        }
+
+        renderingChests = true;
+        chestOutlineBufferSource.endOutlineBatch();
+        renderingChests = false;
+    }
+
     public void processHandOutlineTarget(RenderTarget mainTarget) {
         if (capturedHands) {
             capturedHands = false;
@@ -102,6 +135,30 @@ public class ShaderManager {
             processEntityOutlineTarget(handTarget, Shaders.INSTANCE.handsMode.getValue());
             handTarget.blitAndBlendToTexture(mainTarget.getColorTextureView());
         }
+    }
+
+    public void prepareChestOutlineTarget(RenderTarget referenceTarget) {
+        if (referenceTarget == null || referenceTarget.width <= 0 || referenceTarget.height <= 0) {
+            return;
+        }
+
+        ensureChestTarget(referenceTarget.width, referenceTarget.height);
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        encoder.clearColorAndDepthTextures(chestTarget.getColorTexture(), 0, chestTarget.getDepthTexture(), 1.0);
+    }
+
+    public void processChestOutlineTarget(RenderTarget mainTarget) {
+        if (capturedChests) {
+            capturedChests = false;
+
+            if (chestTarget == null || mainTarget == null || mainTarget.getColorTextureView() == null) {
+                return;
+            }
+
+            processEntityOutlineTarget(chestTarget, Shaders.INSTANCE.chestMode.getValue());
+            chestTarget.blitAndBlendToTexture(mainTarget.getColorTextureView());
+        }
+        preparedChests = false;
     }
 
     private void renderPass(String name, RenderTarget input, RenderTarget output, RenderPipeline pipeline, boolean customUniforms) {
@@ -195,6 +252,16 @@ public class ShaderManager {
 
         if (handTarget.width != width || handTarget.height != height) {
             handTarget.resize(width, height);
+        }
+    }
+
+    private void ensureChestTarget(int width, int height) {
+        if (chestTarget == null) {
+            chestTarget = new TextureTarget("Epsilon Shader Chests", width, height, true);
+        }
+
+        if (chestTarget.width != width || chestTarget.height != height) {
+            chestTarget.resize(width, height);
         }
     }
 

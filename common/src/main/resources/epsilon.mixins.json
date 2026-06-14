@@ -41,6 +41,7 @@
     "MixinMain",
     "MixinMinecraft",
     "MixinMobEffectFogEnvironment",
+    "MixinModelFeatureRenderer",
     "MixinMouseHandler",
     "MixinMultiPlayerGameMode",
     "MixinOutputTarget",
