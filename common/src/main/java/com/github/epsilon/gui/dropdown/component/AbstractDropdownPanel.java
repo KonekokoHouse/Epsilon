@@ -34,6 +34,12 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     private static final float SCROLL_SMOOTHING = 0.16f;
     private static final float SCROLL_EPSILON = 0.05f;
+    private int renderFrameId = Integer.MIN_VALUE;
+    private int cachedMetricsFrameId = Integer.MIN_VALUE;
+    private float cachedExpand;
+    private float cachedContentHeight;
+    private float cachedVisibleContentHeight;
+    private float cachedPanelHeight;
 
     protected AbstractDropdownPanel(String id, String title, String icon, int panelIndex) {
         this(id, title, null, icon, panelIndex);
@@ -75,6 +81,12 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
+    public void beginRenderFrame(int frameId) {
+        renderFrameId = frameId;
+        cachedMetricsFrameId = Integer.MIN_VALUE;
+    }
+
+    @Override
     public float getIntroValue() {
         introAnim.run(1.0f);
         return introAnim.getValue();
@@ -82,12 +94,12 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     @Override
     public void drawBackground(DropdownRenderer renderer) {
-        openAnim.run(opened ? 1.0f : 0.0f);
-        float expand = openAnim.getValue();
-        float contentHeight = computeContentHeight();
-        float visibleHeight = computeVisibleContentHeight(contentHeight);
+        ensureFrameMetrics();
+        float expand = cachedExpand;
+        float contentHeight = cachedContentHeight;
+        float visibleHeight = cachedVisibleContentHeight;
         updateScroll(contentHeight, visibleHeight, true);
-        float panelHeight = DropdownTheme.PANEL_HEADER_HEIGHT + (visibleHeight + DropdownTheme.PANEL_BOTTOM_PADDING) * expand;
+        float panelHeight = cachedPanelHeight;
 
         renderer.shadow().addShadow(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow());
         renderer.roundRect().addRoundRect(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground());
@@ -116,11 +128,11 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     @Override
     public void drawContent(DropdownRenderer renderer, int mouseX, int mouseY) {
-        openAnim.run(opened ? 1.0f : 0.0f);
-        if (openAnim.getValue() < 0.01f) return;
+        ensureFrameMetrics();
+        if (cachedExpand < 0.01f) return;
 
-        float contentHeight = computeContentHeight();
-        float visibleHeight = computeVisibleContentHeight(contentHeight);
+        float contentHeight = cachedContentHeight;
+        float visibleHeight = cachedVisibleContentHeight;
         updateScroll(contentHeight, visibleHeight, false);
         drawPanelContent(renderer, mouseX, mouseY, visibleHeight);
     }
@@ -132,18 +144,14 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     @Override
     public float getContentClipHeight() {
-        openAnim.run(opened ? 1.0f : 0.0f);
-        float contentHeight = computeContentHeight();
-        float visibleHeight = computeVisibleContentHeight(contentHeight);
-        return visibleHeight * openAnim.getValue();
+        ensureFrameMetrics();
+        return cachedVisibleContentHeight * cachedExpand;
     }
 
     @Override
     public float getPanelHeight() {
-        openAnim.run(opened ? 1.0f : 0.0f);
-        float contentHeight = computeContentHeight();
-        float visibleHeight = computeVisibleContentHeight(contentHeight);
-        return DropdownTheme.PANEL_HEADER_HEIGHT + (visibleHeight + DropdownTheme.PANEL_BOTTOM_PADDING) * openAnim.getValue();
+        ensureFrameMetrics();
+        return cachedPanelHeight;
     }
 
     @Override
@@ -281,6 +289,22 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     protected float computeVisibleContentHeight(float contentHeight) {
         float maxContentHeight = Math.max(0.0f, maxPanelHeight - DropdownTheme.PANEL_HEADER_HEIGHT - DropdownTheme.PANEL_BOTTOM_PADDING);
         return Math.min(contentHeight, maxContentHeight);
+    }
+
+    protected int getRenderFrameId() {
+        return renderFrameId;
+    }
+
+    private void ensureFrameMetrics() {
+        if (cachedMetricsFrameId == renderFrameId) {
+            return;
+        }
+        openAnim.run(opened ? 1.0f : 0.0f);
+        cachedExpand = openAnim.getValue();
+        cachedContentHeight = computeContentHeight();
+        cachedVisibleContentHeight = computeVisibleContentHeight(cachedContentHeight);
+        cachedPanelHeight = DropdownTheme.PANEL_HEADER_HEIGHT + (cachedVisibleContentHeight + DropdownTheme.PANEL_BOTTOM_PADDING) * cachedExpand;
+        cachedMetricsFrameId = renderFrameId;
     }
 
     protected boolean isHeaderHovered(double mouseX, double mouseY) {

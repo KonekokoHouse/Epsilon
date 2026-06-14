@@ -8,7 +8,7 @@ import com.github.epsilon.gui.panel.component.setting.ColorSettingRow;
 import com.github.epsilon.gui.panel.component.setting.DoubleSettingRow;
 import com.github.epsilon.gui.panel.component.setting.EnumSettingRow;
 import com.github.epsilon.gui.panel.component.setting.IntSettingRow;
-import com.github.epsilon.gui.panel.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.popup.ColorPickerPopup;
 import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;

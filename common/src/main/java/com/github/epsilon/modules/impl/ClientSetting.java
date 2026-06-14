@@ -5,7 +5,7 @@ import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
-import com.github.epsilon.gui.panel.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;

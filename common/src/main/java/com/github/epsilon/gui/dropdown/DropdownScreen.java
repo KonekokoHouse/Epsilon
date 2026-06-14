@@ -25,7 +25,9 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DropdownScreen extends Screen {
 
@@ -39,11 +41,13 @@ public class DropdownScreen extends Screen {
     private final DropdownRenderer renderer = new DropdownRenderer();
     private final Animation scrimAnim = new Animation(Easing.EASE_OUT_SINE, 200L);
     private final DropdownTextField searchField = new DropdownTextField(64);
+    private final Set<String> visiblePanelIds = new HashSet<>();
 
     private LuminRenderSystem.LuminRenderTarget renderTarget;
     private IMEPreeditOverlay preeditOverlay;
     private boolean initialized;
     private int sessionId;
+    private int renderFrameId;
 
     private DropdownScreen() {
         super(Component.literal("DropdownGui"));
@@ -74,8 +78,8 @@ public class DropdownScreen extends Screen {
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("dropdown-gui", window.getWidth(), window.getHeight());
         }
-        renderTarget.clear();
         renderTarget.resize(window.getWidth(), window.getHeight());
+        renderTarget.clear();
         LuminRenderSystem.setActiveTarget(renderTarget);
 
         MD3Theme.syncFromSettings();
@@ -93,6 +97,8 @@ public class DropdownScreen extends Screen {
         scrimAnim.run(1.0f);
         renderer.beginFrame();
         updatePanelHeightLimits();
+        updateVisiblePanelIds();
+        beginPanelFrames();
 
         renderer.beginPass();
         Color scrim = DropdownTheme.scrim();
@@ -154,6 +160,7 @@ public class DropdownScreen extends Screen {
         }
 
         drawSearch(mouseX, mouseY);
+        renderer.endFrame();
     }
 
     private void drawSearch(int mouseX, int mouseY) {
@@ -386,11 +393,23 @@ public class DropdownScreen extends Screen {
     }
 
     private boolean isPanelVisible(String panelId) {
-        return panels.stream().anyMatch(panel -> panel.getId().equals(panelId) && panel.isVisible());
+        return visiblePanelIds.contains(panelId);
+    }
+
+    private void updateVisiblePanelIds() {
+        visiblePanelIds.clear();
+        for (DropdownPanel panel : panels) {
+            if (panel.isVisible()) {
+                visiblePanelIds.add(panel.getId());
+            }
+        }
     }
 
     private float resolveMaxPanelHeight(DropdownPanel panel) {
-        float screenLimited = LuminRenderSystem.getScaledHeight() * 0.72f;
+        return resolveMaxPanelHeight(panel, LuminRenderSystem.getScaledHeight() * 0.72f);
+    }
+
+    private float resolveMaxPanelHeight(DropdownPanel panel, float screenLimited) {
         return switch (panel.getId()) {
             case "main", "addon" -> Math.min(screenLimited, 260.0f);
             case "friend", "config" -> Math.min(screenLimited, 220.0f);
@@ -399,8 +418,16 @@ public class DropdownScreen extends Screen {
     }
 
     private void updatePanelHeightLimits() {
+        float screenLimited = LuminRenderSystem.getScaledHeight() * 0.72f;
         for (DropdownPanel panel : panels) {
-            panel.setMaxPanelHeight(resolveMaxPanelHeight(panel));
+            panel.setMaxPanelHeight(resolveMaxPanelHeight(panel, screenLimited));
+        }
+    }
+
+    private void beginPanelFrames() {
+        int frameId = ++renderFrameId;
+        for (DropdownPanel panel : panels) {
+            panel.beginRenderFrame(frameId);
         }
     }
 

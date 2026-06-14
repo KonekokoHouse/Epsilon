@@ -39,6 +39,8 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
 
     private final DropdownTextField inputField = new DropdownTextField(160);
     private String status = "";
+    private int cachedConfigFrameId = Integer.MIN_VALUE;
+    private List<String> cachedConfigs = List.of();
 
     public ConfigDropdownPanel(int panelIndex) {
         super("config", titleComponent, "", panelIndex);
@@ -46,7 +48,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
 
     @Override
     protected float computeContentHeight() {
-        int configCount = ConfigManager.INSTANCE.listConfigs().size();
+        int configCount = configsForFrame().size();
         return PADDING * 2.0f + FIELD_HEIGHT + GAP + BUTTON_HEIGHT * 3.0f + GAP * 3.0f
                 + Math.max(ROW_HEIGHT, configCount * (ROW_HEIGHT + GAP))
                 + (status.isEmpty() ? 0.0f : ROW_HEIGHT);
@@ -97,7 +99,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         }
 
         String active = ConfigManager.INSTANCE.getActiveConfigName();
-        List<String> configs = ConfigManager.INSTANCE.listConfigs();
+        List<String> configs = configsForFrame();
         if (configs.isEmpty()) {
             float emptyScale = 0.55f;
             renderer.text().addText(emptyComponent.getTranslatedName(), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
@@ -147,7 +149,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         currentY += BUTTON_HEIGHT * 3.0f + GAP * 3.0f;
         if (!status.isEmpty()) currentY += ROW_HEIGHT;
 
-        for (String name : ConfigManager.INSTANCE.listConfigs()) {
+        for (String name : configsForFrame()) {
             float deleteX = contentX + contentW - 18.0f;
             if (isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
                 try {
@@ -246,6 +248,15 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
 
     private float getCenteredTextY(DropdownRenderer renderer, float boxY, float boxH, float scale) {
         return boxY + (boxH - renderer.text().getHeight(scale)) / 2.0f;
+    }
+
+    private List<String> configsForFrame() {
+        int frameId = getRenderFrameId();
+        if (cachedConfigFrameId != frameId) {
+            cachedConfigs = ConfigManager.INSTANCE.listConfigs();
+            cachedConfigFrameId = frameId;
+        }
+        return cachedConfigs;
     }
 
 }
