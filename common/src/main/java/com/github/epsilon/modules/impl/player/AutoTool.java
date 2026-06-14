@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -38,7 +37,7 @@ public class AutoTool extends Module {
 
     @EventHandler
     public void onClientTick(PlayerTickEvent.Pre event) {
-        if (!(RotationManager.INSTANCE.getHitResult() instanceof BlockHitResult result)) return;
+        if (!(mc.hitResult instanceof BlockHitResult result)) return;
 
         BlockPos pos = result.getBlockPos();
         if (mc.level.getBlockState(pos).isAir()) {

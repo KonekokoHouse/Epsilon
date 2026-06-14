@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -43,7 +42,7 @@ public class KeepSprint extends Module {
         if (prediction.getValue() && !can) return false;
         if (groundOnly.getValue() && !mc.player.onGround()) return false;
         if (reachOnly.getValue()) {
-            HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+            HitResult hitResult = mc.hitResult;
             if (hitResult == null || hitResult.getType() == HitResult.Type.MISS) return false;
             return hitResult.getLocation().distanceTo(mc.player.getEyePosition()) > 3.0;
         }

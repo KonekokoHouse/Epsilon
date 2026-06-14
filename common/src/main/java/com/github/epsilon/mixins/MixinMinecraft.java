@@ -7,7 +7,6 @@ import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.LevelUpdateEvent;
 import com.github.epsilon.events.impl.StartUseItemEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
@@ -89,7 +88,7 @@ public class MixinMinecraft {
         if (handsView.isEnabled() && handsView.swingWhileUsing.getValue()
                 && mc.options.keyAttack.isDown()
                 && mc.options.keyAttack.consumeClick()
-                && (!handsView.onlyOnBlock.getValue() || RotationManager.INSTANCE.getHitResult().getType() == HitResult.Type.BLOCK)
+                && (!handsView.onlyOnBlock.getValue() || mc.hitResult.getType() == HitResult.Type.BLOCK)
         ) {
             mc.player.swing(InteractionHand.MAIN_HAND, false); // Use this method can swing client side.
         }

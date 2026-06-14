@@ -9,21 +9,10 @@ import com.github.epsilon.modules.impl.movement.MovementFix;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySelector;
-import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.AttackRange;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.*;
 
-import java.util.Collection;
 import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
@@ -48,8 +37,6 @@ public class RotationManager {
 
     private int priority;
     private Runnable callback;
-    private HitResult hitResult;
-    private Entity crosshairPickEntity;
 
     private RotationManager() {
         EventBus.INSTANCE.subscribe(this);
@@ -93,7 +80,6 @@ public class RotationManager {
         this.active = true;
 
         smooth();
-        updatePick();
     }
 
     private void smooth() {
@@ -142,6 +128,8 @@ public class RotationManager {
         }
 
         smoothed = true;
+
+        mc.pick(1.0f);
     }
 
     private void correctDisabledRotations() {
@@ -161,16 +149,6 @@ public class RotationManager {
 
     public Rot2f getRotation() {
         return active ? rotations : new Rot2f(mc.player.getYRot(), mc.player.getXRot());
-    }
-
-    public HitResult getHitResult() {
-        updatePick();
-        return hitResult;
-    }
-
-    public Entity getCrosshairPickEntity() {
-        updatePick();
-        return crosshairPickEntity;
     }
 
     public Rot2f getLastRotation() {
@@ -208,8 +186,6 @@ public class RotationManager {
         raytrace = null;
         randomAngle = 0;
         s08 = false;
-        hitResult = null;
-        crosshairPickEntity = null;
     }
 
     @EventHandler
@@ -227,7 +203,6 @@ public class RotationManager {
 
         if (active) {
             smooth();
-            updatePick();
             EventBus.INSTANCE.post(new AfterRotationEvent());
 
             if (callback != null) {
@@ -275,7 +250,6 @@ public class RotationManager {
         targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         raytrace = null;
         smoothed = false;
-        updatePick();
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -345,139 +319,6 @@ public class RotationManager {
         if (rotations != null) {
             event.setYaw(rotations.getYaw());
         }
-    }
-
-    private void updatePick() {
-        if (mc.player == null || mc.level == null) {
-            hitResult = null;
-            crosshairPickEntity = null;
-            return;
-        }
-
-        if (!active || rotations == null) {
-            hitResult = mc.hitResult;
-            crosshairPickEntity = mc.crosshairPickEntity;
-            return;
-        }
-
-        Entity cameraEntity = mc.getCameraEntity();
-        if (cameraEntity == null) {
-            return;
-        }
-
-        float partialTicks = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        hitResult = raycastHitResult(cameraEntity, partialTicks);
-        crosshairPickEntity = hitResult instanceof EntityHitResult entityHitResult ? entityHitResult.getEntity() : null;
-    }
-
-    private HitResult raycastHitResult(Entity cameraEntity, float partialTicks) {
-        ItemStack itemStack = mc.player.getActiveItem();
-        AttackRange itemAttackRange = itemStack.get(DataComponents.ATTACK_RANGE);
-        double blockInteractionRange = mc.player.blockInteractionRange();
-        HitResult result = null;
-
-        if (itemAttackRange != null) {
-            result = getClosestAttackRangeHit(cameraEntity, itemAttackRange, partialTicks);
-            if (result instanceof BlockHitResult) {
-                result = filterHitResult(result, cameraEntity.getEyePosition(partialTicks), blockInteractionRange);
-            }
-        }
-
-        if (result == null || result.getType() == HitResult.Type.MISS) {
-            result = pick(cameraEntity, blockInteractionRange, mc.player.entityInteractionRange(), partialTicks);
-        }
-
-        return result;
-    }
-
-    private HitResult getClosestAttackRangeHit(Entity cameraEntity, AttackRange attackRange, float partialTicks) {
-        Vec3 look = getViewVector().normalize();
-        Vec3 eyePosition = cameraEntity.getEyePosition(partialTicks);
-        Vec3 from = eyePosition.add(look.scale(attackRange.effectiveMinRange(cameraEntity)));
-        double movementComponent = cameraEntity.getKnownMovement().dot(look);
-        Vec3 to = eyePosition.add(look.scale(attackRange.effectiveMaxRange(cameraEntity) + Math.max(0.0, movementComponent)));
-
-        BlockHitResult blockHit = mc.level.clipIncludingBorder(new ClipContext(eyePosition, to, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, cameraEntity));
-        if (blockHit.getType() != HitResult.Type.MISS) {
-            to = blockHit.getLocation();
-            if (eyePosition.distanceToSqr(to) < eyePosition.distanceToSqr(from)) {
-                return blockHit;
-            }
-        }
-
-        AABB searchArea = AABB.ofSize(from, attackRange.hitboxMargin(), attackRange.hitboxMargin(), attackRange.hitboxMargin())
-                .expandTowards(to.subtract(from))
-                .inflate(1.0);
-        Collection<EntityHitResult> entityHits = ProjectileUtil.getManyEntityHitResult(
-                mc.level,
-                cameraEntity,
-                from,
-                to,
-                searchArea,
-                EntitySelector.CAN_BE_PICKED,
-                attackRange.hitboxMargin(),
-                ClipContext.Block.OUTLINE,
-                true
-        );
-
-        EntityHitResult entityHit = null;
-        double closestDistance = Double.MAX_VALUE;
-        for (EntityHitResult target : entityHits) {
-            double distance = eyePosition.distanceToSqr(target.getLocation());
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                entityHit = target;
-            }
-        }
-
-        if (entityHit != null) {
-            return entityHit;
-        }
-
-        Vec3 missPosition = eyePosition.add(look);
-        return BlockHitResult.miss(missPosition, Direction.getApproximateNearest(look), BlockPos.containing(missPosition));
-    }
-
-    private HitResult pick(Entity cameraEntity, double blockInteractionRange, double entityInteractionRange, float partialTicks) {
-        double maxDistance = Math.max(blockInteractionRange, entityInteractionRange);
-        double maxDistanceSq = Mth.square(maxDistance);
-        Vec3 from = cameraEntity.getEyePosition(partialTicks);
-        HitResult blockHitResult = pickBlock(cameraEntity, maxDistance, partialTicks);
-        double blockDistanceSq = blockHitResult.getLocation().distanceToSqr(from);
-        if (blockHitResult.getType() != HitResult.Type.MISS) {
-            maxDistanceSq = blockDistanceSq;
-            maxDistance = Math.sqrt(blockDistanceSq);
-        }
-
-        Vec3 direction = getViewVector();
-        Vec3 to = from.add(direction.x * maxDistance, direction.y * maxDistance, direction.z * maxDistance);
-        AABB box = cameraEntity.getBoundingBox().expandTowards(direction.scale(maxDistance)).inflate(1.0, 1.0, 1.0);
-        EntityHitResult entityHitResult = ProjectileUtil.getEntityHitResult(cameraEntity, from, to, box, EntitySelector.CAN_BE_PICKED, maxDistanceSq);
-        return entityHitResult != null && entityHitResult.getLocation().distanceToSqr(from) < blockDistanceSq
-                ? filterHitResult(entityHitResult, from, entityInteractionRange)
-                : filterHitResult(blockHitResult, from, blockInteractionRange);
-    }
-
-    private HitResult pickBlock(Entity cameraEntity, double range, float partialTicks) {
-        Vec3 from = cameraEntity.getEyePosition(partialTicks);
-        Vec3 viewVector = getViewVector();
-        Vec3 to = from.add(viewVector.x * range, viewVector.y * range, viewVector.z * range);
-        return mc.level.clip(new ClipContext(from, to, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, cameraEntity));
-    }
-
-    private HitResult filterHitResult(HitResult result, Vec3 from, double maxRange) {
-        Vec3 hitLocation = result.getLocation();
-        if (!hitLocation.closerThan(from, maxRange)) {
-            Direction direction = Direction.getApproximateNearest(hitLocation.x - from.x, hitLocation.y - from.y, hitLocation.z - from.z);
-            return BlockHitResult.miss(hitLocation, direction, BlockPos.containing(hitLocation));
-        }
-
-        return result;
-    }
-
-    private Vec3 getViewVector() {
-        Rot2f rotation = active && rotations != null ? rotations : new Rot2f(mc.player.getYRot(), mc.player.getXRot());
-        return mc.player.calculateViewVector(rotation.getPitch(), rotation.getYaw());
     }
 
 }

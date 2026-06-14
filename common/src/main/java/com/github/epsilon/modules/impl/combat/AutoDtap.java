@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.MousePressEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -81,7 +80,7 @@ public class AutoDtap extends Module {
                     ItemStack main = mc.player.getMainHandItem();
                     if (!main.is(ItemTags.SWORDS)) return;
 
-                    HitResult hit = RotationManager.INSTANCE.getHitResult();
+                    HitResult hit = mc.hitResult;
                     if (!(hit instanceof BlockHitResult blockHit)) return;
                     if (blockHit.getType() != HitResult.Type.BLOCK) return;
 
@@ -129,7 +128,7 @@ public class AutoDtap extends Module {
                 break;
 
             case 1:
-                HitResult hit1 = RotationManager.INSTANCE.getHitResult();
+                HitResult hit1 = mc.hitResult;
                 if (!(hit1 instanceof BlockHitResult baseHit)) {
                     resetState();
                     return;

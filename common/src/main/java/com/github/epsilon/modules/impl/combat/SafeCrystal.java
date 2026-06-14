@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -70,7 +69,7 @@ public class SafeCrystal extends Module {
             return;
         }
 
-        HitResult hit = RotationManager.INSTANCE.getHitResult();
+        HitResult hit = mc.hitResult;
         if (!(hit instanceof EntityHitResult ehr)) return;
 
         if (!(ehr.getEntity() instanceof EndCrystal crystal)) return;
@@ -108,7 +107,7 @@ public class SafeCrystal extends Module {
             return;
         }
 
-        HitResult hit = RotationManager.INSTANCE.getHitResult();
+        HitResult hit = mc.hitResult;
         if (!(hit instanceof BlockHitResult bhr)) return;
 
         BlockPos base = bhr.getBlockPos();

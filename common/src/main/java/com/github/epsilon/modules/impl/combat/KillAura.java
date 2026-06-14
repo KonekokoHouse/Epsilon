@@ -163,7 +163,7 @@ public class KillAura extends Module {
 
     private void clickTargets(List<LivingEntity> targets) {
         boolean shouldCheckHitResult = !throughWalls.getValue();
-        HitResult hitResult = shouldCheckHitResult ? RotationManager.INSTANCE.getHitResult() : null;
+        HitResult hitResult = shouldCheckHitResult ? mc.hitResult : null;
 
         if (targetMode.is(TargetMode.Multiple)) {
             for (LivingEntity target : targets) {
@@ -174,7 +174,7 @@ public class KillAura extends Module {
             }
             switchIndex++;
         } else {
-            Entity crosshairPickEntity = shouldCheckHitResult ? RotationManager.INSTANCE.getCrosshairPickEntity() : null;
+            Entity crosshairPickEntity = shouldCheckHitResult ? mc.crosshairPickEntity : null;
             if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue()
                     && (!shouldCheckHitResult || hitResult.getType() == HitResult.Type.ENTITY && crosshairPickEntity != null && crosshairPickEntity.is(target))) {
                 doAttack(target);

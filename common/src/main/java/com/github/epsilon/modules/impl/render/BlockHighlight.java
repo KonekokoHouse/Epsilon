@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -44,7 +43,7 @@ public class BlockHighlight extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        HitResult hitResult = RotationManager.INSTANCE.getHitResult();
+        HitResult hitResult = mc.hitResult;
         if (hitResult == null || hitResult.getType() != HitResult.Type.BLOCK || !(hitResult instanceof BlockHitResult bhr)) {
             return;
         }

@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -105,7 +104,7 @@ public class CrystalAura extends Module {
 
         if (!mc.player.getMainHandItem().is(Items.END_CRYSTAL)) return;
 
-        if (RotationManager.INSTANCE.getHitResult() instanceof BlockHitResult hit) {
+        if (mc.hitResult instanceof BlockHitResult hit) {
             if (!dontPlace
                     && randomInt <= placeChance.getValue().intValue()
                     && (mc.level.getBlockState(hit.getBlockPos()).is(Blocks.OBSIDIAN)
@@ -146,7 +145,7 @@ public class CrystalAura extends Module {
 
         randomInt = MathUtils.getRandom(1, 100);
 
-        if (RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult hit) {
+        if (mc.hitResult instanceof EntityHitResult hit) {
             if (!dontBreak && randomInt <= breakChance.getValue().intValue()) {
                 Entity entity = hit.getEntity();
 
@@ -188,7 +187,7 @@ public class CrystalAura extends Module {
         if (!mc.mouseHandler.isRightPressed()) return;
         if (!mc.player.getMainHandItem().is(Items.END_CRYSTAL)) return;
 
-        if (RotationManager.INSTANCE.getHitResult() instanceof BlockHitResult hit) {
+        if (mc.hitResult instanceof BlockHitResult hit) {
             if ((mc.level.getBlockState(hit.getBlockPos()).is(Blocks.OBSIDIAN) || mc.level.getBlockState(hit.getBlockPos()).is(Blocks.BEDROCK))
                     && canPlaceCrystalAssumeObsidian(hit.getBlockPos())) {
                 event.setCancelled(true);
@@ -253,7 +252,7 @@ public class CrystalAura extends Module {
 
         if (!found) return false;
 
-        return !(RotationManager.INSTANCE.getHitResult() instanceof EntityHitResult ehr && ehr.getEntity() instanceof Player);
+        return !(mc.hitResult instanceof EntityHitResult ehr && ehr.getEntity() instanceof Player);
     }
 
 }

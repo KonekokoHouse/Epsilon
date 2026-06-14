@@ -1,5 +1,7 @@
 accessWidener v2 official
 
+accessible method net/minecraft/client/Minecraft pick (F)V
+
 accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyProgress F
 
 accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
