@@ -3,6 +3,7 @@ package com.github.epsilon.graphics;
 import com.github.epsilon.assets.holders.RenderTargetHolder;
 import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.buffer.LuminDynamicUniforms;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -11,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.*;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.Projection;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
@@ -39,8 +41,23 @@ public class LuminRenderSystem {
 
     public static void destroyAll() {
         guiProjectionMatrixBuffer.close();
+        ShaderUniforms.closeAll();
         RenderTargetHolder.INSTANCE.destroyAll();
         RendererHolder.INSTANCE.destroyAll();
+    }
+
+    public static <T extends DynamicUniformStorage.DynamicUniform> GpuBufferSlice writeDynamicUniform(
+            String key,
+            String label,
+            int uniformSize,
+            int initialCapacity,
+            T uniform
+    ) {
+        return ShaderUniforms.write(key, label, uniformSize, initialCapacity, uniform);
+    }
+
+    public static void endDynamicUniformFrame() {
+        ShaderUniforms.endFrame();
     }
 
     @Nullable
@@ -211,6 +228,37 @@ public class LuminRenderSystem {
             int indexCount,
             GpuBufferSlice dynamicUniforms
     ) {
+    }
+
+    private static final class ShaderUniforms {
+
+        private static final java.util.Map<String, LuminDynamicUniforms<DynamicUniformStorage.DynamicUniform>> UNIFORMS = new java.util.HashMap<>();
+
+        private ShaderUniforms() {
+        }
+
+        @SuppressWarnings("unchecked")
+        private static <T extends DynamicUniformStorage.DynamicUniform> GpuBufferSlice write(
+                String key,
+                String label,
+                int uniformSize,
+                int initialCapacity,
+                T uniform
+        ) {
+            LuminDynamicUniforms<T> storage = (LuminDynamicUniforms<T>) UNIFORMS.computeIfAbsent(key, ignored ->
+                    new LuminDynamicUniforms<>(label, uniformSize, initialCapacity));
+            return storage.write(uniform);
+        }
+
+        private static void endFrame() {
+            UNIFORMS.values().forEach(LuminDynamicUniforms::endFrame);
+        }
+
+        private static void closeAll() {
+            UNIFORMS.values().forEach(LuminDynamicUniforms::close);
+            UNIFORMS.clear();
+        }
+
     }
 
     public static final class LuminRenderTarget implements AutoCloseable {

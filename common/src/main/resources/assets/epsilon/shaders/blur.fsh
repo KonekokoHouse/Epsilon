@@ -3,9 +3,9 @@
 uniform sampler2D InputSampler;
 
 layout(std140) uniform BlurUniforms {
-    vec3 Params1;
-    vec4 Params2;
-    vec4 Params3;
+    vec3 InputInfo;
+    vec4 Rect;
+    vec4 CornerRadii;
 };
 
 layout(location = 0) out vec4 fragColor;
@@ -29,29 +29,29 @@ float roundRectDistance(vec2 position, vec4 innerRect, vec4 radius) {
 vec4 blur() {
     #define TAU 6.28318530718
 
-    vec2 inputResolution = Params1.xy;
-    float Quality = Params1.z;
-    vec2 Radius = Quality / inputResolution.xy;
+    vec2 inputResolution = InputInfo.xy;
+    float quality = InputInfo.z;
+    vec2 radius = quality / inputResolution.xy;
 
     vec2 uv = gl_FragCoord.xy / inputResolution.xy;
-    vec4 Color = texture(InputSampler, uv);
+    vec4 color = texture(InputSampler, uv);
 
     float step =  TAU / 16.0;
 
     for (float d = 0.0; d < TAU; d += step) {
         for (float i = 0.2; i <= 1.0; i += 0.2) {
-            Color += texture(InputSampler, uv + vec2(cos(d), sin(d)) * Radius * i);
+            color += texture(InputSampler, uv + vec2(cos(d), sin(d)) * radius * i);
         }
     }
 
-    Color /= 81.0;
-    return Color;
+    color /= 81.0;
+    return color;
 }
 
 void main() {
-    vec2 uSize = Params2.xy;
-    vec2 uLocation = Params2.zw;
-    vec4 radii = Params3;
+    vec2 uSize = Rect.xy;
+    vec2 uLocation = Rect.zw;
+    vec4 radii = CornerRadii;
     vec4 bounds = vec4(uLocation, uLocation + uSize);
 
     float dist = roundRectDistance(gl_FragCoord.xy, bounds, radii);

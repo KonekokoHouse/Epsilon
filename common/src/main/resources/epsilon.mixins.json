@@ -48,6 +48,7 @@
     "MixinParticleManager",
     "MixinPlayer",
     "MixinProjection",
+    "MixinRenderSystem",
     "MixinScreenEffectRenderer",
     "MixinTitleScreen",
     "MixinWebBlock",

@@ -3,10 +3,10 @@
 uniform sampler2D InputSampler;
 
 layout(std140) uniform ShaderConfig {
-    vec4 Params0;
-    vec4 Params1;
-    vec4 Params2;
-    vec4 Params3;
+    vec4 TargetSize;
+    vec4 OutlineParams;
+    vec4 AnimationParams;
+    vec4 NoiseParams;
     vec4 Outline;
     vec4 SmokeOutline1;
     vec4 SmokeOutline2;
@@ -39,7 +39,7 @@ float fbm(vec2 pos) {
     float a = 0.5;
     mat2 rot = mat2(cos(0.1), sin(0.5), -sin(0.5), cos(0.5));
     for (int i = 0; i < 30; i++) {
-        if (i >= int(Params3.x)) break;
+        if (i >= int(NoiseParams.x)) break;
         v += a * noise(pos);
         pos = rot * pos * 2.0;
         a *= 0.5;
@@ -48,10 +48,10 @@ float fbm(vec2 pos) {
 }
 
 vec3 gradientColor() {
-    vec2 resolution = Params0.xy;
-    float time = Params2.y;
-    float factor = Params2.z;
-    float moreGradient = Params2.w;
+    vec2 resolution = TargetSize.xy;
+    float time = AnimationParams.y;
+    float factor = AnimationParams.z;
+    float moreGradient = AnimationParams.w;
     vec2 p = (((vec2(2.0) * gl_FragCoord.xy) - resolution.xy) * vec2(moreGradient / min(resolution.x, resolution.y)));
     float time2 = 1.5 * time;
     vec2 q = vec2(fbm(p), fbm(p + vec2(1.0)));
@@ -64,12 +64,12 @@ vec3 gradientColor() {
 
 void main() {
     vec4 centerCol = texture(InputSampler, vUv);
-    int quality = int(Params1.x);
-    float lineWidth = Params1.y;
-    float alpha0 = Params1.z;
-    float fillAlpha = Params1.w;
-    float alpha2 = Params2.x;
-    vec2 oneTexel = Params0.zw;
+    int sampleRadius = min(int(OutlineParams.x), 6);
+    float lineWidth = OutlineParams.y;
+    float alpha0 = OutlineParams.z;
+    float fillAlpha = OutlineParams.w;
+    float alpha2 = AnimationParams.x;
+    vec2 oneTexel = TargetSize.zw;
 
     if (centerCol.a != 0.0) {
         fragColor = vec4(gradientColor(), alpha2);
@@ -78,11 +78,8 @@ void main() {
 
     float alphaOutline = 0.0;
     vec3 colorFinal = vec3(0.0);
-    for (int x = -6; x < 6; x++) {
-        for (int y = -6; y < 6; y++) {
-            if (x < -quality || x >= quality || y < -quality || y >= quality) {
-                continue;
-            }
+    for (int x = -sampleRadius; x < sampleRadius; x++) {
+        for (int y = -sampleRadius; y < sampleRadius; y++) {
             vec4 sampleCol = texture(InputSampler, vUv + vec2(x, y) * oneTexel);
             if (sampleCol.a != 0.0) {
                 if (alpha0 == -1.0) {

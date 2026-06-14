@@ -3,10 +3,10 @@
 uniform sampler2D InputSampler;
 
 layout(std140) uniform ShaderConfig {
-    vec4 Params0;
-    vec4 Params1;
-    vec4 Params2;
-    vec4 Params3;
+    vec4 TargetSize;
+    vec4 OutlineParams;
+    vec4 AnimationParams;
+    vec4 NoiseParams;
     vec4 Outline;
     vec4 SmokeOutline1;
     vec4 SmokeOutline2;
@@ -20,7 +20,7 @@ in vec2 vUv;
 layout(location = 0) out vec4 fragColor;
 
 float snow(vec2 uv, float scale) {
-    float time = Params2.y;
+    float time = AnimationParams.y;
     float w = smoothstep(1.0, 0.0, -uv.y * (scale / 10.0));
     if (w < 0.1) return 0.0;
     uv += time / scale;
@@ -36,14 +36,11 @@ float snow(vec2 uv, float scale) {
 }
 
 float glowShader() {
-    int quality = int(Params1.x);
-    vec2 texelSize = vec2(Params0.z * float(quality), Params0.w * float(quality));
+    int sampleRadius = min(int(OutlineParams.x), 6);
+    vec2 texelSize = vec2(TargetSize.z * float(sampleRadius), TargetSize.w * float(sampleRadius));
     float alpha = 0.0;
-    for (int x = -6; x < 6; x++) {
-        for (int y = -6; y < 6; y++) {
-            if (x < -quality || x >= quality || y < -quality || y >= quality) {
-                continue;
-            }
+    for (int x = -sampleRadius; x < sampleRadius; x++) {
+        for (int y = -sampleRadius; y < sampleRadius; y++) {
             vec4 currentColor = texture(InputSampler, vUv + vec2(texelSize.x * float(x), texelSize.y * float(y)));
             if (currentColor.a != 0.0) {
                 alpha += max(0.0, (10.0 - distance(vec2(x, y), vec2(0.0))) / 158.0);
@@ -55,7 +52,7 @@ float glowShader() {
 
 void main() {
     vec4 centerCol = texture(InputSampler, vUv);
-    vec2 uv = (gl_FragCoord.xy * 2.0 - Params0.xy) / min(Params0.x, Params0.y);
+    vec2 uv = (gl_FragCoord.xy * 2.0 - TargetSize.xy) / min(TargetSize.x, TargetSize.y);
     float c = smoothstep(1.0, 0.3, clamp(uv.y * 0.3 + 0.8, 0.0, 0.75));
     c += snow(uv, 10.0);
     c += snow(uv, 8.0);

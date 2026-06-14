@@ -1,7 +1,8 @@
 package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.github.epsilon.graphics.LuminRenderSystem;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -12,9 +13,11 @@ import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
+import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
+import java.nio.ByteBuffer;
 import java.util.OptionalInt;
 
 import static com.github.epsilon.Constants.mc;
@@ -31,13 +34,9 @@ public class FXAAShader {
             .get();
 
     private RenderPipeline pipeline;
-    private GpuBuffer uniforms;
     private RenderTarget input;
 
     private void ensureProgram() {
-        if (this.uniforms == null) {
-            this.uniforms = RenderSystem.getDevice().createBuffer(() -> "EpsilonFXAAUniforms", GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_UNIFORM, UNIFORMS_SIZE);
-        }
         if (this.pipeline == null) {
             this.pipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/fxaa"))
@@ -92,10 +91,13 @@ public class FXAAShader {
                 framebuffer.width, framebuffer.height
         );
 
-        try (GpuBuffer.MappedView view = encoder.mapBuffer(this.uniforms, false, true)) {
-            Std140Builder.intoBuffer(view.data())
-                    .putVec4(framebuffer.width, framebuffer.height, 1.0f / framebuffer.width, 1.0f / framebuffer.height);
-        }
+        GpuBufferSlice fxaaInfo = LuminRenderSystem.writeDynamicUniform(
+                "fxaa_info",
+                "Epsilon FXAA UBO",
+                UNIFORMS_SIZE,
+                4,
+                new FXAAInfo(framebuffer.width, framebuffer.height)
+        );
 
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> "Epsilon FXAA",
@@ -104,10 +106,20 @@ public class FXAAShader {
         )) {
             renderPass.setPipeline(this.pipeline);
             RenderSystem.bindDefaultUniforms(renderPass);
-            renderPass.setUniform("FxaaInfo", this.uniforms);
+            renderPass.setUniform("FxaaInfo", fxaaInfo);
             renderPass.bindTexture("InputSampler", this.input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-            renderPass.draw(0, 6);
+            renderPass.draw(0, 3);
         }
+    }
+
+    private record FXAAInfo(float width, float height) implements DynamicUniformStorage.DynamicUniform {
+
+        @Override
+        public void write(ByteBuffer buffer) {
+            Std140Builder.intoBuffer(buffer)
+                    .putVec4(width, height, 1.0f / width, 1.0f / height);
+        }
+
     }
 
 }
