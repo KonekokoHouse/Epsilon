@@ -8,6 +8,9 @@ public interface DropdownPanel {
 
     void startIntro();
 
+    default void beginRenderFrame(int frameId) {
+    }
+
     float getIntroValue();
 
     void drawBackground(DropdownRenderer renderer);

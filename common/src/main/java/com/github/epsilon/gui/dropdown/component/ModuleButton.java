@@ -40,6 +40,8 @@ public class ModuleButton extends Component {
     private final Animation keybindHoverAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER);
     private boolean expanded;
     private boolean listeningKeybind;
+    private int cachedHeightFrameId = Integer.MIN_VALUE;
+    private float cachedHeight;
 
     public ModuleButton(Module module) {
         this.module = module;
@@ -81,6 +83,21 @@ public class ModuleButton extends Component {
 
     @Override
     public float getHeight() {
+        return computeHeight();
+    }
+
+    public float getHeightForFrame(int frameId) {
+        if (frameId == Integer.MIN_VALUE) {
+            return computeHeight();
+        }
+        if (cachedHeightFrameId != frameId) {
+            cachedHeight = computeHeight();
+            cachedHeightFrameId = frameId;
+        }
+        return cachedHeight;
+    }
+
+    private float computeHeight() {
         expandAnim.run(expanded ? 1.0f : 0.0f);
         float settingsHeight = computeSettingsHeight();
         return DropdownTheme.MODULE_HEIGHT + settingsHeight * expandAnim.getValue();

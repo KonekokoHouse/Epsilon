@@ -47,9 +47,13 @@ public class ConfigManager {
     public static final ConfigManager INSTANCE = new ConfigManager();
 
     private final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    private static final long CONFIG_LIST_CACHE_TTL_MS = 1000L;
 
     private String activeConfigName = DEFAULT_CONFIG_NAME;
     private boolean rootDirectoriesEnsured = false;
+    private List<String> cachedConfigNames = List.of();
+    private long configListCacheExpiresAt;
+    private boolean configListCacheDirty = true;
 
     private ConfigManager() {
     }
@@ -92,7 +96,7 @@ public class ConfigManager {
 
     public synchronized List<String> listConfigs() {
         try {
-            return listConfigsInternal(true);
+            return listConfigsCached(true);
         } catch (IOException e) {
             Constants.LOGGER.error("列出配置失败", e);
             return List.of(activeConfigName);
@@ -140,6 +144,7 @@ public class ConfigManager {
 
         activeConfigName = configName;
         writeActiveConfigName(configName);
+        invalidateConfigListCache();
         loadActiveConfigSnapshot();
         return configName;
     }
@@ -148,6 +153,7 @@ public class ConfigManager {
         String configName = normalizeAndValidateConfigName(rawName);
         ensureRootDirectories();
         Files.createDirectories(getConfigStorageDir(configName));
+        invalidateConfigListCache();
         switchConfig(configName);
         return configName;
     }
@@ -164,6 +170,7 @@ public class ConfigManager {
         ensureConfigExists(configName);
         activeConfigName = configName;
         writeActiveConfigName(configName);
+        invalidateConfigListCache();
         loadActiveConfigSnapshot();
     }
 
@@ -191,6 +198,7 @@ public class ConfigManager {
         }
 
         deleteDirectory(targetDir);
+        invalidateConfigListCache();
         return true;
     }
 
@@ -251,6 +259,7 @@ public class ConfigManager {
 
             deleteDirectory(targetDir);
             copyDirectory(configRoot, targetDir, true);
+            invalidateConfigListCache();
 
             if (switchToImported) {
                 activeConfigName = importedName;
@@ -708,6 +717,23 @@ public class ConfigManager {
             return List.of(DEFAULT_CONFIG_NAME);
         }
         return configs;
+    }
+
+    private List<String> listConfigsCached(boolean createDefaultIfMissing) throws IOException {
+        long now = System.currentTimeMillis();
+        if (!configListCacheDirty && now < configListCacheExpiresAt) {
+            return cachedConfigNames;
+        }
+        List<String> configs = listConfigsInternal(createDefaultIfMissing);
+        cachedConfigNames = List.copyOf(configs);
+        configListCacheDirty = false;
+        configListCacheExpiresAt = now + CONFIG_LIST_CACHE_TTL_MS;
+        return cachedConfigNames;
+    }
+
+    private void invalidateConfigListCache() {
+        configListCacheDirty = true;
+        configListCacheExpiresAt = 0L;
     }
 
     private String normalizeAndValidateConfigName(String rawName) {
