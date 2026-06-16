@@ -47,7 +47,9 @@ public class Shaders extends Module {
     public final IntSetting quality = intSetting("Quality", 3, 0, 6, 1);
     public final IntSetting octaves = intSetting("Smoke Octaves", 10, 5, 30, 1);
     public final IntSetting fillAlpha = intSetting("Fill Alpha", 170, 0, 255, 1);
-    public final BoolSetting glow = boolSetting("Smoke Glow", true);
+    public final BoolSetting glow = boolSetting("Glow", true);
+    public final IntSetting glowRadius = intSetting("Glow Radius", 8, 1, 32, 1, () -> glow.getValue() && isDefaultShaderSelected());
+    public final DoubleSetting glowStrength = doubleSetting("Glow Strength", 1.4, 0.1, 5.0, 0.1, () -> glow.getValue() && isDefaultShaderSelected());
 
     public final ColorSetting outlineColor = colorSetting("Outline", new Color(255, 255, 255, 136)).group(colors);
     public final ColorSetting smokeOutlineColor1 = colorSetting("Smoke Outline", new Color(255, 0, 0, 136), () -> mode.is(ShaderManager.Shader.Smoke) || handsMode.is(ShaderManager.Shader.Smoke) || chestMode.is(ShaderManager.Shader.Smoke)).group(colors);
@@ -55,6 +57,10 @@ public class Shaders extends Module {
     public final ColorSetting fillColor1 = colorSetting("Fill", new Color(255, 255, 255, 136)).group(colors);
     public final ColorSetting fillColor2 = colorSetting("Smoke Fill", new Color(255, 255, 255, 136)).group(colors);
     public final ColorSetting fillColor3 = colorSetting("Smoke Fill 2", new Color(255, 255, 255, 136)).group(colors);
+
+    private boolean isDefaultShaderSelected() {
+        return mode.is(ShaderManager.Shader.Default) || handsMode.is(ShaderManager.Shader.Default) || chestMode.is(ShaderManager.Shader.Default);
+    }
 
     public boolean shouldRenderHands() {
         return hands.getValue();
