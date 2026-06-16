@@ -28,8 +28,6 @@ public class WatermarkHUD extends HudModule {
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        if (nullCheck()) return;
-
         TextRenderer textRenderer = textRendererSupplier.get();
 
         String traditionText = "EPSILON";

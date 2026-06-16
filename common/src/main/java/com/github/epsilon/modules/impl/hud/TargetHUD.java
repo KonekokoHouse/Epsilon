@@ -77,8 +77,6 @@ public class TargetHUD extends HudModule {
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        if (nullCheck()) return;
-
         float panelScale = scale.getValue().floatValue();
         float panelWidth = width.getValue().floatValue() * panelScale;
         float panelHeight = height.getValue().floatValue() * panelScale;

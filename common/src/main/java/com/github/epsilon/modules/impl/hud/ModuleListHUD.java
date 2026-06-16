@@ -63,8 +63,6 @@ public class ModuleListHUD extends HudModule {
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        if (nullCheck()) return;
-
         List<ItemInfo> items = collectItems(deltaTracker);
         if (items.isEmpty()) return;
 

@@ -266,6 +266,9 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        if (this.minecraft.level == null) {
+            this.extractPanorama(graphics, a);
+        }
     }
 
     private void clearSnapPreview() {

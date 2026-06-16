@@ -85,10 +85,7 @@ public class BPSHUD extends HudModule {
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        if (nullCheck()) {
-            resetBps();
-            return;
-        }
+        if (nullCheck()) return;
 
         updateBps();
 
@@ -199,7 +196,7 @@ public class BPSHUD extends HudModule {
         float step = innerW / (GRAPH_SIZE - 1);
         float barWidth = Math.max(step * 0.75f, 0.7f * s);
         float glowBarWidth = Math.max(barWidth + 1.8f * s, 1.2f * s);
-        float barRadius = Math.min(1f * s, barWidth / 2f);
+        float barRadius = Math.min(s, barWidth / 2f);
         float glowBarRadius = Math.min(1.5f * s, glowBarWidth / 2f);
 
         for (int i = 0; i < GRAPH_SIZE; i++) {

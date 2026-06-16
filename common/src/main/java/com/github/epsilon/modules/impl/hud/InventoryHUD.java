@@ -46,8 +46,6 @@ public class InventoryHUD extends HudModule {
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        if (nullCheck()) return;
-
         RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
         ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
 

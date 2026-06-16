@@ -65,12 +65,17 @@ public class ScaffoldBlockHUD extends HudModule {
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        if (nullCheck()) {
-            resetAnimation();
-            return;
-        }
+    protected void onEnable() {
+        resetAnimation();
+    }
 
+    @Override
+    protected void onDisable() {
+        resetAnimation();
+    }
+
+    @Override
+    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         int blockCount = getDisplayBlockCount();
         boolean shouldShow = shouldShowHud(blockCount);
         updateVisibilityAnimation(shouldShow);
@@ -124,13 +129,12 @@ public class ScaffoldBlockHUD extends HudModule {
         float height = BASE_HEIGHT * scaled;
         float radius = Math.min(cornerRadius.getValue().floatValue() * scaled, height / 2.0f);
         float padX = BASE_PAD_X * scaled;
-        float numberScale = scaled;
         float labelScale = 0.62f * scaled;
         float labelGap = BASE_LABEL_GAP * scaled;
-        float numberColumnWidth = getNumberColumnWidth(textRenderer, numberScale);
+        float numberColumnWidth = getNumberColumnWidth(textRenderer, scaled);
         float labelWidth = textRenderer.getWidth(LABEL, labelScale);
         float totalWidth = padX * 2.0f + numberColumnWidth + labelGap + labelWidth;
-        return new Layout(height, radius, padX, numberScale, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth, this.x);
+        return new Layout(height, radius, padX, scaled, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth, this.x);
     }
 
     private void drawBackground(Layout layout, AnimationState animation, RoundRectRenderer roundRectRenderer, ShadowRenderer shadowRenderer) {
