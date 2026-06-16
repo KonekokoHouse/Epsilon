@@ -15,7 +15,7 @@ layout(std140) uniform ShaderConfig {
     vec4 SmokeFill2;
 };
 
-in vec2 vUv;
+in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -39,11 +39,12 @@ float glowShader() {
     int sampleRadius = min(int(OutlineParams.x), 6);
     vec2 texelSize = vec2(TargetSize.z * float(sampleRadius), TargetSize.w * float(sampleRadius));
     float alpha = 0.0;
-    for (int x = -sampleRadius; x < sampleRadius; x++) {
-        for (int y = -sampleRadius; y < sampleRadius; y++) {
-            vec4 currentColor = texture(InputSampler, vUv + vec2(texelSize.x * float(x), texelSize.y * float(y)));
+    for (int offsetX = -sampleRadius; offsetX < sampleRadius; offsetX++) {
+        for (int offsetY = -sampleRadius; offsetY < sampleRadius; offsetY++) {
+            vec2 sampleOffset = vec2(texelSize.x * float(offsetX), texelSize.y * float(offsetY));
+            vec4 currentColor = texture(InputSampler, texCoord + sampleOffset);
             if (currentColor.a != 0.0) {
-                alpha += max(0.0, (10.0 - distance(vec2(x, y), vec2(0.0))) / 158.0);
+                alpha += max(0.0, (10.0 - length(vec2(offsetX, offsetY))) / 158.0);
             }
         }
     }
@@ -51,7 +52,7 @@ float glowShader() {
 }
 
 void main() {
-    vec4 centerCol = texture(InputSampler, vUv);
+    vec4 centerCol = texture(InputSampler, texCoord);
     vec2 uv = (gl_FragCoord.xy * 2.0 - TargetSize.xy) / min(TargetSize.x, TargetSize.y);
     float c = smoothstep(1.0, 0.3, clamp(uv.y * 0.3 + 0.8, 0.0, 0.75));
     c += snow(uv, 10.0);

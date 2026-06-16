@@ -26,7 +26,7 @@ public class FXAAShader {
 
     public static final FXAAShader INSTANCE = new FXAAShader();
 
-    private static final Identifier vertexShader = ResourceLocationUtils.getIdentifier("fullscreen");
+    private static final Identifier vertexShader = Identifier.withDefaultNamespace("core/screenquad");
     private static final Identifier fragmentShader = ResourceLocationUtils.getIdentifier("fxaa");
 
     private static final int UNIFORMS_SIZE = new Std140SizeCalculator()

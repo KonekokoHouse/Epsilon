@@ -3,7 +3,6 @@ package com.github.epsilon.graphics;
 import com.github.epsilon.assets.holders.RenderTargetHolder;
 import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import com.github.epsilon.graphics.buffer.LuminDynamicUniforms;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -22,6 +21,8 @@ import org.joml.*;
 
 import javax.annotation.Nullable;
 import java.lang.Math;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.OptionalDouble;
 
 import static com.github.epsilon.Constants.mc;
@@ -232,7 +233,7 @@ public class LuminRenderSystem {
 
     private static final class ShaderUniforms {
 
-        private static final java.util.Map<String, LuminDynamicUniforms<DynamicUniformStorage.DynamicUniform>> UNIFORMS = new java.util.HashMap<>();
+        private static final Map<String, DynamicUniformStorage<DynamicUniformStorage.DynamicUniform>> UNIFORMS = new HashMap<>();
 
         private ShaderUniforms() {
         }
@@ -245,17 +246,17 @@ public class LuminRenderSystem {
                 int initialCapacity,
                 T uniform
         ) {
-            LuminDynamicUniforms<T> storage = (LuminDynamicUniforms<T>) UNIFORMS.computeIfAbsent(key, ignored ->
-                    new LuminDynamicUniforms<>(label, uniformSize, initialCapacity));
-            return storage.write(uniform);
+            DynamicUniformStorage<T> storage = (DynamicUniformStorage<T>) UNIFORMS.computeIfAbsent(key, ignored ->
+                    new DynamicUniformStorage<>(label, uniformSize, initialCapacity));
+            return storage.writeUniform(uniform);
         }
 
         private static void endFrame() {
-            UNIFORMS.values().forEach(LuminDynamicUniforms::endFrame);
+            UNIFORMS.values().forEach(DynamicUniformStorage::endFrame);
         }
 
         private static void closeAll() {
-            UNIFORMS.values().forEach(LuminDynamicUniforms::close);
+            UNIFORMS.values().forEach(DynamicUniformStorage::close);
             UNIFORMS.clear();
         }
 

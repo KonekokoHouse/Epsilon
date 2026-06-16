@@ -15,7 +15,7 @@ layout(std140) uniform ShaderConfig {
     vec4 SmokeFill2;
 };
 
-in vec2 vUv;
+in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -64,7 +64,7 @@ vec3 smokeColor(vec4 first, vec4 second, vec4 third) {
 }
 
 void main() {
-    vec4 centerCol = texture(InputSampler, vUv);
+    vec4 centerCol = texture(InputSampler, texCoord);
     int sampleRadius = min(int(OutlineParams.x), 6);
     float lineWidth = OutlineParams.y;
     float alpha0 = OutlineParams.z;
@@ -78,12 +78,13 @@ void main() {
 
     float alphaOutline = 0.0;
     vec3 colorFinal = vec3(0.0);
-    for (int x = -sampleRadius; x < sampleRadius; x++) {
-        for (int y = -sampleRadius; y < sampleRadius; y++) {
-            vec4 sampleCol = texture(InputSampler, vUv + vec2(x, y) * oneTexel);
+    for (int offsetX = -sampleRadius; offsetX < sampleRadius; offsetX++) {
+        for (int offsetY = -sampleRadius; offsetY < sampleRadius; offsetY++) {
+            vec2 sampleOffset = vec2(offsetX, offsetY);
+            vec4 sampleCol = texture(InputSampler, texCoord + sampleOffset * oneTexel);
             if (sampleCol.a != 0.0) {
                 if (alpha0 == -1.0) {
-                    alphaOutline += Outline.a * 255.0 > 0.0 ? max(0.0, (lineWidth - distance(vec2(x, y), vec2(0.0))) / (Outline.a * 255.0)) : 1.0;
+                    alphaOutline += Outline.a * 255.0 > 0.0 ? max(0.0, (lineWidth - length(sampleOffset)) / (Outline.a * 255.0)) : 1.0;
                 } else {
                     fragColor = vec4(smokeColor(Outline, SmokeOutline1, SmokeOutline2), alpha0);
                     return;

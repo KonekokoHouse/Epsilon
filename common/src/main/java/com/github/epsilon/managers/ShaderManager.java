@@ -19,6 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 
 import java.awt.*;
@@ -236,7 +237,7 @@ public class ShaderManager {
             fadePipeline = pipeline("fade");
             copyPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                     .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_copy"))
-                    .withVertexShader(ResourceLocationUtils.getIdentifier("fullscreen"))
+                    .withVertexShader(("core/screenquad"))
                     .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_copy"))
                     .withSampler("InputSampler")
                     .withCull(false)
@@ -277,7 +278,7 @@ public class ShaderManager {
     private RenderPipeline pipeline(String shader) {
         return RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_" + shader))
-                .withVertexShader(ResourceLocationUtils.getIdentifier("fullscreen"))
+                .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_" + shader))
                 .withUniform("ShaderConfig", UniformType.UNIFORM_BUFFER)
                 .withSampler("InputSampler")

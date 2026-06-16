@@ -31,7 +31,7 @@ public class GlslSandBox implements AutoCloseable {
     public static final Identifier MINECRAFT = ResourceLocationUtils.getIdentifier("menu/minecraft");
     public static final Identifier PLANET = ResourceLocationUtils.getIdentifier("menu/planet");
 
-    private static final Identifier FULLSCREEN_VERTEX = ResourceLocationUtils.getIdentifier("fullscreen");
+    private static final Identifier FULLSCREEN_VERTEX = Identifier.withDefaultNamespace("core/screenquad");
 
     private static final int SANDBOX_INFO_SIZE = new Std140SizeCalculator()
             .putVec4()

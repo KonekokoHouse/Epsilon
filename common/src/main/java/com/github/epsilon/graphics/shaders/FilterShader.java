@@ -15,6 +15,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
@@ -37,7 +38,7 @@ public class FilterShader {
         if (this.pipeline == null) {
             this.pipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                     .withLocation(ResourceLocationUtils.getIdentifier("pipeline/filter"))
-                    .withVertexShader(ResourceLocationUtils.getIdentifier("fullscreen"))
+                    .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                     .withFragmentShader(ResourceLocationUtils.getIdentifier("filter"))
                     .withUniform("FilterColor", UniformType.UNIFORM_BUFFER)
                     .withSampler("InputSampler")

@@ -6,7 +6,7 @@ layout(std140) uniform FxaaInfo {
     vec4 ScreenSize;
 };
 
-in vec2 vUv;
+in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -29,11 +29,11 @@ float luma(vec3 color) {
 void main() {
     vec2 inverseVP = ScreenSize.zw;
 
-    vec3 rgbNW = texture(InputSampler, vUv + vec2(-1.0, -1.0) * inverseVP).rgb;
-    vec3 rgbNE = texture(InputSampler, vUv + vec2(1.0, -1.0) * inverseVP).rgb;
-    vec3 rgbSW = texture(InputSampler, vUv + vec2(-1.0, 1.0) * inverseVP).rgb;
-    vec3 rgbSE = texture(InputSampler, vUv + vec2(1.0, 1.0) * inverseVP).rgb;
-    vec4 texColor = texture(InputSampler, vUv);
+    vec3 rgbNW = texture(InputSampler, texCoord + vec2(-1.0, -1.0) * inverseVP).rgb;
+    vec3 rgbNE = texture(InputSampler, texCoord + vec2(1.0, -1.0) * inverseVP).rgb;
+    vec3 rgbSW = texture(InputSampler, texCoord + vec2(-1.0, 1.0) * inverseVP).rgb;
+    vec3 rgbSE = texture(InputSampler, texCoord + vec2(1.0, 1.0) * inverseVP).rgb;
+    vec4 texColor = texture(InputSampler, texCoord);
     vec3 rgbM = texColor.rgb;
 
     float lumaNW = luma(rgbNW);
@@ -58,13 +58,13 @@ void main() {
     dir = clamp(dir * rcpDirMin, vec2(-FXAA_SPAN_MAX), vec2(FXAA_SPAN_MAX)) * inverseVP;
 
     vec3 rgbA = 0.5 * (
-        texture(InputSampler, vUv + dir * (1.0 / 3.0 - 0.5)).rgb +
-        texture(InputSampler, vUv + dir * (2.0 / 3.0 - 0.5)).rgb
+        texture(InputSampler, texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
+        texture(InputSampler, texCoord + dir * (2.0 / 3.0 - 0.5)).rgb
     );
 
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture(InputSampler, vUv + dir * -0.5).rgb +
-        texture(InputSampler, vUv + dir * 0.5).rgb
+        texture(InputSampler, texCoord + dir * -0.5).rgb +
+        texture(InputSampler, texCoord + dir * 0.5).rgb
     );
 
     float lumaB = luma(rgbB);
