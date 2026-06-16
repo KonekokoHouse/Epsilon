@@ -11,12 +11,16 @@ import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.Render3DUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
 
 import java.awt.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ESP extends Module {
 
@@ -40,6 +44,7 @@ public class ESP extends Module {
 
             BlockPos playerPos = mc.player.blockPosition();
             ChunkPos playerChunk = mc.player.chunkPosition();
+            Set<BlockPos> renderedChests = new HashSet<>();
 
             for (int x = -renderDistance; x <= renderDistance; x++) {
                 for (int z = -renderDistance; z <= renderDistance; z++) {
@@ -48,8 +53,21 @@ public class ESP extends Module {
 
                         BlockPos blockPos = entity.getBlockPos();
                         if (blockPos.distSqr(playerPos) > maxRange * maxRange) continue;
+                        if (renderedChests.contains(blockPos)) continue;
 
                         AABB box = getAABB(blockPos);
+                        BlockState state = mc.level.getBlockState(blockPos);
+                        if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                            BlockPos connectedPos = ChestBlock.getConnectedBlockPos(blockPos, state);
+                            BlockState connectedState = mc.level.getBlockState(connectedPos);
+
+                            if (connectedState.getBlock() == state.getBlock() && connectedState.getValue(ChestBlock.TYPE) == state.getValue(ChestBlock.TYPE).getOpposite() && connectedState.getValue(ChestBlock.FACING) == state.getValue(ChestBlock.FACING)) {
+                                box = box.minmax(getAABB(connectedPos));
+                                renderedChests.add(connectedPos);
+                            }
+
+                            renderedChests.add(blockPos);
+                        }
 
                         if (blur.getValue()) BlurShader.INSTANCE.render3DBox(box, blurStrength.getValue());
                         Render3DUtils.drawFilledBox(box, color.getValue());
