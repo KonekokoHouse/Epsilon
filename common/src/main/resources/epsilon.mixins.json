@@ -32,6 +32,8 @@
     "MixinHumanoidMobRenderer",
     "MixinItem",
     "MixinItemInHandRenderer",
+    "MixinItemInHandLayer",
+    "MixinItemStackLayerRenderState",
     "MixinKeyboardHandler",
     "MixinKeyboardInput",
     "MixinLevelRenderer",
