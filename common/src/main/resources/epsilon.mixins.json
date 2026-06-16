@@ -8,6 +8,7 @@
     "MixinBlock",
     "MixinBlockCollisions",
     "MixinCamera",
+    "MixinCapeLayer",
     "MixinChatComponent",
     "MixinChatComponentHash",
     "MixinChestRenderer",
