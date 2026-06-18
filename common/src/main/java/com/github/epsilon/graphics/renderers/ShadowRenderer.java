@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.graphics.elements.ShadowElement;
+import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -100,15 +101,19 @@ public class ShadowRenderer implements IRenderer {
     }
 
     public void setScissor(int x, int y, int width, int height) {
+<<<<<<< HEAD
         if (x < 0 || y < 0) {
             return;
         }
 
+=======
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
+>>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
         scissorEnabled = true;
-        scissorX = x;
-        scissorY = y;
-        scissorW = width;
-        scissorH = height;
+        scissorX = scissor.x();
+        scissorY = scissor.y();
+        scissorW = scissor.width();
+        scissorH = scissor.height();
     }
 
     public void clearScissor() {
@@ -122,13 +127,14 @@ public class ShadowRenderer implements IRenderer {
 
         LuminRenderSystem.QuadRenderingInfo info = LuminRenderSystem.prepareQuadRendering(vertexCount);
         if (info == null || info.colorView() == null) return;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Lumin Shadow Draw", info.colorView(), OptionalInt.empty(),
                 info.depthView(), OptionalDouble.empty())
         ) {
             pass.setPipeline(LuminRenderPipelines.SHADOW);
-            if (scissorEnabled) pass.enableScissor(scissorX, scissorY, scissorW, scissorH);
+            if (scissorEnabled) ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", info.dynamicUniforms());
             pass.setVertexBuffer(0, buffer.getGpuBuffer());

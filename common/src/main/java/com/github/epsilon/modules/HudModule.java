@@ -67,8 +67,12 @@ public abstract class HudModule extends Module {
     }
 
     protected final void setBounds(float width, float height) {
+        boolean changed = this.width != width || this.height != height;
         this.width = width;
         this.height = height;
+        if (changed) {
+            applyRenderPosition(getAnchoredRenderX(), getAnchoredRenderY(), false);
+        }
     }
 
     public final boolean contains(double mouseX, double mouseY) {

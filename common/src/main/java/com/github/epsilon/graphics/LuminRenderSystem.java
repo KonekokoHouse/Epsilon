@@ -4,6 +4,13 @@ import com.github.epsilon.assets.holders.RenderTargetHolder;
 import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.modules.impl.ClientSetting;
+<<<<<<< HEAD
+=======
+import com.github.epsilon.utils.render.ScissorUtils;
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.IndexType;
+import com.mojang.blaze3d.PrimitiveTopology;
+>>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -109,6 +116,7 @@ public class LuminRenderSystem {
     }
 
     public static ScissorRect toFramebufferScissor(float x, float y, float width, float height) {
+<<<<<<< HEAD
         double scale = getGuiScale();
         WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
         int sx = (int) Math.round(x * scale);
@@ -116,15 +124,13 @@ public class LuminRenderSystem {
         int sw = Math.max(0, (int) Math.round(width * scale));
         int sh = Math.max(0, (int) Math.round(height * scale));
         return clampFramebufferScissor(sx, sy, sw, sh);
+=======
+        return ScissorUtils.toFramebufferScissor(x, y, width, height);
+>>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
     }
 
     public static ScissorRect toFramebufferScissor(float x, float y, float width, float height, float guiHeight) {
-        double scale = getGuiScale();
-        int sx = (int) Math.round(x * scale);
-        int sy = (int) Math.round((guiHeight - y - height) * scale);
-        int sw = Math.max(0, (int) Math.round(width * scale));
-        int sh = Math.max(0, (int) Math.round(height * scale));
-        return clampFramebufferScissor(sx, sy, sw, sh);
+        return ScissorUtils.toFramebufferScissor(x, y, width, height, guiHeight);
     }
 
     public static ScissorRect toFramebufferScissor(float x, float y, float width, float height, int guiHeight) {
@@ -199,6 +205,7 @@ public class LuminRenderSystem {
         );
     }
 
+<<<<<<< HEAD
     private static ScissorRect clampFramebufferScissor(int x, int y, int width, int height) {
         int areaWidth;
         int areaHeight;
@@ -218,6 +225,8 @@ public class LuminRenderSystem {
         return new ScissorRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
     }
 
+=======
+>>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
     public record ScissorRect(int x, int y, int width, int height) {
     }
 

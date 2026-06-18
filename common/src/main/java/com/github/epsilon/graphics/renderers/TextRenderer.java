@@ -88,9 +88,12 @@ public class TextRenderer implements IRenderer {
     }
 
     public void setScissor(int x, int y, int width, int height) {
+<<<<<<< HEAD
         if (x < 0 || y < 0) {
             return;
         }
+=======
+>>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
         textRenderer.setScissor(x, y, width, height);
     }
 

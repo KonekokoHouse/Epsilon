@@ -4,6 +4,7 @@ import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
+import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -94,11 +95,15 @@ public class TriangleRenderer implements IRenderer {
     }
 
     public void setScissor(int x, int y, int width, int height) {
+<<<<<<< HEAD
+=======
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
+>>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
         scissorEnabled = true;
-        scissorX = x;
-        scissorY = y;
-        scissorW = width;
-        scissorH = height;
+        scissorX = scissor.x();
+        scissorY = scissor.y();
+        scissorW = scissor.width();
+        scissorH = scissor.height();
     }
 
     public void clearScissor() {
@@ -118,6 +123,7 @@ public class TriangleRenderer implements IRenderer {
         GpuTextureView colorView = LuminRenderSystem.resolveColorView();
         GpuTextureView depthView = LuminRenderSystem.resolveDepthView();
         if (colorView == null) return;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
         GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
                 RenderSystem.getModelViewMatrix(),
@@ -133,7 +139,7 @@ public class TriangleRenderer implements IRenderer {
         ) {
             pass.setPipeline(LuminRenderPipelines.TRIANGLE);
             if (scissorEnabled) {
-                pass.enableScissor(scissorX, scissorY, scissorW, scissorH);
+                ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
             }
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", dynamicUniforms);

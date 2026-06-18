@@ -7,6 +7,11 @@ import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.graphics.text.GlyphDescriptor;
 import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.modules.impl.ClientSetting;
+<<<<<<< HEAD
+=======
+import com.github.epsilon.utils.render.ScissorUtils;
+import com.mojang.blaze3d.PrimitiveTopology;
+>>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -102,6 +107,7 @@ public class TtfTextRenderer implements ITextRenderer {
         GpuTextureView colorView = LuminRenderSystem.resolveColorView();
         GpuTextureView depthView = LuminRenderSystem.resolveDepthView();
         if (colorView == null) return;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
         GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
                 RenderSystem.getModelViewMatrix(), new Vector4f(1, 1, 1, 1),
@@ -132,7 +138,7 @@ public class TtfTextRenderer implements ITextRenderer {
                         ? LuminRenderPipelines.TTF_FONT_AA
                         : LuminRenderPipelines.TTF_FONT_NO_AA);
                 if (scissorEnabled) {
-                    pass.enableScissor(scissorX, scissorY, scissorW, scissorH);
+                    ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
                 }
 
                 RenderSystem.bindDefaultUniforms(pass);
@@ -204,11 +210,12 @@ public class TtfTextRenderer implements ITextRenderer {
 
     @Override
     public void setScissor(int x, int y, int width, int height) {
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
         scissorEnabled = true;
-        scissorX = x;
-        scissorY = y;
-        scissorW = width;
-        scissorH = height;
+        scissorX = scissor.x();
+        scissorY = scissor.y();
+        scissorW = scissor.width();
+        scissorH = scissor.height();
     }
 
     @Override
