@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.graphics.elements.RectElement;
+import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -102,15 +103,12 @@ public class RectRenderer implements IRenderer {
     }
 
     public void setScissor(int x, int y, int width, int height) {
-        if (x < 0 || y < 0 || width <= 0 || height <= 0) {
-            return;
-        }
-
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
         scissorEnabled = true;
-        scissorX = x;
-        scissorY = y;
-        scissorW = width;
-        scissorH = height;
+        scissorX = scissor.x();
+        scissorY = scissor.y();
+        scissorW = scissor.width();
+        scissorH = scissor.height();
     }
 
     public void clearScissor() {
@@ -127,6 +125,7 @@ public class RectRenderer implements IRenderer {
 
         LuminRenderSystem.QuadRenderingInfo info = LuminRenderSystem.prepareQuadRendering(vertexCount);
         if (info == null || info.colorView() == null) return;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Rect Draw",
@@ -135,7 +134,7 @@ public class RectRenderer implements IRenderer {
         ) {
             pass.setPipeline(LuminRenderPipelines.RECTANGLE);
             if (scissorEnabled) {
-                pass.enableScissor(scissorX, scissorY, scissorW, scissorH);
+                ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
             }
 
             RenderSystem.bindDefaultUniforms(pass);

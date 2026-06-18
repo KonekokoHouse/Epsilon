@@ -88,9 +88,6 @@ public class TextRenderer implements IRenderer {
     }
 
     public void setScissor(int x, int y, int width, int height) {
-        if (x < 0 || y < 0 || width <= 0 || height <= 0) {
-            return;
-        }
         textRenderer.setScissor(x, y, width, height);
     }
 

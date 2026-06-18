@@ -2,6 +2,7 @@ package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.IndexType;
 import com.mojang.blaze3d.PrimitiveTopology;
@@ -16,6 +17,8 @@ import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -86,25 +89,41 @@ public class BlurShader {
     public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength) {
         this.ensureProgram();
 
-        RenderTarget fb = mc.gameRenderer.mainRenderTarget();
-        if (fb.getColorTexture() == null || fb.getColorTextureView() == null) {
+        if (width <= 0.0f || height <= 0.0f) {
             return;
         }
 
-        int fbWidth = mc.getWindow().getWidth();
-        int fbHeight = mc.getWindow().getHeight();
+        RenderTarget fb = mc.gameRenderer.mainRenderTarget();
+        LuminRenderSystem.LuminRenderTarget activeTarget = LuminRenderSystem.getActiveTarget();
+        GpuTexture targetTexture = activeTarget == null ? fb.getColorTexture() : activeTarget.colorTexture();
+        GpuTextureView targetView = activeTarget == null ? fb.getColorTextureView() : activeTarget.colorView();
+        int targetWidth = activeTarget == null ? fb.width : activeTarget.width();
+        int targetHeight = activeTarget == null ? fb.height : activeTarget.height();
+
+        if (targetWidth <= 0 || targetHeight <= 0 || targetTexture == null || targetView == null) {
+            return;
+        }
 
         if (input == null) {
-            input = new TextureTarget("Lumin Blur Input", fbWidth, fbHeight, false, GpuFormat.RGBA8_UNORM);
+            input = new TextureTarget("Lumin Blur Input", targetWidth, targetHeight, false, GpuFormat.RGBA8_UNORM);
         }
 
-        if (this.input.width != fbWidth || this.input.height != fbHeight) {
-            this.input.resize(fbWidth, fbHeight);
+        if (this.input.width != targetWidth || this.input.height != targetHeight) {
+            this.input.resize(targetWidth, targetHeight);
         }
 
-        float scale = (float) mc.getWindow().getGuiScale();
+        if (this.input.getColorTexture() == null || this.input.getColorTextureView() == null) {
+            return;
+        }
+
+        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(x, y, width, height);
+        if (!ScissorUtils.isVisible(scissor)) {
+            return;
+        }
+
+        float scale = (float) LuminRenderSystem.getGuiScale();
         float pxX = x * scale;
-        float pxY = (-y + mc.getWindow().getGuiScaledHeight() - height) * scale;
+        float pxY = targetHeight - (y + height) * scale;
         float pxW = width * scale;
         float pxH = height * scale;
 
@@ -117,10 +136,10 @@ public class BlurShader {
 
         CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
         encoder.copyTextureToTexture(
-                fb.getColorTexture(),
+                targetTexture,
                 input.getColorTexture(),
                 0, 0, 0, 0, 0,
-                fb.width, fb.height
+                targetWidth, targetHeight
         );
 
         GpuBufferSlice blurUniforms = LuminRenderSystem.writeDynamicUniform(
@@ -128,16 +147,16 @@ public class BlurShader {
                 "Lumin Blur UBO",
                 UNIFORMS_SIZE,
                 16,
-                new BlurUniforms(fb.width, fb.height, quality, pxW, pxH, pxX, pxY, rTLPx, rTRPx, rBRPx, rBLPx)
+                new BlurUniforms(targetWidth, targetHeight, quality, pxW, pxH, pxX, pxY, rTLPx, rTRPx, rBRPx, rBLPx)
         );
 
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> "Lumin Blur",
-                fb.getColorTextureView(),
+                targetView,
                 Optional.empty()
         )) {
             renderPass.setPipeline(pipeline);
-            renderPass.enableScissor((int) pxX, (int) pxY, Math.max(0, (int) pxW), Math.max(0, (int) pxH));
+            ScissorUtils.enableScissor(renderPass, scissor);
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("BlurUniforms", blurUniforms);
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));

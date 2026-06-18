@@ -1,5 +1,6 @@
 package com.github.epsilon.utils.render;
 
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -331,7 +332,9 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             renderPass.setVertexBuffer(0, executeInfo.vertexBuffer().slice());
             ScreenRectangle scissorArea = draw.scissorArea();
             if (scissorArea != null) {
-                this.enableScissor(scissorArea, renderPass);
+                if (!this.enableScissor(scissorArea, renderPass)) {
+                    return;
+                }
             } else {
                 renderPass.disableScissor();
             }
@@ -361,14 +364,18 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         }
     }
 
-    private void enableScissor(ScreenRectangle rectangle, RenderPass renderPass) {
+    private boolean enableScissor(ScreenRectangle rectangle, RenderPass renderPass) {
         WindowRenderState window = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState;
         int guiScale = window.guiScale;
-        double left = rectangle.left() * guiScale;
-        double top = rectangle.top() * guiScale;
-        double right = Math.min(rectangle.right() * guiScale, window.width);
-        double bottom = Math.min(rectangle.bottom() * guiScale, window.height);
-        renderPass.enableScissor((int)left, window.height - (int)bottom, Math.max(0, (int)(right - left)), Math.max(0, (int)(bottom - top)));
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.toFramebufferScissor(
+                rectangle.left(),
+                rectangle.top(),
+                rectangle.width(),
+                rectangle.height(),
+                guiScale,
+                window.height
+        );
+        return ScissorUtils.enableScissor(renderPass, scissor);
     }
 
     public void registerPanoramaTextures(TextureManager textureManager) {
