@@ -2,9 +2,11 @@ package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
@@ -22,12 +24,16 @@ public class CircleESP {
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/triangle_strip"))
             .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withCull(false)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+            .withPrimitiveTopology(PrimitiveTopology.TRIANGLE_STRIP)
             .build();
 
     private static final RenderPipeline TRIANGLE_STRIP_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/triangle_strip"))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+            .withPrimitiveTopology(PrimitiveTopology.TRIANGLE_STRIP)
             .build();
 
     private static final RenderPipeline CIRCLE_LINES_NO_DEPTH_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
@@ -38,7 +44,7 @@ public class CircleESP {
 
     private static final RenderPipeline CIRCLE_LINES_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/circle_lines"))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
             .withCull(false)
             .build();
 
@@ -60,7 +66,7 @@ public class CircleESP {
         Matrix4f matrix = poseStack.last().pose();
 
         RenderPipeline triPipeline = canSee ? TRIANGLE_STRIP_PIPELINE : TRIANGLE_STRIP_NO_DEPTH_PIPELINE;
-        LuminImmediateRenderer.PosColorQuads triBuilder = LuminImmediateRenderer.beginPosColorQuads(triPipeline);
+        LuminImmediateRenderer.PosColorTriangleStrip triBuilder = LuminImmediateRenderer.beginPosColorTriangleStrip(triPipeline);
 
         for (float i = 0; i <= (Math.PI * 2); i += ((float) Math.PI * 2) / 64.F) {
             float vecX = (float) (radius * Math.cos(i));
