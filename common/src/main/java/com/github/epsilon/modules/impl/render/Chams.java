@@ -69,6 +69,7 @@ public class Chams extends Module {
             texture -> RenderType.create("sakura_item_chams_cutout", RenderSetup.builder(ITEM_CHAMS_CUTOUT_PIPELINE)
                     .withTexture("Sampler0", texture)
                     .useLightmap()
+                    .useOverlay()
                     .affectsCrumbling()
                     .setOutline(RenderSetup.OutlineProperty.AFFECTS_OUTLINE)
                     .createRenderSetup()));
@@ -78,6 +79,7 @@ public class Chams extends Module {
                     .withTexture("Sampler0", texture)
                     .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
                     .useLightmap()
+                    .useOverlay()
                     .affectsCrumbling()
                     .sortOnUpload()
                     .setOutline(RenderSetup.OutlineProperty.AFFECTS_OUTLINE)
