@@ -1,6 +1,5 @@
 package com.github.epsilon.graphics.immediate;
 
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -20,7 +19,7 @@ public final class LuminTessellator {
         return INSTANCE;
     }
 
-    public BufferBuilder begin(PrimitiveTopology mode, VertexFormat format) {
+    public BufferBuilder begin(VertexFormat.Mode mode, VertexFormat format) {
         return new BufferBuilder(this.allocator, mode, format);
     }
 

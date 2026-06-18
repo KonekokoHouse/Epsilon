@@ -26,15 +26,9 @@ public class MixinGameRenderer {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled()) {
             RenderTarget target = ((LevelRendererAccessor) minecraft.levelRenderer).epsilon$getEntityOutlineTarget();
-<<<<<<< HEAD
-            ShaderManager.INSTANCE.processEntityOutlineTarget(target, shaders.mode.getValue());
-            ShaderManager.INSTANCE.processChestOutlineTarget(minecraft.getMainRenderTarget());
-            ShaderManager.INSTANCE.processHandOutlineTarget(minecraft.getMainRenderTarget());
-=======
             ShaderHolder.INSTANCE.processEntityOutlineTarget(target, shaders.mode.getValue());
-            ShaderHolder.INSTANCE.processChestOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
-            ShaderHolder.INSTANCE.processHandOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
->>>>>>> 23c6ecd (重构 Managers (#256))
+            ShaderHolder.INSTANCE.processChestOutlineTarget(minecraft.getMainRenderTarget());
+            ShaderHolder.INSTANCE.processHandOutlineTarget(minecraft.getMainRenderTarget());
         }
     }
 

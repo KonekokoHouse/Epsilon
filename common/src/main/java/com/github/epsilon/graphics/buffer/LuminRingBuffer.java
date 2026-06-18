@@ -1,14 +1,9 @@
 package com.github.epsilon.graphics.buffer;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
-<<<<<<< HEAD
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.system.MemoryUtil;
-=======
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import net.minecraft.client.renderer.MappableRingBuffer;
->>>>>>> 23c6ecd (重构 Managers (#256))
 
 import java.nio.ByteBuffer;
 

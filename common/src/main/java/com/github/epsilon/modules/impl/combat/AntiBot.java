@@ -10,11 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.world.entity.Entity;
-<<<<<<< HEAD
 import net.minecraft.world.entity.EntityType;
-=======
-import net.minecraft.world.entity.EntityTypes;
->>>>>>> 23c6ecd (重构 Managers (#256))
 import net.minecraft.world.level.GameType;
 
 import java.util.HashSet;

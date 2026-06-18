@@ -2,7 +2,6 @@ package com.github.epsilon.graphics.immediate;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -25,8 +24,8 @@ import org.lwjgl.system.MemoryUtil;
 
 import javax.annotation.Nullable;
 import java.nio.ByteOrder;
-import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -35,9 +34,9 @@ public final class LuminImmediateRenderer {
     private static final long DEFAULT_BUFFER_SIZE = 1024 * 1024;
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
 
-    private static final Channel POS_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_COLOR, PrimitiveTopology.QUADS);
-    private static final Channel POS_TEX_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_TEX_COLOR, PrimitiveTopology.QUADS);
-    private static final Channel POS_COLOR_NORMAL_LINE_WIDTH_LINES = new Channel(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, PrimitiveTopology.LINES);
+    private static final Channel POS_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS);
+    private static final Channel POS_TEX_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS);
+    private static final Channel POS_COLOR_NORMAL_LINE_WIDTH_LINES = new Channel(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, VertexFormat.Mode.LINES);
 
     private LuminImmediateRenderer() {
     }
@@ -121,7 +120,7 @@ public final class LuminImmediateRenderer {
 
         private final LuminRingBuffer ringBuffer;
         private final VertexFormat format;
-        private final PrimitiveTopology mode;
+        private final VertexFormat.Mode mode;
         private final int stride;
 
         private final int positionOffset;
@@ -142,22 +141,21 @@ public final class LuminImmediateRenderer {
         @Nullable
         private Identifier texture;
 
-        private Channel(VertexFormat format, PrimitiveTopology mode) {
+        private Channel(VertexFormat format, VertexFormat.Mode mode) {
             this.ringBuffer = new LuminRingBuffer(DEFAULT_BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
             this.format = format;
             this.mode = mode;
             this.stride = format.getVertexSize();
 
-            this.positionOffset = resolveOffset(format, "Position");
-            this.colorOffset = resolveOffset(format, "Color");
-            this.uvOffset = resolveOffset(format, "UV0");
-            this.normalOffset = resolveOffset(format, "Normal");
-            this.lineWidthOffset = resolveOffset(format, "LineWidth");
+            this.positionOffset = resolveOffset(format, VertexFormatElement.POSITION);
+            this.colorOffset = resolveOffset(format, VertexFormatElement.COLOR);
+            this.uvOffset = resolveOffset(format, VertexFormatElement.UV0);
+            this.normalOffset = resolveOffset(format, VertexFormatElement.NORMAL);
+            this.lineWidthOffset = resolveOffset(format, VertexFormatElement.LINE_WIDTH);
         }
 
-        private static int resolveOffset(VertexFormat format, String elementName) {
-            VertexFormatElement element = format.getElement(elementName);
-            return element != null ? element.offset() : -1;
+        private static int resolveOffset(VertexFormat format, VertexFormatElement element) {
+            return format.contains(element) ? format.getOffset(element) : -1;
         }
 
         private Channel begin(RenderPipeline pipeline, @Nullable Identifier texture) {
@@ -228,7 +226,7 @@ public final class LuminImmediateRenderer {
             this.currentOffset += this.stride;
             this.vertexCount++;
 
-            if (this.mode == PrimitiveTopology.LINES) {
+            if (this.mode == VertexFormat.Mode.LINES) {
                 long duplicateVertexBaseAddr = MemoryUtil.memAddress(this.ringBuffer.getMappedBuffer()) + this.currentOffset;
                 MemoryUtil.memCopy(completedVertexBaseAddr, duplicateVertexBaseAddr, this.stride);
                 this.currentOffset += this.stride;
@@ -245,7 +243,7 @@ public final class LuminImmediateRenderer {
             if (this.vertexBaseAddr != 0L) {
                 return true;
             }
-            long requiredBytes = this.mode == PrimitiveTopology.LINES ? this.stride * 2L : this.stride;
+            long requiredBytes = this.mode == VertexFormat.Mode.LINES ? this.stride * 2L : this.stride;
             if (this.currentOffset + requiredBytes > DEFAULT_BUFFER_SIZE) {
                 this.vertexBaseAddr = 0L;
                 return false;
@@ -271,21 +269,21 @@ public final class LuminImmediateRenderer {
                 }
 
                 GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
-                        RenderSystem.getModelViewMatrixCopy(),
+                        RenderSystem.getModelViewMatrix(),
                         new Vector4f(1, 1, 1, 1),
                         new Vector3f(0, 0, 0),
-                        TextureTransform.DEFAULT_TEXTURING.createMatrix()
+                        TextureTransform.DEFAULT_TEXTURING.getMatrix()
                 );
 
                 try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                         () -> "Lumin Immediate Draw",
-                        colorView, Optional.empty(),
+                        colorView, OptionalInt.empty(),
                         depthView, OptionalDouble.empty())
                 ) {
                     pass.setPipeline(this.pipeline);
                     RenderSystem.bindDefaultUniforms(pass);
                     pass.setUniform("DynamicTransforms", dynamicUniforms);
-                    pass.setVertexBuffer(0, new GpuBufferSlice(this.ringBuffer.getGpuBuffer(), 0, this.ringBuffer.getGpuBuffer().size()));
+                    pass.setVertexBuffer(0, this.ringBuffer.getGpuBuffer());
 
                     if (this.texture != null) {
                         AbstractTexture textureObject = mc.getTextureManager().getTexture(this.texture);
@@ -299,10 +297,10 @@ public final class LuminImmediateRenderer {
                                 RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(this.mode);
                                 GpuBuffer ibo = autoIndices.getBuffer(indexCount);
                                 pass.setIndexBuffer(ibo, autoIndices.type());
-                                pass.drawIndexed(indexCount, 1, 0, 0, 0);
+                                pass.drawIndexed(0, 0, indexCount, 1);
                             }
                         }
-                        default -> pass.draw(this.vertexCount, 1, 0, 0);
+                        default -> pass.draw(0, this.vertexCount);
                     }
                 }
             } finally {

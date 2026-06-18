@@ -55,24 +55,16 @@ public abstract class MixinItemInHandRenderer {
     private void beginShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled() && shaders.shouldRenderHands()) {
-<<<<<<< HEAD
-            ShaderManager.INSTANCE.beginHandOutlineCapture(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
-=======
-            ShaderHolder.INSTANCE.beginHandOutlineCapture(mc.gameRenderer.mainRenderTarget().width, mc.gameRenderer.mainRenderTarget().height);
->>>>>>> 23c6ecd (重构 Managers (#256))
+            ShaderHolder.INSTANCE.beginHandOutlineCapture(mc.getMainRenderTarget().width, mc.getMainRenderTarget().height);
         }
     }
 
     @Inject(method = "renderHandsWithItems", at = @At("RETURN"))
     private void endShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
-<<<<<<< HEAD
-        if (ShaderManager.INSTANCE.isRenderingHands()) {
+        if (ShaderHolder.INSTANCE.isRenderingHands()) {
             minecraft.renderBuffers().outlineBufferSource().endOutlineBatch();
         }
-        ShaderManager.INSTANCE.endHandOutlineCapture();
-=======
         ShaderHolder.INSTANCE.endHandOutlineCapture();
->>>>>>> 23c6ecd (重构 Managers (#256))
     }
 
     @Inject(method = "renderArmWithItem", at = @At("HEAD"))

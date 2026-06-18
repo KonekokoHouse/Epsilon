@@ -4,26 +4,18 @@ import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-<<<<<<< HEAD
-=======
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.holders.TextureCacheHolder;
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
->>>>>>> 23c6ecd (重构 Managers (#256))
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-<<<<<<< HEAD
-import com.mojang.blaze3d.textures.*;
-=======
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
->>>>>>> 23c6ecd (重构 Managers (#256))
+import com.mojang.blaze3d.textures.TextureFormat;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
