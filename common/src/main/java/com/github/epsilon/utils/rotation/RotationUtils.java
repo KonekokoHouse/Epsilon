@@ -177,24 +177,22 @@ public class RotationUtils {
     }
 
     public static Rot2f calculate(Vec3 position, Direction direction) {
-        double x = position.x + 0.5D;
-        double y = position.y + 0.5D;
-        double z = position.z + 0.5D;
-
-        x += (double) direction.getStepX() * 0.5D;
-        y += (double) direction.getStepY() * 0.5D;
-        z += (double) direction.getStepZ() * 0.5D;
+        double x = position.x + 0.5;
+        double y = position.y + 0.5;
+        double z = position.z + 0.5;
+        x += (double) direction.getStepX() * 0.5;
+        y += (double) direction.getStepY() * 0.5;
+        z += (double) direction.getStepZ() * 0.5;
         return calculate(new Vec3(x, y, z));
     }
 
     public static Rot2f calculate(BlockPos position, Direction direction) {
-        double x = position.getX() + 0.5D;
-        double y = position.getY() + 0.5D;
-        double z = position.getZ() + 0.5D;
-
-        x += (double) direction.getStepX() * 0.5D;
-        y += (double) direction.getStepY() * 0.5D;
-        z += (double) direction.getStepZ() * 0.5D;
+        double x = position.getX() + 0.5;
+        double y = position.getY() + 0.5;
+        double z = position.getZ() + 0.5;
+        x += (double) direction.getStepX() * 0.5;
+        y += (double) direction.getStepY() * 0.5;
+        z += (double) direction.getStepZ() * 0.5;
         return calculate(new Vec3(x, y, z));
     }
 
