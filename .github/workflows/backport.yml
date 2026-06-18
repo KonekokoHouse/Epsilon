@@ -1,0 +1,225 @@
+name: Backport
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: backport-pr-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  backport:
+    # Only trusted repository users can trigger a backport from a PR comment.
+    if: >
+      github.event.issue.pull_request != null &&
+      startsWith(github.event.comment.body, '/backport ') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Backport pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          # Parse commands like "/backport 26.1.x" and treat the argument as the target branch.
+          target_branch="$(printf '%s' "$COMMENT_BODY" | sed -nE 's|^/backport[[:space:]]+([A-Za-z0-9][A-Za-z0-9._/-]*)[[:space:]]*$|\1|p')"
+          if [[ -z "$target_branch" ]]; then
+            echo "Comment does not match /backport <branch>."
+            exit 0
+          fi
+
+          if ! git check-ref-format --branch "$target_branch" >/dev/null; then
+            gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" \
+              -f body="Backport target \`$target_branch\` is not a valid branch name."
+            exit 1
+          fi
+
+          if ! git ls-remote --exit-code --heads origin "$target_branch" >/dev/null; then
+            gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" \
+              -f body="Backport target branch \`$target_branch\` does not exist."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          pr_json="$(gh api "repos/$REPOSITORY/pulls/$PR_NUMBER")"
+          pr_title="$(jq -r '.title' <<<"$pr_json")"
+          pr_url="$(jq -r '.html_url' <<<"$pr_json")"
+          pr_author="$(jq -r '.user.login' <<<"$pr_json")"
+          base_ref="$(jq -r '.base.ref' <<<"$pr_json")"
+          base_sha="$(jq -r '.base.sha' <<<"$pr_json")"
+          head_sha="$(jq -r '.head.sha' <<<"$pr_json")"
+          merged="$(jq -r '.merged' <<<"$pr_json")"
+          merge_commit_sha="$(jq -r '.merge_commit_sha // empty' <<<"$pr_json")"
+
+          branch_suffix="$(printf '%s' "$target_branch" | tr '/' '-')"
+          backport_branch="backport/$branch_suffix/pr-$PR_NUMBER"
+
+          git fetch --no-tags origin "+refs/heads/$target_branch:refs/remotes/origin/$target_branch"
+          git checkout -B "$backport_branch" "origin/$target_branch"
+
+          post_comment() {
+            gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" -f body="$1" >/dev/null
+          }
+
+          picked_any=0
+          has_conflicts=0
+          conflict_files=""
+          conflict_commit=""
+
+          cherry_pick_or_record_conflict() {
+            # Return success when the cherry-pick applies cleanly or is already present.
+            if git cherry-pick -x "$@"; then
+              picked_any=1
+              return 0
+            fi
+
+            if git diff --quiet && git diff --cached --quiet; then
+              git cherry-pick --skip
+              return 0
+            fi
+
+            conflict_files="$(git diff --name-only --diff-filter=U | sed 's/^/- /')"
+            if [[ -z "$conflict_files" ]]; then
+              conflict_files="- unknown"
+            fi
+            has_conflicts=1
+
+            commit_args=("$@")
+            conflicted_commit="${commit_args[$((${#commit_args[@]} - 1))]}"
+            conflict_commit="$conflicted_commit"
+            # Git cannot push an unresolved index, so commit the conflict markers and open a draft PR.
+            git add -A
+            git commit \
+              -m "Backport #$PR_NUMBER to $target_branch with conflicts" \
+              -m "Cherry-pick of $conflicted_commit produced conflicts. Resolve the conflict markers manually before merging this backport PR."
+            picked_any=1
+            return 1
+          }
+
+          if [[ "$merged" == "true" && -n "$merge_commit_sha" ]]; then
+            git fetch --no-tags origin "+refs/heads/$base_ref:refs/remotes/origin/$base_ref"
+            parent_count="$(git show -s --format=%P "$merge_commit_sha" | wc -w | tr -d ' ')"
+
+            if (( parent_count > 1 )); then
+              cherry_pick_or_record_conflict -m 1 "$merge_commit_sha" || true
+            else
+              cherry_pick_or_record_conflict "$merge_commit_sha" || true
+            fi
+          else
+            git fetch --no-tags origin "+refs/heads/$base_ref:refs/remotes/origin/$base_ref"
+            git fetch --no-tags origin "pull/$PR_NUMBER/head:refs/remotes/origin/pr-$PR_NUMBER-head"
+
+            mapfile -t commits < <(git rev-list --reverse "$base_sha..$head_sha")
+            if (( ${#commits[@]} == 0 )); then
+              post_comment "Backport to \`$target_branch\` was skipped because this PR has no commits to cherry-pick."
+              exit 0
+            fi
+
+            for commit in "${commits[@]}"; do
+              if ! cherry_pick_or_record_conflict "$commit"; then
+                break
+              fi
+            done
+          fi
+
+          # Nothing to review if all requested changes are already in the target branch.
+          if (( picked_any == 0 )) || git diff --quiet "origin/$target_branch"...HEAD; then
+            post_comment "Backport to \`$target_branch\` was skipped because the changes are already present."
+            exit 0
+          fi
+
+          if git ls-remote --exit-code --heads origin "$backport_branch" >/dev/null; then
+            git push --force-with-lease origin HEAD:"$backport_branch"
+          else
+            git push origin HEAD:"$backport_branch"
+          fi
+
+          body_file="$RUNNER_TEMP/backport-body.md"
+          cat > "$body_file" <<EOF
+          Backport of #$PR_NUMBER to \`$target_branch\`.
+
+          Source PR: $pr_url
+          Source author: @$pr_author
+          Triggered by: @$COMMENT_AUTHOR
+
+          Please merge this backport PR with squash merge after review.
+          EOF
+
+          if (( has_conflicts == 1 )); then
+            cat >> "$body_file" <<EOF
+
+          This automated backport hit cherry-pick conflicts and was opened anyway.
+          Please resolve the conflict markers manually before review and squash merge.
+          If the source PR has commits after the conflicted commit, apply them manually after resolving conflicts.
+
+          Conflicted commit: \`$conflict_commit\`
+          Conflicted files:
+          $conflict_files
+          EOF
+          fi
+
+          existing_pr_url="$(gh pr list \
+            --base "$target_branch" \
+            --head "$backport_branch" \
+            --state open \
+            --json url \
+            --jq '.[0].url // empty')"
+
+          if [[ -n "$existing_pr_url" ]]; then
+            gh pr edit "$existing_pr_url" \
+              --title "[$target_branch] Backport #$PR_NUMBER: $pr_title" \
+              --body-file "$body_file"
+            # Repeated conflicted runs should keep the existing PR in draft state.
+            if (( has_conflicts == 1 )); then
+              gh pr ready "$existing_pr_url" --undo
+            fi
+            backport_pr_url="$existing_pr_url"
+          else
+            create_args=(
+              --base "$target_branch"
+              --head "$backport_branch"
+              --title "[$target_branch] Backport #$PR_NUMBER: $pr_title"
+              --body-file "$body_file"
+            )
+            if (( has_conflicts == 1 )); then
+              # Conflicted backports are intentionally opened as draft PRs.
+              create_args+=(--draft)
+            fi
+            backport_pr_url="$(gh pr create \
+              "${create_args[@]}")"
+          fi
+
+          if (( has_conflicts == 1 )); then
+            post_comment "$(cat <<EOF
+          @$COMMENT_AUTHOR backport to \`$target_branch\` needs manual conflict resolution and was opened as a draft PR: $backport_pr_url
+
+          Conflicted files:
+          $conflict_files
+
+          Conflicted commit: \`$conflict_commit\`
+          Please resolve the conflict markers in the backport PR branch, then squash merge it after review.
+          EOF
+          )"
+          else
+            post_comment "Backport to \`$target_branch\` is ready: $backport_pr_url. Please merge the backport PR with squash merge after review."
+          fi
