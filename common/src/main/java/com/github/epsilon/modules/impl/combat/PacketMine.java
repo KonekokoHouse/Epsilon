@@ -329,7 +329,7 @@ public class PacketMine extends Module {
     }
 
     private void sendStart(BlockPos pos) {
-        mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, RotationUtils.getClickSide(pos)));
+        mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, RotationUtils.getDirection(pos)));
         if (fastBypass.getValue()) {
             BlockPos bypassPos = BlockPos.containing(mc.player.getX(), 321, mc.player.getZ());
             mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, bypassPos, Direction.DOWN, mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence()));
@@ -341,7 +341,7 @@ public class PacketMine extends Module {
                 @Override
                 public void run() {
                     mc.execute(() -> {
-                        mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, RotationUtils.getClickSide(pos)));
+                        mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, RotationUtils.getDirection(pos)));
                     });
                     timer.cancel();
                 }
@@ -380,7 +380,7 @@ public class PacketMine extends Module {
             mc.player.resetFallDistance();
         }
         if (swing.getValue()) mc.player.swing(InteractionHand.MAIN_HAND);
-        mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, targetPos, RotationUtils.getClickSide(targetPos), mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence()));
+        mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, targetPos, RotationUtils.getDirection(targetPos), mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence()));
         if (clientRemove.getValue() && targetPos != null && !isAir(targetPos)) {
             mc.gameMode.destroyBlock(targetPos);
         }

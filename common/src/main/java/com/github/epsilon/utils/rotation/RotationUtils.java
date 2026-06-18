@@ -1,148 +1,89 @@
 package com.github.epsilon.utils.rotation;
 
 import com.github.epsilon.managers.RotationManager;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import java.util.function.Predicate;
 
 import static com.github.epsilon.Constants.mc;
 
 public class RotationUtils {
 
-    public static Direction getClickSide(BlockPos pos) {
-        // 第一阶段：尝试找到玩家视线可见且距离最近的面
-        Direction bestSide = findBestDirection(pos, true);
-
-        if (bestSide != null) {
-            return bestSide;
+    public static Direction getDirection(BlockPos pos) {
+        Direction raycastSide = getNearestSide(pos, direction -> canSee(pos, direction));
+        if (raycastSide != null) {
+            return raycastSide;
         }
-
-        // 第二阶段：如果找不到可见面，则尝试符合 Grim AC 规则的面（作为 fallback）
-        // 注意：这里重置 range 为最大值，以便在 Grim 规则下重新寻找最近的面
-        bestSide = findBestDirection(pos, false);
-
-        // 如果连 Grim 规则下的面都找不到，默认返回 UP (或其他安全默认值)
-        return bestSide != null ? bestSide : Direction.UP;
+        Direction grimSide = getNearestSide(pos, direction -> isGrimDirection(pos, direction));
+        if (grimSide != null) {
+            return grimSide;
+        }
+        return Direction.UP;
     }
 
-    /**
-     * 寻找最佳点击方向
-     *
-     * @param pos          目标方块位置
-     * @param useGrimCheck 如果为 true，使用 canSee 检查；如果为 false，使用 isGrimDirection 检查
-     * @return 最佳方向，如果没有符合条件的方向则返回 null
-     */
-    private static Direction findBestDirection(BlockPos pos, boolean useGrimCheck) {
-        Direction bestSide = null;
-        double minDistSqr = Double.MAX_VALUE; // 使用平方距离进行比较，避免开方运算
-
+    private static Direction getNearestSide(BlockPos pos, Predicate<Direction> predicate) {
+        Direction side = null;
+        double closestDistanceSq = Double.MAX_VALUE;
         Vec3 eyePos = mc.player.getEyePosition();
 
-        for (Direction side : Direction.values()) {
-            // 根据模式选择检查条件
-            if (useGrimCheck) {
-                if (!canSee(pos, side)) {
-                    continue;
-                }
-            } else {
-                if (!isGrimDirection(pos, side)) {
-                    continue;
-                }
-            }
+        for (Direction direction : Direction.values()) {
+            if (!predicate.test(direction)) continue;
 
-            // 计算当前面中心点到眼睛的平方距离
-            double distSqr = eyePos.distanceToSqr(Vec3.atCenterOf(pos.relative(side)));
+            double distanceSq = eyePos.distanceToSqr(pos.relative(direction).getCenter());
+            if (distanceSq >= closestDistanceSq) continue;
 
-            // 如果当前距离更近，则更新最佳方向
-            if (distSqr < minDistSqr) {
-                minDistSqr = distSqr;
-                bestSide = side;
-            }
+            side = direction;
+            closestDistanceSq = distanceSq;
         }
 
-        return bestSide;
+        return side;
     }
 
     public static boolean canSee(BlockPos pos, Direction side) {
-        Vec3 testVec = pos.getCenter().add(side.getUnitVec3i().getX() * 0.5, side.getUnitVec3i().getY() * 0.5, side.getUnitVec3i().getZ() * 0.5);
-        HitResult result = mc.level.clip(new ClipContext(mc.player.getEyePosition(), testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
+        Vec3 testVec = pos.getCenter().relative(side, 0.5);
+        ClipContext context = new ClipContext(mc.player.getEyePosition(), testVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
+        HitResult result = mc.level.clip(context);
         return result.getType() == HitResult.Type.MISS;
     }
 
-    private static boolean isIntersected(AABB bb, AABB other) {
-        return other.maxX - Shapes.EPSILON > bb.minX
-                && other.minX + Shapes.EPSILON < bb.maxX
-                && other.maxY - Shapes.EPSILON > bb.minY
-                && other.minY + Shapes.EPSILON < bb.maxY
-                && other.maxZ - Shapes.EPSILON > bb.minZ
-                && other.minZ + Shapes.EPSILON < bb.maxZ;
-    }
+    private static AABB getCollisionBox(BlockPos pos) {
+        VoxelShape shape = mc.level.getBlockState(pos).getCollisionShape(mc.level, pos).move(pos);
+        AABB collisionBox = new AABB(pos);
 
-    private static AABB getCombinedBox(BlockPos pos, Level level) {
-        VoxelShape shape = level.getBlockState(pos).getCollisionShape(level, pos).move(pos);
-        AABB combined = new AABB(pos);
         for (AABB box : shape.toAabbs()) {
-            double minX = Math.max(box.minX, combined.minX);
-            double minY = Math.max(box.minY, combined.minY);
-            double minZ = Math.max(box.minZ, combined.minZ);
-            double maxX = Math.min(box.maxX, combined.maxX);
-            double maxY = Math.min(box.maxY, combined.maxY);
-            double maxZ = Math.min(box.maxZ, combined.maxZ);
-            combined = new AABB(minX, minY, minZ, maxX, maxY, maxZ);
+            collisionBox = collisionBox.intersect(box);
         }
 
-        return combined;
+        return collisionBox;
     }
 
     public static boolean isGrimDirection(BlockPos pos, Direction direction) {
-        // see ac.grim.grimac.checks.impl.scaffolding.PositionPlace
-        AABB combined = getCombinedBox(pos, mc.level);
-        LocalPlayer player = mc.player;
-        AABB eyePositions = new AABB(player.getX(), player.getY() + 0.4, player.getZ(), player.getX(), player.getY() + 1.62, player.getZ()).inflate(0.0002);
-        if (isIntersected(eyePositions, combined)) {
+        AABB collisionBox = getCollisionBox(pos);
+        AABB eyePositions = new AABB(mc.player.getX(), mc.player.getY() + 0.4, mc.player.getZ(), mc.player.getX(), mc.player.getY() + 1.62, mc.player.getZ()).inflate(0.0002);
+        if (eyePositions.intersects(collisionBox)) {
             return true;
         }
         return !switch (direction) {
-            case NORTH -> eyePositions.minZ > combined.minZ;
-            case SOUTH -> eyePositions.maxZ < combined.maxZ;
-            case EAST -> eyePositions.maxX < combined.maxX;
-            case WEST -> eyePositions.minX > combined.minX;
-            case UP -> eyePositions.maxY < combined.maxY;
-            case DOWN -> eyePositions.minY > combined.minY;
+            case NORTH -> eyePositions.minZ > collisionBox.minZ;
+            case SOUTH -> eyePositions.maxZ < collisionBox.maxZ;
+            case EAST -> eyePositions.maxX < collisionBox.maxX;
+            case WEST -> eyePositions.minX > collisionBox.minX;
+            case UP -> eyePositions.maxY < collisionBox.maxY;
+            case DOWN -> eyePositions.minY > collisionBox.minY;
         };
     }
 
-    public static Direction getDirection(BlockPos blockPos) {
-        double eyePos = mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose());
-        VoxelShape outline = mc.level.getBlockState(blockPos).getCollisionShape(mc.level, blockPos);
-
-        if (eyePos > blockPos.getY() + outline.max(Direction.Axis.Y) && mc.level.getBlockState(blockPos.above()).canBeReplaced()) {
-            return Direction.UP;
-        } else if (eyePos < blockPos.getY() + outline.min(Direction.Axis.Y) && mc.level.getBlockState(blockPos.below()).canBeReplaced()) {
-            return Direction.DOWN;
-        } else {
-            BlockPos difference = blockPos.subtract(mc.player.blockPosition());
-
-            if (Math.abs(difference.getX()) > Math.abs(difference.getZ())) {
-                return difference.getX() > 0 ? Direction.WEST : Direction.EAST;
-            } else {
-                return difference.getZ() > 0 ? Direction.NORTH : Direction.SOUTH;
-            }
-        }
-    }
-
     public static boolean isInFov(Entity entity, float fov) {
-        if (fov >= 360.0) return true;
+        if (fov >= 360) return true;
         float yawDiff = Math.abs(Mth.wrapDegrees(RotationUtils.getRotationsToEntity(entity).getYaw() - mc.player.getYRot()));
         return yawDiff <= fov / 2.0;
     }
@@ -154,10 +95,8 @@ public class RotationUtils {
         double dy = targetPos.y - eyePos.y;
         double dz = targetPos.z - eyePos.z;
         double dist = Math.sqrt(dx * dx + dz * dz);
-
         float yaw = (float) Math.toDegrees(-Math.atan2(dx, dz));
         float pitch = (float) Math.toDegrees(-Math.atan2(dy, dist));
-
         return new Rot2f(yaw, Mth.clamp(pitch, -90, 90));
     }
 
@@ -306,8 +245,8 @@ public class RotationUtils {
             double maxYaw = speed * distributionYaw;
             double maxPitch = speed * distributionPitch;
 
-            float moveYaw = (float) Math.max(Math.min(deltaYaw, maxYaw), -maxYaw);
-            float movePitch = (float) Math.max(Math.min(deltaPitch, maxPitch), -maxPitch);
+            float moveYaw = (float) Mth.clamp(deltaYaw, -maxYaw, maxYaw);
+            float movePitch = (float) Mth.clamp(deltaPitch, -maxPitch, maxPitch);
 
             return new Rot2f(moveYaw, movePitch);
         }
