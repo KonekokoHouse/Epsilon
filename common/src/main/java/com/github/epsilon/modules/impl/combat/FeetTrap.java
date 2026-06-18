@@ -5,6 +5,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.managers.RotationManager;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -13,8 +14,12 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.render.animation.Easing;
+import com.github.epsilon.utils.rotation.RaytraceUtils;
+import com.github.epsilon.utils.rotation.Rot2f;
+import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.world.BlockUtils;
 import com.github.epsilon.utils.world.HoleUtils;
 import net.minecraft.core.BlockPos;
@@ -28,7 +33,6 @@ import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -91,10 +95,12 @@ public class FeetTrap extends Module {
 
     private final EnumSetting<SwitchMode> switchMode = enumSetting("Switch", SwitchMode.Visible);
     private final EnumSetting<RotateMode> rotate = enumSetting("Rotate", RotateMode.Silent);
+    private final EnumSetting<PlayerUtils.HelperMode> helperMode = enumSetting("Helper Mode", PlayerUtils.HelperMode.Grim);
     private final IntSetting rotationSpeed = intSetting("Rotation Speed", 10, 1, 10, 1, () -> rotate.is(RotateMode.Silent));
     private final BoolSetting sideCheck = boolSetting("Side Check", false, () -> rotate.is(RotateMode.Silent));
     private final IntSetting blocksPerTick = intSetting("Blocks Per Tick", 2, 1, 8, 1);
     private final IntSetting delay = intSetting("Delay", 0, 0, 20, 1);
+    private final BoolSetting toggleOnYChange = boolSetting("Toggle On Y Change", true);
     private final BoolSetting toggleWhenDone = boolSetting("Toggle When Done", false);
 
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
@@ -106,12 +112,18 @@ public class FeetTrap extends Module {
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
 
     private int timer;
+    private double prevY;
 
     private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
     @Override
     protected void onEnable() {
+        if (nullCheck()) {
+            toggle();
+            return;
+        }
         timer = 0;
+        prevY = mc.player.getY();
     }
 
     @Override
@@ -120,7 +132,14 @@ public class FeetTrap extends Module {
     }
 
     @EventHandler
-    private void onTick(PlayerTickEvent.Pre event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (toggleOnYChange.getValue() && prevY != mc.player.getY()) {
+            toggle();
+            return;
+        }
+
+        prevY = mc.player.getY();
+
         if (timer > 0) {
             timer--;
             return;
@@ -128,7 +147,7 @@ public class FeetTrap extends Module {
 
         List<BlockPos> blocks = getBlocks();
         if (blocks.isEmpty()) {
-            if (toggleWhenDone.getValue()) setEnabled(false);
+            if (toggleWhenDone.getValue()) toggle();
             return;
         }
 
@@ -151,18 +170,18 @@ public class FeetTrap extends Module {
     }
 
     private List<BlockPos> getBlocks() {
-        final BlockPos playerPos = getPlayerPos();
-        final List<BlockPos> offsets = new ArrayList<>();
+        BlockPos playerPos = getPlayerPos();
+        List<BlockPos> offsets = new ArrayList<>();
 
-        int z;
         int x;
-        final double decimalX = Math.abs(mc.player.getX()) - Math.floor(Math.abs(mc.player.getX()));
-        final double decimalZ = Math.abs(mc.player.getZ()) - Math.floor(Math.abs(mc.player.getZ()));
-        final int lengthXPos = HoleUtils.calcLength(decimalX, false);
-        final int lengthXNeg = HoleUtils.calcLength(decimalX, true);
-        final int lengthZPos = HoleUtils.calcLength(decimalZ, false);
-        final int lengthZNeg = HoleUtils.calcLength(decimalZ, true);
-        final ArrayList<BlockPos> tempOffsets = new ArrayList<>();
+        int z;
+        double decimalX = Math.abs(mc.player.getX()) - Math.floor(Math.abs(mc.player.getX()));
+        double decimalZ = Math.abs(mc.player.getZ()) - Math.floor(Math.abs(mc.player.getZ()));
+        int lengthXPos = HoleUtils.calcLength(decimalX, false);
+        int lengthXNeg = HoleUtils.calcLength(decimalX, true);
+        int lengthZPos = HoleUtils.calcLength(decimalZ, false);
+        int lengthZNeg = HoleUtils.calcLength(decimalZ, true);
+        List<BlockPos> tempOffsets = new ArrayList<>();
         offsets.addAll(getOverlapPos());
 
         for (x = 1; x < lengthXPos + 1; ++x) {
@@ -203,7 +222,7 @@ public class FeetTrap extends Module {
             for (int z = 0; z <= Math.abs(offZ); ++z) {
                 int properX = x * offX;
                 int properZ = z * offZ;
-                positions.add(Objects.requireNonNull(getPlayerPos()).offset(properX, -1, properZ));
+                positions.add(getPlayerPos().offset(properX, -1, properZ));
             }
         }
 
@@ -235,13 +254,12 @@ public class FeetTrap extends Module {
     }
 
     private boolean placeBlock(BlockPos blockPos, FindItemResult item) {
-        Vec3 hitVec = Vec3.atCenterOf(placeInfo.neighbor()).add(
-                placeInfo.side().getStepX() * 0.5,
-                placeInfo.side().getStepY() * 0.5,
-                placeInfo.side().getStepZ() * 0.5
-        );
+        BlockHitResult hitResult = PlayerUtils.getPlaceResult(blockPos, helperMode.getValue(), true);
+        if (hitResult == null) return false;
 
-        BlockHitResult hitResult = new BlockHitResult(hitVec, placeInfo.side(), placeInfo.neighbor(), false);
+        if (rotate.is(RotateMode.Silent) && !setRotation(hitResult)) {
+            return false;
+        }
 
         int oldSlot = mc.player.getInventory().getSelectedSlot();
         Input oldInput = mc.player.input.keyPresses;
@@ -265,7 +283,7 @@ public class FeetTrap extends Module {
             }
 
             if (render.getValue()) {
-                renderBoxes.add(new RenderInfo(new AABB(placeInfo.placedPos()), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                renderBoxes.add(new RenderInfo(new AABB(blockPos), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
             }
         }
 
@@ -282,6 +300,17 @@ public class FeetTrap extends Module {
         return result.consumesAction();
     }
 
+    private boolean setRotation(BlockHitResult hitResult) {
+        Rot2f rotation = RotationUtils.calculate(hitResult.getLocation());
+        RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue());
+        return RaytraceUtils.overBlock(
+                RotationManager.INSTANCE.getRotation(),
+                hitResult.getDirection(),
+                hitResult.getBlockPos(),
+                sideCheck.getValue()
+        );
+    }
+
     private void setShiftState(boolean state) {
         Input current = mc.player.input.keyPresses;
         setShiftState(new Input(current.forward(), current.backward(), current.left(), current.right(), current.jump(), state, current.sprint()));
@@ -293,11 +322,14 @@ public class FeetTrap extends Module {
         mc.getConnection().send(new ServerboundPlayerInputPacket(input));
     }
 
-    private record PlaceInfo(BlockPos placedPos, BlockPos neighbor, Direction side) {
-    }
-
-    private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
-                              boolean shrink) {
+    private record RenderInfo(
+            AABB aabb,
+            Color lineColor,
+            Color sideColor,
+            long startTime,
+            boolean fade,
+            boolean shrink
+    ) {
     }
 
 }
