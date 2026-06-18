@@ -17,6 +17,7 @@ import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.render.animation.Easing;
+import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -37,7 +38,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class FeetTrap extends Module {
 
@@ -113,6 +113,7 @@ public class FeetTrap extends Module {
 
     private int timer;
     private double prevY;
+    private BlockPos pendingPos;
 
     private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
@@ -124,10 +125,12 @@ public class FeetTrap extends Module {
         }
         timer = 0;
         prevY = mc.player.getY();
+        pendingPos = null;
     }
 
     @Override
     protected void onDisable() {
+        pendingPos = null;
         InvUtils.swapBack();
     }
 
@@ -142,11 +145,13 @@ public class FeetTrap extends Module {
 
         if (timer > 0) {
             timer--;
+            pendingPos = null;
             return;
         }
 
         List<BlockPos> blocks = getBlocks();
         if (blocks.isEmpty()) {
+            pendingPos = null;
             if (toggleWhenDone.getValue()) toggle();
             return;
         }
@@ -158,9 +163,10 @@ public class FeetTrap extends Module {
 
         int placed = 0;
         while (placed < blocksPerTick.getValue()) {
-            BlockPos targetBlock = getSequentialPos();
+            BlockPos targetBlock = pendingPos != null && BlockUtils.canPlaceAt(pendingPos) ? pendingPos : getSequentialPos();
             if (targetBlock == null) break;
             if (placeBlock(targetBlock, obsidian)) {
+                pendingPos = null;
                 placed++;
                 timer = delay.getValue();
             } else {
@@ -255,10 +261,40 @@ public class FeetTrap extends Module {
 
     private boolean placeBlock(BlockPos blockPos, FindItemResult item) {
         BlockHitResult hitResult = PlayerUtils.getPlaceResult(blockPos, helperMode.getValue(), true);
-        if (hitResult == null) return false;
-
-        if (rotate.is(RotateMode.Silent) && !setRotation(hitResult)) {
+        if (hitResult == null) {
+            pendingPos = null;
             return false;
+        }
+        if (mc.level.isEmptyBlock(hitResult.getBlockPos())) {
+            pendingPos = null;
+            return false;
+        }
+        if (!PlayerUtils.isValidBlock(hitResult.getBlockPos())) {
+            pendingPos = null;
+            return false;
+        }
+
+        if (rotate.is(RotateMode.Silent)) {
+            if (!blockPos.equals(pendingPos)) {
+                pendingPos = blockPos;
+                setRotation(hitResult);
+                return false;
+            }
+
+            if (!isLookingAt(hitResult)) {
+                setRotation(hitResult);
+                return false;
+            }
+
+            if (mc.level.isEmptyBlock(hitResult.getBlockPos())) {
+                pendingPos = null;
+                return false;
+            }
+
+            if (!PlayerUtils.isValidBlock(hitResult.getBlockPos())) {
+                pendingPos = null;
+                return false;
+            }
         }
 
         int oldSlot = mc.player.getInventory().getSelectedSlot();
@@ -300,9 +336,12 @@ public class FeetTrap extends Module {
         return result.consumesAction();
     }
 
-    private boolean setRotation(BlockHitResult hitResult) {
+    private void setRotation(BlockHitResult hitResult) {
         Rot2f rotation = RotationUtils.calculate(hitResult.getLocation());
-        RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue());
+        RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
+    }
+
+    private boolean isLookingAt(BlockHitResult hitResult) {
         return RaytraceUtils.overBlock(
                 RotationManager.INSTANCE.getRotation(),
                 hitResult.getDirection(),

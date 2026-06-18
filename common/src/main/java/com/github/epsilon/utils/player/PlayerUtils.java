@@ -10,6 +10,7 @@ import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.WebBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -127,27 +128,27 @@ public class PlayerUtils {
     private static List<BlockPosWithFacing> getSupportBlocks(BlockPos bp) {
         List<BlockPosWithFacing> list = new ArrayList<>();
 
-        if (mc.level.getBlockState(bp.below()).isSolid() || awaiting.containsKey(bp.below())) {
+        if (isValidBlock(bp.below())) {
             list.add(new BlockPosWithFacing(bp.below(), Direction.UP));
         }
 
-        if (mc.level.getBlockState(bp.above()).isSolid() || awaiting.containsKey(bp.above())) {
+        if (isValidBlock(bp.above())) {
             list.add(new BlockPosWithFacing(bp.above(), Direction.DOWN));
         }
 
-        if (mc.level.getBlockState(bp.west()).isSolid() || awaiting.containsKey(bp.west())) {
+        if (isValidBlock(bp.west())) {
             list.add(new BlockPosWithFacing(bp.west(), Direction.EAST));
         }
 
-        if (mc.level.getBlockState(bp.east()).isSolid() || awaiting.containsKey(bp.east())) {
+        if (isValidBlock(bp.east())) {
             list.add(new BlockPosWithFacing(bp.east(), Direction.WEST));
         }
 
-        if (mc.level.getBlockState(bp.south()).isSolid() || awaiting.containsKey(bp.south())) {
+        if (isValidBlock(bp.south())) {
             list.add(new BlockPosWithFacing(bp.south(), Direction.NORTH));
         }
 
-        if (mc.level.getBlockState(bp.north()).isSolid() || awaiting.containsKey(bp.north())) {
+        if (isValidBlock(bp.north())) {
             list.add(new BlockPosWithFacing(bp.north(), Direction.SOUTH));
         }
 
@@ -166,53 +167,54 @@ public class PlayerUtils {
         double upDelta = eyesPos.y - positionVector.add(0.0, 0.5, 0.0).y;
         double downDelta = eyesPos.y - positionVector.add(0.0, -0.5, 0.0).y;
 
-        if (westDelta > 0 && isSolid(bp.west())) {
+        if (westDelta > 0 && isValidBlock(bp.west())) {
             visibleSides.add(Direction.EAST);
         }
-        if (westDelta < 0 && isSolid(bp.east())) {
+        if (westDelta < 0 && isValidBlock(bp.east())) {
             visibleSides.add(Direction.WEST);
         }
 
-        if (eastDelta < 0 && isSolid(bp.east())) {
+        if (eastDelta < 0 && isValidBlock(bp.east())) {
             visibleSides.add(Direction.WEST);
         }
-        if (eastDelta > 0 && isSolid(bp.west())) {
+        if (eastDelta > 0 && isValidBlock(bp.west())) {
             visibleSides.add(Direction.EAST);
         }
 
-        if (northDelta > 0 && isSolid(bp.north())) {
+        if (northDelta > 0 && isValidBlock(bp.north())) {
             visibleSides.add(Direction.SOUTH);
         }
-        if (northDelta < 0 && isSolid(bp.south())) {
+        if (northDelta < 0 && isValidBlock(bp.south())) {
             visibleSides.add(Direction.NORTH);
         }
 
-        if (southDelta < 0 && isSolid(bp.south())) {
+        if (southDelta < 0 && isValidBlock(bp.south())) {
             visibleSides.add(Direction.NORTH);
         }
-        if (southDelta > 0 && isSolid(bp.north())) {
+        if (southDelta > 0 && isValidBlock(bp.north())) {
             visibleSides.add(Direction.SOUTH);
         }
 
-        if (upDelta > 0 && isSolid(bp.below())) {
+        if (upDelta > 0 && isValidBlock(bp.below())) {
             visibleSides.add(Direction.UP);
         }
-        if (upDelta < 0 && isSolid(bp.above())) {
+        if (upDelta < 0 && isValidBlock(bp.above())) {
             visibleSides.add(Direction.DOWN);
         }
 
-        if (downDelta < 0 && isSolid(bp.above())) {
+        if (downDelta < 0 && isValidBlock(bp.above())) {
             visibleSides.add(Direction.DOWN);
         }
-        if (downDelta > 0 && isSolid(bp.below())) {
+        if (downDelta > 0 && isValidBlock(bp.below())) {
             visibleSides.add(Direction.UP);
         }
 
         return visibleSides;
     }
 
-    private static boolean isSolid(BlockPos bp) {
-        return mc.level.getBlockState(bp).isSolid() || awaiting.containsKey(bp);
+    public static boolean isValidBlock(BlockPos bp) {
+        BlockState state = mc.level.getBlockState(bp);
+        return !state.isAir() && !state.canBeReplaced() && state.getFluidState().isEmpty();
     }
 
     private static Vec3 getVisibleDirectionPoint(Direction dir, BlockPos bp, float wallRange, float range) {
