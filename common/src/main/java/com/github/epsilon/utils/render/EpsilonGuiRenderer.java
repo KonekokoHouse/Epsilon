@@ -70,7 +70,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     private final ProjectionMatrixBuffer guiProjectionMatrixBuffer = new ProjectionMatrixBuffer("gui");
     private final FeatureRenderDispatcher featureRenderDispatcher;
     private @Nullable GuiItemAtlas itemAtlas;
-    private int cachedGuiScale;
+    private double cachedGuiScale = Double.NaN;
     private final CubeMap cubeMap = new CubeMap(Identifier.withDefaultNamespace("textures/gui/title/background/panorama"));
     private @Nullable ScreenRectangle previousScissorArea = null;
     private @Nullable RenderPipeline previousPipeline = null;
@@ -149,11 +149,10 @@ public class EpsilonGuiRenderer implements AutoCloseable {
 
     private void draw() {
         if (!this.draws.isEmpty()) {
-            Minecraft minecraft = Minecraft.getInstance();
-            WindowRenderState windowState = minecraft.gameRenderer.gameRenderState().windowRenderState;
             this.guiProjection
-                    .setupOrtho(1000.0F, 11000.0F, (float) windowState.width / windowState.guiScale, (float) windowState.height / windowState.guiScale, true);
+                    .setupOrtho(1000.0F, 11000.0F, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), true);
             RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
+            Minecraft minecraft = Minecraft.getInstance();
             RenderTarget mainRenderTarget = minecraft.gameRenderer.mainRenderTarget();
             GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F));
             if (this.firstDrawIndexAfterBlur > 0) {
@@ -225,7 +224,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         Set<Object> itemsInFrame = this.renderState.getItemModelIdentities();
         if (!itemsInFrame.isEmpty()) {
             int guiScale = this.getGuiScaleInvalidatingItemAtlasIfChanged();
-            GuiItemAtlas itemAtlas = this.prepareItemAtlas(itemsInFrame, 16 * guiScale);
+            GuiItemAtlas itemAtlas = this.prepareItemAtlas(itemsInFrame, Math.max(1, (int) Math.ceil(DEFAULT_ITEM_SIZE * LuminRenderSystem.getGuiScale())));
             MutableBoolean hasOversizedItems = new MutableBoolean(false);
             this.renderState.forEachItem(itemState -> {
                 if (itemState.oversizedItemBounds() != null) {
@@ -301,8 +300,8 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     }
 
     private int getGuiScaleInvalidatingItemAtlasIfChanged() {
-        int guiScale = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState.guiScale;
-        if (guiScale != this.cachedGuiScale) {
+        double guiScale = LuminRenderSystem.getGuiScale();
+        if (Double.compare(guiScale, this.cachedGuiScale) != 0) {
             this.invalidateItemAtlas();
 
             for (OversizedItemRenderer renderer : this.oversizedItemRenderers.values()) {
@@ -312,7 +311,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             this.cachedGuiScale = guiScale;
         }
 
-        return guiScale;
+        return Math.max(1, (int) Math.ceil(guiScale));
     }
 
     private void invalidateItemAtlas() {
@@ -364,13 +363,12 @@ public class EpsilonGuiRenderer implements AutoCloseable {
 
     private boolean enableScissor(ScreenRectangle rectangle, RenderPass renderPass) {
         WindowRenderState window = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState;
-        int guiScale = window.guiScale;
         LuminRenderSystem.ScissorRect scissor = ScissorUtils.toFramebufferScissor(
                 rectangle.left(),
                 rectangle.top(),
                 rectangle.width(),
                 rectangle.height(),
-                guiScale,
+                LuminRenderSystem.getGuiScale(),
                 window.height
         );
         return ScissorUtils.enableScissor(renderPass, scissor);
