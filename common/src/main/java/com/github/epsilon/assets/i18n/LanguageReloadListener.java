@@ -1,8 +1,8 @@
 package com.github.epsilon.assets.i18n;
 
-import com.github.epsilon.assets.holders.TextureCacheHolder;
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.holders.TextureCacheHolder;
+import com.github.epsilon.holders.TranslateHolder;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 
 import java.util.concurrent.CompletableFuture;

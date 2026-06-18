@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.panel.panel;
 
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.RectRenderer;
@@ -15,8 +14,9 @@ import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.adapter.ModuleViewModel;
 import com.github.epsilon.gui.panel.component.ModuleRow;
 import com.github.epsilon.gui.panel.utils.*;
-import com.github.epsilon.managers.sound.SoundKey;
-import com.github.epsilon.managers.sound.SoundManager;
+import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -204,7 +204,7 @@ public class ModuleListPanel {
             }
             if (row.getToggleBounds().contains(event.x(), event.y())) {
                 row.getModule().module().toggle();
-                SoundManager.INSTANCE.playInUi(row.getModule().module().isEnabled() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+                Managers.SOUND.playInUi(row.getModule().module().isEnabled() ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
             } else {
                 state.setSelectedModule(row.getModule().module());
             }

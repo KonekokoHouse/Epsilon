@@ -1,8 +1,9 @@
-package com.github.epsilon.managers;
+package com.github.epsilon.holders;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.config.LegacyConfigMigrator;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -24,7 +25,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-public class ConfigManager {
+public class ConfigHolder {
 
     private static final int CONFIG_VERSION = 3;
     private static final String DEFAULT_CONFIG_NAME = "default";
@@ -44,7 +45,7 @@ public class ConfigManager {
     private static final Path activeConfigFile = configDir.resolve(ACTIVE_CONFIG_FILE_NAME);
     private static final Path legacyFriendFile = configDir.resolve(FRIENDS_FILE_NAME);
 
-    public static final ConfigManager INSTANCE = new ConfigManager();
+    public static final ConfigHolder INSTANCE = new ConfigHolder();
 
     private final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static final long CONFIG_LIST_CACHE_TTL_MS = 1000L;
@@ -55,13 +56,13 @@ public class ConfigManager {
     private long configListCacheExpiresAt;
     private boolean configListCacheDirty = true;
 
-    private ConfigManager() {
+    private ConfigHolder() {
     }
 
     public void initConfig() {
         try {
             ensureRootDirectories();
-            migrateLegacyLayoutsIfNeeded(ModuleManager.INSTANCE.getModules());
+            migrateLegacyLayoutsIfNeeded(ModuleHolder.INSTANCE.getModules());
             activeConfigName = resolveStoredActiveConfigName();
             ensureConfigExists(activeConfigName);
             loadActiveConfigSnapshot();
@@ -467,7 +468,7 @@ public class ConfigManager {
     private synchronized void saveFriends(Path configStorageDir) throws IOException {
         Path friendFile = configStorageDir.resolve(FRIENDS_FILE_NAME);
         JsonArray array = new JsonArray();
-        for (String name : FriendManager.INSTANCE.getFriends()) {
+        for (String name : Managers.FRIEND.getFriends()) {
             array.add(name);
         }
         try {
@@ -484,7 +485,7 @@ public class ConfigManager {
 
     private synchronized void loadFriends(Path configStorageDir) {
         Path friendFile = configStorageDir.resolve(FRIENDS_FILE_NAME);
-        FriendManager.INSTANCE.clearFriends();
+        Managers.FRIEND.clearFriends();
         if (!Files.exists(friendFile)) return;
         try {
             String json = Files.readString(friendFile, StandardCharsets.UTF_8);
@@ -492,7 +493,7 @@ public class ConfigManager {
             if (parsed != null && parsed.isJsonArray()) {
                 for (JsonElement el : parsed.getAsJsonArray()) {
                     if (el.isJsonPrimitive()) {
-                        FriendManager.INSTANCE.addFriend(el.getAsString());
+                        Managers.FRIEND.addFriend(el.getAsString());
                     }
                 }
             }
@@ -638,8 +639,8 @@ public class ConfigManager {
         ensureRootDirectories();
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
-        List<Module> modules = ModuleManager.INSTANCE.getModules();
-        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
+        List<Module> modules = ModuleHolder.INSTANCE.getModules();
+        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         resetModulesToDefaults(modules);
         resetAddonsToDefaults(addons);
         applyToModules(modules);
@@ -652,7 +653,7 @@ public class ConfigManager {
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
         Path configStorageDir = getActiveConfigStorageDir();
-        List<Module> modules = ModuleManager.INSTANCE.getModules();
+        List<Module> modules = ModuleHolder.INSTANCE.getModules();
         if (modules != null) {
             for (Module module : modules) {
                 if (module != null) {
@@ -660,7 +661,7 @@ public class ConfigManager {
                 }
             }
         }
-        saveAddonsToDisk(AddonManager.INSTANCE.getAddons(), configStorageDir);
+        saveAddonsToDisk(AddonHolder.INSTANCE.getAddons(), configStorageDir);
         saveFriends(configStorageDir);
     }
 

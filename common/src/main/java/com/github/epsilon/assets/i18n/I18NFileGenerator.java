@@ -1,6 +1,6 @@
 package com.github.epsilon.assets.i18n;
 
-import com.github.epsilon.managers.ModuleManager;
+import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
@@ -99,7 +99,7 @@ public class I18NFileGenerator {
         root.addProperty(PREFIX + "gui.inspector", "");
         root.addProperty(PREFIX + "gui.inspector.select", "");
 
-        for (Module module : ModuleManager.INSTANCE.getModules()) {
+        for (Module module : ModuleHolder.INSTANCE.getModules()) {
             if (module.translateComponent == null) continue;
             String moduleKey = module.translateComponent.getFullKey();
             root.addProperty(moduleKey, "");

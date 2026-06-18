@@ -5,8 +5,12 @@ import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+<<<<<<< HEAD
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderPipelines;
+=======
+import net.minecraft.client.renderer.BindGroupLayouts;
+>>>>>>> 23c6ecd (重构 Managers (#256))
 
 
 public class LuminRenderPipelines {

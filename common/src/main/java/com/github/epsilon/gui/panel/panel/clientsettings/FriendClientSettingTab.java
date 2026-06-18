@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.RectRenderer;
@@ -16,8 +15,9 @@ import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.managers.ConfigManager;
-import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -78,7 +78,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         PanelLayout.Rect inputBounds = getInputBounds(bounds);
         PanelLayout.Rect listViewport = getListViewport(bounds);
-        List<String> friends = FriendManager.INSTANCE.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+        List<String> friends = Managers.FRIEND.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
         float contentHeight = friends.size() * (FRIEND_ROW_HEIGHT + MD3Theme.ROW_GAP);
         state.setMaxFriendScroll(contentHeight - listViewport.height());
         float maxScroll = Math.max(0.0f, contentHeight - listViewport.height());
@@ -180,8 +180,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         for (FriendRowEntry entry : rowEntries) {
             if (entry.removeBounds().contains(event.x(), event.y())) {
-                FriendManager.INSTANCE.removeFriend(entry.name());
-                ConfigManager.INSTANCE.saveNow();
+                Managers.FRIEND.removeFriend(entry.name());
+                ConfigHolder.INSTANCE.saveNow();
                 markDirty();
                 return true;
             }
@@ -272,9 +272,9 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
     private void addFriendFromInput() {
         String name = inputField.getText().trim();
-        if (!name.isEmpty() && !FriendManager.INSTANCE.isFriend(name)) {
-            FriendManager.INSTANCE.addFriend(name);
-            ConfigManager.INSTANCE.saveNow();
+        if (!name.isEmpty() && !Managers.FRIEND.isFriend(name)) {
+            Managers.FRIEND.addFriend(name);
+            ConfigHolder.INSTANCE.saveNow();
         }
         inputField.clear();
         markDirty();

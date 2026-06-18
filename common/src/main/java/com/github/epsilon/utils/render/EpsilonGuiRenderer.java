@@ -1,7 +1,10 @@
 package com.github.epsilon.utils.render;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
+<<<<<<< HEAD
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
+=======
+>>>>>>> 23c6ecd (重构 Managers (#256))
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -179,7 +182,11 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     private void draw(GpuBufferSlice fogBuffer) {
         if (!this.draws.isEmpty()) {
             this.guiProjection
+<<<<<<< HEAD
                     .setupOrtho(1000.0F, 11000.0F, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), true);
+=======
+                    .setupOrtho(1000.0F, 11000.0F, (float) windowState.width / windowState.guiScale, (float) windowState.height / windowState.guiScale, true);
+>>>>>>> 23c6ecd (重构 Managers (#256))
             RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
             RenderTarget mainRenderTarget = mc.getMainRenderTarget();
             int maxIndexCount = 0;
@@ -556,6 +563,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
     }
 
     private record Draw(
+<<<<<<< HEAD
             GpuBuffer vertexBuffer,
             int baseVertex,
             VertexFormat.Mode mode,
@@ -563,6 +571,12 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             RenderPipeline pipeline,
             TextureSetup textureSetup,
             ScreenRectangle scissorArea
+=======
+            StagedVertexBuffer.Draw draw,
+            RenderPipeline pipeline,
+            TextureSetup textureSetup,
+            @Nullable ScreenRectangle scissorArea
+>>>>>>> 23c6ecd (重构 Managers (#256))
     ) {
     }
 

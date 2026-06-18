@@ -2,7 +2,10 @@ package com.github.epsilon;
 
 import com.github.epsilon.assets.i18n.I18NFileGenerator;
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.managers.*;
+import com.github.epsilon.holders.AddonHolder;
+import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.holders.ModuleHolder;
+import com.github.epsilon.managers.Managers;
 
 import java.lang.invoke.MethodHandles;
 
@@ -13,19 +16,20 @@ public class EpsilonCommon {
 
         EventBus.INSTANCE.registerLambdaFactory(EpsilonCommon.class.getPackageName(), (lookupInMethod, klass) -> (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup()));
 
+        // 初始化客户端系统
+        ModuleHolder.INSTANCE.initModules();
+        AddonHolder.INSTANCE.setupAddons();
+        ConfigHolder.INSTANCE.initConfig();
+
         // 初始化 Managers
-        ModuleManager.INSTANCE.initModules();
-        AddonManager.INSTANCE.setupAddons();
-        ConfigManager.INSTANCE.initConfig();
-        RotationManager.INSTANCE.getClass();
-        HealthManager.INSTANCE.getClass();
+        Managers.initManagers();
 
         // 生成空的 i18n 文件
         I18NFileGenerator.generate("epsilon-empty-i18n.json");
 
         // 添加一个退出游戏时候的钩子
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ConfigManager.INSTANCE.saveNow();
+            ConfigHolder.INSTANCE.saveNow();
             Constants.LOGGER.info(Constants.NAME + " saved config on shutdown.");
         }));
 

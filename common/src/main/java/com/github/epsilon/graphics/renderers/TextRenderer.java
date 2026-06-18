@@ -1,12 +1,12 @@
 package com.github.epsilon.graphics.renderers;
 
-import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.elements.TextElement;
 import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfTextRenderer;
+import com.github.epsilon.holders.RendererHolder;
 
 import java.awt.*;
 

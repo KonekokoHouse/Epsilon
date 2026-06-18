@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.rotation;
 
-import com.github.epsilon.managers.RotationManager;
+import com.github.epsilon.managers.Managers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -197,7 +197,7 @@ public class RotationUtils {
     }
 
     public static Rot2f applySensitivityPatch(Rot2f rotation) {
-        Rot2f previousRotation = new Rot2f(RotationManager.INSTANCE.getLastRotation().getYaw(), RotationManager.INSTANCE.getLastRotation().getPitch());
+        Rot2f previousRotation = new Rot2f(Managers.ROTATION.getLastRotation().getYaw(), Managers.ROTATION.getLastRotation().getPitch());
         float mouseSensitivity = (float) (mc.options.sensitivity().get() * (1 + Math.random() / 10000000) * 0.6F + 0.2F);
         double multiplier = mouseSensitivity * mouseSensitivity * mouseSensitivity * 8.0F * 0.15D;
         float yaw = previousRotation.getYaw() + (float) (Math.round((rotation.getYaw() - previousRotation.getYaw()) / multiplier) * multiplier);
@@ -214,7 +214,7 @@ public class RotationUtils {
     }
 
     public static Rot2f relateToPlayerRotation(Rot2f rotation) {
-        Rot2f previousRotation = new Rot2f(RotationManager.INSTANCE.getLastRotation().getYaw(), RotationManager.INSTANCE.getLastRotation().getPitch());
+        Rot2f previousRotation = new Rot2f(Managers.ROTATION.getLastRotation().getYaw(), Managers.ROTATION.getLastRotation().getPitch());
         float yaw = previousRotation.getYaw() + Mth.wrapDegrees(rotation.getYaw() - previousRotation.getYaw());
         float pitch = Mth.clamp(rotation.getPitch(), -90, 90);
         return new Rot2f(yaw, pitch);
@@ -228,7 +228,7 @@ public class RotationUtils {
     }
 
     public static Rot2f move(Rot2f targetRotation, double speed) {
-        return move(RotationManager.INSTANCE.lastRotations, targetRotation, speed);
+        return move(Managers.ROTATION.lastRotations, targetRotation, speed);
     }
 
     public static Rot2f move(Rot2f lastRotation, Rot2f targetRotation, double speed) {
@@ -253,7 +253,7 @@ public class RotationUtils {
     }
 
     public static Rot2f smooth(final Rot2f targetRotation, final double speed) {
-        return smooth(RotationManager.INSTANCE.lastRotations, targetRotation, speed);
+        return smooth(Managers.ROTATION.lastRotations, targetRotation, speed);
     }
 
     public static Rot2f smooth(final Rot2f lastRotation, final Rot2f targetRotation, final double speed) {

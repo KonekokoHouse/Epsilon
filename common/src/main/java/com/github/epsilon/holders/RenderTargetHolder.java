@@ -1,4 +1,4 @@
-package com.github.epsilon.assets.holders;
+package com.github.epsilon.holders;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 

@@ -6,7 +6,7 @@ import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.managers.RotationManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -182,7 +182,7 @@ public class SafeAnchor extends Module {
         }
 
         if (silentRotation.getValue() && targetRotation != null) {
-            RotationManager.INSTANCE.setRotations(targetRotation, currentRotationSpeed, Priority.High);
+            Managers.ROTATION.setRotations(targetRotation, currentRotationSpeed, Priority.High);
         }
 
         if (System.currentTimeMillis() < nextActionTimeMs) return;
@@ -255,7 +255,7 @@ public class SafeAnchor extends Module {
         }
 
         Rot2f currentRot = silentRotation.getValue()
-                ? RotationManager.INSTANCE.getRotation()
+                ? Managers.ROTATION.getRotation()
                 : new Rot2f(mc.player.getYRot(), mc.player.getXRot());
 
         float yawDiff = Math.abs(Mth.wrapDegrees(targetRotation.getYaw() - currentRot.getYaw()));

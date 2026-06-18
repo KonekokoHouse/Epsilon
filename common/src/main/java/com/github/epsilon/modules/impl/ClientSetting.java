@@ -1,12 +1,12 @@
 package com.github.epsilon.modules.impl;
 
-import com.github.epsilon.assets.holders.TextureCacheHolder;
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
+import com.github.epsilon.holders.TextureCacheHolder;
+import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;

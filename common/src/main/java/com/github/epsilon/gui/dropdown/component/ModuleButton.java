@@ -7,9 +7,9 @@ import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
 import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.ConfigManager;
-import com.github.epsilon.managers.sound.SoundKey;
-import com.github.epsilon.managers.sound.SoundManager;
+import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
@@ -403,7 +403,7 @@ public class ModuleButton extends Component {
         if (isHovered(mouseX, mouseY, x, y, width, DropdownTheme.MODULE_HEIGHT)) {
             if (isHiddenButtonHovered(mouseX, mouseY)) {
                 module.setHidden(!module.isHidden());
-                ConfigManager.INSTANCE.saveNow();
+                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
             if (isKeybindButtonHovered(mouseX, mouseY)) {
@@ -434,7 +434,7 @@ public class ModuleButton extends Component {
                     float headerX = x + DropdownTheme.SETTING_INDENT;
                     if (isGroupHeaderHovered(mouseX, mouseY, headerX, settingY)) {
                         section.group().toggleCollapsed();
-                        SoundManager.INSTANCE.playInUi(section.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                        Managers.SOUND.playInUi(section.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                         return true;
                     }
                     if (!section.group().isCollapsed()) {

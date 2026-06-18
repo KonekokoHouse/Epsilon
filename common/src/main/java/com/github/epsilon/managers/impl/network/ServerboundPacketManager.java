@@ -1,9 +1,9 @@
-package com.github.epsilon.managers.network;
+package com.github.epsilon.managers.impl.network;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.LevelUpdateEvent;
-import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.Managers;
 import net.minecraft.network.protocol.Packet;
 
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,9 +13,7 @@ import static com.github.epsilon.Constants.mc;
 // This is BlinkManager
 public class ServerboundPacketManager {
 
-    public static final ServerboundPacketManager INSTANCE = new ServerboundPacketManager();
-
-    private ServerboundPacketManager() {
+    public ServerboundPacketManager() {
         EventBus.INSTANCE.subscribe(this);
     }
 
@@ -35,7 +33,7 @@ public class ServerboundPacketManager {
             try {
                 mc.getConnection().send(packets.poll());
             } catch (Exception e) {
-                NotificationManager.INSTANCE.error("Serverbound Packet", "failed to flush packets: " + e.getMessage());
+                Managers.NOTIFICATION.error("Serverbound Packet", "failed to flush packets: " + e.getMessage());
             }
         }
     }

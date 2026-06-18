@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.panel;
 
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
@@ -12,6 +11,7 @@ import com.github.epsilon.gui.panel.panel.ModuleDetailPanel;
 import com.github.epsilon.gui.panel.panel.ModuleListPanel;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;

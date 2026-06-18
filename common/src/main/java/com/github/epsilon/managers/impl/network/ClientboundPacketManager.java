@@ -1,9 +1,9 @@
-package com.github.epsilon.managers.network;
+package com.github.epsilon.managers.impl.network;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.LevelUpdateEvent;
-import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.Managers;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
 
@@ -13,9 +13,7 @@ import static com.github.epsilon.Constants.mc;
 
 public class ClientboundPacketManager {
 
-    public static final ClientboundPacketManager INSTANCE = new ClientboundPacketManager();
-
-    private ClientboundPacketManager() {
+    public ClientboundPacketManager() {
         EventBus.INSTANCE.subscribe(this);
     }
 
@@ -36,7 +34,7 @@ public class ClientboundPacketManager {
             try {
                 packets.poll().handle(mc.getConnection().getConnection().getPacketListener());
             } catch (Exception e) {
-                NotificationManager.INSTANCE.error("Clientbound Packet", "Failed to flush packets: " + e.getMessage());
+                Managers.NOTIFICATION.error("Clientbound Packet", "Failed to flush packets: " + e.getMessage());
             }
         }
     }

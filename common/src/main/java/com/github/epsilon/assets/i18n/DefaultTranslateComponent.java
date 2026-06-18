@@ -1,6 +1,6 @@
 package com.github.epsilon.assets.i18n;
 
-import com.github.epsilon.assets.holders.TranslateHolder;
+import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.resources.language.I18n;
 

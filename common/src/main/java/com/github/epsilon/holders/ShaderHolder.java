@@ -1,4 +1,4 @@
-package com.github.epsilon.managers;
+package com.github.epsilon.holders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.LuminRenderSystem;
@@ -30,9 +30,9 @@ import java.util.OptionalInt;
  * @author ilove0329P
  * Thanks to furry client.
  */
-public class ShaderManager {
+public class ShaderHolder {
 
-    public static final ShaderManager INSTANCE = new ShaderManager();
+    public static final ShaderHolder INSTANCE = new ShaderHolder();
 
     private static final int UNIFORMS_SIZE = new Std140SizeCalculator()
             .putVec4()
@@ -67,7 +67,7 @@ public class ShaderManager {
 
     public static final int EPSILON_CHEST_OUTLINE_MARKER = 0x01000001;
 
-    private ShaderManager() {
+    private ShaderHolder() {
     }
 
     public void processEntityOutlineTarget(RenderTarget target, Shader shader) {

@@ -2,9 +2,8 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.managers.target.TargetManager;
-import com.github.epsilon.managers.target.TargetRequest;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -93,7 +92,7 @@ public class MaceAura extends Module {
             return;
         }
 
-        RotationManager.INSTANCE.setRotations(RotationUtils.getRotationsToEntity(target), 10, Priority.Medium);
+        Managers.ROTATION.setRotations(RotationUtils.getRotationsToEntity(target), 10, Priority.Medium);
 
         if (!isReadyToAttack()) return;
 
@@ -104,7 +103,7 @@ public class MaceAura extends Module {
         List<LivingEntity> candidates = new ArrayList<>();
         double rangeValue = range.getValue();
 
-        for (LivingEntity entity : TargetManager.INSTANCE.acquireTargets(
+        for (LivingEntity entity : Managers.TARGET.acquireTargets(
                 TargetRequest.of(
                         rangeValue,
                         360.0f,

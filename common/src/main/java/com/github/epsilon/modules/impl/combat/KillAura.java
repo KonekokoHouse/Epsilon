@@ -3,9 +3,8 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.managers.target.TargetManager;
-import com.github.epsilon.managers.target.TargetRequest;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -116,7 +115,7 @@ public class KillAura extends Module {
     private void onTick(PlayerTickEvent.Pre event) {
         if (mc.player.isUsingItem() || mc.player.isBlocking()) return;
 
-        List<LivingEntity> targets = TargetManager.INSTANCE.acquireTargets(TargetRequest.of(
+        List<LivingEntity> targets = Managers.TARGET.acquireTargets(TargetRequest.of(
                 aimRange.getValue(),
                 fov.getValue().floatValue(),
                 player.getValue(),
@@ -146,7 +145,7 @@ public class KillAura extends Module {
         attacks += MathUtils.getRandom(minCPS.getValue().doubleValue(), maxCPS.getValue().doubleValue()) / 20.0;
 
         if (target != null) {
-            RotationManager.INSTANCE.setRotations(RotationUtils.getRotationsToEntity(target), rotationSpeed.getValue().floatValue(), Priority.Medium);
+            Managers.ROTATION.setRotations(RotationUtils.getRotationsToEntity(target), rotationSpeed.getValue().floatValue(), Priority.Medium);
             if (mode.is(Mode.OnePointEight)) {
                 while (attacks >= 1.0) {
                     clickTargets(targets);

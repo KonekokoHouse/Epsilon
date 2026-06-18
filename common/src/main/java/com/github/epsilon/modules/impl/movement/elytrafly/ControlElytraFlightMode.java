@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.movement.elytrafly;
 
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TravelEvent;
-import com.github.epsilon.managers.RotationManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
@@ -88,7 +88,7 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private void redirectRotation() {
-        RotationManager.INSTANCE.setRotations(new Rot2f(calcYaw(), calcPitch()), 10, Priority.Highest);
+        Managers.ROTATION.setRotations(new Rot2f(calcYaw(), calcPitch()), 10, Priority.Highest);
     }
 
     private float calcYaw() {

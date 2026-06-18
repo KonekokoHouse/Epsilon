@@ -1,4 +1,4 @@
-package com.github.epsilon.managers.target;
+package com.github.epsilon.managers.impl.target;
 
 import net.minecraft.world.entity.LivingEntity;
 

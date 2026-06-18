@@ -1,4 +1,4 @@
-package com.github.epsilon.managers;
+package com.github.epsilon.holders;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
@@ -10,8 +10,8 @@ import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
-import com.github.epsilon.managers.sound.SoundKey;
-import com.github.epsilon.managers.sound.SoundManager;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -33,11 +33,11 @@ import java.util.List;
 
 import static com.github.epsilon.Constants.mc;
 
-public class ModuleManager {
+public class ModuleHolder {
 
-    public static final ModuleManager INSTANCE = new ModuleManager();
+    public static final ModuleHolder INSTANCE = new ModuleHolder();
 
-    private ModuleManager() {
+    public ModuleHolder() {
         EventBus.INSTANCE.subscribe(this);
     }
 
@@ -233,9 +233,9 @@ public class ModuleManager {
 
         if (!affectedModules.isEmpty() && ClientSetting.INSTANCE.soundNotify.getValue()) {
             if (hasEnabling) {
-                SoundManager.INSTANCE.playInUi(SoundKey.ENABLE);
+                Managers.SOUND.playInUi(SoundKey.ENABLE);
             } else {
-                SoundManager.INSTANCE.playInUi(SoundKey.DISABLE);
+                Managers.SOUND.playInUi(SoundKey.DISABLE);
             }
         }
     }

@@ -7,7 +7,7 @@ import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -52,7 +52,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        NotificationManager.INSTANCE.clear();
+        Managers.NOTIFICATION.clear();
         super.init();
     }
 

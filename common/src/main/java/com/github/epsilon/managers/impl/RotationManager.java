@@ -1,4 +1,4 @@
-package com.github.epsilon.managers;
+package com.github.epsilon.managers.impl;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
@@ -19,8 +19,6 @@ import static com.github.epsilon.Constants.mc;
 
 public class RotationManager {
 
-    public static final RotationManager INSTANCE = new RotationManager();
-
     private final Rot2f offset = new Rot2f(0, 0);
     public Rot2f rotations = new Rot2f(0, 0);
     public Rot2f lastRotations = new Rot2f(0, 0);
@@ -38,7 +36,7 @@ public class RotationManager {
     private int priority;
     private Runnable callback;
 
-    private RotationManager() {
+    public RotationManager() {
         EventBus.INSTANCE.subscribe(this);
     }
 

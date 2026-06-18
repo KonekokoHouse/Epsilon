@@ -18,8 +18,13 @@ import net.minecraft.util.Util;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+<<<<<<< HEAD
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
+=======
+import java.util.Optional;
+import java.util.OptionalDouble;
+>>>>>>> 23c6ecd (重构 Managers (#256))
 
 import static com.github.epsilon.Constants.mc;
 

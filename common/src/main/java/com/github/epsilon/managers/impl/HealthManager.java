@@ -1,4 +1,4 @@
-package com.github.epsilon.managers;
+package com.github.epsilon.managers.impl;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
@@ -14,9 +14,7 @@ import static com.github.epsilon.Constants.mc;
 
 public class HealthManager {
 
-    public static final HealthManager INSTANCE = new HealthManager();
-
-    private HealthManager() {
+    public HealthManager() {
         EventBus.INSTANCE.subscribe(this);
     }
 

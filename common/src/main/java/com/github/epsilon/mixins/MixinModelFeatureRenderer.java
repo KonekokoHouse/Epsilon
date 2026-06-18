@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.managers.ShaderManager;
+import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -22,6 +22,7 @@ public class MixinModelFeatureRenderer {
     @Unique
     private boolean epsilon$renderingChestOutline;
 
+<<<<<<< HEAD
     @WrapOperation(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;setColor(I)V"))
     private void redirectChestOutlineColor(OutlineBufferSource outlineBufferSource, int color, Operation<Void> original) {
         epsilon$renderingChestOutline = color == ShaderManager.EPSILON_CHEST_OUTLINE_MARKER;
@@ -31,6 +32,23 @@ public class MixinModelFeatureRenderer {
         }
 
         original.call(outlineBufferSource, color);
+=======
+    @WrapOperation(method = "buildGroup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer;prepareModel(Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer$Submit;)V"))
+    private void redirectChestOutlineSubmit(ModelFeatureRenderer instance, ModelFeatureRenderer.Submit<?> submit, Operation<Void> original) {
+        epsilon$renderingChestOutline = submit.tintedColor() == ShaderHolder.EPSILON_CHEST_OUTLINE_MARKER;
+        if (!epsilon$renderingChestOutline) {
+            original.call(instance, submit);
+            return;
+        }
+
+        ShaderHolder.INSTANCE.beginChestOutlineCapture();
+        try {
+            original.call(instance, epsilon$withOutlineColor(submit, Shaders.INSTANCE.outlineColor.getValue().getRGB()));
+        } finally {
+            ShaderHolder.INSTANCE.endChestOutlineCapture();
+            epsilon$renderingChestOutline = false;
+        }
+>>>>>>> 23c6ecd (重构 Managers (#256))
     }
 
     @WrapOperation(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;getBuffer(Lnet/minecraft/client/renderer/rendertype/RenderType;)Lcom/mojang/blaze3d/vertex/VertexConsumer;"))
