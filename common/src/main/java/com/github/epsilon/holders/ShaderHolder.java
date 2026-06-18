@@ -20,12 +20,16 @@ import com.mojang.blaze3d.textures.GpuSampler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.feature.submit.SubmitNode;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author ilove0329P
@@ -62,10 +66,10 @@ public class ShaderHolder {
     private boolean renderingChests;
     private boolean capturedChests;
     private boolean preparedChests;
+    private int chestCaptureDepth;
+    private final Set<SubmitNode> chestOutlineSubmits = Collections.newSetFromMap(new IdentityHashMap<>());
 
     private final long startTimeMs = Util.getMillis();
-
-    public static final int EPSILON_CHEST_OUTLINE_MARKER = 0x01000001;
 
     private ShaderHolder() {
     }
@@ -109,6 +113,14 @@ public class ShaderHolder {
         return renderingChests ? chestTarget : null;
     }
 
+    public void markChestOutlineSubmit(SubmitNode submit) {
+        chestOutlineSubmits.add(submit);
+    }
+
+    public boolean isChestOutlineSubmit(SubmitNode submit) {
+        return chestOutlineSubmits.contains(submit);
+    }
+
     public void beginChestOutlineCapture() {
         if (!preparedChests) {
             RenderTarget mainTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
@@ -116,11 +128,15 @@ public class ShaderHolder {
             preparedChests = true;
         }
         capturedChests = true;
+        chestCaptureDepth++;
         renderingChests = true;
     }
 
     public void endChestOutlineCapture() {
-        renderingChests = false;
+        if (chestCaptureDepth > 0) {
+            chestCaptureDepth--;
+        }
+        renderingChests = chestCaptureDepth > 0;
     }
 
     public void processHandOutlineTarget(RenderTarget mainTarget) {
@@ -158,6 +174,9 @@ public class ShaderHolder {
             chestTarget.blitAndBlendToTexture(mainTarget.getColorTextureView(), mainTarget.getDepthTextureView());
         }
         preparedChests = false;
+        chestCaptureDepth = 0;
+        renderingChests = false;
+        chestOutlineSubmits.clear();
     }
 
     private void renderPass(String name, RenderTarget input, RenderTarget output, RenderPipeline pipeline, GpuBufferSlice shaderConfig) {

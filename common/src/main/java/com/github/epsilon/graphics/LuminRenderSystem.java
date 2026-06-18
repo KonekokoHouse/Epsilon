@@ -174,8 +174,7 @@ public class LuminRenderSystem {
 
         final var indexCount = vertexCount / 4 * 6;
 
-        RenderSystem.AutoStorageIndexBuffer autoIndices =
-                RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
         GpuBuffer ibo = autoIndices.getBuffer(indexCount);
 
         GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
@@ -189,23 +188,21 @@ public class LuminRenderSystem {
     }
 
     public static GpuBuffer getQuadIndexBuffer(int indexCount) {
-        RenderSystem.AutoStorageIndexBuffer autoIndices =
-                RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
         return autoIndices.getBuffer(indexCount);
     }
 
     public static IndexType getQuadIndexType() {
-        RenderSystem.AutoStorageIndexBuffer autoIndices =
-                RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
         return autoIndices.type();
     }
 
     public static GpuBufferSlice writeTransform(Matrix4fc modelView, Vector4fc colorModulator, Vector3fc modelOffset, Matrix4fc textureMatrix) {
         return RenderSystem.getDynamicUniforms().writeTransform(
-                new org.joml.Matrix4f(modelView),
+                new Matrix4f(modelView),
                 new Vector4f(colorModulator),
                 new Vector3f(modelOffset),
-                new org.joml.Matrix4f(textureMatrix)
+                new Matrix4f(textureMatrix)
         );
     }
 

@@ -2,29 +2,26 @@ package com.github.epsilon.graphics.buffer;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import net.minecraft.client.renderer.MappableRingBuffer;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import java.nio.ByteBuffer;
 
-/**
- * 1) 在支持 GL_MAP_PERSISTENT_BIT GL_MAP_FLUSH_EXPLICIT_BIT 的情况下不会执行 glUnmapBuffer 只会调用 Flush
- * <p>
- * 2) 在均不支持的情况下 会退化至 glBufferData + glMapBufferRange + glUnmapBuffer
- */
 public class LuminRingBuffer {
 
-    private final MappableRingBuffer ringBuffer;
+    private static final int BUFFER_COUNT = 8;
+
+    private final GpuBuffer[] buffers = new GpuBuffer[BUFFER_COUNT];
 
     private GpuBufferSlice.MappedView mappedBuffer;
-
+    private int current;
     private boolean mapped;
 
     public LuminRingBuffer(long size, @GpuBuffer.Usage int usage) {
-        ringBuffer = new MappableRingBuffer(() -> "lumin-ring-buffer",
-                GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | usage,
-                (int) size);
-
-        tryMap();
+        int bufferUsage = GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | usage;
+        for (int i = 0; i < buffers.length; i++) {
+            int index = i;
+            buffers[i] = RenderSystem.getDevice().createBuffer(() -> "lumin-ring-buffer #" + index, bufferUsage, size);
+        }
     }
 
     public boolean isMapped() {
@@ -35,23 +32,12 @@ public class LuminRingBuffer {
         return mappedBuffer.data();
     }
 
-    /**
-     * 尝试 Map 此 Buffer
-     * 如已经 Map 则不会执行
-     */
     public void tryMap() {
         if (mapped) return;
-        mappedBuffer = ringBuffer.currentBuffer().map(
-                false, true
-        );
+        mappedBuffer = getGpuBuffer().map(false, true);
         mapped = true;
     }
 
-    /**
-     * 调用 Blaze3D 的 unmap
-     * 在支持 GL_MAP_PERSISTENT_BIT GL_MAP_FLUSH_EXPLICIT_BIT 的情况下不会执行 Unmap 只会调用 Flush
-     * 在均不支持的情况下 会退化至 glBufferData + glMapBufferRange + glUnmapBuffer
-     */
     public void unmap() {
         if (!mapped) return;
         mappedBuffer.close();
@@ -60,27 +46,25 @@ public class LuminRingBuffer {
     }
 
     public void rotate() {
-        ringBuffer.rotate();
+        current = (current + 1) % buffers.length;
     }
 
-    /**
-     * @see #unmap()
-     */
     public GpuBuffer unmapAndRotate() {
-        final GpuBuffer lastGpuBuffer = ringBuffer.currentBuffer();
-        mappedBuffer.close();
-        mapped = false;
-        ringBuffer.rotate();
+        GpuBuffer lastGpuBuffer = getGpuBuffer();
+        unmap();
+        rotate();
         return lastGpuBuffer;
     }
 
     public GpuBuffer getGpuBuffer() {
-        return ringBuffer.currentBuffer();
+        return buffers[current];
     }
 
     public void close() {
         if (mapped) unmap();
-        ringBuffer.close();
+        for (GpuBuffer buffer : buffers) {
+            buffer.close();
+        }
     }
 
 }

@@ -59,11 +59,6 @@ public abstract class MixinItemInHandRenderer {
         }
     }
 
-    @Inject(method = "submitHandsWithItems", at = @At("RETURN"))
-    private void endShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
-        ShaderHolder.INSTANCE.endHandOutlineCapture();
-    }
-
     @Inject(method = "submitArmWithItem", at = @At("HEAD"))
     private void cacheBlockingState(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         epsilon$blocked = HandsView.INSTANCE.shouldApplyBlockingAnimation(hand, itemStack);
