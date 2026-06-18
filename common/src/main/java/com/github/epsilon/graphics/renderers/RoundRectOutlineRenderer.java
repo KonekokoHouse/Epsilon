@@ -106,10 +106,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     }
 
     public void setScissor(int x, int y, int width, int height) {
-<<<<<<< HEAD
-=======
         LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
         scissorEnabled = true;
         scissorX = scissor.x();
         scissorY = scissor.y();

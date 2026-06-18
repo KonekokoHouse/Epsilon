@@ -1,11 +1,7 @@
 package com.github.epsilon.utils.render;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-<<<<<<< HEAD
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-=======
-import com.google.common.collect.ImmutableMap;
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -34,6 +30,7 @@ import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState;
+import net.minecraft.client.renderer.state.WindowRenderState;
 import net.minecraft.client.renderer.state.gui.*;
 import net.minecraft.client.renderer.state.gui.pip.OversizedItemRenderState;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -405,42 +402,10 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         }
     }
 
-<<<<<<< HEAD
     private void recordMesh(BufferBuilder bufferBuilder, RenderPipeline pipeline, TextureSetup textureSetup, @Nullable ScreenRectangle scissorArea) {
         MeshData mesh = bufferBuilder.build();
         if (mesh != null) {
             this.meshesToDraw.add(new EpsilonGuiRenderer.MeshToDraw(mesh, pipeline, textureSetup, scissorArea));
-=======
-    private void executeDraw(Draw draw, RenderPass renderPass) {
-        StagedVertexBuffer.ExecuteInfo executeInfo = this.vertexBuffer.getExecuteInfo(draw.draw);
-        if (executeInfo != null) {
-            RenderPipeline pipeline = draw.pipeline();
-            renderPass.setPipeline(pipeline);
-            renderPass.setVertexBuffer(0, executeInfo.vertexBuffer().slice());
-            ScreenRectangle scissorArea = draw.scissorArea();
-            if (scissorArea != null) {
-                if (!this.enableScissor(scissorArea, renderPass)) {
-                    return;
-                }
-            } else {
-                renderPass.disableScissor();
-            }
-
-            if (draw.textureSetup.texure0() != null) {
-                renderPass.bindTexture("Sampler0", draw.textureSetup.texure0(), draw.textureSetup.sampler0());
-            }
-
-            if (draw.textureSetup.texure1() != null) {
-                renderPass.bindTexture("Sampler1", draw.textureSetup.texure1(), draw.textureSetup.sampler1());
-            }
-
-            if (draw.textureSetup.texure2() != null) {
-                renderPass.bindTexture("Sampler2", draw.textureSetup.texure2(), draw.textureSetup.sampler2());
-            }
-
-            renderPass.setIndexBuffer(executeInfo.indexBuffer(), executeInfo.indexType());
-            renderPass.drawIndexed(executeInfo.indexCount(), 1, executeInfo.firstIndex(), executeInfo.baseVertex(), 0);
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
         }
     }
 
@@ -520,7 +485,9 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         renderPass.setVertexBuffer(0, draw.vertexBuffer);
         ScreenRectangle scissorArea = draw.scissorArea();
         if (scissorArea != null) {
-            this.enableScissor(scissorArea, renderPass);
+            if (!this.enableScissor(scissorArea, renderPass)) {
+                return;
+            }
         } else {
             renderPass.disableScissor();
         }
@@ -553,24 +520,17 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         }
     }
 
-<<<<<<< HEAD
-    private void enableScissor(ScreenRectangle rectangle, RenderPass renderPass) {
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(rectangle.left(), rectangle.top(), rectangle.width(), rectangle.height());
-        renderPass.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
-=======
     private boolean enableScissor(ScreenRectangle rectangle, RenderPass renderPass) {
-        WindowRenderState window = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState;
-        int guiScale = window.guiScale;
+        WindowRenderState window = mc.gameRenderer.getGameRenderState().windowRenderState;
         LuminRenderSystem.ScissorRect scissor = ScissorUtils.toFramebufferScissor(
                 rectangle.left(),
                 rectangle.top(),
                 rectangle.width(),
                 rectangle.height(),
-                guiScale,
+                window.guiScale,
                 window.height
         );
         return ScissorUtils.enableScissor(renderPass, scissor);
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
     }
 
     public void registerPanoramaTextures(TextureManager textureManager) {

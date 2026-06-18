@@ -4,13 +4,7 @@ import com.github.epsilon.assets.holders.RenderTargetHolder;
 import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.modules.impl.ClientSetting;
-<<<<<<< HEAD
-=======
 import com.github.epsilon.utils.render.ScissorUtils;
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.IndexType;
-import com.mojang.blaze3d.PrimitiveTopology;
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -116,17 +110,7 @@ public class LuminRenderSystem {
     }
 
     public static ScissorRect toFramebufferScissor(float x, float y, float width, float height) {
-<<<<<<< HEAD
-        double scale = getGuiScale();
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
-        int sx = (int) Math.round(x * scale);
-        int sy = (int) Math.round(windowState.height - (y + height) * scale);
-        int sw = Math.max(0, (int) Math.round(width * scale));
-        int sh = Math.max(0, (int) Math.round(height * scale));
-        return clampFramebufferScissor(sx, sy, sw, sh);
-=======
         return ScissorUtils.toFramebufferScissor(x, y, width, height);
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
     }
 
     public static ScissorRect toFramebufferScissor(float x, float y, float width, float height, float guiHeight) {
@@ -205,28 +189,6 @@ public class LuminRenderSystem {
         );
     }
 
-<<<<<<< HEAD
-    private static ScissorRect clampFramebufferScissor(int x, int y, int width, int height) {
-        int areaWidth;
-        int areaHeight;
-        if (activeTarget != null) {
-            areaWidth = activeTarget.width();
-            areaHeight = activeTarget.height();
-        } else {
-            WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
-            areaWidth = windowState.width;
-            areaHeight = windowState.height;
-        }
-
-        int left = Math.clamp(x, 0, areaWidth);
-        int top = Math.clamp(y, 0, areaHeight);
-        int right = Math.clamp(x + width, 0, areaWidth);
-        int bottom = Math.clamp(y + height, 0, areaHeight);
-        return new ScissorRect(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
-    }
-
-=======
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
     public record ScissorRect(int x, int y, int width, int height) {
     }
 

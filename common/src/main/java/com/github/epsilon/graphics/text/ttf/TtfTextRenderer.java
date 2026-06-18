@@ -7,11 +7,7 @@ import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.graphics.text.GlyphDescriptor;
 import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.modules.impl.ClientSetting;
-<<<<<<< HEAD
-=======
 import com.github.epsilon.utils.render.ScissorUtils;
-import com.mojang.blaze3d.PrimitiveTopology;
->>>>>>> 9ab3b90 (修复 Scissors 越界导致的崩溃问题 (#254))
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
