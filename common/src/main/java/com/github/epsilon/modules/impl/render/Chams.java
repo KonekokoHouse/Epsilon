@@ -5,9 +5,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.CompareOp;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
@@ -19,18 +17,20 @@ import net.minecraft.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class Chams extends Module {
 
     public static final Chams INSTANCE = new Chams();
-    private static final ThreadLocal<Boolean> RENDERING_THIRD_PERSON_HAND_ITEM = ThreadLocal.withInitial(() -> false);
 
     private Chams() {
         super("Chams", Category.RENDER);
     }
 
     public final BoolSetting noDepth = boolSetting("No Depth", true);
+
+    private static final ThreadLocal<Boolean> RENDERING_THIRD_PERSON_HAND_ITEM = ThreadLocal.withInitial(() -> false);
 
     private static final RenderPipeline ENTITY_CHAMS_PIPELINE = RenderPipeline.builder(RenderPipelines.ENTITY_SNIPPET)
             .withLocation("pipeline/epsilon_entity_chams")
@@ -39,20 +39,20 @@ public class Chams extends Module {
             .withBindGroupLayout(BindGroupLayouts.SAMPLER1)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
             .withCull(false)
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0f, -1100000.0f))
+            .withDepthStencilState(Optional.empty())
             .build();
 
     private static final RenderPipeline ITEM_CHAMS_CUTOUT_PIPELINE = RenderPipeline.builder(RenderPipelines.ITEM_SNIPPET)
             .withLocation("pipeline/epsilon_item_chams_cutout")
             .withShaderDefine("ALPHA_CUTOUT", 0.1f)
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0f, -1100000.0f))
+            .withDepthStencilState(Optional.empty())
             .build();
 
     private static final RenderPipeline ITEM_CHAMS_TRANSLUCENT_PIPELINE = RenderPipeline.builder(RenderPipelines.ITEM_SNIPPET)
             .withLocation("pipeline/epsilon_item_chams_translucent")
             .withShaderDefine("ALPHA_CUTOUT", 0.1f)
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true, -1.0f, -1100000.0f))
+            .withDepthStencilState(Optional.empty())
             .build();
 
     private static final Function<Identifier, RenderType> ENTITY_CHAMS_TYPE = Util.memoize(
