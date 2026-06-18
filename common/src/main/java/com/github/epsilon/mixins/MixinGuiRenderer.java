@@ -3,7 +3,6 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.utils.render.EpsilonGuiRenderer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;

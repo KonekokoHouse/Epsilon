@@ -1,23 +1,19 @@
-package com.github.epsilon.managers;
+package com.github.epsilon.holders;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.addon.EpsilonAddon;
 
 import java.util.*;
 
-public class AddonManager {
+public class AddonHolder {
 
-    public static final AddonManager INSTANCE = new AddonManager();
+    public static final AddonHolder INSTANCE = new AddonHolder();
 
     private final List<EpsilonAddon> addons = new ArrayList<>();
     private final Set<String> addonIds = new HashSet<>();
     private boolean setupComplete;
 
-    private AddonManager() {
-    }
-
     public synchronized void registerAddon(EpsilonAddon addon) {
-
         if (Objects.isNull(addon)) {
             return;
         }

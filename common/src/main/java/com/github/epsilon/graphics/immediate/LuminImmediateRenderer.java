@@ -13,11 +13,11 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -28,9 +28,10 @@ import java.nio.ByteOrder;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
+import static com.github.epsilon.Constants.mc;
+
 public final class LuminImmediateRenderer {
 
-    private static final Minecraft MC = Minecraft.getInstance();
     private static final long DEFAULT_BUFFER_SIZE = 1024 * 1024;
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
 
@@ -287,7 +288,7 @@ public final class LuminImmediateRenderer {
                     pass.setVertexBuffer(0, new GpuBufferSlice(this.ringBuffer.getGpuBuffer(), 0, this.ringBuffer.getGpuBuffer().size()));
 
                     if (this.texture != null) {
-                        AbstractTexture textureObject = MC.getTextureManager().getTexture(this.texture);
+                        AbstractTexture textureObject = mc.getTextureManager().getTexture(this.texture);
                         pass.bindTexture("Sampler0", textureObject.getTextureView(), textureObject.getSampler());
                     }
 
@@ -320,8 +321,9 @@ public final class LuminImmediateRenderer {
         }
 
         private static byte packNormal(float value) {
-            float clamped = Math.max(-1.0f, Math.min(1.0f, value));
+            float clamped = Mth.clamp(value, -1.0f, 1.0f);
             return (byte) ((int) (clamped * 127.0f) & 0xFF);
         }
     }
+
 }

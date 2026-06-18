@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
 import com.github.epsilon.addon.EpsilonAddon;
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.RectRenderer;
@@ -19,7 +18,8 @@ import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.managers.AddonManager;
+import com.github.epsilon.holders.AddonHolder;
+import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -103,7 +103,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             markDirty();
         }
 
-        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
+        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         EpsilonAddon selectedAddon = resolveSelectedAddon(addons);
         List<Setting<?>> selectedSettings = selectedAddon == null
                 ? List.of()
@@ -249,7 +249,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         }
 
         PanelLayout.Rect listViewport = getListViewport(getListPanelBounds(bounds));
-        PanelLayout.Rect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonManager.INSTANCE.getAddons()));
+        PanelLayout.Rect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
 
         if (listScrollBarDrag.mouseClicked(event.x(), event.y(), listViewport, state.getAddonListScroll(), state.getMaxAddonListScroll())) {
             float newScroll = listScrollBarDrag.mouseDragged(event.y(), listViewport, state.getMaxAddonListScroll());
@@ -318,7 +318,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             return true;
         }
         if (detailScrollBarDrag.isDragging()) {
-            PanelLayout.Rect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonManager.INSTANCE.getAddons()));
+            PanelLayout.Rect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
             float newScroll = detailScrollBarDrag.mouseDragged(event.y(), settingsViewport, state.getMaxAddonDetailScroll());
             if (newScroll >= 0.0f) {
                 state.setAddonDetailScroll(newScroll);
@@ -344,7 +344,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             markDirty();
             return true;
         }
-        PanelLayout.Rect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonManager.INSTANCE.getAddons()));
+        PanelLayout.Rect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
         if (settingsViewport.contains(mouseX, mouseY)) {
             detailScrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
@@ -396,7 +396,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
 
     @Override
     public void onActivated() {
-        resolveSelectedAddon(AddonManager.INSTANCE.getAddons());
+        resolveSelectedAddon(AddonHolder.INSTANCE.getAddons());
         markDirty();
     }
 

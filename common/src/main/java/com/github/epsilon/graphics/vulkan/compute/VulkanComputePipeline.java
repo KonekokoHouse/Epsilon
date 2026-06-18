@@ -5,11 +5,7 @@ import com.github.epsilon.graphics.vulkan.descriptor.DescriptorLayout;
 import com.github.epsilon.graphics.vulkan.descriptor.DescriptorLayoutSpec;
 import com.mojang.blaze3d.vulkan.VulkanUtils;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VkComputePipelineCreateInfo;
-import org.lwjgl.vulkan.VkDevice;
-import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
-import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo;
-import org.lwjgl.vulkan.VkShaderModuleCreateInfo;
+import org.lwjgl.vulkan.*;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;

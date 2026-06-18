@@ -1,4 +1,4 @@
-package com.github.epsilon.managers.sound;
+package com.github.epsilon.managers.impl.sound;
 
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -9,14 +9,9 @@ import static com.github.epsilon.Constants.mc;
 
 public class SoundManager {
 
-    public static final SoundManager INSTANCE = new SoundManager();
-
     private static final long UI_DEBOUNCE_MS = 40L;
 
     private long lastUiPlayTimeMs;
-
-    private SoundManager() {
-    }
 
     public void playInUi(SoundKey key) {
         playSound(key, 1.2f);

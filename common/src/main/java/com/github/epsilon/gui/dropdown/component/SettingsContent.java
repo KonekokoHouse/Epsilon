@@ -6,9 +6,9 @@ import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
 import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.ConfigManager;
-import com.github.epsilon.managers.sound.SoundKey;
-import com.github.epsilon.managers.sound.SoundManager;
+import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
@@ -102,15 +102,15 @@ public class SettingsContent {
                 float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
                 if (isHovered(mouseX, mouseY, headerX, currentY, headerW, DropdownTheme.GROUP_HEADER_HEIGHT)) {
                     section.group().toggleCollapsed();
-                    SoundManager.INSTANCE.playInUi(section.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
-                    ConfigManager.INSTANCE.saveNow();
+                    Managers.SOUND.playInUi(section.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
                 if (!section.group().isCollapsed()) {
                     for (SettingWidget<?> widget : section.widgets()) {
                         if (!widget.isVisible()) continue;
                         if (widget.mouseClicked(mouseX, mouseY, button)) {
-                            ConfigManager.INSTANCE.saveNow();
+                            ConfigHolder.INSTANCE.saveNow();
                             return true;
                         }
                     }
@@ -119,7 +119,7 @@ public class SettingsContent {
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
                     if (widget.mouseClicked(mouseX, mouseY, button)) {
-                        ConfigManager.INSTANCE.saveNow();
+                        ConfigHolder.INSTANCE.saveNow();
                         return true;
                     }
                 }
@@ -134,7 +134,7 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.mouseReleased(mouseX, mouseY, button)) {
-                    ConfigManager.INSTANCE.saveNow();
+                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }
@@ -147,7 +147,7 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.keyPressed(keyCode, scanCode, modifiers)) {
-                    ConfigManager.INSTANCE.saveNow();
+                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }
@@ -160,7 +160,7 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.charTyped(typedText)) {
-                    ConfigManager.INSTANCE.saveNow();
+                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }

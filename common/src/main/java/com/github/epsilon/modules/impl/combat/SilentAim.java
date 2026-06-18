@@ -3,9 +3,8 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.SwingHandEvent;
-import com.github.epsilon.managers.RotationManager;
-import com.github.epsilon.managers.target.TargetManager;
-import com.github.epsilon.managers.target.TargetRequest;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -54,7 +53,7 @@ public class SilentAim extends Module {
         }
 
         Rot2f rotations = RotationUtils.calculate(target.getEyePosition());
-        RotationManager.INSTANCE.setRotations(rotations, 10, Priority.High);
+        Managers.ROTATION.setRotations(rotations, 10, Priority.High);
 
         HitResult hitResult = mc.hitResult;
         if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {
@@ -77,7 +76,7 @@ public class SilentAim extends Module {
             return;
         }
 
-        target = TargetManager.INSTANCE.acquirePrimary(TargetRequest.of(
+        target = Managers.TARGET.acquirePrimary(TargetRequest.of(
                 range.getValue(),
                 fov.getValue(),
                 player.getValue(),

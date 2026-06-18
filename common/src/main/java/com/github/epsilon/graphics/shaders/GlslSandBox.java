@@ -19,8 +19,8 @@ import net.minecraft.util.Util;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.OptionalDouble;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 import static com.github.epsilon.Constants.mc;
 

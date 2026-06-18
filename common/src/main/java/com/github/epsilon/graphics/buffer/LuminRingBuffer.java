@@ -2,7 +2,6 @@ package com.github.epsilon.graphics.buffer;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.MappableRingBuffer;
 
 import java.nio.ByteBuffer;

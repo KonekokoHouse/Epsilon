@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -123,7 +123,7 @@ public class NameTags extends Module {
                 continue;
 
             Color healthColor = totalHealth < 10.0f ? new Color(255, 214, 64, 240) : new Color(120, 255, 120, 240);
-            final var isFriend = FriendManager.INSTANCE.isFriend(nameText);
+            final var isFriend = Managers.FRIEND.isFriend(nameText);
 
             drawList.add(new TagDrawData(equipmentItems, nameText, isFriend, healthText, healthColor, x, y, boxWidth, boxHeight, renderScale, padding, lineGap, itemScale, itemSize, itemGap, itemRowGap));
         }

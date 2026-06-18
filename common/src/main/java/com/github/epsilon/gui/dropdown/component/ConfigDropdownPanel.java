@@ -6,7 +6,7 @@ import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
 import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.ConfigManager;
+import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.utils.client.ConfigFolderOpener;
 
 import java.util.List;
@@ -60,7 +60,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
 
-        String placeholder = ConfigManager.INSTANCE.getActiveConfigName();
+        String placeholder = ConfigHolder.INSTANCE.getActiveConfigName();
         if (!inputField.isFocused() && inputField.getText().isEmpty()) {
             inputField.setText(placeholder);
         }
@@ -98,7 +98,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
             currentY += ROW_HEIGHT;
         }
 
-        String active = ConfigManager.INSTANCE.getActiveConfigName();
+        String active = ConfigHolder.INSTANCE.getActiveConfigName();
         List<String> configs = configsForFrame();
         if (configs.isEmpty()) {
             float emptyScale = 0.55f;
@@ -153,7 +153,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
             float deleteX = contentX + contentW - 18.0f;
             if (isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
                 try {
-                    ConfigManager.INSTANCE.deleteConfig(name);
+                    ConfigHolder.INSTANCE.deleteConfig(name);
                     status = deletedComponent.getTranslatedName() + " " + name;
                 } catch (Exception e) {
                     status = errorText(e);
@@ -162,7 +162,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
             }
             if (isHovered(mouseX, mouseY, contentX, currentY, contentW, ROW_HEIGHT)) {
                 try {
-                    ConfigManager.INSTANCE.switchConfig(name);
+                    ConfigHolder.INSTANCE.switchConfig(name);
                     inputField.setText(name);
                     inputField.setCursorToEnd();
                     status = switchedComponent.getTranslatedName() + " " + name;
@@ -182,22 +182,22 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
             switch (index) {
                 case 0 -> {
                     if (!value.isEmpty()) {
-                        String saved = ConfigManager.INSTANCE.saveAsConfig(value);
+                        String saved = ConfigHolder.INSTANCE.saveAsConfig(value);
                         inputField.setText(saved);
                         inputField.setCursorToEnd();
                         status = savedComponent.getTranslatedName() + " " + saved;
                     }
                 }
                 case 1 -> {
-                    ConfigManager.INSTANCE.reloadOrThrow();
+                    ConfigHolder.INSTANCE.reloadOrThrow();
                     status = reloadedComponent.getTranslatedName();
                 }
                 case 2 -> {
-                    status = exportedComponent.getTranslatedName() + " " + ConfigManager.INSTANCE.exportActiveConfigToZip(value).getFileName();
+                    status = exportedComponent.getTranslatedName() + " " + ConfigHolder.INSTANCE.exportActiveConfigToZip(value).getFileName();
                 }
                 case 3 -> {
                     if (!value.isEmpty()) {
-                        String imported = ConfigManager.INSTANCE.importConfigFromZip(value);
+                        String imported = ConfigHolder.INSTANCE.importConfigFromZip(value);
                         inputField.setText(imported);
                         inputField.setCursorToEnd();
                         status = importedComponent.getTranslatedName() + " " + imported;
@@ -205,7 +205,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                 }
                 case 4 -> {
                     if (!value.isEmpty()) {
-                        String created = ConfigManager.INSTANCE.newDefaultConfig(value);
+                        String created = ConfigHolder.INSTANCE.newDefaultConfig(value);
                         inputField.setText(created);
                         inputField.setCursorToEnd();
                         status = createdComponent.getTranslatedName() + " " + created;
@@ -253,7 +253,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     private List<String> configsForFrame() {
         int frameId = getRenderFrameId();
         if (cachedConfigFrameId != frameId) {
-            cachedConfigs = ConfigManager.INSTANCE.listConfigs();
+            cachedConfigs = ConfigHolder.INSTANCE.listConfigs();
             cachedConfigFrameId = frameId;
         }
         return cachedConfigs;

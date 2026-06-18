@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.hudeditor;
 
-import com.github.epsilon.managers.ModuleManager;
+import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.Module;
 
@@ -14,7 +14,7 @@ public class HudEditorModules {
 
     public static List<HudModule> collectEnabledHudModules() {
         List<HudModule> hudModules = new ArrayList<>();
-        List<Module> modules = ModuleManager.INSTANCE.getModules();
+        List<Module> modules = ModuleHolder.INSTANCE.getModules();
         if (modules == null) {
             return hudModules;
         }
@@ -31,7 +31,7 @@ public class HudEditorModules {
 
     public static List<HudModule> collectHudModules() {
         List<HudModule> hudModules = new ArrayList<>();
-        List<Module> modules = ModuleManager.INSTANCE.getModules();
+        List<Module> modules = ModuleHolder.INSTANCE.getModules();
         if (modules == null) {
             return hudModules;
         }

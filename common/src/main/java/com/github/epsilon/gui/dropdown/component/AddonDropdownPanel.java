@@ -10,8 +10,8 @@ import com.github.epsilon.gui.dropdown.widget.KeybindWidget;
 import com.github.epsilon.gui.dropdown.widget.SettingWidget;
 import com.github.epsilon.gui.dropdown.widget.StringWidget;
 import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.AddonManager;
-import com.github.epsilon.managers.ConfigManager;
+import com.github.epsilon.holders.AddonHolder;
+import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.settings.Setting;
 
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             return PADDING * 2.0f + ADDON_ROW_HEIGHT;
         }
         ensureWidgets(addon);
-        float height = PADDING + AddonManager.INSTANCE.getAddons().size() * (ADDON_ROW_HEIGHT + GAP) + INFO_HEIGHT + GAP;
+        float height = PADDING + AddonHolder.INSTANCE.getAddons().size() * (ADDON_ROW_HEIGHT + GAP) + INFO_HEIGHT + GAP;
         if (widgets.isEmpty()) {
             height += ADDON_ROW_HEIGHT;
         } else {
@@ -62,7 +62,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
-        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
+        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         EpsilonAddon selected = resolveSelectedAddon();
         if (addons.isEmpty()) {
             renderer.text().addText(emptyComponent.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
@@ -111,7 +111,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
-        for (EpsilonAddon addon : AddonManager.INSTANCE.getAddons()) {
+        for (EpsilonAddon addon : AddonHolder.INSTANCE.getAddons()) {
             if (isHovered(mouseX, mouseY, contentX, currentY, contentW, ADDON_ROW_HEIGHT)) {
                 selectedAddonId = addon.getAddonId();
                 setScrollImmediate(Math.min(scroll, Math.max(0.0f, currentY - y)));
@@ -124,7 +124,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.mouseClicked(mouseX, mouseY, button)) {
-                ConfigManager.INSTANCE.saveNow();
+                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
             currentY += widget.getHeight() + DropdownTheme.SETTING_GAP;
@@ -137,7 +137,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.mouseReleased(mouseX, mouseY, button)) {
-                ConfigManager.INSTANCE.saveNow();
+                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
         }
@@ -149,7 +149,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.keyPressed(keyCode, scanCode, modifiers)) {
-                ConfigManager.INSTANCE.saveNow();
+                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
         }
@@ -161,7 +161,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.charTyped(typedText)) {
-                ConfigManager.INSTANCE.saveNow();
+                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
         }
@@ -179,7 +179,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
     }
 
     private EpsilonAddon resolveSelectedAddon() {
-        List<EpsilonAddon> addons = AddonManager.INSTANCE.getAddons();
+        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         if (addons.isEmpty()) {
             selectedAddonId = "";
             lastAddon = null;

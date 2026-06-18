@@ -1,7 +1,7 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.interfaces.LevelRendererAccessor;
-import com.github.epsilon.managers.ShaderManager;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.DeltaTracker;
@@ -26,9 +26,9 @@ public class MixinGameRenderer {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled()) {
             RenderTarget target = ((LevelRendererAccessor) minecraft.levelRenderer).epsilon$getEntityOutlineTarget();
-            ShaderManager.INSTANCE.processEntityOutlineTarget(target, shaders.mode.getValue());
-            ShaderManager.INSTANCE.processChestOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
-            ShaderManager.INSTANCE.processHandOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
+            ShaderHolder.INSTANCE.processEntityOutlineTarget(target, shaders.mode.getValue());
+            ShaderHolder.INSTANCE.processChestOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
+            ShaderHolder.INSTANCE.processHandOutlineTarget(minecraft.gameRenderer.mainRenderTarget());
         }
     }
 

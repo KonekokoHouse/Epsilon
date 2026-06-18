@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.render;
 
-import com.github.epsilon.managers.FriendManager;
-import com.github.epsilon.managers.ShaderManager;
+import com.github.epsilon.holders.ShaderHolder;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -35,14 +35,14 @@ public class Shaders extends Module {
     private final BoolSetting ambients = boolSetting("Ambients", false).group(select);
     private final BoolSetting others = boolSetting("Others", false).group(select);
 
-    public final EnumSetting<ShaderManager.Shader> mode = enumSetting("Mode", ShaderManager.Shader.Default);
-    public final EnumSetting<ShaderManager.Shader> handsMode = enumSetting("Hands Mode", ShaderManager.Shader.Default);
-    public final EnumSetting<ShaderManager.Shader> chestMode = enumSetting("Chest Mode", ShaderManager.Shader.Default);
+    public final EnumSetting<ShaderHolder.Shader> mode = enumSetting("Mode", ShaderHolder.Shader.Default);
+    public final EnumSetting<ShaderHolder.Shader> handsMode = enumSetting("Hands Mode", ShaderHolder.Shader.Default);
+    public final EnumSetting<ShaderHolder.Shader> chestMode = enumSetting("Chest Mode", ShaderHolder.Shader.Default);
 
     public final IntSetting maxRange = intSetting("Max Range", 64, 16, 256, 1, () -> players.getValue() || crystals.getValue() || chests.getValue() || friends.getValue() || creatures.getValue() || monsters.getValue() || ambients.getValue() || others.getValue());
-    public final DoubleSetting factor = doubleSetting("Gradient Factor", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient) || chestMode.is(ShaderManager.Shader.Gradient));
-    public final DoubleSetting gradient = doubleSetting("Gradient", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient) || chestMode.is(ShaderManager.Shader.Gradient));
-    public final IntSetting alpha2 = intSetting("Gradient Alpha", 170, 0, 255, 1, () -> mode.is(ShaderManager.Shader.Gradient) || handsMode.is(ShaderManager.Shader.Gradient) || chestMode.is(ShaderManager.Shader.Gradient));
+    public final DoubleSetting factor = doubleSetting("Gradient Factor", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderHolder.Shader.Gradient) || handsMode.is(ShaderHolder.Shader.Gradient) || chestMode.is(ShaderHolder.Shader.Gradient));
+    public final DoubleSetting gradient = doubleSetting("Gradient", 2.0, 0.0, 20.0, 0.1, () -> mode.is(ShaderHolder.Shader.Gradient) || handsMode.is(ShaderHolder.Shader.Gradient) || chestMode.is(ShaderHolder.Shader.Gradient));
+    public final IntSetting alpha2 = intSetting("Gradient Alpha", 170, 0, 255, 1, () -> mode.is(ShaderHolder.Shader.Gradient) || handsMode.is(ShaderHolder.Shader.Gradient) || chestMode.is(ShaderHolder.Shader.Gradient));
     public final IntSetting lineWidth = intSetting("Line Width", 2, 0, 500, 1);
     public final IntSetting quality = intSetting("Quality", 3, 0, 6, 1);
     public final IntSetting octaves = intSetting("Smoke Octaves", 10, 5, 30, 1);
@@ -52,14 +52,14 @@ public class Shaders extends Module {
     public final DoubleSetting glowStrength = doubleSetting("Glow Strength", 1.4, 0.1, 5.0, 0.1, () -> glow.getValue() && isDefaultShaderSelected());
 
     public final ColorSetting outlineColor = colorSetting("Outline", new Color(255, 255, 255, 136)).group(colors);
-    public final ColorSetting smokeOutlineColor1 = colorSetting("Smoke Outline", new Color(255, 0, 0, 136), () -> mode.is(ShaderManager.Shader.Smoke) || handsMode.is(ShaderManager.Shader.Smoke) || chestMode.is(ShaderManager.Shader.Smoke)).group(colors);
-    public final ColorSetting smokeOutlineColor2 = colorSetting("Smoke Outline 2", new Color(255, 0, 0, 136), () -> mode.is(ShaderManager.Shader.Smoke) || handsMode.is(ShaderManager.Shader.Smoke) || chestMode.is(ShaderManager.Shader.Smoke)).group(colors);
+    public final ColorSetting smokeOutlineColor1 = colorSetting("Smoke Outline", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke)).group(colors);
+    public final ColorSetting smokeOutlineColor2 = colorSetting("Smoke Outline 2", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke)).group(colors);
     public final ColorSetting fillColor1 = colorSetting("Fill", new Color(255, 255, 255, 136)).group(colors);
     public final ColorSetting fillColor2 = colorSetting("Smoke Fill", new Color(255, 255, 255, 136)).group(colors);
     public final ColorSetting fillColor3 = colorSetting("Smoke Fill 2", new Color(255, 255, 255, 136)).group(colors);
 
     private boolean isDefaultShaderSelected() {
-        return mode.is(ShaderManager.Shader.Default) || handsMode.is(ShaderManager.Shader.Default) || chestMode.is(ShaderManager.Shader.Default);
+        return mode.is(ShaderHolder.Shader.Default) || handsMode.is(ShaderHolder.Shader.Default) || chestMode.is(ShaderHolder.Shader.Default);
     }
 
     public boolean shouldRenderHands() {
@@ -87,7 +87,7 @@ public class Shaders extends Module {
             if (player == mc.player && !self.getValue()) {
                 return false;
             }
-            if (FriendManager.INSTANCE.isFriend(player)) {
+            if (Managers.FRIEND.isFriend(player)) {
                 return friends.getValue();
             }
             return players.getValue();

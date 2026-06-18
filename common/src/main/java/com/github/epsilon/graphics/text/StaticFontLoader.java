@@ -1,6 +1,5 @@
 package com.github.epsilon.graphics.text;
 
-import com.github.epsilon.assets.holders.RendererHolder;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 

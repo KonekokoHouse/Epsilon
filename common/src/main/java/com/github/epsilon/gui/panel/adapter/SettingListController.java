@@ -12,8 +12,8 @@ import com.github.epsilon.gui.panel.component.setting.IntSettingRow;
 import com.github.epsilon.gui.panel.popup.ColorPickerPopup;
 import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
-import com.github.epsilon.managers.sound.SoundKey;
-import com.github.epsilon.managers.sound.SoundManager;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -157,7 +157,7 @@ public class SettingListController {
             if (entry.bounds().contains(event.x(), event.y())) {
                 entry.group().toggleCollapsed();
                 draggingSliderEntry = null;
-                SoundManager.INSTANCE.playInUi(entry.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                Managers.SOUND.playInUi(entry.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                 return true;
             }
         }

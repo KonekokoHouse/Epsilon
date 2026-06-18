@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.hud.notification;
 import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.managers.NotificationManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -39,9 +39,9 @@ public class NotificationsHUD extends HudModule {
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        NotificationManager.INSTANCE.update();
+        Managers.NOTIFICATION.update();
         Notification previewNotification = createPreviewNotification();
-        if (NotificationManager.INSTANCE.isEmpty() && previewNotification == null) return;
+        if (Managers.NOTIFICATION.isEmpty() && previewNotification == null) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
         RectRenderer rectRenderer = rectRendererSupplier.get();
@@ -55,7 +55,7 @@ public class NotificationsHUD extends HudModule {
         List<RenderEntry> entries = new ArrayList<>();
         float totalHeight = 0f;
 
-        for (Notification notification : NotificationManager.INSTANCE.getNotifications()) {
+        for (Notification notification : Managers.NOTIFICATION.getNotifications()) {
             RenderFrame frame = getRenderFrame(notification, spacing);
             if (frame.stage == RenderStage.HIDDEN) continue;
 

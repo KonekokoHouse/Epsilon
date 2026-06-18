@@ -1,4 +1,4 @@
-package com.github.epsilon.managers.sound;
+package com.github.epsilon.managers.impl.sound;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import net.minecraft.resources.Identifier;

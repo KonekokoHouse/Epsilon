@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.managers.ShaderManager;
+import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -17,17 +17,17 @@ public class MixinModelFeatureRenderer {
 
     @WrapOperation(method = "buildGroup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer;prepareModel(Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer$Submit;)V"))
     private void redirectChestOutlineSubmit(ModelFeatureRenderer instance, ModelFeatureRenderer.Submit<?> submit, Operation<Void> original) {
-        epsilon$renderingChestOutline = submit.tintedColor() == ShaderManager.EPSILON_CHEST_OUTLINE_MARKER;
+        epsilon$renderingChestOutline = submit.tintedColor() == ShaderHolder.EPSILON_CHEST_OUTLINE_MARKER;
         if (!epsilon$renderingChestOutline) {
             original.call(instance, submit);
             return;
         }
 
-        ShaderManager.INSTANCE.beginChestOutlineCapture();
+        ShaderHolder.INSTANCE.beginChestOutlineCapture();
         try {
             original.call(instance, epsilon$withOutlineColor(submit, Shaders.INSTANCE.outlineColor.getValue().getRGB()));
         } finally {
-            ShaderManager.INSTANCE.endChestOutlineCapture();
+            ShaderHolder.INSTANCE.endChestOutlineCapture();
             epsilon$renderingChestOutline = false;
         }
     }

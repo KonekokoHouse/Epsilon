@@ -1,4 +1,4 @@
-package com.github.epsilon.managers;
+package com.github.epsilon.managers.impl;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
@@ -13,8 +13,6 @@ import net.minecraft.util.FormattedCharSequence;
 import java.util.*;
 
 public class NotificationManager {
-
-    public static final NotificationManager INSTANCE = new NotificationManager();
 
     private static final int MAX_NOTIFICATIONS = 5;
 

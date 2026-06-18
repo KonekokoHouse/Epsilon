@@ -23,4 +23,5 @@ public final class LuminTessellator {
     public BufferBuilder begin(PrimitiveTopology mode, VertexFormat format) {
         return new BufferBuilder(this.allocator, mode, format);
     }
+
 }

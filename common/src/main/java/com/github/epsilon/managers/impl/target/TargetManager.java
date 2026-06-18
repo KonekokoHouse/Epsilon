@@ -1,9 +1,9 @@
-package com.github.epsilon.managers.target;
+package com.github.epsilon.managers.impl.target;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
-import com.github.epsilon.managers.FriendManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.combat.AntiBot;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.world.entity.Entity;
@@ -22,16 +22,14 @@ import static com.github.epsilon.Constants.mc;
 
 public class TargetManager {
 
-    public static final TargetManager INSTANCE = new TargetManager();
-
     private LivingEntity sharedTarget;
 
-    private TargetManager() {
+    public TargetManager() {
         EventBus.INSTANCE.subscribe(this);
     }
 
     @EventHandler
-    private void onTick(ClientTickEvent.Pre event) {
+    private void onClientTick(ClientTickEvent.Pre event) {
         if (mc.player == null || mc.level == null) {
             sharedTarget = null;
             return;
@@ -117,7 +115,7 @@ public class TargetManager {
 
         switch (entity) {
             case Player player -> {
-                if (FriendManager.INSTANCE.isFriend(player)) return false;
+                if (Managers.FRIEND.isFriend(player)) return false;
                 if (!request.player()) return false;
                 if (entity.isInvisible() && !request.invisible()) return false;
             }

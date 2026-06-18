@@ -5,7 +5,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.managers.RotationManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -338,12 +338,12 @@ public class FeetTrap extends Module {
 
     private void setRotation(BlockHitResult hitResult) {
         Rot2f rotation = RotationUtils.calculate(hitResult.getLocation());
-        RotationManager.INSTANCE.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
+        Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
     }
 
     private boolean isLookingAt(BlockHitResult hitResult) {
         return RaytraceUtils.overBlock(
-                RotationManager.INSTANCE.getRotation(),
+                Managers.ROTATION.getRotation(),
                 hitResult.getDirection(),
                 hitResult.getBlockPos(),
                 sideCheck.getValue()

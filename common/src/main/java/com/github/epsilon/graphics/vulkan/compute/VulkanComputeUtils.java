@@ -40,13 +40,13 @@ public final class VulkanComputeUtils implements AutoCloseable {
     /**
      * 录制并提交一次完整的「上传 → compute → 回读」流程，阻塞等待完成。
      *
-     * @param inputs      需要上传到 GPU 的输入缓冲（staging → gpu copy）
-     * @param output      计算结果输出缓冲（gpu → readback copy）
-     * @param pipeline    已创建的 compute pipeline
+     * @param inputs        需要上传到 GPU 的输入缓冲（staging → gpu copy）
+     * @param output        计算结果输出缓冲（gpu → readback copy）
+     * @param pipeline      已创建的 compute pipeline
      * @param descriptorSet 已绑定所有 buffer 的 descriptor set 句柄
-     * @param groupCountX dispatch X 轴工作组数
-     * @param groupCountY dispatch Y 轴工作组数
-     * @param groupCountZ dispatch Z 轴工作组数
+     * @param groupCountX   dispatch X 轴工作组数
+     * @param groupCountY   dispatch Y 轴工作组数
+     * @param groupCountZ   dispatch Z 轴工作组数
      * @param readbackBytes 需要回读的字节数（从 output gpu buffer offset 0 起）
      */
     public void dispatchAndWait(

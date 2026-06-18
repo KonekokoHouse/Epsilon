@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.managers.ShaderManager;
+import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.modules.impl.render.HandsView;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -55,13 +55,13 @@ public abstract class MixinItemInHandRenderer {
     private void beginShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
         Shaders shaders = Shaders.INSTANCE;
         if (shaders.isEnabled() && shaders.shouldRenderHands()) {
-            ShaderManager.INSTANCE.beginHandOutlineCapture(mc.gameRenderer.mainRenderTarget().width, mc.gameRenderer.mainRenderTarget().height);
+            ShaderHolder.INSTANCE.beginHandOutlineCapture(mc.gameRenderer.mainRenderTarget().width, mc.gameRenderer.mainRenderTarget().height);
         }
     }
 
     @Inject(method = "submitHandsWithItems", at = @At("RETURN"))
     private void endShadersHandCapture(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, LocalPlayer player, int lightCoords, CallbackInfo ci) {
-        ShaderManager.INSTANCE.endHandOutlineCapture();
+        ShaderHolder.INSTANCE.endHandOutlineCapture();
     }
 
     @Inject(method = "submitArmWithItem", at = @At("HEAD"))

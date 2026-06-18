@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.RectRenderer;
@@ -19,7 +18,8 @@ import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.managers.ConfigManager;
+import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.utils.client.ConfigFolderOpener;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -112,8 +112,8 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             markDirty();
         }
 
-        List<String> configs = ConfigManager.INSTANCE.listConfigs();
-        String activeConfig = ConfigManager.INSTANCE.getActiveConfigName();
+        List<String> configs = ConfigHolder.INSTANCE.listConfigs();
+        String activeConfig = ConfigHolder.INSTANCE.getActiveConfigName();
         PanelLayout.Rect inputSection = getInputSectionBounds(bounds);
         PanelLayout.Rect listViewport = getListViewport(bounds);
         float contentHeight = configs.size() * (ROW_HEIGHT + MD3Theme.ROW_GAP);
@@ -317,7 +317,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     @Override
     public void onActivated() {
         if (inputField.getText().isBlank()) {
-            inputField.setText(ConfigManager.INSTANCE.getActiveConfigName());
+            inputField.setText(ConfigHolder.INSTANCE.getActiveConfigName());
             inputField.setCursorToEnd();
         }
         markDirty();
@@ -427,7 +427,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             return;
         }
         try {
-            String savedName = ConfigManager.INSTANCE.saveAsConfig(targetName);
+            String savedName = ConfigHolder.INSTANCE.saveAsConfig(targetName);
             inputField.setText(savedName);
             inputField.setCursorToEnd();
             state.setConfigScroll(0.0f);
@@ -443,7 +443,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             return;
         }
         try {
-            String newName = ConfigManager.INSTANCE.newDefaultConfig(targetName);
+            String newName = ConfigHolder.INSTANCE.newDefaultConfig(targetName);
             inputField.setText(newName);
             inputField.setCursorToEnd();
             state.setConfigScroll(0.0f);
@@ -455,7 +455,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
     private void tryReload() {
         try {
-            ConfigManager.INSTANCE.reloadOrThrow();
+            ConfigHolder.INSTANCE.reloadOrThrow();
             markDirty();
         } catch (Exception exception) {
             Constants.LOGGER.error("重载配置失败", exception);
@@ -465,7 +465,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
     private void tryExport() {
         try {
-            Path exported = ConfigManager.INSTANCE.exportActiveConfigToZip(inputField.getText());
+            Path exported = ConfigHolder.INSTANCE.exportActiveConfigToZip(inputField.getText());
             openExportSuccessPopup(exported);
         } catch (Exception exception) {
             Constants.LOGGER.error("导出配置失败", exception);
@@ -479,7 +479,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             return;
         }
         try {
-            String importedName = ConfigManager.INSTANCE.importConfigFromZip(zipPath);
+            String importedName = ConfigHolder.INSTANCE.importConfigFromZip(zipPath);
             inputField.setText(importedName);
             inputField.setCursorToEnd();
             state.setConfigScroll(0.0f);
@@ -498,11 +498,11 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     }
 
     private void trySwitchConfig(String configName) {
-        if (Objects.equals(configName, ConfigManager.INSTANCE.getActiveConfigName())) {
+        if (Objects.equals(configName, ConfigHolder.INSTANCE.getActiveConfigName())) {
             return;
         }
         try {
-            ConfigManager.INSTANCE.switchConfig(configName);
+            ConfigHolder.INSTANCE.switchConfig(configName);
             inputField.setText(configName);
             inputField.setCursorToEnd();
         } catch (Exception exception) {
@@ -513,12 +513,12 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
     private void tryDeleteConfig(String configName) {
         try {
-            if (!ConfigManager.INSTANCE.deleteConfig(configName)) {
+            if (!ConfigHolder.INSTANCE.deleteConfig(configName)) {
                 openErrorPopup(deleteErrorComponent::getTranslatedName, deleteLastErrorComponent.getTranslatedName());
                 return;
             }
             if (Objects.equals(inputField.getText().trim(), configName)) {
-                inputField.setText(ConfigManager.INSTANCE.getActiveConfigName());
+                inputField.setText(ConfigHolder.INSTANCE.getActiveConfigName());
                 inputField.setCursorToEnd();
             }
         } catch (Exception exception) {

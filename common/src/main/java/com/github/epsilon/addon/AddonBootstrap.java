@@ -1,6 +1,6 @@
 package com.github.epsilon.addon;
 
-import com.github.epsilon.managers.AddonManager;
+import com.github.epsilon.holders.AddonHolder;
 
 /**
  * Shared addon bootstrap utility used by multiple loaders.
@@ -17,17 +17,17 @@ public class AddonBootstrap {
     }
 
     public static void registerAddons(Iterable<EpsilonAddon> addons) {
-        AddonManager.INSTANCE.registerAddons(addons);
+        AddonHolder.INSTANCE.registerAddons(addons);
     }
 
     public static void setupAddons(EpsilonAddonSetupEvent addonEvent) {
         registerAddons(addonEvent);
-        AddonManager.INSTANCE.setupAddons();
+        AddonHolder.INSTANCE.setupAddons();
     }
 
     public static void setupAddons(Iterable<EpsilonAddon> addons) {
         registerAddons(addons);
-        AddonManager.INSTANCE.setupAddons();
+        AddonHolder.INSTANCE.setupAddons();
     }
 
 }

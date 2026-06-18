@@ -1,7 +1,6 @@
 package com.github.epsilon.utils.render;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -26,7 +25,6 @@ import net.minecraft.client.renderer.item.TrackingItemStackRenderState;
 import net.minecraft.client.renderer.state.WindowRenderState;
 import net.minecraft.client.renderer.state.gui.*;
 import net.minecraft.client.renderer.state.gui.pip.OversizedItemRenderState;
-import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.profiling.Profiler;
@@ -154,7 +152,7 @@ public class EpsilonGuiRenderer implements AutoCloseable {
             Minecraft minecraft = Minecraft.getInstance();
             WindowRenderState windowState = minecraft.gameRenderer.gameRenderState().windowRenderState;
             this.guiProjection
-                    .setupOrtho(1000.0F, 11000.0F, (float)windowState.width / windowState.guiScale, (float)windowState.height / windowState.guiScale, true);
+                    .setupOrtho(1000.0F, 11000.0F, (float) windowState.width / windowState.guiScale, (float) windowState.height / windowState.guiScale, true);
             RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
             RenderTarget mainRenderTarget = minecraft.gameRenderer.mainRenderTarget();
             GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F));
@@ -395,6 +393,11 @@ public class EpsilonGuiRenderer implements AutoCloseable {
         this.cubeMap.close();
     }
 
-    private record Draw(StagedVertexBuffer.Draw draw, RenderPipeline pipeline, TextureSetup textureSetup, @Nullable ScreenRectangle scissorArea) {
+    private record Draw(
+            StagedVertexBuffer.Draw draw,
+            RenderPipeline pipeline,
+            TextureSetup textureSetup,
+            @Nullable ScreenRectangle scissorArea
+    ) {
     }
 }

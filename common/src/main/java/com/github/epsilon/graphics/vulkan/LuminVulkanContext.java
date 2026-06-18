@@ -1,6 +1,5 @@
 package com.github.epsilon.graphics.vulkan;
 
-import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.GpuDeviceBackend;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vulkan.VulkanDevice;
@@ -11,9 +10,6 @@ import org.lwjgl.vulkan.VkCommandPoolCreateInfo;
 import org.lwjgl.vulkan.VkDevice;
 
 import javax.annotation.Nullable;
-
-import java.lang.reflect.Field;
-import java.nio.LongBuffer;
 
 import static org.lwjgl.vulkan.VK10.*;
 
@@ -66,7 +62,7 @@ public class LuminVulkanContext {
                     "Failed to create command pool"
             );
 
-             this.cmdPool = cmdPool.get();
+            this.cmdPool = cmdPool.get();
 
         }
     }

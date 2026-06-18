@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.assets.holders.TranslateHolder;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.managers.ModuleManager;
+import com.github.epsilon.holders.ModuleHolder;
+import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -26,7 +26,7 @@ public class CategoryPanel extends AbstractDropdownPanel {
     public CategoryPanel(Category category, int panelIndex) {
         super("category:" + category, category::getName, category.icon, panelIndex);
         this.category = category;
-        List<Module> modules = ModuleManager.INSTANCE.getModules().stream()
+        List<Module> modules = ModuleHolder.INSTANCE.getModules().stream()
                 .filter(m -> m.getCategory() == category)
                 .toList();
         for (Module module : modules) {

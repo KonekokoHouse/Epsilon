@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.managers.ShaderManager;
+import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.modules.impl.render.Shaders;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.Model;
@@ -20,7 +20,7 @@ public class MixinChestRenderer {
     @Redirect(method = "submit*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;IIILnet/minecraft/client/resources/model/sprite/SpriteId;Lnet/minecraft/client/resources/model/sprite/SpriteGetter;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"))
     private <S> void applyShadersChestOutline(SubmitNodeCollector submitNodeCollector, Model<S> model, S modelState, PoseStack poseStack, int lightCoords, int overlayCoords, int tintedColor, SpriteId sprite, SpriteGetter sprites, int outlineColor, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay, ChestRenderState state) {
         Shaders shaders = Shaders.INSTANCE;
-        int finalOutlineColor = shaders.isEnabled() && shaders.shouldRenderChest(state.blockPos) ? ShaderManager.EPSILON_CHEST_OUTLINE_MARKER : outlineColor;
+        int finalOutlineColor = shaders.isEnabled() && shaders.shouldRenderChest(state.blockPos) ? ShaderHolder.EPSILON_CHEST_OUTLINE_MARKER : outlineColor;
         submitNodeCollector.submitModel(model, modelState, poseStack, lightCoords, overlayCoords, tintedColor, sprite, sprites, finalOutlineColor, crumblingOverlay);
     }
 

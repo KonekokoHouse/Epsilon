@@ -144,7 +144,7 @@ public class Render3DUtils {
     }
 
     public static void drawOutlineBox(PoseStack stack, AABB box, Color color) {
-        drawOutlineBox(stack, box, color.getRGB(), 1.5f);
+        drawOutlineBox(stack, box, color.getRGB(), 2f);
     }
 
     public static void drawOutlineBox(PoseStack stack, AABB box, Color color, float thickness) {

@@ -7,7 +7,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
-import com.github.epsilon.managers.RotationManager;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -254,8 +254,8 @@ public class Scaffold extends Module {
                 event.setCancelled(true);
 
                 rotateCount++;
-                RotationManager.INSTANCE.rotations = rotation;
-                RotationManager.INSTANCE.setActive(true);
+                Managers.ROTATION.rotations = rotation;
+                Managers.ROTATION.setActive(true);
                 mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
 
                 swap();
@@ -313,7 +313,7 @@ public class Scaffold extends Module {
 
     private void handleTelly() {
         if (mc.player.onGround()) {
-            RotationManager.INSTANCE.setRotations(new Rot2f(mc.player.getYRot(), rotation == null ? mc.player.getXRot() : rotation.getPitch()), rotateBackSpeed.getValue());
+            Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), rotation == null ? mc.player.getXRot() : rotation.getPitch()), rotateBackSpeed.getValue());
             return;
         }
 
@@ -324,7 +324,7 @@ public class Scaffold extends Module {
             speed = airTicks <= 1 ? 7.055 : 1.944;
         }
 
-        RotationManager.INSTANCE.setRotations(rotation, speed);
+        Managers.ROTATION.setRotations(rotation, speed);
 
         if (airTicks > tellyTicks.getValue()) {
             place();
@@ -334,7 +334,7 @@ public class Scaffold extends Module {
     private void handleNormal() {
         if (onAir() || !snap.getValue()) {
             rotation = getRotation(blockPos, direction);
-            RotationManager.INSTANCE.setRotations(rotation, rotateSpeed.getValue());
+            Managers.ROTATION.setRotations(rotation, rotateSpeed.getValue());
         }
         place();
     }
@@ -345,8 +345,8 @@ public class Scaffold extends Module {
         }
 
         if (switch (raytrace.getValue()) {
-            case Normal -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), blockPos);
-            case Strict -> !RaytraceUtils.overBlock(RotationManager.INSTANCE.getRotation(), blockPos, direction);
+            case Normal -> !RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), blockPos);
+            case Strict -> !RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), blockPos, direction);
         }) {
             return;
         }

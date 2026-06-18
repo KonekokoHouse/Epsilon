@@ -5,7 +5,7 @@ import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.managers.ModuleManager;
+import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.Module;
@@ -193,7 +193,7 @@ public class ModuleListHUD extends HudModule {
     }
 
     private List<ItemInfo> collectItems(DeltaTracker delta) {
-        List<Module> allModules = ModuleManager.INSTANCE.getModules();
+        List<Module> allModules = ModuleHolder.INSTANCE.getModules();
         float frameTime = delta == null ? 0.05f : delta.getGameTimeDeltaTicks() / 20.0f;
         float speed = animSpeed.getValue().floatValue();
 
