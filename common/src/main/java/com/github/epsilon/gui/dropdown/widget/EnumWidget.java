@@ -200,7 +200,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         Color textColor = hovered ? MD3Theme.TEXT_PRIMARY : DropdownTheme.settingLabelMuted();
         textColor = MD3Theme.withAlpha(textColor, Mth.clamp((int) (textColor.getAlpha() * alpha), 0, 255));
         renderer.text().addText(
-                setting.getTranslatedValueByIndex(mode.ordinal()),
+                setting.getTranslatedValueUnchecked(mode),
                 listX + FIELD_TEXT_PADDING_X,
                 textY,
                 OPTION_TEXT_SCALE,

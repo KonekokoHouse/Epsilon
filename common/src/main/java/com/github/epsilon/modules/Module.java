@@ -240,8 +240,16 @@ public class Module {
         return addSetting(new StringSetting(name, defaultValue, dependency));
     }
 
+    protected StringSetting stringSetting(String name, String defaultValue, Setting.Dependency dependency, Consumer<String> onChanged) {
+        return addSetting(new StringSetting(name, defaultValue, dependency, onChanged));
+    }
+
     protected StringSetting stringSetting(String name, String defaultValue) {
         return addSetting(new StringSetting(name, defaultValue, () -> true));
+    }
+
+    protected StringSetting stringSetting(String name, String defaultValue, Consumer<String> onChanged) {
+        return addSetting(new StringSetting(name, defaultValue, () -> true, onChanged));
     }
 
     protected <E extends Enum<E>> EnumSetting<E> enumSetting(String name, E defaultValue, Setting.Dependency dependency, Consumer<E> onChanged) {
