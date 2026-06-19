@@ -45,34 +45,6 @@ float outlineFalloff(vec2 offset, float lineWidth, float alpha) {
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
-<<<<<<< HEAD
-    int sampleRadius = min(int(OutlineParams.x), 6);
-    float lineWidth = OutlineParams.y;
-    float alpha0 = OutlineParams.z;
-    vec2 oneTexel = TargetSize.zw;
-
-    if (centerCol.a != 0.0) {
-        fragColor = Fill;
-        return;
-    }
-
-    float alphaOutline = 0.0;
-    vec3 colorFinal = vec3(0.0);
-    for (int offsetX = -sampleRadius; offsetX < sampleRadius; offsetX++) {
-        for (int offsetY = -sampleRadius; offsetY < sampleRadius; offsetY++) {
-            vec2 sampleOffset = vec2(offsetX, offsetY);
-            vec4 sampleCol = texture(InputSampler, texCoord + sampleOffset * oneTexel);
-            if (sampleCol.a != 0.0) {
-                if (alpha0 == -1.0) {
-                    colorFinal = Outline.rgb;
-                    alphaOutline += Outline.a * 255.0 > 0.0 ? max(0.0, (lineWidth - length(sampleOffset)) / (Outline.a * 255.0)) : 1.0;
-                } else {
-                    fragColor = vec4(Outline.rgb, alpha0);
-                    return;
-                }
-            }
-        }
-=======
     int quality = int(Quality);
     int lineWidth = int(LineWidth);
     float alpha0 = OutlineAlpha;
@@ -98,7 +70,6 @@ void main() {
         float hardMode = 1.0 - softMode;
         float finalAlpha = alphaOutline + hardMode * alpha0 * hitMask;
         fragColor = vec4(mix(vec3(-1.0), Outline.rgb, hitMask), finalAlpha);
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
     }
 
     fragColor = vec4(colorFinal, alphaOutline);

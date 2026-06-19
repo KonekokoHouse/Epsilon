@@ -32,17 +32,6 @@ layout(location = 0) out vec4 fragColor;
 float snow(vec2 uv, float scale) {
     float time = AnimationParams.y;
     float w = smoothstep(1.0, 0.0, -uv.y * (scale / 10.0));
-<<<<<<< HEAD
-    if (w < 0.1) return 0.0;
-    uv += time / scale;
-    uv.y += time * 2.0 / scale;
-    uv.x += sin(uv.y + time * 0.5) / scale;
-    uv *= scale;
-    vec2 s = floor(uv);
-    vec2 f = fract(uv);
-    vec2 p = 0.5 + 0.35 * sin(11.0 * fract(sin((s + vec2(scale)) * mat2(7, 3, 6, 5)) * 5.0)) - f;
-    float k = min(length(p), 3.0);
-=======
     uv += Time / scale;
     uv.y += Time * 2.0 / scale;
     uv.x += sin(uv.y + Time * 0.5) / scale;
@@ -55,7 +44,6 @@ float snow(vec2 uv, float scale) {
     p = 0.5 + 0.35 * sin(11.0 * fract(sin((s + p + scale) * mat2(7, 3, 6, 5)) * 5.0)) - f;
     d = length(p);
     k = min(d, k);
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
     k = smoothstep(0.0, k, sin(f.x + f.y) * 0.01);
     return k * w * smoothstep(0.08, 0.1, w);
 }
@@ -70,18 +58,6 @@ float glowFalloff(vec2 offset, float maxSample, float divider) {
 }
 
 float glowShader() {
-<<<<<<< HEAD
-    int sampleRadius = min(int(OutlineParams.x), 6);
-    vec2 texelSize = vec2(TargetSize.z * float(sampleRadius), TargetSize.w * float(sampleRadius));
-    float alpha = 0.0;
-    for (int offsetX = -sampleRadius; offsetX < sampleRadius; offsetX++) {
-        for (int offsetY = -sampleRadius; offsetY < sampleRadius; offsetY++) {
-            vec2 sampleOffset = vec2(texelSize.x * float(offsetX), texelSize.y * float(offsetY));
-            vec4 currentColor = texture(InputSampler, texCoord + sampleOffset);
-            if (currentColor.a != 0.0) {
-                alpha += max(0.0, (10.0 - length(vec2(offsetX, offsetY))) / 158.0);
-            }
-=======
     float divider = 158.0;
     float maxSample = 10.0;
     vec2 resolution = Resolution;
@@ -93,7 +69,6 @@ float glowShader() {
         for (float y = -quality; y < quality; y++) {
             vec4 currentColor = texture(InputSampler, texCoord + vec2(texelSize.x * x, texelSize.y * y));
             alpha += alphaMask(currentColor.a) * glowFalloff(vec2(x, y), maxSample, divider);
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
         }
     }
     return alpha;
@@ -101,13 +76,9 @@ float glowShader() {
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
-<<<<<<< HEAD
-    vec2 uv = (gl_FragCoord.xy * 2.0 - TargetSize.xy) / min(TargetSize.x, TargetSize.y);
-=======
     vec2 resolution = Resolution;
     vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
     vec3 finalColor = vec3(0.0);
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
     float c = smoothstep(1.0, 0.3, clamp(uv.y * 0.3 + 0.8, 0.0, 0.75));
     c += snow(uv, 10.0);
     c += snow(uv, 8.0);
