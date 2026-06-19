@@ -86,9 +86,22 @@ jobs:
           conflict_files=""
           conflict_commit=""
 
+          amend_cherry_pick_title() {
+            original_body="$(git log -1 --format=%B | sed '1d')"
+            if [[ -n "$(printf '%s' "$original_body" | tr -d '[:space:]')" ]]; then
+              git commit --amend -m "$pr_title" -m "$original_body"
+            else
+              git commit --amend -m "$pr_title"
+            fi
+          }
+
           cherry_pick_or_record_conflict() {
             # Return success when the cherry-pick applies cleanly or is already present.
+            commit_args=("$@")
+            picked_commit="${commit_args[$((${#commit_args[@]} - 1))]}"
+
             if git cherry-pick -x "$@"; then
+              amend_cherry_pick_title "$picked_commit"
               picked_any=1
               return 0
             fi
@@ -104,14 +117,12 @@ jobs:
             fi
             has_conflicts=1
 
-            commit_args=("$@")
-            conflicted_commit="${commit_args[$((${#commit_args[@]} - 1))]}"
-            conflict_commit="$conflicted_commit"
+            conflict_commit="$picked_commit"
             # Git cannot push an unresolved index, so commit the conflict markers and open a draft PR.
             git add -A
             git commit \
-              -m "Backport #$PR_NUMBER to $target_branch with conflicts" \
-              -m "Cherry-pick of $conflicted_commit produced conflicts. Resolve the conflict markers manually before merging this backport PR."
+              -m "$pr_title" \
+              -m "Cherry-pick of $picked_commit produced conflicts. Resolve the conflict markers manually before merging this backport PR."
             picked_any=1
             return 1
           }
