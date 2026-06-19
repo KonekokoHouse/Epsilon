@@ -2,17 +2,19 @@
 
 uniform sampler2D InputSampler;
 
-layout(std140) uniform ShaderConfig {
-    vec4 TargetSize;
-    vec4 OutlineParams;
-    vec4 AnimationParams;
-    vec4 NoiseParams;
-    vec4 Outline;
-    vec4 SmokeOutline1;
-    vec4 SmokeOutline2;
-    vec4 Fill;
-    vec4 SmokeFill1;
-    vec4 SmokeFill2;
+layout(std140) uniform ShaderParams {
+    vec2 TargetSize;
+    vec2 TexelSize;
+    float Quality;
+    float LineWidth;
+    float OutlineAlpha;
+    float FillAlpha;
+    float GradientAlpha;
+    float Time;
+    float GradientFactor;
+    float GradientScale;
+    float Octaves;
+    vec2 Resolution;
 };
 
 in vec2 texCoord;
@@ -37,7 +39,7 @@ float noise(vec2 pos) {
 float fbm(vec2 pos) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < int(NoiseParams.x); i++) {
+    for (int i = 0; i < int(Octaves); i++) {
         v += a * noise(pos);
         a *= 0.5;
     }
@@ -45,9 +47,9 @@ float fbm(vec2 pos) {
 }
 
 vec3 getColor() {
-    vec2 resolution = NoiseParams.yz;
-    vec2 p = ((vec2(2.0) * gl_FragCoord.xy) - resolution.xy) * vec2(AnimationParams.w / min(resolution.x, resolution.y));
-    float time2 = 3.0 * AnimationParams.y / 2.0;
+    vec2 resolution = Resolution;
+    vec2 p = ((vec2(2.0) * gl_FragCoord.xy) - resolution.xy) * vec2(GradientScale / min(resolution.x, resolution.y));
+    float time2 = 3.0 * Time / 2.0;
     vec2 q = vec2(0.0);
     q.x = fbm(p + 0.00);
     q.y = fbm(p + vec2(1.0));
@@ -55,10 +57,10 @@ vec3 getColor() {
     vec4 temp = vec4(
             vec3(
                     noise(p + vec2(1.0)),
-                    noise(p + AnimationParams.z * q + vec2(1.7, 9.2) + 0.15 * time2),
-                    noise(p + AnimationParams.z * q + vec2(8.3, 2.8) + 0.126 * time2)
+                    noise(p + GradientFactor * q + vec2(1.7, 9.2) + 0.15 * time2),
+                    noise(p + GradientFactor * q + vec2(8.3, 2.8) + 0.126 * time2)
             ),
-            AnimationParams.x
+            GradientAlpha
     );
     return temp.rgb;
 }
@@ -79,12 +81,12 @@ float outlineFalloff(vec2 offset, float lineWidth, float alpha) {
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
-    int quality = int(OutlineParams.x);
-    int lineWidth = int(OutlineParams.y);
-    float alpha0 = OutlineParams.z;
-    float alpha1 = OutlineParams.w;
-    float alpha2 = AnimationParams.x;
-    vec2 oneTexel = TargetSize.zw;
+    int quality = int(Quality);
+    int lineWidth = int(LineWidth);
+    float alpha0 = OutlineAlpha;
+    float alpha1 = FillAlpha;
+    float alpha2 = GradientAlpha;
+    vec2 oneTexel = TexelSize;
     float softMode = modeMask(alpha0, -1.0);
 
     if (centerCol.a != 0.0) {

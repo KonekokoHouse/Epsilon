@@ -2,11 +2,22 @@
 
 uniform sampler2D InputSampler;
 
-layout(std140) uniform ShaderConfig {
-    vec4 TargetSize;
-    vec4 OutlineParams;
-    vec4 AnimationParams;
-    vec4 NoiseParams;
+layout(std140) uniform ShaderParams {
+    vec2 TargetSize;
+    vec2 TexelSize;
+    float Quality;
+    float LineWidth;
+    float OutlineAlpha;
+    float FillAlpha;
+    float GradientAlpha;
+    float Time;
+    float GradientFactor;
+    float GradientScale;
+    float Octaves;
+    vec2 Resolution;
+};
+
+layout(std140) uniform ShaderColors {
     vec4 Outline;
     vec4 SmokeOutline1;
     vec4 SmokeOutline2;
@@ -14,16 +25,15 @@ layout(std140) uniform ShaderConfig {
     vec4 SmokeFill1;
     vec4 SmokeFill2;
 };
-
 in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
 
 float snow(vec2 uv, float scale) {
     float w = smoothstep(1.0, 0.0, -uv.y * (scale / 10.0));
-    uv += AnimationParams.y / scale;
-    uv.y += AnimationParams.y * 2.0 / scale;
-    uv.x += sin(uv.y + AnimationParams.y * 0.5) / scale;
+    uv += Time / scale;
+    uv.y += Time * 2.0 / scale;
+    uv.x += sin(uv.y + Time * 0.5) / scale;
     uv *= scale;
     vec2 s = floor(uv);
     vec2 f = fract(uv);
@@ -49,8 +59,8 @@ float glowFalloff(vec2 offset, float maxSample, float divider) {
 float glowShader() {
     float divider = 158.0;
     float maxSample = 10.0;
-    vec2 resolution = NoiseParams.yz;
-    float quality = OutlineParams.x;
+    vec2 resolution = Resolution;
+    float quality = Quality;
     vec2 texelSize = vec2(1.0 / resolution.x * quality, 1.0 / resolution.y * quality);
     float alpha = 0.0;
 
@@ -66,7 +76,7 @@ float glowShader() {
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
-    vec2 resolution = NoiseParams.yz;
+    vec2 resolution = Resolution;
     vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
     vec3 finalColor = vec3(0.0);
     float c = smoothstep(1.0, 0.3, clamp(uv.y * 0.3 + 0.8, 0.0, 0.75));

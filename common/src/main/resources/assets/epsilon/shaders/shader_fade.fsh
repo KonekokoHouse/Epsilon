@@ -2,11 +2,22 @@
 
 uniform sampler2D InputSampler;
 
-layout(std140) uniform ShaderConfig {
-    vec4 TargetSize;
-    vec4 OutlineParams;
-    vec4 AnimationParams;
-    vec4 NoiseParams;
+layout(std140) uniform ShaderParams {
+    vec2 TargetSize;
+    vec2 TexelSize;
+    float Quality;
+    float LineWidth;
+    float OutlineAlpha;
+    float FillAlpha;
+    float GradientAlpha;
+    float Time;
+    float GradientFactor;
+    float GradientScale;
+    float Octaves;
+    vec2 Resolution;
+};
+
+layout(std140) uniform ShaderColors {
     vec4 Outline;
     vec4 SmokeOutline1;
     vec4 SmokeOutline2;
@@ -14,13 +25,12 @@ layout(std140) uniform ShaderConfig {
     vec4 SmokeFill1;
     vec4 SmokeFill2;
 };
-
 in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
 
 vec3 wave(vec2 pos) {
-    return mix(Fill.rgb, SmokeFill1.rgb, sin((distance(vec2(0.0), pos) - AnimationParams.y * 60.0) / 60.0) * 0.5 + 0.5);
+    return mix(Fill.rgb, SmokeFill1.rgb, sin((distance(vec2(0.0), pos) - Time * 60.0) / 60.0) * 0.5 + 0.5);
 }
 
 float alphaMask(float alpha) {
@@ -39,11 +49,11 @@ float outlineFalloff(vec2 offset, float lineWidth, float alpha) {
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
-    int quality = int(OutlineParams.x);
-    int lineWidth = int(OutlineParams.y);
-    float alpha0 = OutlineParams.z;
-    float fillAlpha = OutlineParams.w;
-    vec2 oneTexel = TargetSize.zw;
+    int quality = int(Quality);
+    int lineWidth = int(LineWidth);
+    float alpha0 = OutlineAlpha;
+    float fillAlpha = FillAlpha;
+    vec2 oneTexel = TexelSize;
     float softMode = modeMask(alpha0, -1.0);
 
     if (centerCol.a != 0.0) {
