@@ -5,9 +5,12 @@ import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.component.CategoryPanel;
+import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,15 +18,31 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import org.lwjgl.glfw.GLFW;
+
+import java.awt.*;
+import java.util.List;
 
 public class HudEditorScreen extends Screen {
 
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();
 
+    private static final float SNAP_DISTANCE = 6.0f;
+    private static final float ELEMENT_PADDING = 3.0f;
+    private static final float LABEL_HEIGHT = 13.0f;
+    private static final float GUIDE_ALPHA = 95.0f;
+
     private CategoryPanel hudPanel;
     private LuminRenderSystem.LuminRenderTarget renderTarget;
     private int renderFrameId;
     private int panelElementCount = -1;
+    private HudModule selectedElement;
+    private HudModule draggingElement;
+    private float dragOffsetX;
+    private float dragOffsetY;
+    private boolean movedDuringDrag;
+    private SnapInfo currentSnap = SnapInfo.none();
 
     private final DropdownRenderer renderer = new DropdownRenderer();
 
@@ -54,15 +73,32 @@ public class HudEditorScreen extends Screen {
 
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
-        drawPanel(epsilonMouseX, epsilonMouseY);
+        drawEditor(graphics, epsilonMouseX, epsilonMouseY);
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
     }
 
+    private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        ensureHudPanel();
+        updateHudLayouts();
+        validateSelection();
+
+        renderer.beginFrame();
+        drawCanvasBackground();
+        renderer.endFrame();
+
+        renderHudElements(graphics);
+
+        renderer.beginFrame();
+        drawElementChrome(mouseX, mouseY);
+        drawPanel(mouseX, mouseY);
+        drawCanvasChrome();
+        renderer.endFrame();
+    }
+
     private void drawPanel(int mouseX, int mouseY) {
         ensureHudPanel();
-        renderer.beginFrame();
         hudPanel.setMaxPanelHeight(resolveMaxPanelHeight());
         hudPanel.beginRenderFrame(++renderFrameId);
 
@@ -102,8 +138,123 @@ public class HudEditorScreen extends Screen {
 
             hudPanel.setPosition(hudPanel.getX(), origY);
         }
+    }
 
-        renderer.endFrame();
+    private void drawCanvasBackground() {
+        float screenW = LuminRenderSystem.getScaledWidth();
+        float screenH = LuminRenderSystem.getScaledHeight();
+
+        renderer.beginPass();
+        renderer.rect().addRect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
+        renderer.flush();
+    }
+
+    private void drawCanvasChrome() {
+        float screenW = LuminRenderSystem.getScaledWidth();
+        float screenH = LuminRenderSystem.getScaledHeight();
+
+        renderer.beginPass();
+
+        float centerX = screenW / 2.0f;
+        float centerY = screenH / 2.0f;
+        Color centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52);
+        renderer.rect().addRect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
+        renderer.rect().addRect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
+
+        drawSnapGuides(screenW, screenH);
+
+        String title = "HUD Editor";
+        String subtitle = selectedElement == null ? "Select and drag an element" : selectedElement.getTranslatedName();
+        float titleScale = 0.72f;
+        float subScale = 0.50f;
+        float titleW = renderer.text().getWidth(title, titleScale);
+        float subW = renderer.text().getWidth(subtitle, subScale);
+        float boxW = Math.max(titleW, subW) + 18.0f;
+        float boxH = 34.0f;
+        float labelX = (screenW - boxW) * 0.5f;
+        float labelY = DropdownTheme.PANEL_MARGIN_Y + 2.0f;
+
+        renderer.shadow().addShadow(labelX, labelY, boxW, boxH, 12.0f, 12.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, 38));
+        renderer.roundRect().addRoundRect(labelX, labelY, boxW, boxH, 12.0f, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 220));
+        renderer.text().addText(title, labelX + 9.0f, labelY + 5.0f, titleScale, MD3Theme.TEXT_PRIMARY);
+        renderer.text().addText(subtitle, labelX + 9.0f, labelY + 20.0f, subScale, MD3Theme.TEXT_MUTED);
+        renderer.flush();
+    }
+
+    private void drawSnapGuides(float screenW, float screenH) {
+        if (!currentSnap.hasAny()) {
+            return;
+        }
+        Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
+        if (!Float.isNaN(currentSnap.verticalLineX())) {
+            float x = currentSnap.verticalLineX();
+            renderer.rect().addRect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
+        }
+        if (!Float.isNaN(currentSnap.horizontalLineY())) {
+            float y = currentSnap.horizontalLineY();
+            renderer.rect().addRect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
+        }
+    }
+
+    private void drawElementChrome(int mouseX, int mouseY) {
+        renderer.beginPass();
+        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
+        HudModule hovered = findElementAt(mouseX, mouseY, true);
+        for (HudModule element : elements) {
+            if (!element.isEnabled()) continue;
+            boolean selected = element == selectedElement;
+            boolean hover = element == hovered;
+            if (!selected && !hover) continue;
+            drawElementFrame(element, selected, hover);
+        }
+        renderer.flush();
+    }
+
+    private void drawElementFrame(HudModule element, boolean selected, boolean hover) {
+        float x = element.x - ELEMENT_PADDING;
+        float y = element.y - ELEMENT_PADDING;
+        float w = element.width + ELEMENT_PADDING * 2.0f;
+        float h = element.height + ELEMENT_PADDING * 2.0f;
+        Color frameColor = selected ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 150);
+        Color fillColor = selected ? MD3Theme.withAlpha(MD3Theme.PRIMARY_CONTAINER, 44) : MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGH, hover ? 48 : 24);
+
+        renderer.rect().addRect(x, y, w, h, fillColor);
+        renderer.outline().addOutline(x, y, w, h, 0.0f, selected ? 1.2f : 0.8f, frameColor);
+
+        if (selected) {
+            drawAnchorMarker(element, frameColor);
+            drawElementLabel(element, x, y);
+        }
+    }
+
+    private void drawAnchorMarker(HudModule element, Color color) {
+        float anchorX = HudLayoutHelper.getAnchorPointX(element.getHorizontalAnchor(), element.x, element.width);
+        float anchorY = HudLayoutHelper.getAnchorPointY(element.getVerticalAnchor(), element.y, element.height);
+        renderer.rect().addRect(anchorX - 2.5f, anchorY - 2.5f, 5.0f, 5.0f, color);
+    }
+
+    private void drawElementLabel(HudModule element, float frameX, float frameY) {
+        String label = element.getTranslatedName();
+        float scale = 0.48f;
+        float labelW = renderer.text().getWidth(label, scale) + 10.0f;
+        float labelX = Mth.clamp(frameX, 2.0f, Math.max(2.0f, LuminRenderSystem.getScaledWidth() - labelW - 2.0f));
+        float labelY = Math.max(2.0f, frameY - LABEL_HEIGHT - 3.0f);
+        renderer.roundRect().addRoundRect(labelX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
+        renderer.text().addText(label, labelX + 5.0f, labelY + 2.0f, scale, MD3Theme.ON_PRIMARY_CONTAINER);
+    }
+
+    private void renderHudElements(GuiGraphicsExtractor graphics) {
+        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+            if (!element.isEnabled()) continue;
+            element.updateLayout();
+            element.render(graphics, minecraft.getDeltaTracker());
+        }
+    }
+
+    private void updateHudLayouts() {
+        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+            element.updateLayout();
+        }
     }
 
     @Override
@@ -113,6 +264,9 @@ public class HudEditorScreen extends Screen {
         }
         if (event.isEscape()) {
             onClose();
+            return true;
+        }
+        if (handleEditorKey(event)) {
             return true;
         }
         if (hudPanel != null && hudPanel.keyPressed(event.key(), event.scancode(), event.modifiers())) {
@@ -134,6 +288,22 @@ public class HudEditorScreen extends Screen {
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
         if (hudPanel != null && hudPanel.mouseClicked(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
+            validateSelection();
+            return true;
+        }
+        if (epsilonEvent.button() == 0) {
+            HudModule element = findElementAt(epsilonEvent.x(), epsilonEvent.y(), false);
+            if (element != null) {
+                selectedElement = element;
+                draggingElement = element;
+                dragOffsetX = (float) epsilonEvent.x() - element.x;
+                dragOffsetY = (float) epsilonEvent.y() - element.y;
+                movedDuringDrag = false;
+                currentSnap = SnapInfo.none();
+                return true;
+            }
+            selectedElement = null;
+            currentSnap = SnapInfo.none();
             return true;
         }
         return super.mouseClicked(epsilonEvent, isDoubleClick);
@@ -142,6 +312,15 @@ public class HudEditorScreen extends Screen {
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        if (draggingElement != null && epsilonEvent.button() == 0) {
+            draggingElement = null;
+            currentSnap = SnapInfo.none();
+            if (movedDuringDrag) {
+                ConfigHolder.INSTANCE.saveNow();
+            }
+            movedDuringDrag = false;
+            return true;
+        }
         if (hudPanel != null && hudPanel.mouseReleased(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
             return true;
         }
@@ -151,6 +330,13 @@ public class HudEditorScreen extends Screen {
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
         MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        if (draggingElement != null) {
+            double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(event.x());
+            double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(event.y());
+            moveElementTo(draggingElement, (float) epsilonMouseX - dragOffsetX, (float) epsilonMouseY - dragOffsetY, true);
+            movedDuringDrag = true;
+            return true;
+        }
         if (hudPanel != null) {
             hudPanel.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
         }
@@ -165,6 +351,143 @@ public class HudEditorScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY);
+    }
+
+    private boolean handleEditorKey(KeyEvent event) {
+        if (selectedElement == null) {
+            return false;
+        }
+
+        float step = event.hasShiftDown() ? 10.0f : 1.0f;
+        return switch (event.key()) {
+            case GLFW.GLFW_KEY_LEFT -> {
+                moveElementTo(selectedElement, selectedElement.x - step, selectedElement.y, false);
+                ConfigHolder.INSTANCE.saveNow();
+                yield true;
+            }
+            case GLFW.GLFW_KEY_RIGHT -> {
+                moveElementTo(selectedElement, selectedElement.x + step, selectedElement.y, false);
+                ConfigHolder.INSTANCE.saveNow();
+                yield true;
+            }
+            case GLFW.GLFW_KEY_UP -> {
+                moveElementTo(selectedElement, selectedElement.x, selectedElement.y - step, false);
+                ConfigHolder.INSTANCE.saveNow();
+                yield true;
+            }
+            case GLFW.GLFW_KEY_DOWN -> {
+                moveElementTo(selectedElement, selectedElement.x, selectedElement.y + step, false);
+                ConfigHolder.INSTANCE.saveNow();
+                yield true;
+            }
+            case GLFW.GLFW_KEY_DELETE, GLFW.GLFW_KEY_BACKSPACE -> {
+                selectedElement.setEnabled(false);
+                selectedElement = null;
+                ConfigHolder.INSTANCE.saveNow();
+                yield true;
+            }
+            default -> false;
+        };
+    }
+
+    private void moveElementTo(HudModule element, float targetX, float targetY, boolean snap) {
+        SnapInfo snapInfo = snap ? computeSnap(element, targetX, targetY) : new SnapInfo(targetX, targetY, Float.NaN, Float.NaN);
+        currentSnap = snapInfo;
+        element.moveTo(snapInfo.resolvedX(), snapInfo.resolvedY());
+    }
+
+    private SnapInfo computeSnap(HudModule element, float targetX, float targetY) {
+        float screenW = LuminRenderSystem.getScaledWidth();
+        float screenH = LuminRenderSystem.getScaledHeight();
+        float snappedX = targetX;
+        float snappedY = targetY;
+        float verticalGuide = Float.NaN;
+        float horizontalGuide = Float.NaN;
+
+        float leftDelta = Math.abs(targetX);
+        float centerDelta = Math.abs(targetX + element.width / 2.0f - screenW / 2.0f);
+        float rightDelta = Math.abs(targetX + element.width - screenW);
+        float bestX = leftDelta;
+        int bestXIndex = 0;
+        if (centerDelta < bestX) {
+            bestX = centerDelta;
+            bestXIndex = 1;
+        }
+        if (rightDelta < bestX) {
+            bestX = rightDelta;
+            bestXIndex = 2;
+        }
+        if (bestX <= SNAP_DISTANCE) {
+            if (bestXIndex == 0) {
+                snappedX = 0.0f;
+                verticalGuide = 0.0f;
+            } else if (bestXIndex == 1) {
+                snappedX = screenW / 2.0f - element.width / 2.0f;
+                verticalGuide = screenW / 2.0f;
+            } else {
+                snappedX = screenW - element.width;
+                verticalGuide = screenW;
+            }
+        }
+
+        float topDelta = Math.abs(targetY);
+        float middleDelta = Math.abs(targetY + element.height / 2.0f - screenH / 2.0f);
+        float bottomDelta = Math.abs(targetY + element.height - screenH);
+        float bestY = topDelta;
+        int bestYIndex = 0;
+        if (middleDelta < bestY) {
+            bestY = middleDelta;
+            bestYIndex = 1;
+        }
+        if (bottomDelta < bestY) {
+            bestY = bottomDelta;
+            bestYIndex = 2;
+        }
+        if (bestY <= SNAP_DISTANCE) {
+            if (bestYIndex == 0) {
+                snappedY = 0.0f;
+                horizontalGuide = 0.0f;
+            } else if (bestYIndex == 1) {
+                snappedY = screenH / 2.0f - element.height / 2.0f;
+                horizontalGuide = screenH / 2.0f;
+            } else {
+                snappedY = screenH - element.height;
+                horizontalGuide = screenH;
+            }
+        }
+
+        return new SnapInfo(snappedX, snappedY, verticalGuide, horizontalGuide);
+    }
+
+    private HudModule findElementAt(double mouseX, double mouseY, boolean includePanelArea) {
+        if (!includePanelArea && isOverPanel(mouseX, mouseY)) {
+            return null;
+        }
+        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            HudModule element = elements.get(i);
+            if (!element.isEnabled()) continue;
+            if (element.contains(mouseX, mouseY)) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    private boolean isOverPanel(double mouseX, double mouseY) {
+        return hudPanel != null
+                && mouseX >= hudPanel.getX()
+                && mouseX <= hudPanel.getX() + hudPanel.getWidth()
+                && mouseY >= hudPanel.getY()
+                && mouseY <= hudPanel.getY() + hudPanel.getPanelHeight();
+    }
+
+    private void validateSelection() {
+        if (selectedElement != null && !selectedElement.isEnabled()) {
+            selectedElement = null;
+            draggingElement = null;
+            currentSnap = SnapInfo.none();
+        }
     }
 
     @Override
@@ -214,6 +537,25 @@ public class HudEditorScreen extends Screen {
         hudPanel.setPosition(x, y);
         hudPanel.setMaxPanelHeight(resolveMaxPanelHeight());
         panelElementCount = elementCount;
+    }
+
+    private record SnapInfo(float x, float y, float verticalLineX, float horizontalLineY) {
+
+        private static SnapInfo none() {
+            return new SnapInfo(Float.NaN, Float.NaN, Float.NaN, Float.NaN);
+        }
+
+        private boolean hasAny() {
+            return !Float.isNaN(verticalLineX) || !Float.isNaN(horizontalLineY);
+        }
+
+        private float resolvedX() {
+            return Float.isNaN(x) ? 0.0f : x;
+        }
+
+        private float resolvedY() {
+            return Float.isNaN(y) ? 0.0f : y;
+        }
     }
 
 }
