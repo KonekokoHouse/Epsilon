@@ -21,6 +21,7 @@
     "MixinEntityRenderer",
     "MixinEntityRenderState",
     "MixinEquipmentLayerRenderer",
+    "MixinFeatureRenderDispatcherPhaseSubmitGrouper",
     "MixinFireworkRocketEntity",
     "MixinFlowingFluid",
     "MixinFont",
