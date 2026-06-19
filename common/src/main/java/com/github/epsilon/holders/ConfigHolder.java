@@ -680,11 +680,9 @@ public class ConfigHolder {
         writeActiveConfigName(activeConfigName);
         Path configStorageDir = getActiveConfigStorageDir();
         List<Module> modules = getConfigurableModules();
-        if (modules != null) {
-            for (Module module : modules) {
-                if (module != null) {
-                    saveModuleToDisk(module, configStorageDir);
-                }
+        for (Module module : modules) {
+            if (module != null) {
+                saveModuleToDisk(module, configStorageDir);
             }
         }
         saveAddonsToDisk(AddonHolder.INSTANCE.getAddons(), configStorageDir);
