@@ -2,11 +2,22 @@
 
 uniform sampler2D InputSampler;
 
-layout(std140) uniform ShaderConfig {
-    vec4 TargetSize;
-    vec4 OutlineParams;
-    vec4 AnimationParams;
-    vec4 NoiseParams;
+layout(std140) uniform ShaderParams {
+    vec2 TargetSize;
+    vec2 TexelSize;
+    float Quality;
+    float LineWidth;
+    float OutlineAlpha;
+    float FillAlpha;
+    float GradientAlpha;
+    float Time;
+    float GradientFactor;
+    float GradientScale;
+    float Octaves;
+    vec2 Resolution;
+};
+
+layout(std140) uniform ShaderColors {
     vec4 Outline;
     vec4 SmokeOutline1;
     vec4 SmokeOutline2;
@@ -14,7 +25,6 @@ layout(std140) uniform ShaderConfig {
     vec4 SmokeFill1;
     vec4 SmokeFill2;
 };
-
 in vec2 texCoord;
 
 layout(location = 0) out vec4 fragColor;
@@ -38,9 +48,14 @@ float fbm(vec2 st) {
     float v = 0.0;
     float a = 0.5;
     vec2 shift = vec2(100.0);
+<<<<<<< HEAD
     mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
     for (int i = 0; i < 30; i++) {
         if (i >= int(NoiseParams.x)) break;
+=======
+    mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.50));
+    for (int i = 0; i < int(Octaves); ++i) {
+>>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
         v += a * noise(st);
         st = rot * st * 2.0 + shift;
         a *= 0.5;
@@ -48,6 +63,7 @@ float fbm(vec2 st) {
     return v;
 }
 
+<<<<<<< HEAD
 vec3 smokeColor(vec4 first, vec4 second, vec4 third) {
     vec2 st = gl_FragCoord.xy / TargetSize.xy * 3.0;
     vec2 q = vec2(fbm(st), fbm(st + vec2(1.0)));
@@ -61,10 +77,61 @@ vec3 smokeColor(vec4 first, vec4 second, vec4 third) {
     color = mix(color, second.rgb, clamp(length(q), 0.0, 1.0));
     color = mix(color, third.rgb, clamp(length(r.x), 0.0, 1.0));
     return (f * f * f + 0.6 * f * f + 0.5 * f) * color;
+=======
+vec3 getColor() {
+    vec2 resolution = Resolution;
+    vec2 st = gl_FragCoord.xy / resolution.xy * 3.0;
+    vec3 color = vec3(0.0);
+    vec2 q = vec2(0.0);
+    q.x = fbm(st);
+    q.y = fbm(st + vec2(1.0));
+    vec2 r = vec2(0.0);
+    r.x = fbm(st + 1.0 * q + vec2(1.7, 9.2) + 0.15 * Time);
+    r.y = fbm(st + 1.0 * q + vec2(8.3, 2.8) + 0.126 * Time);
+    float f = fbm(st + r);
+    color = Outline.rgb;
+    color = mix(color, SmokeOutline1.rgb, clamp(length(q), 0.0, 1.0));
+    color = mix(color, SmokeOutline2.rgb, clamp(length(r.x), 0.0, 1.0));
+    vec4 outputColor = vec4((f * f * f + 0.6 * f * f + 0.5 * f) * color, Outline.a);
+    return outputColor.rgb;
+}
+
+vec3 getFillColor() {
+    vec2 resolution = Resolution;
+    vec2 st = gl_FragCoord.xy / resolution.xy * 3.0;
+    vec3 color = vec3(0.0);
+    vec2 q = vec2(0.0);
+    q.x = fbm(st);
+    q.y = fbm(st + vec2(1.0));
+    vec2 r = vec2(0.0);
+    r.x = fbm(st + 1.0 * q + vec2(1.7, 9.2) + 0.15 * Time);
+    r.y = fbm(st + 1.0 * q + vec2(8.3, 2.8) + 0.126 * Time);
+    float f = fbm(st + r);
+    color = Fill.rgb;
+    color = mix(color, SmokeFill1.rgb, clamp(length(q), 0.0, 1.0));
+    color = mix(color, SmokeFill2.rgb, clamp(length(r.x), 0.0, 1.0));
+    vec4 outputColor = vec4((f * f * f + 0.6 * f * f + 0.5 * f) * color, Fill.a);
+    return outputColor.rgb;
+>>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
+}
+
+float alphaMask(float alpha) {
+    return step(1.0e-6, alpha);
+}
+
+float modeMask(float value, float target) {
+    return 1.0 - step(1.0e-4, abs(value - target));
+}
+
+float outlineFalloff(vec2 offset, float lineWidth, float alpha) {
+    float alphaScale = alpha * 255.0;
+    float faded = max(0.0, (lineWidth - length(offset)) / max(alphaScale, 1.0e-6));
+    return mix(1.0, faded, step(1.0e-6, alphaScale));
 }
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
+<<<<<<< HEAD
     int sampleRadius = min(int(OutlineParams.x), 6);
     float lineWidth = OutlineParams.y;
     float alpha0 = OutlineParams.z;
@@ -91,6 +158,40 @@ void main() {
                 }
             }
         }
+=======
+    int quality = int(Quality);
+    int lineWidth = int(LineWidth);
+    float alpha0 = OutlineAlpha;
+    float alpha1 = FillAlpha;
+    vec2 oneTexel = TexelSize;
+    float softMode = modeMask(alpha0, -1.0);
+
+    if (centerCol.a != 0.0) {
+        fragColor = vec4(getFillColor(), alpha1);
+    } else {
+        float alphaOutline = 0.0;
+        float outlineHit = 0.0;
+
+        for (int x = -quality; x < quality; x++) {
+            for (int y = -quality; y < quality; y++) {
+                vec2 offset = vec2(x, y);
+                vec2 coord = texCoord + offset * oneTexel;
+                float sampleHit = alphaMask(texture(InputSampler, coord).a);
+                outlineHit += sampleHit;
+                alphaOutline += sampleHit * softMode * outlineFalloff(offset, float(lineWidth), Outline.a);
+            }
+        }
+
+        float hitMask = alphaMask(outlineHit);
+        float hardMode = 1.0 - softMode;
+        float finalAlpha = alphaOutline + hardMode * alpha0 * hitMask;
+
+        if (outlineHit != 0.0) {
+            fragColor = vec4(getColor(), finalAlpha);
+        } else {
+            fragColor = vec4(vec3(-1.0), 0.0);
+        }
+>>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
     }
 
     if (alphaOutline > 0.0) {

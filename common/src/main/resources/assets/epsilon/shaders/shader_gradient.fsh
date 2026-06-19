@@ -2,17 +2,19 @@
 
 uniform sampler2D InputSampler;
 
-layout(std140) uniform ShaderConfig {
-    vec4 TargetSize;
-    vec4 OutlineParams;
-    vec4 AnimationParams;
-    vec4 NoiseParams;
-    vec4 Outline;
-    vec4 SmokeOutline1;
-    vec4 SmokeOutline2;
-    vec4 Fill;
-    vec4 SmokeFill1;
-    vec4 SmokeFill2;
+layout(std140) uniform ShaderParams {
+    vec2 TargetSize;
+    vec2 TexelSize;
+    float Quality;
+    float LineWidth;
+    float OutlineAlpha;
+    float FillAlpha;
+    float GradientAlpha;
+    float Time;
+    float GradientFactor;
+    float GradientScale;
+    float Octaves;
+    vec2 Resolution;
 };
 
 in vec2 texCoord;
@@ -37,9 +39,13 @@ float noise(vec2 pos) {
 float fbm(vec2 pos) {
     float v = 0.0;
     float a = 0.5;
+<<<<<<< HEAD
     mat2 rot = mat2(cos(0.1), sin(0.5), -sin(0.5), cos(0.5));
     for (int i = 0; i < 30; i++) {
         if (i >= int(NoiseParams.x)) break;
+=======
+    for (int i = 0; i < int(Octaves); i++) {
+>>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
         v += a * noise(pos);
         pos = rot * pos * 2.0;
         a *= 0.5;
@@ -47,6 +53,7 @@ float fbm(vec2 pos) {
     return v;
 }
 
+<<<<<<< HEAD
 vec3 gradientColor() {
     vec2 resolution = TargetSize.xy;
     float time = AnimationParams.y;
@@ -59,11 +66,43 @@ vec3 gradientColor() {
         noise(p + vec2(1.0)),
         noise(p + factor * q + vec2(1.7, 9.2) + 0.15 * time2),
         noise(p + factor * q + vec2(8.3, 2.8) + 0.126 * time2)
+=======
+vec3 getColor() {
+    vec2 resolution = Resolution;
+    vec2 p = ((vec2(2.0) * gl_FragCoord.xy) - resolution.xy) * vec2(GradientScale / min(resolution.x, resolution.y));
+    float time2 = 3.0 * Time / 2.0;
+    vec2 q = vec2(0.0);
+    q.x = fbm(p + 0.00);
+    q.y = fbm(p + vec2(1.0));
+
+    vec4 temp = vec4(
+            vec3(
+                    noise(p + vec2(1.0)),
+                    noise(p + GradientFactor * q + vec2(1.7, 9.2) + 0.15 * time2),
+                    noise(p + GradientFactor * q + vec2(8.3, 2.8) + 0.126 * time2)
+            ),
+            GradientAlpha
+>>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
     );
+}
+
+float alphaMask(float alpha) {
+    return step(1.0e-6, alpha);
+}
+
+float modeMask(float value, float target) {
+    return 1.0 - step(1.0e-4, abs(value - target));
+}
+
+float outlineFalloff(vec2 offset, float lineWidth, float alpha) {
+    float alphaScale = alpha * 255.0;
+    float faded = max(0.0, (lineWidth - length(offset)) / max(alphaScale, 1.0e-6));
+    return mix(1.0, faded, step(1.0e-6, alphaScale));
 }
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
+<<<<<<< HEAD
     int sampleRadius = min(int(OutlineParams.x), 6);
     float lineWidth = OutlineParams.y;
     float alpha0 = OutlineParams.z;
@@ -91,6 +130,41 @@ void main() {
                 }
             }
         }
+=======
+    int quality = int(Quality);
+    int lineWidth = int(LineWidth);
+    float alpha0 = OutlineAlpha;
+    float alpha1 = FillAlpha;
+    float alpha2 = GradientAlpha;
+    vec2 oneTexel = TexelSize;
+    float softMode = modeMask(alpha0, -1.0);
+
+    if (centerCol.a != 0.0) {
+        fragColor = vec4(getColor(), alpha2);
+    } else {
+        float alphaOutline = 0.0;
+        float outlineHit = 0.0;
+
+        for (int x = -quality; x < quality; x++) {
+            for (int y = -quality; y < quality; y++) {
+                vec2 offset = vec2(x, y);
+                vec2 coord = texCoord + offset * oneTexel;
+                float sampleHit = alphaMask(texture(InputSampler, coord).a);
+                outlineHit += sampleHit;
+                alphaOutline += sampleHit * softMode * outlineFalloff(offset, float(lineWidth), alpha1);
+            }
+        }
+
+        float hitMask = alphaMask(outlineHit);
+        float hardMode = 1.0 - softMode;
+        float finalAlpha = alphaOutline + hardMode * alpha0 * hitMask;
+
+        if (outlineHit != 0.0) {
+            fragColor = vec4(getColor(), finalAlpha);
+        } else {
+            fragColor = vec4(vec3(-1.0), 0.0);
+        }
+>>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
     }
 
     if (alphaOutline > 0.0) {
