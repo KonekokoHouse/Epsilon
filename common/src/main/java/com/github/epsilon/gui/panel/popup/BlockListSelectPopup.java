@@ -7,6 +7,7 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
+import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.settings.impl.BlockListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -38,6 +39,9 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     private static final float SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 1.0f;
     private static final float ITEM_PREVIEW_SIZE = 12.0f;
     private static final float ITEM_PREVIEW_GAP = 5.0f;
+    private static final float SCROLL_STEP = 24.0f;
+    private static final float SCROLL_DECAY = 0.86f;
+    private static final float MIN_SCROLL_VELOCITY = 0.3f;
     private static final int MAX_QUERY_LENGTH = 64;
 
     private final PanelLayout.Rect bounds;
@@ -47,9 +51,11 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final List<ItemPreview> itemPreviews = new ArrayList<>();
+    private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
 
     private String query = "";
     private float scroll;
+    private float scrollVelocity;
     private float maxScroll;
     private Block hoveredAdd;
     private Block hoveredRemove;
@@ -76,6 +82,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
         PanelLayout.Rect viewport = getViewport();
         maxScroll = Math.max(0.0f, columnContentHeight - viewport.height());
         scroll = Mth.clamp(scroll, 0.0f, maxScroll);
+        updateSmoothScroll(partialTick);
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
@@ -146,6 +153,11 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
         if (event.button() != 0 || !bounds.contains(event.x(), event.y())) {
             return false;
         }
+        PanelLayout.Rect viewport = lastViewport != null ? lastViewport : getViewport();
+        if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, scroll, maxScroll)) {
+            applyDraggedScroll(event.y(), viewport);
+            return true;
+        }
         if (hoveredAdd != null) {
             setting.add(hoveredAdd);
             return true;
@@ -158,18 +170,33 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     }
 
     @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        return scrollBarDrag.mouseReleased();
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+        if (!scrollBarDrag.isDragging()) {
+            return false;
+        }
+        PanelLayout.Rect viewport = lastViewport != null ? lastViewport : getViewport();
+        applyDraggedScroll(mouseY, viewport);
+        return true;
+    }
+
+    @Override
     public boolean keyPressed(KeyEvent event) {
         return switch (event.key()) {
             case GLFW.GLFW_KEY_BACKSPACE -> {
                 if (!query.isEmpty()) {
                     query = query.substring(0, query.length() - 1);
-                    scroll = 0.0f;
+                    resetScroll();
                 }
                 yield true;
             }
             case GLFW.GLFW_KEY_DELETE -> {
                 query = "";
-                scroll = 0.0f;
+                resetScroll();
                 yield true;
             }
             default -> false;
@@ -182,7 +209,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
             return false;
         }
         query += event.codepointAsString();
-        scroll = 0.0f;
+        resetScroll();
         return true;
     }
 
@@ -191,8 +218,44 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
         if (!getViewport(bounds.y()).contains(mouseX, mouseY) || maxScroll <= 0.0f) {
             return false;
         }
-        scroll = Mth.clamp(scroll - (float) scrollY * 24.0f, 0.0f, maxScroll);
+        scrollVelocity -= (float) scrollY * SCROLL_STEP;
         return true;
+    }
+
+    private void updateSmoothScroll(float partialTick) {
+        if (maxScroll <= 0.0f) {
+            resetScroll();
+            return;
+        }
+        if (Math.abs(scrollVelocity) <= 0.01f) {
+            return;
+        }
+        if (partialTick <= 0.0f) {
+            return;
+        }
+        float nextScroll = Mth.clamp(scroll + scrollVelocity * partialTick, 0.0f, maxScroll);
+        if (Float.compare(nextScroll, scroll) == 0) {
+            scrollVelocity = 0.0f;
+            return;
+        }
+        scroll = nextScroll;
+        scrollVelocity *= SCROLL_DECAY;
+        if (Math.abs(scrollVelocity) < MIN_SCROLL_VELOCITY) {
+            scrollVelocity = 0.0f;
+        }
+    }
+
+    private void resetScroll() {
+        scroll = 0.0f;
+        scrollVelocity = 0.0f;
+    }
+
+    private void applyDraggedScroll(double mouseY, PanelLayout.Rect viewport) {
+        float newScroll = scrollBarDrag.mouseDragged(mouseY, viewport, maxScroll);
+        if (newScroll >= 0.0f) {
+            scroll = Mth.clamp(newScroll, 0.0f, maxScroll);
+            scrollVelocity = 0.0f;
+        }
     }
 
     private void buildColumn(PanelUiTree.Scope scope, List<Block> blocks, float columnX, float startY, float columnWidth,
