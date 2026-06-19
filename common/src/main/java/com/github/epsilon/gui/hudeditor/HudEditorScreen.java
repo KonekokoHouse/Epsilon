@@ -18,7 +18,6 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -77,6 +76,7 @@ public class HudEditorScreen extends Screen {
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        drawCanvasChrome(graphics);
     }
 
     private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -93,7 +93,6 @@ public class HudEditorScreen extends Screen {
         renderer.beginFrame();
         drawElementChrome(mouseX, mouseY);
         drawPanel(mouseX, mouseY);
-        drawCanvasChrome();
         renderer.endFrame();
     }
 
@@ -149,50 +148,47 @@ public class HudEditorScreen extends Screen {
         renderer.flush();
     }
 
-    private void drawCanvasChrome() {
-        float screenW = LuminRenderSystem.getScaledWidth();
-        float screenH = LuminRenderSystem.getScaledHeight();
+    private void drawCanvasChrome(GuiGraphicsExtractor graphics) {
+        graphics.nextStratum();
 
-        renderer.beginPass();
+        float scaleX = graphics.guiWidth() / LuminRenderSystem.getScaledWidth();
+        float scaleY = graphics.guiHeight() / LuminRenderSystem.getScaledHeight();
+        int centerX = graphics.guiWidth() / 2;
+        int centerY = graphics.guiHeight() / 2;
+        int centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52).getRGB();
+        graphics.fill(centerX, 0, centerX + 1, graphics.guiHeight(), centerGuide);
+        graphics.fill(0, centerY, graphics.guiWidth(), centerY + 1, centerGuide);
 
-        float centerX = screenW / 2.0f;
-        float centerY = screenH / 2.0f;
-        Color centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52);
-        renderer.rect().addRect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
-        renderer.rect().addRect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
-
-        drawSnapGuides(screenW, screenH);
+        drawSnapGuides(graphics, scaleX, scaleY);
 
         String title = "HUD Editor";
         String subtitle = selectedElement == null ? "Select and drag an element" : selectedElement.getTranslatedName();
-        float titleScale = 0.72f;
-        float subScale = 0.50f;
-        float titleW = renderer.text().getWidth(title, titleScale);
-        float subW = renderer.text().getWidth(subtitle, subScale);
-        float boxW = Math.max(titleW, subW) + 18.0f;
-        float boxH = 34.0f;
-        float labelX = (screenW - boxW) * 0.5f;
-        float labelY = DropdownTheme.PANEL_MARGIN_Y + 2.0f;
+        int titleW = font.width(title);
+        int subW = font.width(subtitle);
+        int boxW = Math.max(titleW, subW) + 18;
+        int boxH = 28;
+        int labelX = (graphics.guiWidth() - boxW) / 2;
+        int labelY = Math.round(DropdownTheme.PANEL_MARGIN_Y * scaleY + 2.0f);
 
-        renderer.shadow().addShadow(labelX, labelY, boxW, boxH, 12.0f, 12.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, 38));
-        renderer.roundRect().addRoundRect(labelX, labelY, boxW, boxH, 12.0f, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 220));
-        renderer.text().addText(title, labelX + 9.0f, labelY + 5.0f, titleScale, MD3Theme.TEXT_PRIMARY);
-        renderer.text().addText(subtitle, labelX + 9.0f, labelY + 20.0f, subScale, MD3Theme.TEXT_MUTED);
-        renderer.flush();
+        graphics.fill(labelX + 1, labelY + 1, labelX + boxW + 1, labelY + boxH + 1, MD3Theme.withAlpha(MD3Theme.SHADOW, 38).getRGB());
+        graphics.fill(labelX, labelY, labelX + boxW, labelY + boxH, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238).getRGB());
+        graphics.outline(labelX, labelY, boxW, boxH, MD3Theme.withAlpha(MD3Theme.OUTLINE, 72).getRGB());
+        graphics.text(font, title, labelX + 9, labelY + 5, MD3Theme.TEXT_PRIMARY.getRGB(), false);
+        graphics.text(font, subtitle, labelX + 9, labelY + 15, MD3Theme.TEXT_MUTED.getRGB(), false);
     }
 
-    private void drawSnapGuides(float screenW, float screenH) {
+    private void drawSnapGuides(GuiGraphicsExtractor graphics, float scaleX, float scaleY) {
         if (!currentSnap.hasAny()) {
             return;
         }
-        Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
+        int guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA).getRGB();
         if (!Float.isNaN(currentSnap.verticalLineX())) {
-            float x = currentSnap.verticalLineX();
-            renderer.rect().addRect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
+            int x = Math.round(currentSnap.verticalLineX() * scaleX);
+            graphics.fill(x, 0, x + 1, graphics.guiHeight(), guideColor);
         }
         if (!Float.isNaN(currentSnap.horizontalLineY())) {
-            float y = currentSnap.horizontalLineY();
-            renderer.rect().addRect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
+            int y = Math.round(currentSnap.horizontalLineY() * scaleY);
+            graphics.fill(0, y, graphics.guiWidth(), y + 1, guideColor);
         }
     }
 
@@ -219,7 +215,7 @@ public class HudEditorScreen extends Screen {
         Color fillColor = selected ? MD3Theme.withAlpha(MD3Theme.PRIMARY_CONTAINER, 44) : MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGH, hover ? 48 : 24);
 
         renderer.rect().addRect(x, y, w, h, fillColor);
-        renderer.outline().addOutline(x, y, w, h, 0.0f, selected ? 1.2f : 0.8f, frameColor);
+        renderer.rect().addOutline(x, y, w, h, selected ? 1.2f : 0.8f, frameColor);
 
         if (selected) {
             drawAnchorMarker(element, frameColor);
@@ -237,10 +233,9 @@ public class HudEditorScreen extends Screen {
         String label = element.getTranslatedName();
         float scale = 0.48f;
         float labelW = renderer.text().getWidth(label, scale) + 10.0f;
-        float labelX = Mth.clamp(frameX, 2.0f, Math.max(2.0f, LuminRenderSystem.getScaledWidth() - labelW - 2.0f));
-        float labelY = Math.max(2.0f, frameY - LABEL_HEIGHT - 3.0f);
-        renderer.roundRect().addRoundRect(labelX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
-        renderer.text().addText(label, labelX + 5.0f, labelY + 2.0f, scale, MD3Theme.ON_PRIMARY_CONTAINER);
+        float labelY = frameY - LABEL_HEIGHT - 3.0f;
+        renderer.roundRect().addRoundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
+        renderer.text().addText(label, frameX + 5.0f, labelY + 2.0f, scale, MD3Theme.ON_PRIMARY_CONTAINER);
     }
 
     private void renderHudElements(GuiGraphicsExtractor graphics) {

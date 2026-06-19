@@ -227,6 +227,10 @@ public class DropdownRenderer {
             targetScope().rect(currentLayer(), x, y, width, height, color);
         }
 
+        public void addOutline(float x, float y, float width, float height, float outlineWidth, Color color) {
+            targetScope().rectOutline(currentLayer(), x, y, width, height, outlineWidth, color);
+        }
+
         public void addRectGradient(float x, float y, float width, float height,
                                     Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
             targetScope().rectGradient(currentLayer(), x, y, width, height,
