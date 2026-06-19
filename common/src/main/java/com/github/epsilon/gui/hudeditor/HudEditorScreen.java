@@ -82,7 +82,8 @@ public class HudEditorScreen extends Screen {
                     hudPanel.getY() - shadowPad,
                     hudPanel.getWidth() + shadowPad * 2.0f,
                     revealedH + shadowPad * 2.0f,
-                    LuminRenderSystem.getScaledHeightInt());
+                    LuminRenderSystem.getScaledHeightInt()
+            );
             hudPanel.drawBackground(renderer);
             renderer.flush();
             renderer.clearScissor();
@@ -203,9 +204,7 @@ public class HudEditorScreen extends Screen {
 
     private void ensureHudPanel() {
         int elementCount = HudElementHolder.INSTANCE.getElements().size();
-        if (hudPanel != null && panelElementCount == elementCount) {
-            return;
-        }
+        if (hudPanel != null && panelElementCount == elementCount) return;
 
         float x = hudPanel == null ? DropdownTheme.PANEL_MARGIN_X : hudPanel.getX();
         float y = hudPanel == null ? DropdownTheme.PANEL_MARGIN_Y : hudPanel.getY();
