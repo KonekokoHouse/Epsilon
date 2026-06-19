@@ -180,7 +180,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
             return false;
         }
         PanelLayout.Rect viewport = lastViewport != null ? lastViewport : getViewport();
-        applyDraggedScroll(mouseY, viewport);
+        applyDraggedScroll(event.y(), viewport);
         return true;
     }
 
