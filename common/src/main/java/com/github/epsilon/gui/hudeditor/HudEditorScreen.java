@@ -98,7 +98,6 @@ public class HudEditorScreen extends Screen {
     }
 
     private void drawPanel(int mouseX, int mouseY) {
-        ensureHudPanel();
         hudPanel.setMaxPanelHeight(resolveMaxPanelHeight());
         hudPanel.beginRenderFrame(++renderFrameId);
 
@@ -185,16 +184,18 @@ public class HudEditorScreen extends Screen {
     }
 
     private void drawSnapGuides(float screenW, float screenH) {
-        if (currentSnap.hasAny()) {
-            Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
-            if (!Float.isNaN(currentSnap.verticalLineX())) {
-                float x = currentSnap.verticalLineX();
-                renderer.rect().addRect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
-            }
-            if (!Float.isNaN(currentSnap.horizontalLineY())) {
-                float y = currentSnap.horizontalLineY();
-                renderer.rect().addRect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
-            }
+        if (!currentSnap.hasAny()) {
+            return;
+        }
+
+        Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
+        if (!Float.isNaN(currentSnap.verticalLineX())) {
+            float x = currentSnap.verticalLineX();
+            renderer.rect().addRect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
+        }
+        if (!Float.isNaN(currentSnap.horizontalLineY())) {
+            float y = currentSnap.horizontalLineY();
+            renderer.rect().addRect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
         }
     }
 
@@ -247,7 +248,6 @@ public class HudEditorScreen extends Screen {
     private void renderHudElements(GuiGraphicsExtractor graphics) {
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
-            element.updateLayout();
             element.render(graphics, minecraft.getDeltaTracker());
         }
     }
