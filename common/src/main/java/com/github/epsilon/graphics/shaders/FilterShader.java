@@ -62,7 +62,7 @@ public class FilterShader {
         }
     }
 
-    public void renderMainTarget(Color color) {
+    public void renderToMainTarget(Color color) {
         render(mc.gameRenderer.mainRenderTarget(), color);
     }
 
@@ -112,8 +112,12 @@ public class FilterShader {
         }
     }
 
-    private record FilterColor(float red, float green, float blue,
-                               float alpha) implements DynamicUniformStorage.DynamicUniform {
+    private record FilterColor(
+            float red,
+            float green,
+            float blue,
+            float alpha
+    ) implements DynamicUniformStorage.DynamicUniform {
 
         private FilterColor(Color color) {
             this(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
