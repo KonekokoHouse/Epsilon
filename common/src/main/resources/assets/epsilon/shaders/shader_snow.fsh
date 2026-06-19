@@ -30,7 +30,6 @@ in vec2 texCoord;
 layout(location = 0) out vec4 fragColor;
 
 float snow(vec2 uv, float scale) {
-    float time = AnimationParams.y;
     float w = smoothstep(1.0, 0.0, -uv.y * (scale / 10.0));
     uv += Time / scale;
     uv.y += Time * 2.0 / scale;

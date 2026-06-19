@@ -71,6 +71,4 @@ void main() {
         float finalAlpha = alphaOutline + hardMode * alpha0 * hitMask;
         fragColor = vec4(mix(vec3(-1.0), Outline.rgb, hitMask), finalAlpha);
     }
-
-    fragColor = vec4(colorFinal, alphaOutline);
 }

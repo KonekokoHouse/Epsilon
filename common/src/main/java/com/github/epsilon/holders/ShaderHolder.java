@@ -74,8 +74,6 @@ public class ShaderHolder {
     private boolean capturedChests;
     private boolean preparedChests;
 
-    private final long startTimeMs = Util.getMillis();
-
     public static final int EPSILON_CHEST_OUTLINE_MARKER = 0x01000001;
 
     private ShaderHolder() {
@@ -208,6 +206,8 @@ public class ShaderHolder {
         Shaders shaders = Shaders.INSTANCE;
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
+        float scaledWidth = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledWidth());
+        float scaledHeight = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledHeight());
         Color outline = shaders.outlineColor.getValue();
         Color smokeOutline1 = shaders.smokeOutlineColor1.getValue();
         Color smokeOutline2 = shaders.smokeOutlineColor2.getValue();
@@ -215,31 +215,6 @@ public class ShaderHolder {
         Color smokeFill1 = shaders.fillColor2.getValue();
         Color smokeFill2 = shaders.fillColor3.getValue();
 
-<<<<<<< HEAD
-        GpuBufferSlice shaderConfig = LuminRenderSystem.writeDynamicUniform(
-                "shader_config",
-                "Epsilon Shader Config UBO",
-                UNIFORMS_SIZE,
-                8,
-                new ShaderConfig(
-                        width,
-                        height,
-                        shaders.quality.getValue(),
-                        shaders.lineWidth.getValue(),
-                        shaders.glow.getValue() ? -1.0f : alpha(outline),
-                        shaders.fillAlpha.getValue() / 255.0f,
-                        shaders.alpha2.getValue() / 255.0f,
-                        ((Util.getMillis() - startTimeMs) % 1_000_000L) / 1000.0f,
-                        shaders.factor.getValue().floatValue(),
-                        shaders.gradient.getValue().floatValue(),
-                        shaders.octaves.getValue(),
-                        outline,
-                        smokeOutline1,
-                        smokeOutline2,
-                        fill,
-                        smokeFill1,
-                        smokeFill2
-=======
         return new ShaderUniforms(
                 LuminRenderSystem.writeDynamicUniform(
                         "shader_params",
@@ -251,7 +226,7 @@ public class ShaderHolder {
                                 height,
                                 shaders.quality.getValue(),
                                 shaders.lineWidth.getValue(),
-                                shaders.smokeGlow.getValue() ? -1.0f : alpha(outline),
+                                shaders.glow.getValue() ? -1.0f : alpha(outline),
                                 shaders.fillAlpha.getValue() / 255.0f,
                                 shaders.alpha2.getValue() / 255.0f,
                                 (Util.getMillis() % 100_000L) / 1000.0f,
@@ -268,10 +243,8 @@ public class ShaderHolder {
                         COLOR_UNIFORMS_SIZE,
                         8,
                         new ShaderColors(outline, smokeOutline1, smokeOutline2, fill, smokeFill1, smokeFill2)
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
                 )
         );
-        return shaderConfig;
     }
 
     private void ensureProgram() {
@@ -326,22 +299,14 @@ public class ShaderHolder {
                 .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_" + shader))
                 .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_" + shader))
-<<<<<<< HEAD
-                .withUniform("ShaderConfig", UniformType.UNIFORM_BUFFER)
-                .withSampler("InputSampler")
-                .withCull(false)
-=======
                 .withCull(false);
 
-        BindGroupLayout.Builder uniforms = BindGroupLayout.builder()
-                .withUniform("ShaderParams", UniformType.UNIFORM_BUFFER);
+        builder.withUniform("ShaderParams", UniformType.UNIFORM_BUFFER);
         if (useColors) {
-            uniforms.withUniform("ShaderColors", UniformType.UNIFORM_BUFFER);
+            builder.withUniform("ShaderColors", UniformType.UNIFORM_BUFFER);
         }
 
-        return builder.withBindGroupLayout(uniforms.build())
-                .withBindGroupLayout(BindGroupLayout.builder().withSampler("InputSampler").build())
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
+        return builder.withSampler("InputSampler")
                 .build();
     }
 
@@ -401,8 +366,6 @@ public class ShaderHolder {
             float gradientFactor,
             float gradientScale,
             float octaves,
-<<<<<<< HEAD
-=======
             float resolutionWidth,
             float resolutionHeight
     ) implements DynamicUniformStorage.DynamicUniform {
@@ -427,7 +390,6 @@ public class ShaderHolder {
     }
 
     private record ShaderColors(
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
             Color outline,
             Color smokeOutline1,
             Color smokeOutline2,
@@ -439,13 +401,6 @@ public class ShaderHolder {
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer)
-<<<<<<< HEAD
-                    .putVec4(width, height, 1.0f / width, 1.0f / height)
-                    .putVec4(quality, lineWidth, outlineAlpha, fillAlpha)
-                    .putVec4(gradientAlpha, time, gradientFactor, gradientScale)
-                    .putVec4(octaves, 0.0f, 0.0f, 0.0f)
-=======
->>>>>>> 7614dae (优化 Shaders 功能所使用的 shader (#260))
                     .putVec4(red(outline), green(outline), blue(outline), alpha(outline))
                     .putVec4(red(smokeOutline1), green(smokeOutline1), blue(smokeOutline1), alpha(smokeOutline1))
                     .putVec4(red(smokeOutline2), green(smokeOutline2), blue(smokeOutline2), alpha(smokeOutline2))

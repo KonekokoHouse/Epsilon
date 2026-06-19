@@ -142,9 +142,4 @@ void main() {
             fragColor = vec4(vec3(-1.0), 0.0);
         }
     }
-
-    if (alphaOutline > 0.0) {
-        colorFinal = smokeColor(Outline, SmokeOutline1, SmokeOutline2);
-    }
-    fragColor = vec4(colorFinal, alphaOutline);
 }
