@@ -82,7 +82,6 @@ public class DropdownScreen extends Screen {
         renderTarget.clear();
         LuminRenderSystem.setActiveTarget(renderTarget);
 
-        MD3Theme.syncFromSettings();
         drawGui(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
 
         LuminRenderSystem.setActiveTarget(null);

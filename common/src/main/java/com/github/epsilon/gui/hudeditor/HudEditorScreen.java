@@ -67,8 +67,6 @@ public class HudEditorScreen extends Screen {
 
         LuminRenderSystem.setActiveTarget(renderTarget);
 
-        MD3Theme.syncFromSettings();
-
         var delta = minecraft.getDeltaTracker();
 
         int screenWidth = LuminRenderSystem.getScaledWidthInt();

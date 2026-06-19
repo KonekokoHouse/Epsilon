@@ -134,7 +134,6 @@ public class PanelScreen extends Screen {
             clientSettingPanel.markDirty();
         }
 
-        MD3Theme.syncFromSettings();
         float railWidth = categoryRailPanel.getAnimatedWidth();
         PanelLayout.Layout layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), railWidth);
         popupHost.setOverlayBounds(layout.panel());
