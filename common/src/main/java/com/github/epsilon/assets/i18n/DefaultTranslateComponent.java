@@ -2,10 +2,6 @@ package com.github.epsilon.assets.i18n;
 
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
-<<<<<<< HEAD
-import net.minecraft.client.resources.language.I18n;
-=======
->>>>>>> f86598f (重构 I18n 系统使其与 Minecraft 脱离 (#267))
 
 public class DefaultTranslateComponent implements TranslateComponent {
 
@@ -41,13 +37,8 @@ public class DefaultTranslateComponent implements TranslateComponent {
     }
 
     private static String resolveTranslation(String key) {
-<<<<<<< HEAD
-        if (I18n.exists(key)) {
-            return I18n.get(key);
-=======
         if (EpsilonLanguageManager.INSTANCE.has(key)) {
             return EpsilonLanguageManager.INSTANCE.getOrDefault(key);
->>>>>>> f86598f (重构 I18n 系统使其与 Minecraft 脱离 (#267))
         }
         return ClientSetting.INSTANCE.i18nFallback.getValue() ? formatKey(key) : key;
     }
