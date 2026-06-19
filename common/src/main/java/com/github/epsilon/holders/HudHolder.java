@@ -1,4 +1,4 @@
 package com.github.epsilon.holders;
 
-public class HudModuleHolder {
+public class HudHolder {
 }
