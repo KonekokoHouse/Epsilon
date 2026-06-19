@@ -36,12 +36,24 @@ public class EnumSetting<E extends Enum<E>> extends Setting<E> {
         return comp != null ? comp.getTranslatedName() : value.toString();
     }
 
-    @SuppressWarnings("unchecked")
     public String getTranslatedValueByIndex(int index) {
         if (index < 0 || index >= constants.length) return "";
         E enumValue = constants[index];
+        return getTranslatedValue(enumValue);
+    }
+
+    public String getTranslatedValue(E enumValue) {
         TranslateComponent comp = modeTranslations.get(enumValue);
         return comp != null ? comp.getTranslatedName() : enumValue.toString();
+    }
+
+    public String getTranslatedValueUnchecked(Enum<?> enumValue) {
+        for (E value : constants) {
+            if (value == enumValue) {
+                return getTranslatedValue(value);
+            }
+        }
+        return enumValue != null ? enumValue.toString() : "";
     }
 
     public boolean is(E enumValue) {
@@ -49,12 +61,12 @@ public class EnumSetting<E extends Enum<E>> extends Setting<E> {
     }
 
     public boolean is(String string) {
-        return this.getValue().toString().equalsIgnoreCase(string);
+        return matchesMode(this.getValue(), string);
     }
 
     public void setMode(String mode) {
         for (E e : constants) {
-            if (Objects.equals(e.toString(), mode)) {
+            if (matchesMode(e, mode)) {
                 setValue(e);
             }
         }
@@ -62,7 +74,7 @@ public class EnumSetting<E extends Enum<E>> extends Setting<E> {
 
     public void setModeSilently(String mode) {
         for (E e : constants) {
-            if (Objects.equals(e.toString(), mode)) {
+            if (matchesMode(e, mode)) {
                 setValueSilently(e);
             }
         }
@@ -83,5 +95,13 @@ public class EnumSetting<E extends Enum<E>> extends Setting<E> {
 
     public E[] getModes() {
         return constants;
+    }
+
+    private boolean matchesMode(E enumValue, String mode) {
+        return mode != null
+                && (Objects.equals(enumValue.name(), mode)
+                || Objects.equals(enumValue.toString(), mode)
+                || enumValue.name().equalsIgnoreCase(mode)
+                || enumValue.toString().equalsIgnoreCase(mode));
     }
 }

@@ -6,6 +6,8 @@ import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 
 import java.lang.invoke.MethodHandles;
 
@@ -20,6 +22,7 @@ public class EpsilonCommon {
         ModuleHolder.INSTANCE.initModules();
         AddonHolder.INSTANCE.setupAddons();
         ConfigHolder.INSTANCE.initConfig();
+        EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.language.getValue());
 
         // 初始化 Managers
         Managers.initManagers();
