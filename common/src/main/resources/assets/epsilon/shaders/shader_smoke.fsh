@@ -83,6 +83,20 @@ vec3 getFillColor() {
     return outputColor.rgb;
 }
 
+float alphaMask(float alpha) {
+    return step(1.0e-6, alpha);
+}
+
+float modeMask(float value, float target) {
+    return 1.0 - step(1.0e-4, abs(value - target));
+}
+
+float outlineFalloff(vec2 offset, float lineWidth, float alpha) {
+    float alphaScale = alpha * 255.0;
+    float faded = max(0.0, (lineWidth - length(offset)) / max(alphaScale, 1.0e-6));
+    return mix(1.0, faded, step(1.0e-6, alphaScale));
+}
+
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
     int quality = int(OutlineParams.x);
@@ -90,32 +104,32 @@ void main() {
     float alpha0 = OutlineParams.z;
     float alpha1 = OutlineParams.w;
     vec2 oneTexel = TargetSize.zw;
+    float softMode = modeMask(alpha0, -1.0);
 
     if (centerCol.a != 0.0) {
         fragColor = vec4(getFillColor(), alpha1);
     } else {
         float alphaOutline = 0.0;
-        vec3 colorFinal = vec3(-1.0);
+        float outlineHit = 0.0;
 
         for (int x = -quality; x < quality; x++) {
             for (int y = -quality; y < quality; y++) {
                 vec2 offset = vec2(x, y);
                 vec2 coord = texCoord + offset * oneTexel;
-                vec4 sampleColor = texture(InputSampler, coord);
-                if (sampleColor.a != 0.0) {
-                    if (alpha0 == -1.0) {
-                        alphaOutline += Outline.a * 255.0 > 0.0 ? max(0.0, (float(lineWidth) - distance(offset, vec2(0.0))) / (Outline.a * 255.0)) : 1.0;
-                    } else {
-                        fragColor = vec4(getColor(), alpha0);
-                        return;
-                    }
-                }
+                float sampleHit = alphaMask(texture(InputSampler, coord).a);
+                outlineHit += sampleHit;
+                alphaOutline += sampleHit * softMode * outlineFalloff(offset, float(lineWidth), Outline.a);
             }
         }
 
-        if (alphaOutline > 0.0) {
-            colorFinal = getColor();
+        float hitMask = alphaMask(outlineHit);
+        float hardMode = 1.0 - softMode;
+        float finalAlpha = alphaOutline + hardMode * alpha0 * hitMask;
+
+        if (outlineHit != 0.0) {
+            fragColor = vec4(getColor(), finalAlpha);
+        } else {
+            fragColor = vec4(vec3(-1.0), 0.0);
         }
-        fragColor = vec4(colorFinal, alphaOutline);
     }
 }

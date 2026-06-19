@@ -21,21 +21,29 @@ layout(location = 0) out vec4 fragColor;
 
 float snow(vec2 uv, float scale) {
     float w = smoothstep(1.0, 0.0, -uv.y * (scale / 10.0));
-    if (w < 0.1) return 0.0;
     uv += AnimationParams.y / scale;
     uv.y += AnimationParams.y * 2.0 / scale;
     uv.x += sin(uv.y + AnimationParams.y * 0.5) / scale;
     uv *= scale;
     vec2 s = floor(uv);
     vec2 f = fract(uv);
-    vec2 p;
+    vec2 p = vec2(0.0);
     float k = 3.0;
     float d;
     p = 0.5 + 0.35 * sin(11.0 * fract(sin((s + p + scale) * mat2(7, 3, 6, 5)) * 5.0)) - f;
     d = length(p);
     k = min(d, k);
     k = smoothstep(0.0, k, sin(f.x + f.y) * 0.01);
-    return k * w;
+    return k * w * smoothstep(0.08, 0.1, w);
+}
+
+float alphaMask(float alpha) {
+    return step(1.0e-6, alpha);
+}
+
+float glowFalloff(vec2 offset, float maxSample, float divider) {
+    float faded = max(0.0, (maxSample - length(offset)) / max(divider, 1.0e-6));
+    return mix(1.0, faded, step(1.0e-6, divider));
 }
 
 float glowShader() {
@@ -49,9 +57,7 @@ float glowShader() {
     for (float x = -quality; x < quality; x++) {
         for (float y = -quality; y < quality; y++) {
             vec4 currentColor = texture(InputSampler, texCoord + vec2(texelSize.x * x, texelSize.y * y));
-            if (currentColor.a != 0.0) {
-                alpha += divider > 0.0 ? max(0.0, (maxSample - distance(vec2(x, y), vec2(0.0))) / divider) : 1.0;
-            }
+            alpha += alphaMask(currentColor.a) * glowFalloff(vec2(x, y), maxSample, divider);
         }
     }
 
