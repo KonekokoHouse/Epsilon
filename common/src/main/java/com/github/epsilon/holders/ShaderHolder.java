@@ -81,7 +81,7 @@ public class ShaderHolder {
 
         ensureProgram();
         ensureSwap(target.width, target.height);
-        GpuBufferSlice shaderConfig = writeShaderConfig(target.width, target.height, shader);
+        GpuBufferSlice shaderConfig = writeShaderConfig(target.width, target.height);
 
         renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderConfig);
         renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, null);
@@ -202,7 +202,7 @@ public class ShaderHolder {
         }
     }
 
-    private GpuBufferSlice writeShaderConfig(int screenWidth, int screenHeight, Shader shader) {
+    private GpuBufferSlice writeShaderConfig(int screenWidth, int screenHeight) {
         Shaders shaders = Shaders.INSTANCE;
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
