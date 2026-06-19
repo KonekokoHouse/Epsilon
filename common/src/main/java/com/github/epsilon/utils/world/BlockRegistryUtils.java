@@ -2,6 +2,7 @@ package com.github.epsilon.utils.world;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
@@ -25,6 +26,9 @@ public class BlockRegistryUtils {
 
     public static boolean isSelectable(Block block) {
         if (block == null || block == Blocks.AIR) {
+            return false;
+        }
+        if (block.asItem() == Items.AIR) {
             return false;
         }
         Identifier id = BuiltInRegistries.BLOCK.getKey(block);
