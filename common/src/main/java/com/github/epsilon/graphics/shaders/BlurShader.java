@@ -2,6 +2,7 @@ package com.github.epsilon.graphics.shaders;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.immediate.LuminTessellator;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.IndexType;
@@ -20,7 +21,6 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.renderer.DynamicUniformStorage;
@@ -34,6 +34,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
@@ -56,6 +57,12 @@ public class BlurShader {
             .putVec4()
             .get();
 
+    private static final ColorTargetState BLUR_COLOR_TARGET = new ColorTargetState(
+            Optional.of(BlendFunction.TRANSLUCENT),
+            GpuFormat.RGBA8_UNORM,
+            ColorTargetState.WRITE_COLOR
+    );
+
     private RenderPipeline pipeline;
     private RenderPipeline boxPipeline;
     private RenderTarget input;
@@ -68,7 +75,7 @@ public class BlurShader {
                     .withFragmentShader(BLUR_PATH)
                     .withBindGroupLayout(BindGroupLayout.builder().withUniform("BlurUniforms", UniformType.UNIFORM_BUFFER).build())
                     .withBindGroupLayout(BindGroupLayout.builder().withSampler("InputSampler").build())
-                    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                    .withColorTargetState(BLUR_COLOR_TARGET)
                     .withCull(false)
                     .build();
         }
@@ -82,7 +89,7 @@ public class BlurShader {
                     .withFragmentShader(BLUR_3D_BOX_PATH)
                     .withBindGroupLayout(BindGroupLayout.builder().withUniform("BoxBlurUniforms", UniformType.UNIFORM_BUFFER).build())
                     .withBindGroupLayout(BindGroupLayout.builder().withSampler("InputSampler").build())
-                    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                    .withColorTargetState(BLUR_COLOR_TARGET)
                     .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
                     .withCull(false)
                     .build();
@@ -119,16 +126,16 @@ public class BlurShader {
             return;
         }
 
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(x, y, width, height);
-        if (!ScissorUtils.isVisible(scissor)) {
+        LuminRenderSystem.ScissorRect blurRect = LuminRenderSystem.toFramebufferScissor(x, y, width, height);
+        if (!ScissorUtils.isVisible(blurRect)) {
             return;
         }
 
         float scale = (float) LuminRenderSystem.getGuiScale();
-        float pxX = x * scale;
-        float pxY = targetHeight - (y + height) * scale;
-        float pxW = width * scale;
-        float pxH = height * scale;
+        float pxX = blurRect.x();
+        float pxY = blurRect.y();
+        float pxW = blurRect.width();
+        float pxH = blurRect.height();
 
         float rTLPx = Math.max(0.0f, rTL * scale);
         float rTRPx = Math.max(0.0f, rTR * scale);
@@ -159,7 +166,7 @@ public class BlurShader {
                 Optional.empty()
         )) {
             renderPass.setPipeline(pipeline);
-            ScissorUtils.enableScissor(renderPass, scissor);
+            ScissorUtils.enableScissor(renderPass, blurRect);
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("BlurUniforms", blurUniforms);
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
@@ -172,6 +179,14 @@ public class BlurShader {
     }
 
     public void render3DBox(AABB box, double blurStrength) {
+        render3DBoxes(List.of(box), blurStrength);
+    }
+
+    public void render3DBoxes(List<AABB> boxes, double blurStrength) {
+        if (boxes.isEmpty()) {
+            return;
+        }
+
         this.ensureBoxProgram();
 
         RenderTarget fb = mc.gameRenderer.mainRenderTarget();
@@ -212,15 +227,13 @@ public class BlurShader {
                 new BoxBlurUniforms(fb.width, fb.height, quality)
         );
 
-        BufferBuilder buffer = new BufferBuilder(
-                new ByteBufferBuilder(DefaultVertexFormat.POSITION_COLOR.getVertexSize() * 24),
-                PrimitiveTopology.QUADS,
-                DefaultVertexFormat.POSITION_COLOR
-        );
-        addBoxVertices(buffer, box);
+        BufferBuilder buffer = LuminTessellator.getInstance().begin(PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        for (AABB box : boxes) {
+            addBoxVertices(buffer, box);
+        }
         MeshData mesh = buffer.buildOrThrow();
 
-        GpuBuffer vertices = RenderSystem.getDevice().createBuffer(() -> "Lumin 3D Box Blur Vertex Buffer", GpuBuffer.USAGE_VERTEX, mesh.vertexBuffer());
+        GpuBuffer vertices = RenderSystem.getDevice().createBuffer(() -> "Lumin 3D Box Blur Vertices", GpuBuffer.USAGE_VERTEX, mesh.vertexBuffer());
         RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(mesh.drawState().primitiveTopology());
         GpuBuffer indices = autoIndices.getBuffer(mesh.drawState().indexCount());
         IndexType indexType = autoIndices.type();
@@ -241,7 +254,7 @@ public class BlurShader {
             renderPass.setUniform("DynamicTransforms", dynamicTransforms);
             renderPass.setUniform("BoxBlurUniforms", boxBlurUniforms);
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-            renderPass.setVertexBuffer(0, vertices.slice());
+            renderPass.setVertexBuffer(0, new GpuBufferSlice(vertices, 0, vertices.size()));
             renderPass.setIndexBuffer(indices, indexType);
             renderPass.drawIndexed(mesh.drawState().indexCount(), 1, 0, 0, 0);
         }

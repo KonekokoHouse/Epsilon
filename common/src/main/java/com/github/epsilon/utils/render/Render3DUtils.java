@@ -16,6 +16,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.awt.*;
+import java.util.List;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -43,6 +44,14 @@ public class Render3DUtils {
 
     public static void drawFilledBox(AABB box, int color) {
         drawFilledFadeBox(box, color, color);
+    }
+
+    public static void drawFilledBoxes(List<AABB> boxes, Color color) {
+        drawFilledBoxes(boxes, color.getRGB());
+    }
+
+    public static void drawFilledBoxes(List<AABB> boxes, int color) {
+        drawFilledFadeBoxes(boxes, color, color);
     }
 
     public static void drawFilledSide(BlockPos blockPos, Color color, Direction direction) {
@@ -92,45 +101,56 @@ public class Render3DUtils {
     }
 
     public static void drawFilledFadeBox(AABB box, int bottomColor, int topColor) {
+        drawFilledFadeBoxes(List.of(box), bottomColor, topColor);
+    }
+
+    public static void drawFilledFadeBoxes(List<AABB> boxes, int bottomColor, int topColor) {
+        if (boxes.isEmpty()) {
+            return;
+        }
+
         LuminImmediateRenderer.PosColorQuads builder = LuminImmediateRenderer.beginPosColorQuads(FILLED_BOX_PIPELINE);
-        BoxVertices vertices = BoxVertices.of(box);
         Matrix4f matrix = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
 
-        quad(builder, matrix,
-                vertices.minX, vertices.minY, vertices.minZ, bottomColor,
-                vertices.minX, vertices.minY, vertices.maxZ, bottomColor,
-                vertices.maxX, vertices.minY, vertices.maxZ, bottomColor,
-                vertices.maxX, vertices.minY, vertices.minZ, bottomColor);
+        for (AABB box : boxes) {
+            BoxVertices vertices = BoxVertices.of(box);
 
-        quad(builder, matrix,
-                vertices.minX, vertices.maxY, vertices.minZ, topColor,
-                vertices.maxX, vertices.maxY, vertices.minZ, topColor,
-                vertices.maxX, vertices.maxY, vertices.maxZ, topColor,
-                vertices.minX, vertices.maxY, vertices.maxZ, topColor);
+            quad(builder, matrix,
+                    vertices.minX, vertices.minY, vertices.minZ, bottomColor,
+                    vertices.minX, vertices.minY, vertices.maxZ, bottomColor,
+                    vertices.maxX, vertices.minY, vertices.maxZ, bottomColor,
+                    vertices.maxX, vertices.minY, vertices.minZ, bottomColor);
 
-        quad(builder, matrix,
-                vertices.minX, vertices.minY, vertices.minZ, bottomColor,
-                vertices.maxX, vertices.minY, vertices.minZ, bottomColor,
-                vertices.maxX, vertices.maxY, vertices.minZ, topColor,
-                vertices.minX, vertices.maxY, vertices.minZ, topColor);
+            quad(builder, matrix,
+                    vertices.minX, vertices.maxY, vertices.minZ, topColor,
+                    vertices.maxX, vertices.maxY, vertices.minZ, topColor,
+                    vertices.maxX, vertices.maxY, vertices.maxZ, topColor,
+                    vertices.minX, vertices.maxY, vertices.maxZ, topColor);
 
-        quad(builder, matrix,
-                vertices.maxX, vertices.minY, vertices.minZ, bottomColor,
-                vertices.maxX, vertices.minY, vertices.maxZ, bottomColor,
-                vertices.maxX, vertices.maxY, vertices.maxZ, topColor,
-                vertices.maxX, vertices.maxY, vertices.minZ, topColor);
+            quad(builder, matrix,
+                    vertices.minX, vertices.minY, vertices.minZ, bottomColor,
+                    vertices.maxX, vertices.minY, vertices.minZ, bottomColor,
+                    vertices.maxX, vertices.maxY, vertices.minZ, topColor,
+                    vertices.minX, vertices.maxY, vertices.minZ, topColor);
 
-        quad(builder, matrix,
-                vertices.minX, vertices.minY, vertices.maxZ, bottomColor,
-                vertices.minX, vertices.maxY, vertices.maxZ, topColor,
-                vertices.maxX, vertices.maxY, vertices.maxZ, topColor,
-                vertices.maxX, vertices.minY, vertices.maxZ, bottomColor);
+            quad(builder, matrix,
+                    vertices.maxX, vertices.minY, vertices.minZ, bottomColor,
+                    vertices.maxX, vertices.minY, vertices.maxZ, bottomColor,
+                    vertices.maxX, vertices.maxY, vertices.maxZ, topColor,
+                    vertices.maxX, vertices.maxY, vertices.minZ, topColor);
 
-        quad(builder, matrix,
-                vertices.minX, vertices.minY, vertices.minZ, bottomColor,
-                vertices.minX, vertices.maxY, vertices.minZ, topColor,
-                vertices.minX, vertices.maxY, vertices.maxZ, topColor,
-                vertices.minX, vertices.minY, vertices.maxZ, bottomColor);
+            quad(builder, matrix,
+                    vertices.minX, vertices.minY, vertices.maxZ, bottomColor,
+                    vertices.minX, vertices.maxY, vertices.maxZ, topColor,
+                    vertices.maxX, vertices.maxY, vertices.maxZ, topColor,
+                    vertices.maxX, vertices.minY, vertices.maxZ, bottomColor);
+
+            quad(builder, matrix,
+                    vertices.minX, vertices.minY, vertices.minZ, bottomColor,
+                    vertices.minX, vertices.maxY, vertices.minZ, topColor,
+                    vertices.minX, vertices.maxY, vertices.maxZ, topColor,
+                    vertices.minX, vertices.minY, vertices.maxZ, bottomColor);
+        }
 
         builder.end();
     }
