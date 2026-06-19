@@ -37,11 +37,9 @@ float noise(vec2 pos) {
 float fbm(vec2 pos) {
     float v = 0.0;
     float a = 0.5;
-    mat2 rot = mat2(cos(0.1), sin(0.5), -sin(0.5), cos(0.5));
     for (int i = 0; i < 30; i++) {
         if (i >= int(NoiseParams.x)) break;
         v += a * noise(pos);
-        pos = rot * pos * 2.0;
         a *= 0.5;
     }
     return v;
