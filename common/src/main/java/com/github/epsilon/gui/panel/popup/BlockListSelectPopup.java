@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -18,7 +19,9 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import org.lwjgl.glfw.GLFW;
 
@@ -26,6 +29,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import static com.github.epsilon.Constants.mc;
 
 public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
@@ -138,7 +143,12 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
         }
         guiGraphics.nextStratum();
         if (lastViewport != null) {
-            guiGraphics.enableScissor((int) lastViewport.x(), (int) lastViewport.y(), (int) lastViewport.right(), (int) lastViewport.bottom());
+            guiGraphics.enableScissor(
+                    toMinecraftGuiXInt(lastViewport.x()),
+                    toMinecraftGuiYInt(lastViewport.y()),
+                    toMinecraftGuiXInt(lastViewport.right()),
+                    toMinecraftGuiYInt(lastViewport.bottom())
+            );
         }
         for (ItemPreview preview : itemPreviews) {
             drawItemPreview(guiGraphics, preview);
@@ -284,7 +294,10 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
             float actionX = rowBounds.right() - 12.0f;
             float previewX = actionX - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE;
             float previewY = rowBounds.y() + (rowBounds.height() - ITEM_PREVIEW_SIZE) * 0.5f;
-            itemPreviews.add(new ItemPreview(block.asItem().getDefaultInstance(), previewX, previewY, ITEM_PREVIEW_SIZE));
+            ItemStack previewStack = createPreviewStack(block);
+            if (!previewStack.isEmpty()) {
+                itemPreviews.add(new ItemPreview(previewStack, previewX, previewY, ITEM_PREVIEW_SIZE));
+            }
 
             String name = trim(BlockRegistryUtils.displayName(block), 0.50f, previewX - rowBounds.x() - 12.0f);
             scope.text(name, rowBounds.x() + 6.0f, centeredTextY(rowBounds.y(), rowBounds.height(), 0.50f), 0.50f, text);
@@ -349,11 +362,41 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
             return;
         }
         float scale = preview.size() / 16.0f;
+        float guiScale = (float) (scale * LuminRenderSystem.getGuiScale() / mc.getWindow().getGuiScale());
+        float guiX = toMinecraftGuiX(preview.x());
+        float guiY = toMinecraftGuiY(preview.y());
         guiGraphics.pose().pushMatrix();
-        guiGraphics.pose().translate(preview.x(), preview.y());
-        guiGraphics.pose().scale(scale, scale);
+        guiGraphics.pose().translate(guiX + guiScale, guiY + guiScale);
+        guiGraphics.pose().scale(guiScale, guiScale);
         guiGraphics.item(preview.stack(), 0, 0);
         guiGraphics.pose().popMatrix();
+    }
+
+    private float toMinecraftGuiX(float epsilonX) {
+        return (float) LuminRenderSystem.toMinecraftGuiX(epsilonX);
+    }
+
+    private float toMinecraftGuiY(float epsilonY) {
+        return (float) LuminRenderSystem.toMinecraftGuiY(epsilonY);
+    }
+
+    private int toMinecraftGuiXInt(float epsilonX) {
+        return (int) Math.round(toMinecraftGuiX(epsilonX));
+    }
+
+    private int toMinecraftGuiYInt(float epsilonY) {
+        return (int) Math.round(toMinecraftGuiY(epsilonY));
+    }
+
+    private ItemStack createPreviewStack(Block block) {
+        Item item = block.asItem();
+        if (item == Items.AIR) {
+            return ItemStack.EMPTY;
+        }
+        if (!item.builtInRegistryHolder().areComponentsBound()) {
+            return ItemStack.EMPTY;
+        }
+        return item.getDefaultInstance();
     }
 
     private record ItemPreview(ItemStack stack, float x, float y, float size) {
