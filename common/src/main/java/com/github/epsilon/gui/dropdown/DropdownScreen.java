@@ -397,7 +397,7 @@ public class DropdownScreen extends Screen {
     private void buildPanels() {
         panels.clear();
         int index = 0;
-        MainDropdownPanel mainPanel = new MainDropdownPanel(index++, this::handleMainPanelAction, this::isPanelVisible);
+        MainDropdownPanel mainPanel = new MainDropdownPanel(index++, this::handleMainPanelAction, this::anySubPanelVisible, this::isPanelVisible);
         mainPanel.setPosition(DropdownTheme.PANEL_MARGIN_X, DropdownTheme.PANEL_MARGIN_Y);
         panels.add(mainPanel);
 
@@ -425,15 +425,29 @@ public class DropdownScreen extends Screen {
     }
 
     private void handleMainPanelAction(String panelId) {
+        if ("__collapse_all__".equals(panelId)) {
+            for (DropdownPanel panel : panels) {
+                if (!"main".equals(panel.getId())) {
+                    panel.setVisible(false);
+                    panel.setOpened(false);
+                }
+            }
+            DropdownLayoutState.save(panels);
+            return;
+        }
+
         for (DropdownPanel panel : panels) {
             if (panel.getId().equals(panelId)) {
-                boolean nextVisible = !panel.isVisible();
-                panel.setVisible(nextVisible);
+                panel.setVisible(!panel.isVisible());
                 panel.setOpened(false);
                 DropdownLayoutState.save(panels);
                 return;
             }
         }
+    }
+
+    private boolean anySubPanelVisible() {
+        return panels.stream().anyMatch(panel -> !"main".equals(panel.getId()) && panel.isVisible());
     }
 
     private boolean isPanelVisible(String panelId) {

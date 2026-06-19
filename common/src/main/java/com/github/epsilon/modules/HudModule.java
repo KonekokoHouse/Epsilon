@@ -29,12 +29,12 @@ public abstract class HudModule extends Module {
     private HorizontalAnchor horizontalAnchor = HorizontalAnchor.Left;
     private VerticalAnchor verticalAnchor = VerticalAnchor.Top;
 
-    public HudModule(String name, Category category, float width, float height) {
-        this(name, category, 0f, 0f, width, height);
+    public HudModule(String name, float width, float height) {
+        this(name, 0f, 0f, width, height);
     }
 
-    public HudModule(String name, Category category, float x, float y, float width, float height) {
-        super(name, category);
+    public HudModule(String name, float x, float y, float width, float height) {
+        super(name, null);
 
         this.x = x;
         this.y = y;

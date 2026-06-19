@@ -10,7 +10,6 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
@@ -18,6 +17,7 @@ import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
+import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;
 
 import java.awt.*;
@@ -364,7 +364,7 @@ public class ModuleButton extends Component {
         if (!module.isHidden()) {
             renderer.roundRect().addRoundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS,
                     MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
-            String icon = Category.HUD.icon;
+            String icon = "E";
             float scale = 0.58f;
             float iconW = renderer.text().getWidth(icon, scale, StaticFontLoader.ICONS);
             float iconH = renderer.text().getHeight(scale, StaticFontLoader.ICONS);
@@ -375,7 +375,7 @@ public class ModuleButton extends Component {
             String hint = module.isHidden() ? hiddenComponent.getTranslatedName() : visibleComponent.getTranslatedName();
             float hintScale = 0.42f;
             float hintW = renderer.text().getWidth(hint, hintScale);
-            float hintX = Math.max(x + 2.0f, Math.min(btnX + (btnW - hintW) * 0.5f, x + width - hintW - 2.0f));
+            float hintX = Mth.clamp(btnX + (btnW - hintW) * 0.5f, x + 2.0f, x + width - hintW - 2.0f);
             renderer.text().addText(hint, hintX, y + DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED);
         }
     }

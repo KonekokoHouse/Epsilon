@@ -22,6 +22,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     private static final TranslateComponent friendComponent = EpsilonTranslateComponent.create("gui", "tab.friend");
     private static final TranslateComponent configComponent = EpsilonTranslateComponent.create("gui", "tab.config");
     private static final TranslateComponent addonComponent = EpsilonTranslateComponent.create("gui", "tab.addon");
+    private static final TranslateComponent collapseComponent = EpsilonTranslateComponent.create("gui", "dropdown.collapse_all");
 
     private static final float ICON_SIZE = 30.0f;
     private static final float ICON_GAP = 7.0f;
@@ -32,7 +33,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     private final List<Entry> entries = new ArrayList<>();
     private final SettingsContent settingsContent;
 
-    public MainDropdownPanel(int panelIndex, Consumer<String> togglePanel, PanelVisibleResolver panelVisibleResolver) {
+    public MainDropdownPanel(int panelIndex, Consumer<String> togglePanel, BooleanSupplier anySubPanelVisible, PanelVisibleResolver panelVisibleResolver) {
         super("main", Constants.NAME, "", panelIndex);
         this.width = 160.0f;
         this.settingsContent = new SettingsContent(ClientSetting.INSTANCE.getSettings(), ClientSetting.INSTANCE.getSettingGroups());
@@ -42,10 +43,10 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         add(Category.PLAYER::getName, Category.PLAYER.icon, "category:player", togglePanel, panelVisibleResolver);
         add(Category.MOVEMENT::getName, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver);
         add(Category.RENDER::getName, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver);
-        add(Category.HUD::getName, Category.HUD.icon, "category:hud", togglePanel, panelVisibleResolver);
         add(friendComponent::getTranslatedName, "4", "friend", togglePanel, panelVisibleResolver);
         add(configComponent::getTranslatedName, "O", "config", togglePanel, panelVisibleResolver);
         add(addonComponent::getTranslatedName, "+", "addon", togglePanel, panelVisibleResolver);
+        entries.add(new Entry(collapseComponent::getTranslatedName, "X", "__collapse_all__", togglePanel, anySubPanelVisible));
     }
 
     private void add(LabelSupplier labelSupplier, String icon, String panelId, Consumer<String> togglePanel, PanelVisibleResolver panelVisibleResolver) {
