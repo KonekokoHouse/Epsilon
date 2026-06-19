@@ -50,14 +50,14 @@ public class Hat extends Module {
 
     private static final RenderPipeline HAT_CONE_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_cone"))
-            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
             .withCull(false)
             .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_FAN)
             .build();
 
     private static final RenderPipeline HAT_OUTLINE_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_outline"))
-            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withDepthStencilState(new DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
             .withCull(false)
             .build();
 
