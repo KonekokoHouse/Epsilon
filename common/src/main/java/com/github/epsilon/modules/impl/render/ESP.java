@@ -2,13 +2,12 @@ package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.utils.render.Render3DUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.ChestBlock;
@@ -20,9 +19,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class ESP extends Module {
@@ -42,72 +39,61 @@ public class ESP extends Module {
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         if (chests.getValue()) {
-            List<AABB> chestBoxes = collectChestBoxes();
-            if (chestBoxes.isEmpty()) return;
-            // Todo: 做一个 RenderManager，给这些都添加到里面去，最后统一 Vertex 然后 Flush一次
-            if (blur.getValue()) BlurShader.INSTANCE.render3DBoxes(chestBoxes, blurStrength.getValue());
-            Render3DUtils.drawFilledBoxes(chestBoxes, color.getValue());
-        }
-    }
+            double maxRange = range.getValue();
+            int renderDistance = mc.options.renderDistance().get();
 
-    private List<AABB> collectChestBoxes() {
-        double maxRange = range.getValue();
-        int renderDistance = mc.options.renderDistance().get();
+            BlockPos playerPos = mc.player.blockPosition();
+            ChunkPos playerChunk = mc.player.chunkPosition();
+            Set<BlockPos> renderedChests = new HashSet<>();
 
-        BlockPos playerPos = mc.player.blockPosition();
-        ChunkPos playerChunk = mc.player.chunkPosition();
-        Set<BlockPos> renderedChests = new HashSet<>();
-        List<AABB> chestBoxes = new ArrayList<>();
-
-        for (int x = -renderDistance; x <= renderDistance; x++) {
-            for (int z = -renderDistance; z <= renderDistance; z++) {
-                int chunkX = playerChunk.x() + x;
-                int chunkZ = playerChunk.z() + z;
-                if (!mc.level.hasChunk(chunkX, chunkZ)) {
-                    continue;
-                }
-
-                LevelChunk chunk = mc.level.getChunkSource().getChunkNow(chunkX, chunkZ);
-                if (chunk == null) {
-                    continue;
-                }
-
-                for (BlockEntity entity : chunk.getBlockEntities().values()) {
-                    if (!(entity instanceof RandomizableContainerBlockEntity)) {
+            for (int x = -renderDistance; x <= renderDistance; x++) {
+                for (int z = -renderDistance; z <= renderDistance; z++) {
+                    int chunkX = playerChunk.x() + x;
+                    int chunkZ = playerChunk.z() + z;
+                    if (!mc.level.hasChunk(chunkX, chunkZ)) {
                         continue;
                     }
 
-                    BlockPos blockPos = entity.getBlockPos();
-                    if (blockPos.distSqr(playerPos) > maxRange * maxRange || !renderedChests.add(blockPos)) {
+                    LevelChunk chunk = mc.level.getChunkSource().getChunkNow(chunkX, chunkZ);
+                    if (chunk == null) {
                         continue;
                     }
 
-                    AABB box = getAABB(blockPos);
-                    BlockState state = mc.level.getBlockState(blockPos);
-                    if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-                        BlockPos connectedPos = ChestBlock.getConnectedBlockPos(blockPos, state);
-                        if (mc.level.isLoaded(connectedPos)) {
-                            BlockState connectedState = mc.level.getBlockState(connectedPos);
-                            if (connectedState.getBlock() == state.getBlock()
-                                    && connectedState.getValue(ChestBlock.TYPE) == state.getValue(ChestBlock.TYPE).getOpposite()
-                                    && connectedState.getValue(ChestBlock.FACING) == state.getValue(ChestBlock.FACING)) {
-                                box = box.minmax(getAABB(connectedPos));
-                                renderedChests.add(connectedPos);
+                    for (BlockEntity entity : chunk.getBlockEntities().values()) {
+                        if (!(entity instanceof RandomizableContainerBlockEntity)) {
+                            continue;
+                        }
+
+                        BlockPos blockPos = entity.getBlockPos();
+                        if (blockPos.distSqr(playerPos) > maxRange * maxRange || !renderedChests.add(blockPos)) {
+                            continue;
+                        }
+
+                        AABB box = getAABB(blockPos);
+                        BlockState state = mc.level.getBlockState(blockPos);
+                        if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                            BlockPos connectedPos = ChestBlock.getConnectedBlockPos(blockPos, state);
+                            if (mc.level.isLoaded(connectedPos)) {
+                                BlockState connectedState = mc.level.getBlockState(connectedPos);
+                                if (connectedState.getBlock() == state.getBlock()
+                                        && connectedState.getValue(ChestBlock.TYPE) == state.getValue(ChestBlock.TYPE).getOpposite()
+                                        && connectedState.getValue(ChestBlock.FACING) == state.getValue(ChestBlock.FACING)) {
+                                    box = box.minmax(getAABB(connectedPos));
+                                    renderedChests.add(connectedPos);
+                                }
                             }
                         }
-                    }
 
-                    chestBoxes.add(box);
+                        if (blur.getValue()) Managers.RENDER.addBlurredBox(box, blurStrength.getValue());
+                        Managers.RENDER.addFilledBox(box, color.getValue());
+                    }
                 }
             }
         }
-
-        return chestBoxes;
     }
 
     private AABB getAABB(BlockPos blockPos) {
-        BlockState state = mc.level.getBlockState(blockPos);
-        return state.getShape(mc.level, blockPos).bounds().move(blockPos);
+        return mc.level.getBlockState(blockPos).getShape(mc.level, blockPos).bounds().move(blockPos);
     }
 
 }

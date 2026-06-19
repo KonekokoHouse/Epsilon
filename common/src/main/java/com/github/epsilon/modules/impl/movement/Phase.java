@@ -122,6 +122,8 @@ public class Phase extends Module {
 
     @EventHandler
     private void onCollide(CollisionEvent event) {
+        if (nullCheck()) return;
+
         BlockPos playerPos = BlockPos.containing(mc.player.position());
 
         if (!mode.is(Mode.CCClip) && !mode.is(Mode.Pearl) && !mode.is(Mode.ForceMine) && canNoClip() || afterPearlTime > 0) {

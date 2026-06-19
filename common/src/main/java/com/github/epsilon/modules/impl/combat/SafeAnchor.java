@@ -13,7 +13,6 @@ import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.combat.DamageUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -64,8 +63,8 @@ public class SafeAnchor extends Module {
                         Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
                         Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
 
-                        Render3DUtils.drawFilledBox(box.aabb, side);
-                        Render3DUtils.drawOutlineBox(event.getPoseStack(), box.aabb, line);
+                        Managers.RENDER.addFilledBox(box.aabb, side);
+                        Managers.RENDER.addOutlineBox(box.aabb, line);
                     }
                 }
         ));

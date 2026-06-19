@@ -2,14 +2,13 @@ package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
-import com.github.epsilon.utils.render.Render3DUtils;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -50,39 +49,39 @@ public class BlockHighlight extends Module {
 
         float thickness = lineWidth.getValue().floatValue();
         AABB box = new AABB(bhr.getBlockPos());
-        Color fillColor = sideColor.getValue();
-        Color outlineColor = lineColor.getValue();
+        int fillColor = sideColor.getValue().getRGB();
+        int outlineColor = lineColor.getValue().getRGB();
         Direction direction = bhr.getDirection();
 
         switch (mode.getValue()) {
             case Both -> {
                 drawBlur(box);
-                Render3DUtils.drawFilledBox(box, fillColor);
-                Render3DUtils.drawOutlineBox(event.getPoseStack(), box, outlineColor, thickness);
+                Managers.RENDER.addFilledBox(box, fillColor);
+                Managers.RENDER.addOutlineBox(box, outlineColor, thickness);
             }
             case BothSide -> {
                 drawBlur(box);
-                Render3DUtils.drawSideOutline(event.getPoseStack(), box, outlineColor, thickness, direction);
-                Render3DUtils.drawFilledSide(box, fillColor, direction);
+                Managers.RENDER.addSideOutline(box, outlineColor, thickness, direction);
+                Managers.RENDER.addFilledSide(box, fillColor, direction);
             }
             case Fill -> {
                 drawBlur(box);
-                Render3DUtils.drawFilledBox(box, fillColor);
+                Managers.RENDER.addFilledBox(box, fillColor);
             }
             case FilledSide -> {
-                Render3DUtils.drawFilledSide(box, fillColor, direction);
+                Managers.RENDER.addFilledSide(box, fillColor, direction);
             }
             case Outline -> {
-                Render3DUtils.drawOutlineBox(event.getPoseStack(), box, outlineColor, thickness);
+                Managers.RENDER.addOutlineBox(box, outlineColor, thickness);
             }
             case OutlinedSide -> {
-                Render3DUtils.drawSideOutline(event.getPoseStack(), box, outlineColor, thickness, direction);
+                Managers.RENDER.addSideOutline(box, outlineColor, thickness, direction);
             }
         }
     }
 
     private void drawBlur(AABB aabb) {
-        if (blur.getValue()) BlurShader.INSTANCE.render3DBox(aabb, blurStrength.getValue());
+        if (blur.getValue()) Managers.RENDER.addBlurredBox(aabb, blurStrength.getValue());
     }
 
 }

@@ -1,9 +1,6 @@
 package com.github.epsilon.managers;
 
-import com.github.epsilon.managers.impl.FriendManager;
-import com.github.epsilon.managers.impl.HealthManager;
-import com.github.epsilon.managers.impl.NotificationManager;
-import com.github.epsilon.managers.impl.RotationManager;
+import com.github.epsilon.managers.impl.*;
 import com.github.epsilon.managers.impl.network.ClientboundPacketManager;
 import com.github.epsilon.managers.impl.network.ServerboundPacketManager;
 import com.github.epsilon.managers.impl.sound.SoundManager;
@@ -19,11 +16,13 @@ public class Managers {
     public static FriendManager FRIEND;
     public static SoundManager SOUND;
     public static NotificationManager NOTIFICATION;
+    public static RenderManager RENDER;
 
     public static void initManagers() {
         ROTATION = new RotationManager();
         TARGET = new TargetManager();
         HEALTH = new HealthManager();
+        RENDER = new RenderManager();
         C2SPACKET = new ServerboundPacketManager();
         S2CPACKET = new ClientboundPacketManager();
         FRIEND = new FriendManager();

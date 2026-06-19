@@ -6,6 +6,7 @@ import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -13,7 +14,6 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.render.Render3DUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.tags.ItemTags;
@@ -59,8 +59,8 @@ public class AutoHitCrystal extends Module {
                         Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
                         Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
 
-                        Render3DUtils.drawFilledBox(box.aabb, side);
-                        Render3DUtils.drawOutlineBox(event.getPoseStack(), box.aabb, line);
+                        Managers.RENDER.addFilledBox(box.aabb, side);
+                        Managers.RENDER.addOutlineBox(box.aabb, line);
                     }
                 }
         ));

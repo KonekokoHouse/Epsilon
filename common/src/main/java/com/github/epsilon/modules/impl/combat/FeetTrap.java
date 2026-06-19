@@ -15,7 +15,6 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
-import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
@@ -76,8 +75,8 @@ public class FeetTrap extends Module {
                             renderBox = AABB.ofSize(renderBox.getCenter(), renderBox.getXsize() * scale, renderBox.getYsize() * scale, renderBox.getZsize() * scale);
                         }
 
-                        Render3DUtils.drawFilledBox(renderBox, side);
-                        Render3DUtils.drawOutlineBox(event.getPoseStack(), renderBox, line);
+                        Managers.RENDER.addFilledBox(renderBox, side);
+                        Managers.RENDER.addOutlineBox(renderBox, line);
                     }
                 }
         ));

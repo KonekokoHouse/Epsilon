@@ -12,7 +12,6 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.MoveUtils;
-import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.BlockPos;
@@ -174,7 +173,7 @@ public class Xray extends Module {
         }
 
         if (brutForce.getValue()) {
-            Render3DUtils.drawOutlineBox(stack, area, new Color(149, 149, 149, 100));
+            Managers.RENDER.addOutlineBox(area, new Color(149, 149, 149, 100));
         }
 
         if (toCheck.isEmpty() || !brutForce.getValue()) return;
@@ -211,8 +210,9 @@ public class Xray extends Module {
     }
 
     private void draw(PoseStack stack, BlockPos pos, int r, int g, int b) {
-        Render3DUtils.drawFilledBox(pos, new Color(r, g, b, 100));
-        Render3DUtils.drawOutlineBox(stack, pos, new Color(r, g, b, 200));
+        AABB box = new AABB(pos);
+        Managers.RENDER.addFilledBox(box, new Color(r, g, b, 100));
+        Managers.RENDER.addOutlineBox(box, new Color(r, g, b, 200));
     }
 
     public boolean isCheckableOre(Block block) {

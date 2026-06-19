@@ -17,7 +17,6 @@ import com.github.epsilon.utils.combat.DamageUtils;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.render.WorldToScreen;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
@@ -317,10 +316,10 @@ public class ZealotCrystalPlus extends Module {
         Color outline = new Color(base.getRed(), base.getGreen(), base.getBlue(), Math.clamp((int) (outlineAlpha.getValue() * renderScale), 0, 255));
 
         if (filledAlpha.getValue() > 0) {
-            Render3DUtils.drawFilledBox(box, filled);
+            Managers.RENDER.addFilledBox(box, filled);
         }
         if (outlineAlpha.getValue() > 0) {
-            Render3DUtils.drawOutlineBox(event.getPoseStack(), box, outline.getRGB(), outlineWidth.getValue().floatValue());
+            Managers.RENDER.addOutlineBox(box, outline.getRGB(), outlineWidth.getValue().floatValue());
         }
 
         renderLastRenderedPos = renderPos;
@@ -1657,8 +1656,8 @@ public class ZealotCrystalPlus extends Module {
                 continue;
             }
 
-            Render3DUtils.drawFilledBox(targetInfo.box(), filled);
-            Render3DUtils.drawOutlineBox(event.getPoseStack(), targetInfo.box(), outline.getRGB(), 1.5f);
+            Managers.RENDER.addFilledBox(targetInfo.box(), filled);
+            Managers.RENDER.addOutlineBox(targetInfo.box(), outline.getRGB(), 1.5f);
         }
     }
 
