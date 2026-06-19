@@ -6,9 +6,11 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.panel.component.setting.ColorSettingRow;
+import com.github.epsilon.gui.panel.component.setting.BlockListSettingRow;
 import com.github.epsilon.gui.panel.component.setting.DoubleSettingRow;
 import com.github.epsilon.gui.panel.component.setting.EnumSettingRow;
 import com.github.epsilon.gui.panel.component.setting.IntSettingRow;
+import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.ColorPickerPopup;
 import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
@@ -187,6 +189,11 @@ public class SettingListController {
             }
             if (entry.row instanceof ColorSettingRow colorRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
                 popupHost.open(createColorPopup(colorRow, entry.bounds, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof BlockListSettingRow blockListRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createBlockListPopup(blockListRow, popupBounds));
                 draggingSliderEntry = null;
                 return true;
             }
@@ -419,6 +426,11 @@ public class SettingListController {
             popupY = swatchBounds.y() - popupHeight - 4.0f;
         }
         return new ColorPickerPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), swatchBounds, colorRow.getSetting());
+    }
+
+    private BlockListSelectPopup createBlockListPopup(BlockListSettingRow blockListRow, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        return new BlockListSelectPopup(bounds, blockListRow.getSetting());
     }
 
     @FunctionalInterface

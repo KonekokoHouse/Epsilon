@@ -18,6 +18,7 @@ public class SettingViewFactory {
             case IntSetting intSetting -> new IntSettingRow(intSetting);
             case DoubleSetting doubleSetting -> new DoubleSettingRow(doubleSetting);
             case ColorSetting colorSetting -> new ColorSettingRow(colorSetting);
+            case BlockListSetting blockListSetting -> new BlockListSettingRow(blockListSetting);
             case StringSetting stringSetting -> new StringSettingRow(stringSetting);
             case ButtonSetting buttonSetting -> new ButtonSettingRow(buttonSetting);
             case null, default -> null;
