@@ -647,7 +647,8 @@ public class PanelUiTree {
                             Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) implements UiNode {
     }
 
-    record RectOutlineNode(float x, float y, float width, float height, float outlineWidth, Color color) implements UiNode {
+    record RectOutlineNode(float x, float y, float width, float height, float outlineWidth,
+                           Color color) implements UiNode {
     }
 
     record OutlineNode(float x, float y, float width, float height,

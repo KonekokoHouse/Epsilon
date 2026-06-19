@@ -93,6 +93,7 @@ public class HudEditorScreen extends Screen {
         renderer.beginFrame();
         drawElementChrome(mouseX, mouseY);
         drawPanel(mouseX, mouseY);
+        drawCanvasGuides();
         renderer.endFrame();
     }
 
@@ -151,15 +152,7 @@ public class HudEditorScreen extends Screen {
     private void drawCanvasChrome(GuiGraphicsExtractor graphics) {
         graphics.nextStratum();
 
-        float scaleX = graphics.guiWidth() / LuminRenderSystem.getScaledWidth();
         float scaleY = graphics.guiHeight() / LuminRenderSystem.getScaledHeight();
-        int centerX = graphics.guiWidth() / 2;
-        int centerY = graphics.guiHeight() / 2;
-        int centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52).getRGB();
-        graphics.fill(centerX, 0, centerX + 1, graphics.guiHeight(), centerGuide);
-        graphics.fill(0, centerY, graphics.guiWidth(), centerY + 1, centerGuide);
-
-        drawSnapGuides(graphics, scaleX, scaleY);
 
         String title = "HUD Editor";
         String subtitle = selectedElement == null ? "Select and drag an element" : selectedElement.getTranslatedName();
@@ -177,18 +170,31 @@ public class HudEditorScreen extends Screen {
         graphics.text(font, subtitle, labelX + 9, labelY + 15, MD3Theme.TEXT_MUTED.getRGB(), false);
     }
 
-    private void drawSnapGuides(GuiGraphicsExtractor graphics, float scaleX, float scaleY) {
-        if (!currentSnap.hasAny()) {
-            return;
-        }
-        int guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA).getRGB();
-        if (!Float.isNaN(currentSnap.verticalLineX())) {
-            int x = Math.round(currentSnap.verticalLineX() * scaleX);
-            graphics.fill(x, 0, x + 1, graphics.guiHeight(), guideColor);
-        }
-        if (!Float.isNaN(currentSnap.horizontalLineY())) {
-            int y = Math.round(currentSnap.horizontalLineY() * scaleY);
-            graphics.fill(0, y, graphics.guiWidth(), y + 1, guideColor);
+    private void drawCanvasGuides() {
+        float screenW = LuminRenderSystem.getScaledWidth();
+        float screenH = LuminRenderSystem.getScaledHeight();
+        float centerX = screenW / 2.0f;
+        float centerY = screenH / 2.0f;
+        Color centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52);
+
+        renderer.beginPass();
+        renderer.rect().addRect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
+        renderer.rect().addRect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
+        drawSnapGuides(screenW, screenH);
+        renderer.flush();
+    }
+
+    private void drawSnapGuides(float screenW, float screenH) {
+        if (currentSnap.hasAny()) {
+            Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
+            if (!Float.isNaN(currentSnap.verticalLineX())) {
+                float x = currentSnap.verticalLineX();
+                renderer.rect().addRect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
+            }
+            if (!Float.isNaN(currentSnap.horizontalLineY())) {
+                float y = currentSnap.horizontalLineY();
+                renderer.rect().addRect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
+            }
         }
     }
 
