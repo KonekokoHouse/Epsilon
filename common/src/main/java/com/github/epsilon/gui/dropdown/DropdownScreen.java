@@ -6,9 +6,14 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.dropdown.component.*;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
 import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
+import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.settings.impl.BlockListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -39,6 +44,7 @@ public class DropdownScreen extends Screen {
 
     private final List<DropdownPanel> panels = new ArrayList<>();
     private final DropdownRenderer renderer = new DropdownRenderer();
+    private final PanelPopupHost popupHost = new PanelPopupHost();
     private final Animation scrimAnim = new Animation(Easing.EASE_OUT_SINE, 200L);
     private final DropdownTextField searchField = new DropdownTextField(64);
     private final Set<String> visiblePanelIds = new HashSet<>();
@@ -82,8 +88,9 @@ public class DropdownScreen extends Screen {
         renderTarget.clear();
         LuminRenderSystem.setActiveTarget(renderTarget);
 
-        MD3Theme.syncFromSettings();
-        drawGui(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
+        int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        drawGui(graphics, epsilonMouseX, epsilonMouseY, partialTick);
 
         LuminRenderSystem.setActiveTarget(null);
         if (preeditOverlay != null) {
@@ -91,11 +98,13 @@ public class DropdownScreen extends Screen {
             graphics.setPreeditOverlay(preeditOverlay);
         }
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
-    private void drawGui(int mouseX, int mouseY) {
+    private void drawGui(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         scrimAnim.run(1.0f);
         renderer.beginFrame();
+        popupHost.setOverlayBounds(new PanelLayout.Rect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()));
         updatePanelHeightLimits();
         updateVisiblePanelIds();
         beginPanelFrames();
@@ -107,17 +116,22 @@ public class DropdownScreen extends Screen {
         renderer.flush();
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
+        boolean popupHovered = popupHost.getActivePopup() != null && popupHost.getActivePopup().getBounds().contains(mouseX, mouseY);
+        int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
+        int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
         // 找出鼠标位置处最上层的可见 panel，被遮挡的 panel 不应响应悬浮
         DropdownPanel topmostHovered = null;
-        for (int i = panels.size() - 1; i >= 0; i--) {
-            DropdownPanel p = panels.get(i);
-            if (!p.isVisible()) continue;
-            float ph = p.getPanelHeight();
-            if (mouseX >= p.getX() && mouseX <= p.getX() + p.getWidth()
-                    && mouseY >= p.getY() && mouseY <= p.getY() + ph) {
-                topmostHovered = p;
-                break;
+        if (!popupHovered) {
+            for (int i = panels.size() - 1; i >= 0; i--) {
+                DropdownPanel p = panels.get(i);
+                if (!p.isVisible()) continue;
+                float ph = p.getPanelHeight();
+                if (mouseX >= p.getX() && mouseX <= p.getX() + p.getWidth()
+                        && mouseY >= p.getY() && mouseY <= p.getY() + ph) {
+                    topmostHovered = p;
+                    break;
+                }
             }
         }
 
@@ -149,8 +163,8 @@ public class DropdownScreen extends Screen {
             if (actualClipH > 0.5f) {
                 renderer.beginPass();
                 renderer.setScissor(panel.getX(), clipY, panel.getWidth(), actualClipH, LuminRenderSystem.getScaledHeightInt());
-                int hoverMouseX = panel == topmostHovered ? mouseX : -1;
-                int hoverMouseY = panel == topmostHovered ? mouseY : -1;
+                int hoverMouseX = panel == topmostHovered ? backgroundMouseX : -1;
+                int hoverMouseY = panel == topmostHovered ? backgroundMouseY : -1;
                 panel.drawContent(renderer, hoverMouseX, hoverMouseY);
                 renderer.flush();
                 renderer.clearScissor();
@@ -159,8 +173,10 @@ public class DropdownScreen extends Screen {
             panel.setPosition(panel.getX(), origY);
         }
 
-        drawSearch(mouseX, mouseY);
+        drawSearch(backgroundMouseX, backgroundMouseY);
         renderer.endFrame();
+        popupHost.render(graphics, mouseX, mouseY, partialTick);
+        popupHost.flush();
     }
 
     private void drawSearch(int mouseX, int mouseY) {
@@ -204,6 +220,11 @@ public class DropdownScreen extends Screen {
         double my = epsilonEvent.y();
         int button = epsilonEvent.button();
 
+        if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
+            ConfigHolder.INSTANCE.saveNow();
+            return true;
+        }
+
         if (button == 0 && searchField.focusIfContains(mx, my, getSearchX(), getSearchY(), getSearchWidth(), getSearchHeight())) {
             return true;
         } else if (button == 0 && searchField.isFocused()) {
@@ -232,6 +253,11 @@ public class DropdownScreen extends Screen {
         double my = epsilonEvent.y();
         int button = epsilonEvent.button();
 
+        if (popupHost.mouseReleased(epsilonEvent)) {
+            ConfigHolder.INSTANCE.saveNow();
+            return true;
+        }
+
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
             if (panel.mouseReleased(mx, my, button)) {
@@ -244,29 +270,43 @@ public class DropdownScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
+            return true;
+        }
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
             panel.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
         }
         DropdownLayoutState.save(panels);
-        return super.mouseDragged(event, LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
+        return super.mouseDragged(epsilonEvent, LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
+        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
+            return true;
+        }
         // 从顶层向底层遍历，确保最上层 panel 优先处理滚轮事件
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
-            if (panel.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollY)) {
+            if (panel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY)) {
                 return true;
             }
         }
-        return super.mouseScrolled(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY), scrollX, scrollY);
+        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY);
     }
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        if (popupHost.keyPressed(event)) {
+            return true;
+        }
         if (event.key() == GLFW.GLFW_KEY_F && InputConstants.isKeyDown(minecraft.getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL)) {
             searchField.focus();
             return true;
@@ -309,6 +349,9 @@ public class DropdownScreen extends Screen {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
+        if (popupHost.charTyped(event)) {
+            return true;
+        }
         if (searchField.charTyped(event)) {
             syncSearchQuery();
             return true;
@@ -326,6 +369,7 @@ public class DropdownScreen extends Screen {
     @Override
     public void onClose() {
         IMEFocusHelper.deactivate();
+        popupHost.close();
         DropdownLayoutState.save(panels);
         super.onClose();
     }
@@ -458,6 +502,14 @@ public class DropdownScreen extends Screen {
 
     public int getSessionId() {
         return sessionId;
+    }
+
+    public void openBlockListPopup(BlockListSetting setting) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new BlockListSelectPopup(bounds, setting));
     }
 
 }

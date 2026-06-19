@@ -134,7 +134,6 @@ public class PanelScreen extends Screen {
             clientSettingPanel.markDirty();
         }
 
-        MD3Theme.syncFromSettings();
         float railWidth = categoryRailPanel.getAnimatedWidth();
         PanelLayout.Layout layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), railWidth);
         popupHost.setOverlayBounds(layout.panel());
@@ -142,17 +141,20 @@ public class PanelScreen extends Screen {
         drawChrome(layout);
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
-        categoryRailPanel.render(guiGraphics, layout.rail(), epsilonMouseX, epsilonMouseY, partialTick);
+        boolean popupActive = popupHost.getActivePopup() != null;
+        int panelMouseX = popupActive ? Integer.MIN_VALUE : epsilonMouseX;
+        int panelMouseY = popupActive ? Integer.MIN_VALUE : epsilonMouseY;
+        categoryRailPanel.render(guiGraphics, layout.rail(), panelMouseX, panelMouseY, partialTick);
         if (state.isClientSettingMode()) {
             PanelLayout.Rect clientSettingsBounds = new PanelLayout.Rect(
                     layout.modules().x(), layout.modules().y(),
                     layout.detail().right() - layout.modules().x(),
                     layout.modules().height()
             );
-            clientSettingPanel.render(guiGraphics, clientSettingsBounds, epsilonMouseX, epsilonMouseY, partialTick);
+            clientSettingPanel.render(guiGraphics, clientSettingsBounds, panelMouseX, panelMouseY, partialTick);
         } else {
-            moduleListPanel.render(guiGraphics, layout.modules(), epsilonMouseX, epsilonMouseY, partialTick);
-            moduleDetailPanel.render(guiGraphics, layout.detail(), epsilonMouseX, epsilonMouseY, partialTick);
+            moduleListPanel.render(guiGraphics, layout.modules(), panelMouseX, panelMouseY, partialTick);
+            moduleDetailPanel.render(guiGraphics, layout.detail(), panelMouseX, panelMouseY, partialTick);
         }
 
         popupHost.render(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
@@ -166,6 +168,7 @@ public class PanelScreen extends Screen {
             guiGraphics.setPreeditOverlay(this.preeditOverlay);
         }
         guiGraphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
     private void drawChrome(PanelLayout.Layout layout) {

@@ -508,6 +508,13 @@ public class ConfigHolder {
         if (setting instanceof IntSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof DoubleSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof StringSetting s) return new JsonPrimitive(s.getValue());
+        if (setting instanceof BlockListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) {
+                array.add(id);
+            }
+            return array;
+        }
         if (setting instanceof EnumSetting s) return new JsonPrimitive(s.getValue().toString());
         if (setting instanceof ColorSetting s) {
             Color c = s.getValue();
@@ -517,8 +524,19 @@ public class ConfigHolder {
     }
 
     private static void applySetting(Setting<?> setting, JsonElement value) {
-        if (value == null || !value.isJsonPrimitive()) return;
+        if (value == null) return;
         try {
+            if (setting instanceof BlockListSetting s && value.isJsonArray()) {
+                List<String> ids = new java.util.ArrayList<>();
+                for (JsonElement element : value.getAsJsonArray()) {
+                    if (element != null && element.isJsonPrimitive()) {
+                        ids.add(element.getAsString());
+                    }
+                }
+                s.setIds(ids);
+                return;
+            }
+            if (!value.isJsonPrimitive()) return;
             if (setting instanceof BoolSetting s) s.setValue(value.getAsBoolean());
             else if (setting instanceof KeybindSetting s) s.setValue(value.getAsInt());
             else if (setting instanceof IntSetting s) s.setUnboundedValue(value.getAsInt());
