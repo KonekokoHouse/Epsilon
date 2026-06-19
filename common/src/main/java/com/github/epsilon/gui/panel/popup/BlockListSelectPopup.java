@@ -17,6 +17,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.lwjgl.glfw.GLFW;
 
@@ -34,7 +35,9 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     private static final float ROW_HEIGHT = 18.0f;
     private static final float ROW_GAP = 2.0f;
     private static final float COLUMN_GAP = 6.0f;
-    private static final float SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 4.0f;
+    private static final float SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 1.0f;
+    private static final float ITEM_PREVIEW_SIZE = 12.0f;
+    private static final float ITEM_PREVIEW_GAP = 5.0f;
     private static final int MAX_QUERY_LENGTH = 64;
 
     private final PanelLayout.Rect bounds;
@@ -43,12 +46,14 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
+    private final List<ItemPreview> itemPreviews = new ArrayList<>();
 
     private String query = "";
     private float scroll;
     private float maxScroll;
     private Block hoveredAdd;
     private Block hoveredRemove;
+    private PanelLayout.Rect lastViewport;
 
     public BlockListSelectPopup(PanelLayout.Rect bounds, BlockListSetting setting) {
         this.bounds = bounds;
@@ -64,6 +69,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         contentBuffer.clear();
+        itemPreviews.clear();
         List<Block> available = filteredAvailable();
         List<Block> selected = filteredSelected();
         float columnContentHeight = Math.max(available.size(), selected.size()) * (ROW_HEIGHT + ROW_GAP);
@@ -77,6 +83,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
             PanelLayout.Rect animatedBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
             PanelLayout.Rect searchBounds = getSearchBounds(popupY);
             PanelLayout.Rect animatedViewport = getViewport(popupY);
+            lastViewport = animatedViewport;
 
             scope.popupCard(animatedBounds, MD3Theme.CARD_RADIUS, POPUP_SHADOW_RADIUS,
                     MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
@@ -115,6 +122,23 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     public void flush(PanelRenderBatch renderBatch) {
         renderBatch.flushAndClear();
         contentBuffer.flushAndClear();
+    }
+
+    @Override
+    public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (itemPreviews.isEmpty()) {
+            return;
+        }
+        guiGraphics.nextStratum();
+        if (lastViewport != null) {
+            guiGraphics.enableScissor((int) lastViewport.x(), (int) lastViewport.y(), (int) lastViewport.right(), (int) lastViewport.bottom());
+        }
+        for (ItemPreview preview : itemPreviews) {
+            drawItemPreview(guiGraphics, preview);
+        }
+        if (lastViewport != null) {
+            guiGraphics.disableScissor();
+        }
     }
 
     @Override
@@ -194,9 +218,14 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
                     : MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, hovered ? 0.45f : 0.0f);
             Color text = addColumn ? (hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY) : MD3Theme.ON_SECONDARY_CONTAINER;
             scope.roundRect(rowBounds.x(), rowBounds.y(), rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS, background);
-            String name = trim(BlockRegistryUtils.displayName(block), 0.50f, rowBounds.width() - 24.0f);
+            float actionX = rowBounds.right() - 12.0f;
+            float previewX = actionX - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE;
+            float previewY = rowBounds.y() + (rowBounds.height() - ITEM_PREVIEW_SIZE) * 0.5f;
+            itemPreviews.add(new ItemPreview(block.asItem().getDefaultInstance(), previewX, previewY, ITEM_PREVIEW_SIZE));
+
+            String name = trim(BlockRegistryUtils.displayName(block), 0.50f, previewX - rowBounds.x() - 12.0f);
             scope.text(name, rowBounds.x() + 6.0f, centeredTextY(rowBounds.y(), rowBounds.height(), 0.50f), 0.50f, text);
-            scope.text(addColumn ? "+" : "-", rowBounds.right() - 12.0f,
+            scope.text(addColumn ? "+" : "-", actionX,
                     centeredTextY(rowBounds.y(), rowBounds.height(), 0.54f), 0.54f, text);
         }
     }
@@ -250,6 +279,21 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
     private float centeredTextY(float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - textRenderer.getLineHeight(scale)) * 0.5f;
+    }
+
+    private void drawItemPreview(GuiGraphicsExtractor guiGraphics, ItemPreview preview) {
+        if (preview.stack().isEmpty()) {
+            return;
+        }
+        float scale = preview.size() / 16.0f;
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate(preview.x(), preview.y());
+        guiGraphics.pose().scale(scale, scale);
+        guiGraphics.item(preview.stack(), 0, 0);
+        guiGraphics.pose().popMatrix();
+    }
+
+    private record ItemPreview(ItemStack stack, float x, float y, float size) {
     }
 
 }

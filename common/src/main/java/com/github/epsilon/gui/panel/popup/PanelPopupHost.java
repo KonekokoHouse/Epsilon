@@ -102,6 +102,12 @@ public class PanelPopupHost {
         pending = false;
     }
 
+    public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (activePopup != null) {
+            activePopup.extractOverlay(guiGraphics, mouseX, mouseY, partialTick);
+        }
+    }
+
     /**
      * 处理鼠标点击事件。
      * <p>
@@ -204,6 +210,9 @@ public class PanelPopupHost {
          */
         default void flush(PanelRenderBatch renderBatch) {
             renderBatch.flushAndClear();
+        }
+
+        default void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         }
 
         /**

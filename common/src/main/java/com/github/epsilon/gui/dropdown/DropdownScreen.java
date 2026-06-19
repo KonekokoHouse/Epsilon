@@ -98,6 +98,7 @@ public class DropdownScreen extends Screen {
             graphics.setPreeditOverlay(preeditOverlay);
         }
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
     private void drawGui(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {

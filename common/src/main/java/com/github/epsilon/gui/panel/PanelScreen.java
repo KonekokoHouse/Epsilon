@@ -165,6 +165,7 @@ public class PanelScreen extends Screen {
             guiGraphics.setPreeditOverlay(this.preeditOverlay);
         }
         guiGraphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
     private void drawChrome(PanelLayout.Layout layout) {
