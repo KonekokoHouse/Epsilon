@@ -210,7 +210,7 @@ public class ShaderHolder {
                         height,
                         shaders.quality.getValue(),
                         shaders.lineWidth.getValue(),
-                        shaders.glow.getValue() ? -1.0f : alpha(outline),
+                        shaders.smokeGlow.getValue() ? -1.0f : alpha(outline),
                         shaders.fillAlpha.getValue() / 255.0f,
                         shaders.alpha2.getValue() / 255.0f,
                         ((Util.getMillis() - startTimeMs) % 1_000_000L) / 1000.0f,

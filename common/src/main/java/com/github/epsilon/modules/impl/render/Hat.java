@@ -1,13 +1,20 @@
 package com.github.epsilon.modules.impl.render;
 
+import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -40,6 +47,19 @@ public class Hat extends Module {
     private final double[][] positions = new double[181][2];
     private int lastPoints;
     private double lastSize;
+
+    private static final RenderPipeline HAT_CONE_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_cone"))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withCull(false)
+            .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_FAN)
+            .build();
+
+    private static final RenderPipeline HAT_OUTLINE_PIPELINE = RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+            .withLocation(ResourceLocationUtils.getIdentifier("pipeline/hat_outline"))
+            .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+            .withCull(false)
+            .build();
 
     private void computeChineseHatPoints(int points, double radius) {
         for (int i = 0; i <= points; i++) {
@@ -101,10 +121,11 @@ public class Hat extends Module {
         stack.translate(0, 0, pitch / 270.0);
 
         Matrix4f matrix = stack.last().pose();
-        Tesselator tesselator = Tesselator.getInstance();
+        PoseStack.Pose entry = stack.last();
 
         float lineWidth = 2.0f;
-        BufferBuilder outlineBuffer = tesselator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH);
+        LuminImmediateRenderer.Lines outlineBuffer = LuminImmediateRenderer.beginLines(HAT_OUTLINE_PIPELINE);
+
         for (int i = 0; i < pointCount; i++) {
             int next = (i + 1) % pointCount;
 
@@ -120,23 +141,27 @@ public class Hat extends Module {
             Color c1 = colors[i];
             Color c2 = colors[next];
 
-            outlineBuffer.addVertex(matrix, (float) p1[0], 0.0f, (float) p1[1]).setColor(c1.getRed(), c1.getGreen(), c1.getBlue(), 255).setNormal(nx, 0.0f, nz).setLineWidth(lineWidth);
-            outlineBuffer.addVertex(matrix, (float) p2[0], 0.0f, (float) p2[1]).setColor(c2.getRed(), c2.getGreen(), c2.getBlue(), 255).setNormal(nx, 0.0f, nz).setLineWidth(lineWidth);
+            outlineBuffer.vertex(matrix, entry, (float) p1[0], 0.0f, (float) p1[1], withAlpha(c1, 255).getRGB(), nx, 0.0f, nz, lineWidth);
+            outlineBuffer.vertex(matrix, entry, (float) p2[0], 0.0f, (float) p2[1], withAlpha(c2, 255).getRGB(), nx, 0.0f, nz, lineWidth);
         }
-        RenderTypes.lines().draw(outlineBuffer.buildOrThrow());
+        outlineBuffer.end();
 
-        BufferBuilder coneBuffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+        LuminImmediateRenderer.PosColorTriangleFan coneBuffer = LuminImmediateRenderer.beginPosColorTriangleFan(HAT_CONE_PIPELINE);
 
-        coneBuffer.addVertex(matrix, 0, (float) (radius / 2), 0).setColor(255, 255, 255, 128);
+        coneBuffer.vertex(matrix, 0, (float) (radius / 2), 0, new Color(255, 255, 255, 128).getRGB());
 
         for (int i = 0; i <= pointCount; i++) {
             double[] pos = this.positions[i % pointCount];
             Color clr = colors[i % colors.length];
-            coneBuffer.addVertex(matrix, (float) pos[0], 0, (float) pos[1]).setColor(clr.getRed(), clr.getGreen(), clr.getBlue(), 128);
+            coneBuffer.vertex(matrix, (float) pos[0], 0, (float) pos[1], withAlpha(clr, 128).getRGB());
         }
-        RenderTypes.debugTriangleFan().draw(coneBuffer.buildOrThrow());
+        coneBuffer.end();
 
         stack.popPose();
+    }
+
+    private Color withAlpha(Color source, int alpha) {
+        return new Color(source.getRed(), source.getGreen(), source.getBlue(), Mth.clamp(alpha, 0, 255));
     }
 
     private Color[] getColorMode() {

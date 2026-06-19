@@ -60,7 +60,7 @@ public class FilterShader {
         }
     }
 
-    public void renderMainTarget(Color color) {
+    public void renderToMainTarget(Color color) {
         render(mc.getMainRenderTarget(), color);
     }
 

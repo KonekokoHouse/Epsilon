@@ -25,34 +25,35 @@ vec3 wave(vec2 pos) {
 
 void main() {
     vec4 centerCol = texture(InputSampler, texCoord);
-    int sampleRadius = min(int(OutlineParams.x), 6);
-    float lineWidth = OutlineParams.y;
+    int quality = int(OutlineParams.x);
+    int lineWidth = int(OutlineParams.y);
     float alpha0 = OutlineParams.z;
     float fillAlpha = OutlineParams.w;
     vec2 oneTexel = TargetSize.zw;
 
     if (centerCol.a != 0.0) {
         fragColor = vec4(wave(gl_FragCoord.xy), fillAlpha);
-        return;
-    }
-
-    float alphaOutline = 0.0;
-    vec3 colorFinal = vec3(0.0);
-    for (int offsetX = -sampleRadius; offsetX < sampleRadius; offsetX++) {
-        for (int offsetY = -sampleRadius; offsetY < sampleRadius; offsetY++) {
-            vec2 sampleOffset = vec2(offsetX, offsetY);
-            vec4 sampleCol = texture(InputSampler, texCoord + sampleOffset * oneTexel);
-            if (sampleCol.a != 0.0) {
-                if (alpha0 == -1.0) {
-                    colorFinal = Outline.rgb;
-                    alphaOutline += Outline.a * 255.0 > 0.0 ? max(0.0, (lineWidth - length(sampleOffset)) / (Outline.a * 255.0)) : 1.0;
-                } else {
-                    fragColor = vec4(Outline.rgb, alpha0);
-                    return;
+    } else {
+        float alphaOutline = 0.0;
+        vec3 colorFinal = vec3(-1.0);
+        for (int x = -quality; x < quality; x++) {
+            for (int y = -quality; y < quality; y++) {
+                vec2 offset = vec2(x, y);
+                vec2 coord = texCoord + offset * oneTexel;
+                vec4 sampleColor = texture(InputSampler, coord);
+                if (sampleColor.a != 0.0) {
+                    if (alpha0 == -1.0) {
+                        if (colorFinal.x == -1.0) {
+                            colorFinal = Outline.rgb;
+                        }
+                        alphaOutline += Outline.a * 255.0 > 0.0 ? max(0.0, (float(lineWidth) - distance(offset, vec2(0.0))) / (Outline.a * 255.0)) : 1.0;
+                    } else {
+                        fragColor = vec4(Outline.rgb, alpha0);
+                        return;
+                    }
                 }
             }
         }
+        fragColor = vec4(colorFinal, alphaOutline);
     }
-
-    fragColor = vec4(colorFinal, alphaOutline);
 }

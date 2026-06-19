@@ -35,6 +35,8 @@ public final class LuminImmediateRenderer {
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
 
     private static final Channel POS_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS);
+    private static final Channel POS_COLOR_TRIANGLE_STRIP = new Channel(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_STRIP);
+    private static final Channel POS_COLOR_TRIANGLE_FAN = new Channel(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLE_FAN);
     private static final Channel POS_TEX_COLOR_QUADS = new Channel(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS);
     private static final Channel POS_COLOR_NORMAL_LINE_WIDTH_LINES = new Channel(DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH, VertexFormat.Mode.LINES);
 
@@ -43,6 +45,14 @@ public final class LuminImmediateRenderer {
 
     public static PosColorQuads beginPosColorQuads(RenderPipeline pipeline) {
         return new PosColorQuads(POS_COLOR_QUADS.begin(pipeline, null));
+    }
+
+    public static PosColorTriangleStrip beginPosColorTriangleStrip(RenderPipeline pipeline) {
+        return new PosColorTriangleStrip(POS_COLOR_TRIANGLE_STRIP.begin(pipeline, null));
+    }
+
+    public static PosColorTriangleFan beginPosColorTriangleFan(RenderPipeline pipeline) {
+        return new PosColorTriangleFan(POS_COLOR_TRIANGLE_FAN.begin(pipeline, null));
     }
 
     public static PosTexColorQuads beginPosTexColorQuads(RenderPipeline pipeline, Identifier texture) {
@@ -70,6 +80,46 @@ public final class LuminImmediateRenderer {
         public void end() {
             this.channel.drawAndReset();
         }
+    }
+
+    public static final class PosColorTriangleStrip {
+
+        private final Channel channel;
+
+        private PosColorTriangleStrip(Channel channel) {
+            this.channel = channel;
+        }
+
+        public void vertex(Matrix4f matrix, float x, float y, float z, int color) {
+            this.channel.putPosition(matrix, x, y, z);
+            this.channel.putColor(color);
+            this.channel.finishVertex();
+        }
+
+        public void end() {
+            this.channel.drawAndReset();
+        }
+
+    }
+
+    public static final class PosColorTriangleFan {
+
+        private final Channel channel;
+
+        private PosColorTriangleFan(Channel channel) {
+            this.channel = channel;
+        }
+
+        public void vertex(Matrix4f matrix, float x, float y, float z, int color) {
+            this.channel.putPosition(matrix, x, y, z);
+            this.channel.putColor(color);
+            this.channel.finishVertex();
+        }
+
+        public void end() {
+            this.channel.drawAndReset();
+        }
+
     }
 
     public static final class PosTexColorQuads {
@@ -264,6 +314,7 @@ public final class LuminImmediateRenderer {
 
                 GpuTextureView colorView = LuminRenderSystem.resolveColorView();
                 GpuTextureView depthView = LuminRenderSystem.resolveDepthView();
+
                 if (colorView == null) {
                     return;
                 }

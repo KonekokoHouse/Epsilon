@@ -485,7 +485,7 @@ public class ConfigHolder {
 
     private synchronized void loadFriends(Path configStorageDir) {
         Path friendFile = configStorageDir.resolve(FRIENDS_FILE_NAME);
-        Managers.FRIEND.clearFriends();
+        if (Managers.FRIEND != null) Managers.FRIEND.clearFriends();
         if (!Files.exists(friendFile)) return;
         try {
             String json = Files.readString(friendFile, StandardCharsets.UTF_8);

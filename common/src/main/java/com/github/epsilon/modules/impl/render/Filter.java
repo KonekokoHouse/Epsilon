@@ -37,20 +37,11 @@ public class Filter extends Module {
 
     @EventHandler(priority = EventPriority.LOW)
     private void onAfterRender3D(AfterRender3DEvent event) {
-        if (nullCheck()) {
-            return;
+        if (mode.is(Mode.Shader)) {
+            Color color = this.baseColor.getValue();
+            if (color.getAlpha() <= 0) return;
+            FilterShader.INSTANCE.renderToMainTarget(color);
         }
-
-        if (!mode.is(Mode.Shader)) {
-            return;
-        }
-
-        Color color = this.baseColor.getValue();
-        if (color.getAlpha() <= 0) {
-            return;
-        }
-
-        FilterShader.INSTANCE.renderMainTarget(color);
     }
 
 }

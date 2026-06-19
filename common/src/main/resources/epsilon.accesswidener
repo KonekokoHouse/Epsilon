@@ -37,3 +37,5 @@ accessible field net/minecraft/client/ResourceLoadStateTracker reloadState Lnet/
 accessible field net/minecraft/client/player/LocalPlayer lastSentInput Lnet/minecraft/world/entity/player/Input;
 accessible field net/minecraft/client/player/LocalPlayer wasSprinting Z
 mutable field net/minecraft/client/player/LocalPlayer wasSprinting Z
+
+accessible field net/minecraft/client/renderer/LevelRenderer entityOutlineTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
