@@ -2,8 +2,6 @@ package com.github.epsilon.assets.i18n;
 
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.locale.Language;
 
 public class DefaultTranslateComponent implements TranslateComponent {
 
@@ -39,8 +37,8 @@ public class DefaultTranslateComponent implements TranslateComponent {
     }
 
     private static String resolveTranslation(String key) {
-        if (Language.getInstance().has(key)) {
-            return I18n.get(key);
+        if (EpsilonLanguageManager.INSTANCE.has(key)) {
+            return EpsilonLanguageManager.INSTANCE.getOrDefault(key);
         }
         return ClientSetting.INSTANCE.i18nFallback.getValue() ? formatKey(key) : key;
     }
@@ -80,4 +78,3 @@ public class DefaultTranslateComponent implements TranslateComponent {
     }
 
 }
-

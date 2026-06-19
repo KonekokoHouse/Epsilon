@@ -79,6 +79,11 @@
   "epsilon.modules.client setting.module sort.addon": "附加组件",
   "epsilon.modules.client setting.render scale": "界面缩放",
   "epsilon.modules.client setting.open hud editor": "打开 HUD 编辑器",
+  "epsilon.modules.client setting.language": "语言",
+  "epsilon.modules.client setting.language.english": "英语",
+  "epsilon.modules.client setting.language.chinese simplified": "简体中文",
+  "epsilon.modules.client setting.language.custom": "自定义",
+  "epsilon.modules.client setting.custom language": "自定义语言",
   "epsilon.modules.client setting.i18n fallback": "无国际化自动生成",
   "epsilon.modules.client setting.font anti aliasing": "字体抗锯齿",
   "epsilon.modules.client setting.hide mode": "隐藏模式",
@@ -1015,5 +1020,9 @@
   "epsilon.modules.watermark hud.mode.tradition": "传统",
   "epsilon.modules.watermark hud.mode.modern": "现代",
   "epsilon.modules.watermark hud.background blur": "背景模糊",
-  "epsilon.modules.watermark hud.blur strength": "模糊强度"
+  "epsilon.modules.watermark hud.blur strength": "模糊强度",
+  "epsilon.gui.mainmenu.singleplayer": "单人游戏",
+  "epsilon.gui.mainmenu.multiplayer": "多人游戏",
+  "epsilon.gui.mainmenu.options": "选项",
+  "epsilon.gui.mainmenu.quit": "退出游戏"
 }
