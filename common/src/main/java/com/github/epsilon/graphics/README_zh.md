@@ -64,14 +64,28 @@ rectRenderer.get().addRect(10f,10f,100f,100f,Color.WHITE);
 
 ```java
 // 1. 向缓冲区添加形状
-rectRenderer.get().addRect(10f,10f,200f,200f,Color.WHITE);
+rectRenderer.get().
+
+addRect(10f,10f,200f,200f,Color.WHITE);
 
 // 2. 绘制到屏幕并在下一帧前清理数据
-rectRenderer.get().draw();
-rectRenderer.get().clear();
+rectRenderer.
+
+get().
+
+draw();
+rectRenderer.
+
+get().
+
+clear();
 
 // 你也可以直接使用 drawAndClear()
-rectRenderer.get().drawAndClear();
+rectRenderer.
+
+get().
+
+drawAndClear();
 
 ```
 
@@ -81,10 +95,16 @@ rectRenderer.get().drawAndClear();
 
 ```java
 // 在初始化阶段或首帧中：
-rectRenderer.get().addRect(10f,10f,200f,200f,Color.CYAN);
+rectRenderer.get().
+
+addRect(10f,10f,200f,200f,Color.CYAN);
 
 // 在渲染循环中：
-rectRenderer.get().draw(); // 内容会一直保存在 GPU 缓冲区中，直到调用 .clear()
+rectRenderer.
+
+get().
+
+draw(); // 内容会一直保存在 GPU 缓冲区中，直到调用 .clear()
 
 ```
 

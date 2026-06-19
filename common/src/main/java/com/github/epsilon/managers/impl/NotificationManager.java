@@ -82,7 +82,7 @@ public class NotificationManager {
         return notifications.isEmpty();
     }
 
-    public void clear() {
+    public void clearAll() {
         notifications.clear();
         hashCodeMap.clear();
     }
