@@ -31,6 +31,8 @@ import java.util.IdentityHashMap;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.github.epsilon.Constants.mc;
+
 /**
  * @author ilove0329P
  * Thanks to furry client.
@@ -69,8 +71,6 @@ public class ShaderHolder {
     private int chestCaptureDepth;
     private final Set<SubmitNode> chestOutlineSubmits = Collections.newSetFromMap(new IdentityHashMap<>());
 
-    private final long startTimeMs = Util.getMillis();
-
     private ShaderHolder() {
     }
 
@@ -81,7 +81,7 @@ public class ShaderHolder {
 
         ensureProgram();
         ensureSwap(target.width, target.height);
-        GpuBufferSlice shaderConfig = writeShaderConfig(target.width, target.height);
+        GpuBufferSlice shaderConfig = writeShaderConfig(target.width, target.height, shader);
 
         renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderConfig);
         renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, null);
@@ -202,18 +202,19 @@ public class ShaderHolder {
         }
     }
 
-    private GpuBufferSlice writeShaderConfig(int screenWidth, int screenHeight) {
+    private GpuBufferSlice writeShaderConfig(int screenWidth, int screenHeight, Shader shader) {
         Shaders shaders = Shaders.INSTANCE;
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
+        float scaledWidth = Math.max(1.0f, mc.getWindow().getGuiScaledWidth());
+        float scaledHeight = Math.max(1.0f, mc.getWindow().getGuiScaledHeight());
         Color outline = shaders.outlineColor.getValue();
         Color smokeOutline1 = shaders.smokeOutlineColor1.getValue();
         Color smokeOutline2 = shaders.smokeOutlineColor2.getValue();
         Color fill = shaders.fillColor1.getValue();
         Color smokeFill1 = shaders.fillColor2.getValue();
         Color smokeFill2 = shaders.fillColor3.getValue();
-
-        GpuBufferSlice shaderConfig = LuminRenderSystem.writeDynamicUniform(
+        return LuminRenderSystem.writeDynamicUniform(
                 "shader_config",
                 "Epsilon Shader Config UBO",
                 UNIFORMS_SIZE,
@@ -226,10 +227,12 @@ public class ShaderHolder {
                         shaders.smokeGlow.getValue() ? -1.0f : alpha(outline),
                         shaders.fillAlpha.getValue() / 255.0f,
                         shaders.alpha2.getValue() / 255.0f,
-                        ((Util.getMillis() - startTimeMs) % 1_000_000L) / 1000.0f,
+                        (Util.getMillis() % 100_000L) / 1000.0f,
                         shaders.factor.getValue().floatValue(),
                         shaders.gradient.getValue().floatValue(),
                         shaders.octaves.getValue(),
+                        scaledWidth,
+                        scaledHeight,
                         outline,
                         smokeOutline1,
                         smokeOutline2,
@@ -238,7 +241,6 @@ public class ShaderHolder {
                         smokeFill2
                 )
         );
-        return shaderConfig;
     }
 
     private void ensureProgram() {
@@ -345,6 +347,8 @@ public class ShaderHolder {
             float gradientFactor,
             float gradientScale,
             float octaves,
+            float resolutionWidth,
+            float resolutionHeight,
             Color outline,
             Color smokeOutline1,
             Color smokeOutline2,
@@ -359,7 +363,7 @@ public class ShaderHolder {
                     .putVec4(width, height, 1.0f / width, 1.0f / height)
                     .putVec4(quality, lineWidth, outlineAlpha, fillAlpha)
                     .putVec4(gradientAlpha, time, gradientFactor, gradientScale)
-                    .putVec4(octaves, 0.0f, 0.0f, 0.0f)
+                    .putVec4(octaves, resolutionWidth, resolutionHeight, 0.0f)
                     .putVec4(red(outline), green(outline), blue(outline), alpha(outline))
                     .putVec4(red(smokeOutline1), green(smokeOutline1), blue(smokeOutline1), alpha(smokeOutline1))
                     .putVec4(red(smokeOutline2), green(smokeOutline2), blue(smokeOutline2), alpha(smokeOutline2))
