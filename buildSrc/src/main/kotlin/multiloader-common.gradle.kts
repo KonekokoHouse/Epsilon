@@ -4,29 +4,25 @@ plugins {
 }
 
 val baseVersion = providers.gradleProperty("version")
-val currentCommitTags = providers.exec {
-    commandLine("git", "tag", "--points-at", "HEAD")
-    isIgnoreExitValue = true
-}.standardOutput.asText.map { output ->
-    output.lineSequence()
-        .map(String::trim)
-        .filter(String::isNotEmpty)
-        .toSet()
+val isReleaseBuild = gradle.startParameter.taskNames.any { taskName ->
+    taskName == "buildRelease" || taskName.endsWith(":buildRelease")
 }
-val shortCommitId = providers.exec {
-    commandLine("git", "rev-parse", "--short", "HEAD")
-    isIgnoreExitValue = true
-}.standardOutput.asText.map(String::trim)
+val shortCommitId = if (isReleaseBuild) {
+    providers.provider { "" }
+} else {
+    providers.exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.map(String::trim)
+}
 
-version = baseVersion.zip(currentCommitTags.zip(shortCommitId) { tags, shortCommit ->
-    tags to shortCommit
-}) { configuredVersion, (tags, shortCommit) ->
-    if (tags.any { it != "nightly" } || shortCommit.isBlank()) {
-        configuredVersion
-    } else {
-        "$configuredVersion-$shortCommit"
-    }
-}.get()
+version = if (isReleaseBuild) {
+    baseVersion.get()
+} else {
+    baseVersion.zip(shortCommitId) { configuredVersion, shortCommit ->
+        if (shortCommit.isBlank()) configuredVersion else "$configuredVersion-$shortCommit"
+    }.get()
+}
 
 val modId = project.property("mod_id").toString()
 val minecraftVersion = project.property("minecraft_version").toString()
@@ -47,6 +43,12 @@ base {
 
 tasks.withType<Jar>().configureEach {
     archiveVersion.set(project.version.toString())
+}
+
+tasks.register("buildRelease") {
+    group = "build"
+    description = "Assembles and tests this project without appending Git information to built artifacts."
+    dependsOn(tasks.named("build"))
 }
 
 java {
