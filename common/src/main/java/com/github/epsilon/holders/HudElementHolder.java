@@ -9,7 +9,6 @@ import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.impl.hud.*;
 import com.github.epsilon.modules.impl.hud.notification.NotificationsHUD;
 import com.github.epsilon.utils.client.ClientUtils;
-import net.minecraft.client.DeltaTracker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +39,7 @@ public class HudElementHolder {
     private void addElement(HudModule module) {
         elements.add(module);
         module.setAddonId("epsilon");
-        module.initI18n(EpsilonTranslateComponent.create("modules", module.getName().toLowerCase()));
+        module.initI18n(EpsilonTranslateComponent.create("elements", module.getName().toLowerCase()));
     }
 
     public List<HudModule> getElements() {

@@ -14,13 +14,12 @@ public class HudEditorScreen extends Screen {
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();
 
     private HudEditorScreen() {
-        super(Component.literal("HUDEditor"));
+        super(Component.literal("HudEditor"));
     }
 
     @Override
     protected void init() {
         Managers.NOTIFICATION.clearAll();
-        super.init();
     }
 
     @Override
