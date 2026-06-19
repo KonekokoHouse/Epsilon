@@ -116,17 +116,22 @@ public class DropdownScreen extends Screen {
         renderer.flush();
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
+        boolean popupHovered = popupHost.getActivePopup() != null && popupHost.getActivePopup().getBounds().contains(mouseX, mouseY);
+        int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
+        int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
         // 找出鼠标位置处最上层的可见 panel，被遮挡的 panel 不应响应悬浮
         DropdownPanel topmostHovered = null;
-        for (int i = panels.size() - 1; i >= 0; i--) {
-            DropdownPanel p = panels.get(i);
-            if (!p.isVisible()) continue;
-            float ph = p.getPanelHeight();
-            if (mouseX >= p.getX() && mouseX <= p.getX() + p.getWidth()
-                    && mouseY >= p.getY() && mouseY <= p.getY() + ph) {
-                topmostHovered = p;
-                break;
+        if (!popupHovered) {
+            for (int i = panels.size() - 1; i >= 0; i--) {
+                DropdownPanel p = panels.get(i);
+                if (!p.isVisible()) continue;
+                float ph = p.getPanelHeight();
+                if (mouseX >= p.getX() && mouseX <= p.getX() + p.getWidth()
+                        && mouseY >= p.getY() && mouseY <= p.getY() + ph) {
+                    topmostHovered = p;
+                    break;
+                }
             }
         }
 
@@ -158,8 +163,8 @@ public class DropdownScreen extends Screen {
             if (actualClipH > 0.5f) {
                 renderer.beginPass();
                 renderer.setScissor(panel.getX(), clipY, panel.getWidth(), actualClipH, LuminRenderSystem.getScaledHeightInt());
-                int hoverMouseX = panel == topmostHovered ? mouseX : -1;
-                int hoverMouseY = panel == topmostHovered ? mouseY : -1;
+                int hoverMouseX = panel == topmostHovered ? backgroundMouseX : -1;
+                int hoverMouseY = panel == topmostHovered ? backgroundMouseY : -1;
                 panel.drawContent(renderer, hoverMouseX, hoverMouseY);
                 renderer.flush();
                 renderer.clearScissor();
@@ -168,7 +173,7 @@ public class DropdownScreen extends Screen {
             panel.setPosition(panel.getX(), origY);
         }
 
-        drawSearch(mouseX, mouseY);
+        drawSearch(backgroundMouseX, backgroundMouseY);
         renderer.endFrame();
         popupHost.render(graphics, mouseX, mouseY, partialTick);
         popupHost.flush();
