@@ -31,8 +31,7 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
         boolean hovered = isFieldHovered(mouseX, mouseY);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f,
-                DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         float fieldX = getFieldX();
         float fieldY = getFieldY();
@@ -41,11 +40,15 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
         Color background = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, hover * 0.6f);
         Color outline = MD3Theme.lerp(MD3Theme.withAlpha(MD3Theme.OUTLINE, 90), MD3Theme.PRIMARY, hover);
         String label = setting.size() + " blocks";
+        float labelScale = 0.50f;
+        float iconScale = 0.54f;
+        float labelY = centeredTextY(renderer, fieldY, FIELD_HEIGHT, labelScale);
+        float iconY = centeredTextY(renderer, fieldY, FIELD_HEIGHT, iconScale);
 
         renderer.roundRect().addRoundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, background);
         renderer.outline().addOutline(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, 0.7f, outline);
-        renderer.text().addText(label, fieldX + 6.0f, fieldY + 2.0f, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER);
-        renderer.text().addText("+", fieldX + fieldW - 12.0f, fieldY + 2.0f, 0.54f, MD3Theme.ON_SECONDARY_CONTAINER);
+        renderer.text().addText(label, fieldX + 6.0f, labelY, labelScale, MD3Theme.ON_SECONDARY_CONTAINER);
+        renderer.text().addText("+", fieldX + fieldW - 12.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER);
     }
 
     @Override
@@ -72,6 +75,10 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
 
     private float getFieldWidth() {
         return width - DropdownTheme.SETTING_PADDING_X * 2.0f;
+    }
+
+    private float centeredTextY(DropdownRenderer renderer, float boxY, float boxHeight, float scale) {
+        return boxY + (boxHeight - renderer.text().getLineHeight(scale)) * 0.5f;
     }
 
 }

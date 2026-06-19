@@ -4,12 +4,7 @@ import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.world.BlockRegistryUtils;
 import net.minecraft.world.level.block.Block;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class BlockListSetting extends Setting<List<Block>> {
 

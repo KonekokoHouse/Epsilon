@@ -4,7 +4,6 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.managers.Managers;

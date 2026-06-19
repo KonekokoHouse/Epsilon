@@ -5,11 +5,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class BlockRegistryUtils {
 
