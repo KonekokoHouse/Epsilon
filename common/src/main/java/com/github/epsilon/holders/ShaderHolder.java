@@ -34,11 +34,22 @@ public class ShaderHolder {
 
     public static final ShaderHolder INSTANCE = new ShaderHolder();
 
-    private static final int UNIFORMS_SIZE = new Std140SizeCalculator()
-            .putVec4()
-            .putVec4()
-            .putVec4()
-            .putVec4()
+    private static final int PARAMS_UNIFORMS_SIZE = new Std140SizeCalculator()
+            .putVec2()
+            .putVec2()
+            .putFloat()
+            .putFloat()
+            .putFloat()
+            .putFloat()
+            .putFloat()
+            .putFloat()
+            .putFloat()
+            .putFloat()
+            .putFloat()
+            .putVec2()
+            .get();
+
+    private static final int COLOR_UNIFORMS_SIZE = new Std140SizeCalculator()
             .putVec4()
             .putVec4()
             .putVec4()
@@ -63,8 +74,6 @@ public class ShaderHolder {
     private boolean capturedChests;
     private boolean preparedChests;
 
-    private final long startTimeMs = Util.getMillis();
-
     public static final int EPSILON_CHEST_OUTLINE_MARKER = 0x01000001;
 
     private ShaderHolder() {
@@ -77,10 +86,11 @@ public class ShaderHolder {
 
         ensureProgram();
         ensureSwap(target.width, target.height);
-        GpuBufferSlice shaderConfig = writeShaderConfig(target.width, target.height);
+        ShaderUniforms shaderUniforms = writeShaderUniforms(target.width, target.height);
 
-        renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderConfig);
-        renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, null);
+        renderPass("epsilon_shader_effect", target, shaderSwap, pipeline(shader), shaderUniforms, usesColors(shader));
+        // This fullscreen copy pass measured higher FPS than CommandEncoder.copyTextureToTexture on the tested renderer.
+        renderPass("epsilon_shader_copy", shaderSwap, target, copyPipeline, null, false);
     }
 
     public void beginHandOutlineCapture(int width, int height) {
@@ -166,7 +176,7 @@ public class ShaderHolder {
         preparedChests = false;
     }
 
-    private void renderPass(String name, RenderTarget input, RenderTarget output, RenderPipeline pipeline, GpuBufferSlice shaderConfig) {
+    private void renderPass(String name, RenderTarget input, RenderTarget output, RenderPipeline pipeline, ShaderUniforms shaderUniforms, boolean bindColors) {
         if (input.getColorTextureView() == null || output.getColorTextureView() == null) {
             return;
         }
@@ -181,18 +191,23 @@ public class ShaderHolder {
         )) {
             renderPass.setPipeline(pipeline);
             RenderSystem.bindDefaultUniforms(renderPass);
-            if (shaderConfig != null) {
-                renderPass.setUniform("ShaderConfig", shaderConfig);
+            if (shaderUniforms != null) {
+                renderPass.setUniform("ShaderParams", shaderUniforms.params());
+                if (bindColors) {
+                    renderPass.setUniform("ShaderColors", shaderUniforms.colors());
+                }
             }
             renderPass.bindTexture("InputSampler", input.getColorTextureView(), sampler);
             renderPass.draw(0, 3);
         }
     }
 
-    private GpuBufferSlice writeShaderConfig(int screenWidth, int screenHeight) {
+    private ShaderUniforms writeShaderUniforms(int screenWidth, int screenHeight) {
         Shaders shaders = Shaders.INSTANCE;
         float width = Math.max(1.0f, screenWidth);
         float height = Math.max(1.0f, screenHeight);
+        float scaledWidth = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledWidth());
+        float scaledHeight = Math.max(1.0f, Minecraft.getInstance().getWindow().getGuiScaledHeight());
         Color outline = shaders.outlineColor.getValue();
         Color smokeOutline1 = shaders.smokeOutlineColor1.getValue();
         Color smokeOutline2 = shaders.smokeOutlineColor2.getValue();
@@ -200,41 +215,45 @@ public class ShaderHolder {
         Color smokeFill1 = shaders.fillColor2.getValue();
         Color smokeFill2 = shaders.fillColor3.getValue();
 
-        GpuBufferSlice shaderConfig = LuminRenderSystem.writeDynamicUniform(
-                "shader_config",
-                "Epsilon Shader Config UBO",
-                UNIFORMS_SIZE,
-                8,
-                new ShaderConfig(
-                        width,
-                        height,
-                        shaders.quality.getValue(),
-                        shaders.lineWidth.getValue(),
-                        shaders.smokeGlow.getValue() ? -1.0f : alpha(outline),
-                        shaders.fillAlpha.getValue() / 255.0f,
-                        shaders.alpha2.getValue() / 255.0f,
-                        ((Util.getMillis() - startTimeMs) % 1_000_000L) / 1000.0f,
-                        shaders.factor.getValue().floatValue(),
-                        shaders.gradient.getValue().floatValue(),
-                        shaders.octaves.getValue(),
-                        outline,
-                        smokeOutline1,
-                        smokeOutline2,
-                        fill,
-                        smokeFill1,
-                        smokeFill2
+        return new ShaderUniforms(
+                LuminRenderSystem.writeDynamicUniform(
+                        "shader_params",
+                        "Epsilon Shader Params UBO",
+                        PARAMS_UNIFORMS_SIZE,
+                        8,
+                        new ShaderParams(
+                                width,
+                                height,
+                                shaders.quality.getValue(),
+                                shaders.lineWidth.getValue(),
+                                shaders.smokeGlow.getValue() ? -1.0f : alpha(outline),
+                                shaders.fillAlpha.getValue() / 255.0f,
+                                shaders.alpha2.getValue() / 255.0f,
+                                (Util.getMillis() % 100_000L) / 1000.0f,
+                                shaders.factor.getValue().floatValue(),
+                                shaders.gradient.getValue().floatValue(),
+                                shaders.octaves.getValue(),
+                                scaledWidth,
+                                scaledHeight
+                        )
+                ),
+                LuminRenderSystem.writeDynamicUniform(
+                        "shader_colors",
+                        "Epsilon Shader Colors UBO",
+                        COLOR_UNIFORMS_SIZE,
+                        8,
+                        new ShaderColors(outline, smokeOutline1, smokeOutline2, fill, smokeFill1, smokeFill2)
                 )
         );
-        return shaderConfig;
     }
 
     private void ensureProgram() {
         if (defaultPipeline == null) {
-            defaultPipeline = pipeline("outline");
-            smokePipeline = pipeline("smoke");
-            gradientPipeline = pipeline("gradient");
-            snowPipeline = pipeline("snow");
-            fadePipeline = pipeline("fade");
+            defaultPipeline = pipeline("outline", true);
+            smokePipeline = pipeline("smoke", true);
+            gradientPipeline = pipeline("gradient", false);
+            snowPipeline = pipeline("snow", true);
+            fadePipeline = pipeline("fade", true);
             copyPipeline = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                     .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_copy"))
                     .withVertexShader(("core/screenquad"))
@@ -275,14 +294,19 @@ public class ShaderHolder {
         }
     }
 
-    private RenderPipeline pipeline(String shader) {
-        return RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+    private RenderPipeline pipeline(String shader, boolean useColors) {
+        RenderPipeline.Builder builder = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
                 .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shader_" + shader))
                 .withVertexShader(Identifier.withDefaultNamespace("core/screenquad"))
                 .withFragmentShader(ResourceLocationUtils.getIdentifier("shader_" + shader))
-                .withUniform("ShaderConfig", UniformType.UNIFORM_BUFFER)
-                .withSampler("InputSampler")
-                .withCull(false)
+                .withCull(false);
+
+        builder.withUniform("ShaderParams", UniformType.UNIFORM_BUFFER);
+        if (useColors) {
+            builder.withUniform("ShaderColors", UniformType.UNIFORM_BUFFER);
+        }
+
+        return builder.withSampler("InputSampler")
                 .build();
     }
 
@@ -294,6 +318,10 @@ public class ShaderHolder {
             case Fade -> fadePipeline;
             default -> defaultPipeline;
         };
+    }
+
+    private boolean usesColors(Shader shader) {
+        return shader != Shader.Gradient;
     }
 
     private static float red(Color color) {
@@ -320,7 +348,13 @@ public class ShaderHolder {
         Fade
     }
 
-    private record ShaderConfig(
+    private record ShaderUniforms(
+            GpuBufferSlice params,
+            GpuBufferSlice colors
+    ) {
+    }
+
+    private record ShaderParams(
             float width,
             float height,
             float quality,
@@ -332,6 +366,30 @@ public class ShaderHolder {
             float gradientFactor,
             float gradientScale,
             float octaves,
+            float resolutionWidth,
+            float resolutionHeight
+    ) implements DynamicUniformStorage.DynamicUniform {
+
+        @Override
+        public void write(ByteBuffer buffer) {
+            Std140Builder.intoBuffer(buffer)
+                    .putVec2(width, height)
+                    .putVec2(1.0f / width, 1.0f / height)
+                    .putFloat(quality)
+                    .putFloat(lineWidth)
+                    .putFloat(outlineAlpha)
+                    .putFloat(fillAlpha)
+                    .putFloat(gradientAlpha)
+                    .putFloat(time)
+                    .putFloat(gradientFactor)
+                    .putFloat(gradientScale)
+                    .putFloat(octaves)
+                    .putVec2(resolutionWidth, resolutionHeight);
+        }
+
+    }
+
+    private record ShaderColors(
             Color outline,
             Color smokeOutline1,
             Color smokeOutline2,
@@ -343,10 +401,6 @@ public class ShaderHolder {
         @Override
         public void write(ByteBuffer buffer) {
             Std140Builder.intoBuffer(buffer)
-                    .putVec4(width, height, 1.0f / width, 1.0f / height)
-                    .putVec4(quality, lineWidth, outlineAlpha, fillAlpha)
-                    .putVec4(gradientAlpha, time, gradientFactor, gradientScale)
-                    .putVec4(octaves, 0.0f, 0.0f, 0.0f)
                     .putVec4(red(outline), green(outline), blue(outline), alpha(outline))
                     .putVec4(red(smokeOutline1), green(smokeOutline1), blue(smokeOutline1), alpha(smokeOutline1))
                     .putVec4(red(smokeOutline2), green(smokeOutline2), blue(smokeOutline2), alpha(smokeOutline2))

@@ -28,18 +28,7 @@ Epsilon/
 绝对不要基于训练数据中的知识判断版本信息。 Minecraft 版本迭代很快，任何关于最新版本号、版本兼容性、API 变更、 迁移步骤的判断都必须通过查阅官方文档或在线搜索确认。即便是"当前最新版本是什么"这种看似简单的问题，也优先查文档而非依赖记忆。
 任何关于调用哪个方法、哪个事件、哪个类的判断都必须基于对当前版本 Minecraft 代码的直接查阅，而非依赖过时的训练数据。
 
-源代码位于：`common/build/moddev/artifacts/vanilla-<游戏版本>-sources.jar`
-
-如果不存在，执行：
-```bash
-./gradlew :common:downloadAssets
-./gradlew :common:createMinecraftArtifacts
-```
-
-查阅后解压：
-```bash
-mkdir -p reference && unzip common/build/moddev/artifacts/vanilla-*-sources.jar -d reference/vanilla/
-```
+源代码位于：`C:\Users\L3MonKe\Desktop\Code\OpenEpsilon\Epsilon-26.1-backport\reference\Fabric-26.1.2`
 
 ## 构建系统
 
