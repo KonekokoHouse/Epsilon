@@ -115,13 +115,8 @@ public class RenderManager {
             return;
         }
 
-        Map<Double, List<AABB>> groupedBoxes = new LinkedHashMap<>();
         for (BlurredBoxRequest request : blurredBoxes) {
-            groupedBoxes.computeIfAbsent(request.blurStrength(), _ -> new ArrayList<>()).add(request.box());
-        }
-
-        for (Map.Entry<Double, List<AABB>> entry : groupedBoxes.entrySet()) {
-            BlurShader.INSTANCE.render3DBoxes(entry.getValue(), entry.getKey());
+            BlurShader.INSTANCE.render3DBox(request.box, request.blurStrength);
         }
     }
 
@@ -131,7 +126,7 @@ public class RenderManager {
         }
 
         LuminImmediateRenderer.PosColorQuads builder = LuminImmediateRenderer.beginPosColorQuads(FILLED_BOX_PIPELINE);
-        Matrix4f matrix = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
+        Matrix4f matrix = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
         Vec3 camPos = mc.getEntityRenderDispatcher().camera.position();
 
         for (FilledBoxRequest request : filledBoxes) {

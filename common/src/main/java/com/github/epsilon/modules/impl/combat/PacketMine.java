@@ -3,12 +3,12 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.AttackBlockEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.render.Render3DUtils;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -298,8 +298,10 @@ public class PacketMine extends Module {
                 Color color1 = progress >= 0.95 ? sideEndColor.getValue() : sideStartColor.getValue();
                 Color color2 = progress >= 0.95 ? lineEndColor.getValue() : lineStartColor.getValue();
 
-                Render3DUtils.drawFilledBox(targetPos, color1);
-                Render3DUtils.drawOutlineBox(event.getPoseStack(), targetPos, color2);
+                AABB box = new AABB(targetPos);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
+
                 if (!mc.level.getBlockState(targetPos).isAir() && !mc.level.getBlockState(targetPos).canBeReplaced() && instantTimer.passedMillise(instantDelay.getValue())) {
                     sendStop();
                     instantTimer.reset();
@@ -549,8 +551,9 @@ public class PacketMine extends Module {
                 fadeLineColor.getValue().getBlue(),
                 (int) Math.round(fadeLineColor.getValue().getAlpha() * Math.min(1, progress / fadeTime.getValue()))
         );
-        Render3DUtils.drawFilledBox(pos, color1);
-        Render3DUtils.drawOutlineBox(stack, pos, color2);
+        AABB box = new AABB(pos);
+        Managers.RENDER.addFilledBox(box, color1);
+        Managers.RENDER.addOutlineBox(box, color2);
     }
 
     private void mainBlockRender(PoseStack stack) {
@@ -564,24 +567,25 @@ public class PacketMine extends Module {
 
         switch (renderMode.getValue()) {
             case Box -> {
-                Render3DUtils.drawFilledBox(targetPos, color1);
-                Render3DUtils.drawOutlineBox(stack, targetPos, color2);
+                AABB box = new AABB(targetPos);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
             case Normal -> {
-                AABB box = AABB.ofSize(targetPos.getCenter(), rawProgress, rawProgress, rawProgress);
-                Render3DUtils.drawFilledBox(box, color1);
-                Render3DUtils.drawOutlineBox(stack, box, color2);
+                AABB box = AABB.ofSize(Vec3.atCenterOf(targetPos), rawProgress, rawProgress, rawProgress);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
             case Grow -> {
                 AABB box = new AABB(targetPos).setMaxY(targetPos.getY() + rawProgress);
-                Render3DUtils.drawFilledBox(box, color1);
-                Render3DUtils.drawOutlineBox(stack, box, color2);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
             case Shrink -> {
                 double maxBound = Math.round(rawProgress * 100.0) / 100.0;
                 AABB box = new AABB(targetPos).deflate(1.0 - maxBound);
-                Render3DUtils.drawFilledBox(box, color1);
-                Render3DUtils.drawOutlineBox(stack, box, color2);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
         }
 
@@ -598,24 +602,25 @@ public class PacketMine extends Module {
 
         switch (renderMode.getValue()) {
             case Box -> {
-                Render3DUtils.drawFilledBox(secondPos, color1);
-                Render3DUtils.drawOutlineBox(stack, secondPos, color2);
+                AABB box = new AABB(secondPos);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
             case Normal -> {
-                AABB box = AABB.ofSize(secondPos.getCenter(), rawProgress, rawProgress, rawProgress);
-                Render3DUtils.drawFilledBox(box, color1);
-                Render3DUtils.drawOutlineBox(stack, box, color2);
+                AABB box = AABB.ofSize(Vec3.atCenterOf(secondPos), rawProgress, rawProgress, rawProgress);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
             case Grow -> {
                 AABB box = new AABB(secondPos).setMaxY(secondPos.getY() + rawProgress);
-                Render3DUtils.drawFilledBox(box, color1);
-                Render3DUtils.drawOutlineBox(stack, box, color2);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
             case Shrink -> {
                 double maxBound = Math.round(rawProgress * 100.0) / 100.0;
                 AABB box = new AABB(secondPos).deflate(1.0 - maxBound);
-                Render3DUtils.drawFilledBox(box, color1);
-                Render3DUtils.drawOutlineBox(stack, box, color2);
+                Managers.RENDER.addFilledBox(box, color1);
+                Managers.RENDER.addOutlineBox(box, color2);
             }
         }
     }
