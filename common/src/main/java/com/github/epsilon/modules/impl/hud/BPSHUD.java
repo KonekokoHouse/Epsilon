@@ -4,7 +4,6 @@ import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -26,7 +25,7 @@ public class BPSHUD extends HudModule {
     private static final int GRAPH_SIZE = 72;
 
     private BPSHUD() {
-        super("BPS HUD", Category.HUD, 0f, 0f, 158f, 68f);
+        super("BPS HUD", 0f, 0f, 158f, 68f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

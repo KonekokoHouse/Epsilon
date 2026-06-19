@@ -1,13 +1,14 @@
 package com.github.epsilon;
 
+import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.assets.i18n.I18NFileGenerator;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.holders.ConfigHolder;
+import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 
 import java.lang.invoke.MethodHandles;
 
@@ -20,6 +21,7 @@ public class EpsilonCommon {
 
         // 初始化客户端系统
         ModuleHolder.INSTANCE.initModules();
+        HudElementHolder.INSTANCE.initElements();
         AddonHolder.INSTANCE.setupAddons();
         ConfigHolder.INSTANCE.initConfig();
         EpsilonLanguageManager.INSTANCE.selectLanguage(ClientSetting.INSTANCE.language.getValue());

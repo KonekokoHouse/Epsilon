@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.hud;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -18,7 +17,7 @@ public class WatermarkHUD extends HudModule {
     public static final WatermarkHUD INSTANCE = new WatermarkHUD();
 
     private WatermarkHUD() {
-        super("Watermark HUD", Category.HUD, 0f, 0f, 200f, 28f);
+        super("Watermark HUD", 0f, 0f, 200f, 28f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

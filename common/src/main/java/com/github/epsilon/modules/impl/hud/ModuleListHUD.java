@@ -6,7 +6,6 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -28,7 +27,7 @@ public class ModuleListHUD extends HudModule {
     public static final ModuleListHUD INSTANCE = new ModuleListHUD();
 
     private ModuleListHUD() {
-        super("Module List HUD", Category.HUD, 0f, 0f, 50f, 50f);
+        super("Module List HUD", 0f, 0f, 50f, 50f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

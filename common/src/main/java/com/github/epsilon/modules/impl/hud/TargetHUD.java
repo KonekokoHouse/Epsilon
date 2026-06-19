@@ -5,7 +5,6 @@ import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -29,7 +28,7 @@ public class TargetHUD extends HudModule {
     public static final TargetHUD INSTANCE = new TargetHUD();
 
     private TargetHUD() {
-        super("Target HUD", Category.HUD, 0f, 0f, 180f, 80f);
+        super("Target HUD", 0f, 0f, 180f, 80f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 0.9, 0.5, 2.0, 0.1);

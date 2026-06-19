@@ -6,26 +6,19 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyPressEvent;
 import com.github.epsilon.events.impl.MousePressEvent;
-import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
-import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
-import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.combat.*;
-import com.github.epsilon.modules.impl.hud.*;
-import com.github.epsilon.modules.impl.hud.notification.NotificationsHUD;
 import com.github.epsilon.modules.impl.movement.*;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.modules.impl.player.*;
 import com.github.epsilon.modules.impl.render.*;
-import com.github.epsilon.utils.client.ClientUtils;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.DeltaTracker;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -128,16 +121,6 @@ public class ModuleHolder {
         addModule(Particles.INSTANCE);
         addModule(Shaders.INSTANCE);
         addModule(Xray.INSTANCE);
-
-        // Hud
-        addModule(NotificationsHUD.INSTANCE);
-        addModule(BPSHUD.INSTANCE);
-        addModule(InventoryHUD.INSTANCE);
-        addModule(ModuleListHUD.INSTANCE);
-        addModule(PotionHUD.INSTANCE);
-        addModule(ScaffoldBlockHUD.INSTANCE);
-        addModule(TargetHUD.INSTANCE);
-        addModule(WatermarkHUD.INSTANCE);
     }
 
     private void addModule(Module module) {
@@ -157,6 +140,7 @@ public class ModuleHolder {
     }
 
     @EventHandler
+<<<<<<< HEAD
     private void onRender2D(Render2DEvent.HUD event) {
         if (ClientUtils.isLoading() || mc.level == null || mc.gui.screen() instanceof HudEditorScreen) return;
 
@@ -170,6 +154,8 @@ public class ModuleHolder {
     }
 
     @EventHandler
+=======
+>>>>>>> d12f049 (重写 HudEditor (#274))
     private void onKeyPress(KeyPressEvent event) {
         if (mc.level == null || mc.gui.screen() != null || event.getKey() == GLFW.GLFW_KEY_UNKNOWN) return;
 

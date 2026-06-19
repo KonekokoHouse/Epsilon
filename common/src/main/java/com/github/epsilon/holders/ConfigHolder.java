@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -62,7 +63,7 @@ public class ConfigHolder {
     public void initConfig() {
         try {
             ensureRootDirectories();
-            migrateLegacyLayoutsIfNeeded(ModuleHolder.INSTANCE.getModules());
+            migrateLegacyLayoutsIfNeeded(getConfigurableModules());
             activeConfigName = resolveStoredActiveConfigName();
             ensureConfigExists(activeConfigName);
             loadActiveConfigSnapshot();
@@ -609,6 +610,13 @@ public class ConfigHolder {
         return configsDir.resolve(configName);
     }
 
+    private List<Module> getConfigurableModules() {
+        List<Module> modules = new ArrayList<>();
+        modules.addAll(ModuleHolder.INSTANCE.getModules());
+        modules.addAll(HudElementHolder.INSTANCE.getElements());
+        return modules;
+    }
+
     private void resetModulesToDefaults(List<Module> modules) {
         if (modules == null) {
             return;
@@ -657,7 +665,7 @@ public class ConfigHolder {
         ensureRootDirectories();
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
-        List<Module> modules = ModuleHolder.INSTANCE.getModules();
+        List<Module> modules = getConfigurableModules();
         List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         resetModulesToDefaults(modules);
         resetAddonsToDefaults(addons);
@@ -671,12 +679,10 @@ public class ConfigHolder {
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
         Path configStorageDir = getActiveConfigStorageDir();
-        List<Module> modules = ModuleHolder.INSTANCE.getModules();
-        if (modules != null) {
-            for (Module module : modules) {
-                if (module != null) {
-                    saveModuleToDisk(module, configStorageDir);
-                }
+        List<Module> modules = getConfigurableModules();
+        for (Module module : modules) {
+            if (module != null) {
+                saveModuleToDisk(module, configStorageDir);
             }
         }
         saveAddonsToDisk(AddonHolder.INSTANCE.getAddons(), configStorageDir);

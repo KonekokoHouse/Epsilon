@@ -244,6 +244,14 @@ public class PanelUiTree {
             addNode(layer, new RectNode(x, y, width, height, color));
         }
 
+        public void rectOutline(float x, float y, float width, float height, float outlineWidth, Color color) {
+            nodes.add(new RectOutlineNode(x, y, width, height, outlineWidth, color));
+        }
+
+        public void rectOutline(int layer, float x, float y, float width, float height, float outlineWidth, Color color) {
+            addNode(layer, new RectOutlineNode(x, y, width, height, outlineWidth, color));
+        }
+
         public void rectGradient(float x, float y, float width, float height,
                                  Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
             nodes.add(new RectGradientNode(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight));
@@ -565,7 +573,7 @@ public class PanelUiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到具体 renderer 或视口缓冲。
      */
-    sealed interface UiNode permits GroupNode, LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, OutlineNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    sealed interface UiNode permits GroupNode, LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -637,6 +645,10 @@ public class PanelUiTree {
 
     record RectGradientNode(float x, float y, float width, float height,
                             Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) implements UiNode {
+    }
+
+    record RectOutlineNode(float x, float y, float width, float height, float outlineWidth,
+                           Color color) implements UiNode {
     }
 
     record OutlineNode(float x, float y, float width, float height,

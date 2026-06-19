@@ -1,5 +1,6 @@
 package com.github.epsilon.assets.i18n;
 
+import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -100,33 +101,16 @@ public class I18NFileGenerator {
         root.addProperty(PREFIX + "gui.inspector.select", "");
 
         for (Module module : ModuleHolder.INSTANCE.getModules()) {
-            if (module.translateComponent == null) continue;
-            String moduleKey = module.translateComponent.getFullKey();
-            root.addProperty(moduleKey, "");
+            addModuleKeys(root, module);
+        }
 
-            for (SettingGroup group : module.getSettingGroups()) {
-                TranslateComponent groupComp = group.getTranslateComponent();
-                if (groupComp == null) continue;
-                root.addProperty(groupComp.getFullKey(), "");
-            }
-
-            for (Setting<?> setting : module.getSettings()) {
-                TranslateComponent settingComp = setting.getTranslateComponent();
-                if (settingComp == null) continue;
-                String settingKey = settingComp.getFullKey();
-                root.addProperty(settingKey, "");
-
-                if (setting instanceof EnumSetting<?> enumSetting) {
-                    for (final var mode : enumSetting.getModes()) {
-                        root.addProperty(settingKey + "." + mode.toString().toLowerCase(), "");
-                    }
-                }
-            }
+        for (Module module : HudElementHolder.INSTANCE.getElements()) {
+            addModuleKeys(root, module);
         }
 
         // NotificationManager 手动创建的 enabled/disabled 键
-        root.addProperty(PREFIX + "modules.notifications hud.enabled", "");
-        root.addProperty(PREFIX + "modules.notifications hud.disabled", "");
+        root.addProperty(PREFIX + "elements.notifications hud.enabled", "");
+        root.addProperty(PREFIX + "elements.notifications hud.disabled", "");
 
         final var file = new File(filePath);
         if (!file.exists()) {
@@ -142,6 +126,31 @@ public class I18NFileGenerator {
             System.out.println("I18N file generated successfully at: " + filePath);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void addModuleKeys(JsonObject root, Module module) {
+        if (module.translateComponent == null) return;
+        String moduleKey = module.translateComponent.getFullKey();
+        root.addProperty(moduleKey, "");
+
+        for (SettingGroup group : module.getSettingGroups()) {
+            TranslateComponent groupComp = group.getTranslateComponent();
+            if (groupComp == null) continue;
+            root.addProperty(groupComp.getFullKey(), "");
+        }
+
+        for (Setting<?> setting : module.getSettings()) {
+            TranslateComponent settingComp = setting.getTranslateComponent();
+            if (settingComp == null) continue;
+            String settingKey = settingComp.getFullKey();
+            root.addProperty(settingKey, "");
+
+            if (setting instanceof EnumSetting<?> enumSetting) {
+                for (final var mode : enumSetting.getModes()) {
+                    root.addProperty(settingKey + "." + mode.toString().toLowerCase(), "");
+                }
+            }
         }
     }
 
