@@ -1,10 +1,15 @@
 package com.github.epsilon.managers;
 
+import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.managers.impl.*;
 import com.github.epsilon.managers.impl.network.ClientboundPacketManager;
 import com.github.epsilon.managers.impl.network.ServerboundPacketManager;
 import com.github.epsilon.managers.impl.sound.SoundManager;
 import com.github.epsilon.managers.impl.target.TargetManager;
+import com.github.epsilon.managers.rotations.RotationManager;
+import com.github.epsilon.managers.rotations.SilentRotationManager;
+import com.github.epsilon.managers.rotations.SnapRotationManager;
+import com.github.epsilon.modules.impl.ClientSetting;
 
 public class Managers {
 
@@ -19,7 +24,7 @@ public class Managers {
     public static RenderManager RENDER;
 
     public static void initManagers() {
-        ROTATION = new RotationManager();
+        switchRotationManager(ClientSetting.INSTANCE.rotationMode.getValue());
         TARGET = new TargetManager();
         HEALTH = new HealthManager();
         RENDER = new RenderManager();
@@ -28,6 +33,22 @@ public class Managers {
         FRIEND = new FriendManager();
         SOUND = new SoundManager();
         NOTIFICATION = new NotificationManager();
+    }
+
+    public static void switchRotationManager(RotationManager.RotationMode mode) {
+        RotationManager previous = ROTATION;
+        RotationManager next = switch (mode) {
+            case SNAP -> new SnapRotationManager();
+            case SILENT -> new SilentRotationManager();
+        };
+
+        if (previous != null) {
+            next.copyStateFrom(previous);
+            EventBus.INSTANCE.unsubscribe(previous);
+        }
+
+        ROTATION = next;
+        EventBus.INSTANCE.subscribe(next);
     }
 
 }
