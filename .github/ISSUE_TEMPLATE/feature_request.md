@@ -8,5 +8,5 @@ type: Feature
 
 ---
 
-** Introduce your feature request **
+**Introduce your feature request**
 XXX
