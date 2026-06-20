@@ -76,7 +76,6 @@ public class HudEditorScreen extends Screen {
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
-        drawCanvasChrome(graphics);
     }
 
     private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -128,6 +127,8 @@ public class HudEditorScreen extends Screen {
         }
         renderer.flush();
 
+        drawCanvasChrome();
+
         drawPanel(mouseX, mouseY);
 
         renderer.endFrame();
@@ -175,25 +176,30 @@ public class HudEditorScreen extends Screen {
         }
     }
 
-    private void drawCanvasChrome(GuiGraphicsExtractor graphics) {
-        graphics.nextStratum();
-
-        float scaleY = graphics.guiHeight() / LuminRenderSystem.getScaledHeight();
-
+    private void drawCanvasChrome() {
         String title = "HUD Editor";
         String subtitle = selectedElement == null ? "Select and drag an element" : selectedElement.getTranslatedName();
-        int titleW = font.width(title);
-        int subW = font.width(subtitle);
-        int boxW = Math.max(titleW, subW) + 18;
-        int boxH = 28;
-        int labelX = (graphics.guiWidth() - boxW) / 2;
-        int labelY = Math.round(DropdownTheme.PANEL_MARGIN_Y * scaleY + 2.0f);
+        float titleScale = 0.64f;
+        float subtitleScale = 0.56f;
+        float titleW = renderer.text().getWidth(title, titleScale);
+        float subW = renderer.text().getWidth(subtitle, subtitleScale);
+        float titleH = renderer.text().getLineHeight(titleScale);
+        float subtitleH = renderer.text().getLineHeight(subtitleScale);
+        float boxW = Math.max(titleW, subW) + 24.0f;
+        float boxH = 32.0f;
+        float radius = 8.0f;
+        float middlePadding = 3.0f;
+        float labelX = (LuminRenderSystem.getScaledWidth() - boxW) * 0.5f;
+        float labelY = DropdownTheme.PANEL_MARGIN_Y + 2.0f;
+        float titleY = labelY + (boxH - titleH - middlePadding - subtitleH) * 0.5f;
+        float subtitleY = titleY + titleH + middlePadding;
 
-        graphics.fill(labelX + 1, labelY + 1, labelX + boxW + 1, labelY + boxH + 1, MD3Theme.withAlpha(MD3Theme.SHADOW, 38).getRGB());
-        graphics.fill(labelX, labelY, labelX + boxW, labelY + boxH, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238).getRGB());
-        graphics.outline(labelX, labelY, boxW, boxH, MD3Theme.withAlpha(MD3Theme.OUTLINE, 72).getRGB());
-        graphics.text(font, title, labelX + 9, labelY + 5, MD3Theme.TEXT_PRIMARY.getRGB(), false);
-        graphics.text(font, subtitle, labelX + 9, labelY + 15, MD3Theme.TEXT_MUTED.getRGB(), false);
+        renderer.beginPass();
+        renderer.shadow().addShadow(labelX, labelY, boxW, boxH, radius, 8.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, 38));
+        renderer.roundRect().addRoundRect(labelX, labelY, boxW, boxH, radius, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238));
+        renderer.text().addText(title, labelX + 12.0f, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
+        renderer.text().addText(subtitle, labelX + 12.0f, subtitleY, subtitleScale, MD3Theme.TEXT_MUTED);
+        renderer.flush();
     }
 
     private void drawSnapGuides(float screenW, float screenH) {
