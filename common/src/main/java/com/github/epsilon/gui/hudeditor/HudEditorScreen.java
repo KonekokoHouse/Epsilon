@@ -81,19 +81,55 @@ public class HudEditorScreen extends Screen {
 
     private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         ensureHudPanel();
-        updateHudLayouts();
+
+        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+            element.updateLayout();
+        }
+
         validateSelection();
 
         renderer.beginFrame();
-        drawCanvasBackground();
+
+        float screenW = LuminRenderSystem.getScaledWidth();
+        float screenH = LuminRenderSystem.getScaledHeight();
+
+        renderer.beginPass();
+        renderer.rect().addRect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
+        renderer.flush();
+
+        float centerX = screenW / 2.0f;
+        float centerY = screenH / 2.0f;
+        Color centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52);
+
+        renderer.beginPass();
+        renderer.rect().addRect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
+        renderer.rect().addRect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
+        drawSnapGuides(screenW, screenH);
+        renderer.flush();
+
         renderer.endFrame();
 
-        renderHudElements(graphics);
+        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+            if (!element.isEnabled()) continue;
+            element.render(graphics, minecraft.getDeltaTracker());
+        }
 
         renderer.beginFrame();
-        drawElementChrome(mouseX, mouseY);
+
+        renderer.beginPass();
+        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
+        HudModule hovered = findElementAt(mouseX, mouseY, true);
+        for (HudModule element : elements) {
+            if (!element.isEnabled()) continue;
+            boolean selected = element == selectedElement;
+            boolean hover = element == hovered;
+            if (!selected && !hover) continue;
+            drawElementFrame(element, selected, hover);
+        }
+        renderer.flush();
+
         drawPanel(mouseX, mouseY);
-        drawCanvasGuides();
+
         renderer.endFrame();
     }
 
@@ -139,15 +175,6 @@ public class HudEditorScreen extends Screen {
         }
     }
 
-    private void drawCanvasBackground() {
-        float screenW = LuminRenderSystem.getScaledWidth();
-        float screenH = LuminRenderSystem.getScaledHeight();
-
-        renderer.beginPass();
-        renderer.rect().addRect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
-        renderer.flush();
-    }
-
     private void drawCanvasChrome(GuiGraphicsExtractor graphics) {
         graphics.nextStratum();
 
@@ -169,48 +196,18 @@ public class HudEditorScreen extends Screen {
         graphics.text(font, subtitle, labelX + 9, labelY + 15, MD3Theme.TEXT_MUTED.getRGB(), false);
     }
 
-    private void drawCanvasGuides() {
-        float screenW = LuminRenderSystem.getScaledWidth();
-        float screenH = LuminRenderSystem.getScaledHeight();
-        float centerX = screenW / 2.0f;
-        float centerY = screenH / 2.0f;
-        Color centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52);
-
-        renderer.beginPass();
-        renderer.rect().addRect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
-        renderer.rect().addRect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
-        drawSnapGuides(screenW, screenH);
-        renderer.flush();
-    }
-
     private void drawSnapGuides(float screenW, float screenH) {
-        if (!currentSnap.hasAny()) {
-            return;
+        if (currentSnap.hasAny()) {
+            Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
+            if (!Float.isNaN(currentSnap.verticalLineX())) {
+                float x = currentSnap.verticalLineX();
+                renderer.rect().addRect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
+            }
+            if (!Float.isNaN(currentSnap.horizontalLineY())) {
+                float y = currentSnap.horizontalLineY();
+                renderer.rect().addRect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
+            }
         }
-
-        Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
-        if (!Float.isNaN(currentSnap.verticalLineX())) {
-            float x = currentSnap.verticalLineX();
-            renderer.rect().addRect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
-        }
-        if (!Float.isNaN(currentSnap.horizontalLineY())) {
-            float y = currentSnap.horizontalLineY();
-            renderer.rect().addRect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
-        }
-    }
-
-    private void drawElementChrome(int mouseX, int mouseY) {
-        renderer.beginPass();
-        List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
-        HudModule hovered = findElementAt(mouseX, mouseY, true);
-        for (HudModule element : elements) {
-            if (!element.isEnabled()) continue;
-            boolean selected = element == selectedElement;
-            boolean hover = element == hovered;
-            if (!selected && !hover) continue;
-            drawElementFrame(element, selected, hover);
-        }
-        renderer.flush();
     }
 
     private void drawElementFrame(HudModule element, boolean selected, boolean hover) {
@@ -239,23 +236,12 @@ public class HudEditorScreen extends Screen {
     private void drawElementLabel(HudModule element, float frameX, float frameY) {
         String label = element.getTranslatedName();
         float scale = 0.48f;
-        float labelW = renderer.text().getWidth(label, scale) + 10.0f;
+        float textW = renderer.text().getWidth(label, scale);
+        float labelW = textW + 10.0f;
         float labelY = frameY - LABEL_HEIGHT - 3.0f;
+        float textY = labelY + (LABEL_HEIGHT - renderer.text().getLineHeight(scale)) * 0.5f;
         renderer.roundRect().addRoundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
-        renderer.text().addText(label, frameX + 5.0f, labelY + 2.0f, scale, MD3Theme.ON_PRIMARY_CONTAINER);
-    }
-
-    private void renderHudElements(GuiGraphicsExtractor graphics) {
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
-            if (!element.isEnabled()) continue;
-            element.render(graphics, minecraft.getDeltaTracker());
-        }
-    }
-
-    private void updateHudLayouts() {
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
-            element.updateLayout();
-        }
+        renderer.text().addText(label, frameX + (labelW - textW) / 2.0f, textY, scale, MD3Theme.ON_PRIMARY_CONTAINER);
     }
 
     @Override
@@ -557,6 +543,7 @@ public class HudEditorScreen extends Screen {
         private float resolvedY() {
             return Float.isNaN(y) ? 0.0f : y;
         }
+
     }
 
 }
