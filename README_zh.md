@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/NekoyaHouse/Epsilon/actions"><img alt="构建" src="https://img.shields.io/badge/build-gradle-4c1?style=flat-square"></a>
-  <a href="LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square"></a>
+  <a href="LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-GPLv3-blue?style=flat-square"></a>
   <img alt="加载器" src="https://img.shields.io/badge/loaders-NeoForge%20%26%20Fabric-6a5acd?style=flat-square">
   <a href="https://discord.gg/vYbaae3X7e"><img alt="Discord" src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=flat-square&logo=discord&logoColor=white"></a>
 </p>
@@ -49,11 +49,7 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 
 ## 📝 许可证
 
-本项目采用多许可证模式分发：
-
-- **项目核心**: 遵循 [Apache License 2.0](LICENSE) 许可证
-- **渲染系统**: 核心渲染组件（位于 `src/main/java/com/github/epsilon/graphics/`）
-  遵循 [MIT License](src/main/java/com/github/epsilon/graphics/LICENSE) 许可证
+本项目，包括 Lumin Graphics，统一遵循 [GNU General Public License v3.0](LICENSE) 许可证。
 
 ---
 

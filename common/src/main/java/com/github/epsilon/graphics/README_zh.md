@@ -99,7 +99,7 @@ rectRenderer.get().draw(); // 内容会一直保存在 GPU 缓冲区中，直到
 
 ## 开源协议
 
-* **Lumin Graphics**：核心渲染组件（位于 `src/main/java/com/github/epsilon/graphics/`）采用 [MIT License](LICENSE) 协议。
+* **Lumin Graphics** 采用 [GNU General Public License v3.0](LICENSE) 协议。
 
 ---
 

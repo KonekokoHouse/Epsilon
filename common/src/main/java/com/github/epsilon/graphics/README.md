@@ -108,9 +108,7 @@ efficient. It simply re-triggers the draw command for existing GPU data without 
 
 ## License
 
-* **Lumin Graphics**: The core rendering components (located in `src/main/java/com/github/epsilon/graphics/`) are
-  licensed
-  under the [MIT License](https://www.google.com/search?q=LICENSE).
+* **Lumin Graphics** is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ---
 
