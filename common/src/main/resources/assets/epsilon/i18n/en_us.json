@@ -345,6 +345,7 @@
   "epsilon.modules.feet trap.rotate.silent": "Silent",
   "epsilon.modules.feet trap.rotation speed": "Rotation Speed",
   "epsilon.modules.feet trap.side check": "Side Check",
+  "epsilon.modules.feet trap.auto sneak": "Auto Sneak",
   "epsilon.modules.feet trap.switch": "Switch",
   "epsilon.modules.feet trap.switch.silent": "Silent",
   "epsilon.modules.feet trap.switch.visible": "Visible",

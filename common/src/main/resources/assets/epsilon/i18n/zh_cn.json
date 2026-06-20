@@ -330,6 +330,7 @@
   "epsilon.modules.feet trap.rotate.silent": "静默",
   "epsilon.modules.feet trap.rotation speed": "转头速度",
   "epsilon.modules.feet trap.side check": "面检查",
+  "epsilon.modules.feet trap.auto sneak": "自动潜行",
   "epsilon.modules.feet trap.switch": "切换",
   "epsilon.modules.feet trap.switch.visible": "可见",
   "epsilon.modules.feet trap.switch.silent": "静默",
