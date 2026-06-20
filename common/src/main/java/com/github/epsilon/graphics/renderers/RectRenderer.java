@@ -40,14 +40,12 @@ public class RectRenderer implements IRenderer {
         addRectGradient(x, y, width, height, color, color, color, color);
     }
 
-    public void addOutline(float x, float y, float width, float height, float outlineWidth, Color color) {
-        float stroke = Math.min(outlineWidth, Math.min(width, height) * 0.5f);
-        float sideHeight = Math.max(0.0f, height - stroke * 2.0f);
-
-        addRect(x, y, width, stroke, color);
-        addRect(x, y + height - stroke, width, stroke, color);
-        addRect(x, y + stroke, stroke, sideHeight, color);
-        addRect(x + width - stroke, y + stroke, stroke, sideHeight, color);
+    public void addOutline(float x, float y, float width, float height, float outline, Color color) {
+        float sideHeight = height - outline * 2.0f;
+        addRect(x, y, width, outline, color);
+        addRect(x, y + height - outline, width, outline, color);
+        addRect(x, y + outline, outline, sideHeight, color);
+        addRect(x + width - outline, y + outline, outline, sideHeight, color);
     }
 
     public void addVerticalGradient(float x, float y, float width, float height, Color top, Color bottom) {
