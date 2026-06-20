@@ -10,6 +10,8 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
@@ -101,6 +103,13 @@ public class ClientSetting extends Module {
     public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
 
     // Anti Cheat
+    public final EnumSetting<RotationManager.RotationMode> rotationMode =
+            enumSetting("Rotation Mode", RotationManager.RotationMode.SILENT, mode -> {
+                if (Managers.ROTATION != null) {
+                    Managers.switchRotationManager(mode);
+                }
+            }).group(sgAntiCheat);
+
     public final BoolSetting modifyCrosshair = boolSetting("Modify Crosshair", true).group(sgAntiCheat);
 
     public final EnumSetting<HideMode> hideMode = enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat);
@@ -140,6 +149,14 @@ public class ClientSetting extends Module {
 
     public double getScale() {
         return renderScale.getValue();
+    }
+
+    public boolean snapRotation() {
+        return rotationMode.is(RotationManager.RotationMode.SNAP);
+    }
+
+    public boolean silentRotation() {
+        return rotationMode.is(RotationManager.RotationMode.SILENT);
     }
 
 }
