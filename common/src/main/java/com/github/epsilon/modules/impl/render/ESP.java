@@ -1,8 +1,12 @@
 package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.events.bus.EventHandler;
+<<<<<<< HEAD
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.PacketEvent;
+=======
+import com.github.epsilon.events.impl.PlayerTickEvent;
+>>>>>>> affe5de (优化 ESP 性能 (#295))
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
@@ -11,6 +15,7 @@ import com.github.epsilon.settings.impl.BlockListSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+<<<<<<< HEAD
 import com.github.epsilon.settings.impl.IntSetting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -36,6 +41,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+=======
+import com.github.epsilon.utils.timer.TimerUtils;
+import com.google.common.collect.Lists;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.phys.AABB;
+
+import java.awt.*;
+import java.util.ArrayList;
+>>>>>>> affe5de (优化 ESP 性能 (#295))
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,7 +63,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+<<<<<<< HEAD
 import java.util.concurrent.ConcurrentLinkedQueue;
+=======
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+>>>>>>> affe5de (优化 ESP 性能 (#295))
 
 public class ESP extends Module {
 
@@ -55,6 +81,7 @@ public class ESP extends Module {
         super("ESP", Category.RENDER);
     }
 
+<<<<<<< HEAD
     private final Supplier<List<Block>> defaultBlockList = Suppliers.memoize(() -> {
         final var list = new ArrayList<>(List.of(
                 Blocks.CHEST,
@@ -74,6 +101,45 @@ public class ESP extends Module {
     private final IntSetting scanBudget = intSetting("Scan Budget", 4, 1, 16, 1, blocks::getValue);
     private final IntSetting eagerChunkRadius = intSetting("Eager Radius", 1, 0, 2, 1, blocks::getValue);
     private final ColorSetting color = colorSetting("Color", new Color(160, 210, 255, 30));
+=======
+    private final BoolSetting blocksValue = boolSetting("Blocks", true);
+    private final BlockListSetting blockListValue = blockListSetting("Block List",
+            List.of(
+                    Blocks.CHEST,
+                    Blocks.TRAPPED_CHEST,
+                    Blocks.COPPER_CHEST,
+                    Blocks.EXPOSED_COPPER_CHEST,
+                    Blocks.WEATHERED_COPPER_CHEST,
+                    Blocks.OXIDIZED_COPPER_CHEST,
+                    Blocks.WAXED_COPPER_CHEST,
+                    Blocks.WAXED_EXPOSED_COPPER_CHEST,
+                    Blocks.WAXED_WEATHERED_COPPER_CHEST,
+                    Blocks.WAXED_OXIDIZED_COPPER_CHEST,
+                    Blocks.ENDER_CHEST,
+                    Blocks.BARREL,
+                    Blocks.SHULKER_BOX,
+                    Blocks.WHITE_SHULKER_BOX,
+                    Blocks.ORANGE_SHULKER_BOX,
+                    Blocks.MAGENTA_SHULKER_BOX,
+                    Blocks.LIGHT_BLUE_SHULKER_BOX,
+                    Blocks.YELLOW_SHULKER_BOX,
+                    Blocks.LIME_SHULKER_BOX,
+                    Blocks.PINK_SHULKER_BOX,
+                    Blocks.GRAY_SHULKER_BOX,
+                    Blocks.LIGHT_GRAY_SHULKER_BOX,
+                    Blocks.CYAN_SHULKER_BOX,
+                    Blocks.PURPLE_SHULKER_BOX,
+                    Blocks.BLUE_SHULKER_BOX,
+                    Blocks.BROWN_SHULKER_BOX,
+                    Blocks.GREEN_SHULKER_BOX,
+                    Blocks.RED_SHULKER_BOX,
+                    Blocks.BLACK_SHULKER_BOX
+            ), blocksValue::getValue);
+    private final BoolSetting illegals = boolSetting("Illegals", true);
+    private final DoubleSetting range = doubleSetting("Range", 64.0, 1.0, 128.0, 1.0);
+    private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
+    private final ColorSetting lineColor = colorSetting("Line Color", new Color(160, 210, 255, 180));
+>>>>>>> affe5de (优化 ESP 性能 (#295))
     private final BoolSetting blur = boolSetting("Blur", true);
     private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 0.0, 16.0, 0.5, blur::getValue);
     private List<Block> cachedBlockListValue = Collections.emptyList();
@@ -185,8 +251,32 @@ public class ESP extends Module {
         }
     }
 
+    private final ExecutorService searchThread = Executors.newSingleThreadExecutor();
+    private final TimerUtils searchTimer = new TimerUtils();
+    private boolean canContinue;
+
+    public static List<AABB> boxes = new ArrayList<>();
+
+    @Override
+    protected void onEnable() {
+        boxes.clear();
+        canContinue = true;
+    }
+
+    @EventHandler
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (searchTimer.every(1000) && canContinue) {
+            CompletableFuture.supplyAsync(this::scan, searchThread).thenAcceptAsync(newAABBList -> {
+                boxes = newAABBList;
+                canContinue = true;
+            }, Util.backgroundExecutor());
+            canContinue = false;
+        }
+    }
+
     @EventHandler
     private void onRender3D(Render3DEvent event) {
+<<<<<<< HEAD
         if (!blocks.getValue() || nullCheck()) {
             return;
         }
@@ -209,10 +299,18 @@ public class ESP extends Module {
                     continue;
                 }
                 renderBlock(entry, renderedBlocks, playerPos, maxRangeSqr, drawBlur, blurAmount);
+=======
+        if (!boxes.isEmpty()) {
+            for (AABB aabb : Lists.newArrayList(boxes)) {
+                if (blur.getValue()) Managers.RENDER.addBlurredBox(aabb, blurStrength.getValue());
+                Managers.RENDER.addFilledBox(aabb, sideColor.getValue());
+                Managers.RENDER.addOutlineBox(aabb, lineColor.getValue());
+>>>>>>> affe5de (优化 ESP 性能 (#295))
             }
         }
     }
 
+<<<<<<< HEAD
     private void refreshBlockCaches() {
         List<Block> selectedBlocks = blockList.getValue();
         if (selectedBlocks == null) {
@@ -221,8 +319,60 @@ public class ESP extends Module {
 
         if (Objects.equals(selectedBlocks, cachedBlockListValue)) {
             return;
-        }
+=======
+    private List<AABB> scan() {
+        List<AABB> boxes = new ArrayList<>();
+        Set<BlockPos> processed = new HashSet<>();
 
+        int startX = Mth.floor(mc.player.getX() - range.getValue());
+        int endX = Mth.ceil(mc.player.getX() + range.getValue());
+        int startY = mc.level.getMinY() + 1;
+        int endY = mc.level.getMaxY();
+        int startZ = Mth.floor(mc.player.getZ() - range.getValue());
+        int endZ = Mth.ceil(mc.player.getZ() + range.getValue());
+
+        for (int x = startX; x <= endX; x++) {
+            for (int y = startY; y <= endY; y++) {
+                for (int z = startZ; z <= endZ; z++) {
+                    BlockPos blockPos = new BlockPos(x, y, z);
+                    if (!processed.contains(blockPos)) {
+                        BlockState blockState = mc.level.getBlockState(blockPos);
+                        if (shouldAdd(blockState.getBlock(), blockPos)) {
+                            boxes.add(getConnectedShapeAABB(blockPos, blockState, processed));
+                        }
+                    }
+                }
+            }
+>>>>>>> affe5de (优化 ESP 性能 (#295))
+        }
+        return boxes;
+    }
+
+    private boolean shouldAdd(Block block, BlockPos pos) {
+        if (block instanceof AirBlock) return false;
+        if (blockListValue.getValue().contains(block)) return true;
+        if (illegals.getValue()) return isIllegal(block, pos);
+        return false;
+    }
+
+    private boolean isIllegal(Block block, BlockPos pos) {
+        if (block instanceof CommandBlock || block instanceof BarrierBlock) return true;
+
+        if (block == Blocks.BEDROCK) {
+            if (!Level.NETHER.equals(mc.level.dimension())) {
+                return pos.getY() > 4;
+            } else {
+                return pos.getY() > 127 || (pos.getY() < 123 && pos.getY() > 4);
+            }
+        }
+        return false;
+    }
+
+    private AABB getConnectedShapeAABB(BlockPos blockPos, BlockState state, Set<BlockPos> processed) {
+        processed.add(blockPos);
+        AABB box = getShapeAABB(blockPos, state);
+
+<<<<<<< HEAD
         cachedBlockListValue = List.copyOf(selectedBlocks);
         clearChunkCache();
         if (selectedBlocks.isEmpty()) {
@@ -538,6 +688,34 @@ public class ESP extends Module {
             esp.removeChunk(chunkX, chunkZ);
         }
 
+=======
+        if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+            BlockPos connectedPos = ChestBlock.getConnectedBlockPos(blockPos, state);
+            BlockState connectedState = mc.level.getBlockState(connectedPos);
+            if (isConnectedChestPart(blockPos, state, connectedState, connectedPos)) {
+                processed.add(connectedPos);
+                box = box.minmax(getShapeAABB(connectedPos, connectedState));
+            }
+        }
+
+        return box;
+    }
+
+    private boolean isConnectedChestPart(BlockPos blockPos, BlockState state, BlockState connectedState, BlockPos connectedPos) {
+        if (!(state.getBlock() instanceof ChestBlock chestBlock)) return false;
+        if (!chestBlock.chestCanConnectTo(connectedState)) return false;
+        if (!connectedState.hasProperty(ChestBlock.TYPE) || !connectedState.hasProperty(ChestBlock.FACING))
+            return false;
+        if (connectedState.getValue(ChestBlock.TYPE) == ChestType.SINGLE) return false;
+        if (connectedState.getValue(ChestBlock.FACING) != state.getValue(ChestBlock.FACING)) return false;
+        if (!ChestBlock.getConnectedBlockPos(connectedPos, connectedState).equals(blockPos)) return false;
+
+        return shouldAdd(connectedState.getBlock(), connectedPos);
+    }
+
+    private AABB getShapeAABB(BlockPos blockPos, BlockState state) {
+        return state.getShape(mc.level, blockPos).bounds().move(blockPos);
+>>>>>>> affe5de (优化 ESP 性能 (#295))
     }
 
 }
