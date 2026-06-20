@@ -293,6 +293,7 @@
   "epsilon.modules.client setting.mainmenu background.black_hole": "Black Hole",
   "epsilon.modules.client setting.mainmenu background.minecraft": "Minecraft",
   "epsilon.modules.client setting.mainmenu background.planet": "Planet",
+  "epsilon.modules.client setting.mainmenu background.sea_level": "Sea Level",
   "epsilon.modules.client setting.notification": "Notification",
   "epsilon.modules.client setting.open hud editor": "Open HUD Editor",
   "epsilon.modules.client setting.sound notify": "Sound Notify",

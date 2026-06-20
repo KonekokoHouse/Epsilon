@@ -120,6 +120,7 @@
   "epsilon.modules.client setting.mainmenu background.black_hole": "黑洞",
   "epsilon.modules.client setting.mainmenu background.minecraft": "Minecraft",
   "epsilon.modules.client setting.mainmenu background.planet": "行星",
+  "epsilon.modules.client setting.mainmenu background.sea_level": "海平面",
   "epsilon.modules.anti bot": "反人机",
   "epsilon.modules.anti alias": "抗锯齿",
   "epsilon.modules.aspect ratio": "画面比例",

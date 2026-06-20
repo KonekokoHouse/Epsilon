@@ -86,9 +86,10 @@ public class MainMenuScreen extends Screen {
         LuminRenderSystem.setActiveTarget(backgroundRenderTarget);
 
         final var background = switch (ClientSetting.INSTANCE.mainMenuBackground.getValue()) {
+            case SEA_LEVEL -> GlslSandBox.SEA_LEVEL;
+            case PLANET -> GlslSandBox.PLANET;
             case BLACK_HOLE -> GlslSandBox.BLACK_HOLE;
             case MINECRAFT -> GlslSandBox.MINECRAFT;
-            case PLANET -> GlslSandBox.PLANET;
         };
 
         GlslSandBox.INSTANCE.render(background, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
@@ -328,9 +329,10 @@ public class MainMenuScreen extends Screen {
     }
 
     public enum Background {
+        SEA_LEVEL,
+        PLANET,
         BLACK_HOLE,
-        MINECRAFT,
-        PLANET
+        MINECRAFT
     }
 
 }
