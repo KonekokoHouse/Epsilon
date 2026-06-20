@@ -14,6 +14,7 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.player.InteractionUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.rotation.Priority;
@@ -33,6 +34,7 @@ import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -108,6 +110,9 @@ public class FeetTrap extends Module {
     private final BoolSetting toggleOnYChange = boolSetting("Toggle On Y Change", true);
     private final BoolSetting toggleWhenDone = boolSetting("Toggle When Done", false);
     private final BoolSetting autoSneak = boolSetting("Auto Sneak", true);
+    private final BoolSetting airPlace = boolSetting("Air Place", false);
+    private final BoolSetting airPlacePacket = boolSetting("Air Place Packet", true, airPlace::getValue);
+    private final BoolSetting airPlaceGrimBypass = boolSetting("Air Place Grim Bypass", false, airPlace::getValue);
 
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
     private final BoolSetting render = boolSetting("Render", true);
@@ -291,8 +296,7 @@ public class FeetTrap extends Module {
     private PlaceResult placeBlock(BlockPos blockPos, FindItemResult item) {
         BlockHitResult hitResult = PlayerUtils.getPlaceResult(blockPos, helperMode.getValue(), true);
         if (hitResult == null) {
-            pendingPos = null;
-            return PlaceResult.Skipped;
+            return airPlace(blockPos, item);
         }
         if (mc.level.isEmptyBlock(hitResult.getBlockPos())) {
             pendingPos = null;
@@ -374,8 +378,79 @@ public class FeetTrap extends Module {
         return result.consumesAction() ? PlaceResult.Placed : PlaceResult.Skipped;
     }
 
+    private PlaceResult airPlace(BlockPos blockPos, FindItemResult item) {
+        if (!airPlace.getValue()) {
+            pendingPos = null;
+            return PlaceResult.Skipped;
+        }
+
+        if (rotate.is(RotateMode.Silent)) {
+            if (!blockPos.equals(pendingPos)) {
+                pendingPos = blockPos;
+                setAirPlaceRotation(blockPos);
+                return PlaceResult.Waiting;
+            }
+        }
+
+        int oldSlot = mc.player.getInventory().getSelectedSlot();
+        Input oldInput = mc.player.input.keyPresses;
+
+        if (switchMode.is(SwitchMode.Visible)) {
+            if (oldSlot != item.slot()) {
+                InvUtils.swap(item.slot(), true);
+            }
+        } else {
+            InvUtils.invSwap(item.slot());
+        }
+
+        if (autoSneak.getValue()) {
+            setShiftState(true);
+        }
+
+        InteractionResult result = InteractionUtils.airPlace(
+                blockPos,
+                rotate.is(RotateMode.Silent),
+                InteractionHand.MAIN_HAND,
+                airPlacePacket.getValue(),
+                airPlaceGrimBypass.getValue()
+        );
+
+        if (result.consumesAction()) {
+            InteractionHand swing = airPlaceGrimBypass.getValue() ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+            if (swingHand.getValue()) {
+                mc.player.swing(swing);
+            } else {
+                mc.getConnection().send(new ServerboundSwingPacket(swing));
+            }
+
+            if (render.getValue()) {
+                renderBoxes.add(new RenderInfo(new AABB(blockPos), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+            }
+        }
+
+        if (autoSneak.getValue()) {
+            setShiftState(oldInput);
+        }
+
+        if (switchMode.is(SwitchMode.Visible)) {
+            if (oldSlot != item.slot()) {
+                InvUtils.swapBack();
+            }
+        } else {
+            InvUtils.invSwapBack();
+        }
+
+        return result.consumesAction() ? PlaceResult.Placed : PlaceResult.Skipped;
+    }
+
     private void setRotation(BlockHitResult hitResult) {
         Rot2f rotation = RotationUtils.calculate(hitResult.getLocation());
+        Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
+    }
+
+    private void setAirPlaceRotation(BlockPos pos) {
+        Direction side = RotationUtils.getDirection(pos);
+        Rot2f rotation = RotationUtils.calculate(Vec3.atCenterOf(pos).relative(side, 0.5));
         Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
     }
 
