@@ -19,8 +19,8 @@ public class NotificationManager {
     private final Queue<Notification> notifications = new ArrayDeque<>();
     private final Map<Integer, Notification> hashCodeMap = new HashMap<>();
 
-    private final TranslateComponent enableComponent = EpsilonTranslateComponent.create("modules.notifications hud", "enabled");
-    private final TranslateComponent disableComponent = EpsilonTranslateComponent.create("modules.notifications hud", "disabled");
+    private final TranslateComponent enableComponent = EpsilonTranslateComponent.create("elements.notifications hud", "enabled");
+    private final TranslateComponent disableComponent = EpsilonTranslateComponent.create("elements.notifications hud", "disabled");
 
     public void success(String title, String subTitle) {
         notify(title, subTitle, NotificationMode.Success, ChatFormatting.GREEN);
@@ -148,11 +148,9 @@ public class NotificationManager {
     }
 
     private Component createNotificationMessage(String title, String subTitle, ChatFormatting chatColor) {
-        return Component.translatable(
-                "epsilon.notification.chat_notify",
-                Component.literal(title),
-                Component.literal(subTitle).withStyle(chatColor)
-        );
+        return Component.literal(title)
+                .append(" ")
+                .append(Component.literal(subTitle).withStyle(chatColor));
     }
 
     private void sendChatMessage(Component message) {
