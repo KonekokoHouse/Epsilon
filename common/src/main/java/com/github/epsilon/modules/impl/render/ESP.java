@@ -10,6 +10,7 @@ import com.github.epsilon.settings.impl.BlockListSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -59,7 +60,7 @@ public class ESP extends Module {
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(160, 210, 255, 180));
     private final BoolSetting blur = boolSetting("Blur", true);
-    private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 0.0, 16.0, 0.5, blur::getValue);
+    private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 8.0, 0.0, 16.0, 0.5, blur::getValue);
 
     private final ExecutorService searchThread = Executors.newSingleThreadExecutor();
     private final TimerUtils searchTimer = new TimerUtils();
@@ -86,12 +87,17 @@ public class ESP extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (!boxes.isEmpty()) {
-            for (AABB aabb : Lists.newArrayList(boxes)) {
-                if (blur.getValue()) Managers.RENDER.addBlurredBox(aabb, blurStrength.getValue());
-                Managers.RENDER.addFilledBox(aabb, sideColor.getValue());
-                Managers.RENDER.addOutlineBox(aabb, lineColor.getValue());
-            }
+        if (boxes.isEmpty()) return;
+
+        if (mc.getFps() < 8 && mc.player.tickCount > 100) {
+            ChatUtils.addChatMessage("就你这 FPS 你还开 ESP 呢? 该换电脑了!");
+            return;
+        }
+
+        for (AABB aabb : Lists.newArrayList(boxes)) {
+            if (blur.getValue()) Managers.RENDER.addBlurredBox(aabb, blurStrength.getValue());
+            Managers.RENDER.addFilledBox(aabb, sideColor.getValue());
+            Managers.RENDER.addOutlineBox(aabb, lineColor.getValue());
         }
     }
 
