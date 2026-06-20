@@ -27,7 +27,7 @@ public class GlslSandBox implements AutoCloseable {
 
     public static final GlslSandBox INSTANCE = new GlslSandBox();
 
-    public static final Identifier SEA_LEVEL = ResourceLocationUtils.getIdentifier("menu/main_menu");
+    public static final Identifier SEA_LEVEL = ResourceLocationUtils.getIdentifier("menu/sea_level");
     public static final Identifier PLANET = ResourceLocationUtils.getIdentifier("menu/planet");
     public static final Identifier BLACK_HOLE = ResourceLocationUtils.getIdentifier("menu/black_hole");
     public static final Identifier MINECRAFT = ResourceLocationUtils.getIdentifier("menu/minecraft");

@@ -86,10 +86,10 @@ public class MainMenuScreen extends Screen {
         LuminRenderSystem.setActiveTarget(backgroundRenderTarget);
 
         final var background = switch (ClientSetting.INSTANCE.mainMenuBackground.getValue()) {
-            case BLACK_HOLE -> GlslSandBox.BLACK_HOLE;
             case SEA_LEVEL -> GlslSandBox.SEA_LEVEL;
-            case MINECRAFT -> GlslSandBox.MINECRAFT;
             case PLANET -> GlslSandBox.PLANET;
+            case BLACK_HOLE -> GlslSandBox.BLACK_HOLE;
+            case MINECRAFT -> GlslSandBox.MINECRAFT;
         };
 
         GlslSandBox.INSTANCE.render(background, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
