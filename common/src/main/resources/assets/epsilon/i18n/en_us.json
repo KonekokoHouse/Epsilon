@@ -291,6 +291,7 @@
   "epsilon.modules.client setting.i18n fallback": "I18n Fallback",
   "epsilon.modules.client setting.mainmenu background": "Main Menu Background",
   "epsilon.modules.client setting.mainmenu background.black_hole": "Black Hole",
+  "epsilon.modules.client setting.mainmenu background.main_menu": "Main Menu",
   "epsilon.modules.client setting.mainmenu background.minecraft": "Minecraft",
   "epsilon.modules.client setting.mainmenu background.planet": "Planet",
   "epsilon.modules.client setting.notification": "Notification",

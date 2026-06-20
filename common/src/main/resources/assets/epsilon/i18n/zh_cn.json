@@ -118,6 +118,7 @@
   "epsilon.modules.client setting.use mainmenu": "自定义主菜单",
   "epsilon.modules.client setting.mainmenu background": "主菜单背景",
   "epsilon.modules.client setting.mainmenu background.black_hole": "黑洞",
+  "epsilon.modules.client setting.mainmenu background.main_menu": "主菜单",
   "epsilon.modules.client setting.mainmenu background.minecraft": "Minecraft",
   "epsilon.modules.client setting.mainmenu background.planet": "行星",
   "epsilon.modules.anti bot": "反人机",
