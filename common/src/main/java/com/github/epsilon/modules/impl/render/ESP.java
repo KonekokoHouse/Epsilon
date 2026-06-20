@@ -15,10 +15,12 @@ import com.google.common.collect.Lists;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -71,7 +73,7 @@ public class ESP extends Module {
     private final TimerUtils searchTimer = new TimerUtils();
     private boolean canContinue;
 
-    public static List<BlockVec> blocks = new ArrayList<>();
+    public static List<BlockPos> blocks = new ArrayList<>();
 
     @Override
     protected void onEnable() {
@@ -80,7 +82,7 @@ public class ESP extends Module {
     }
 
     @EventHandler
-    private void onPlayerTick(PlayerTickEvent event) {
+    private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (searchTimer.every(1000) && canContinue) {
             CompletableFuture.supplyAsync(this::scan, searchThread).thenAcceptAsync(this::sync, Util.backgroundExecutor());
             canContinue = false;
@@ -91,13 +93,13 @@ public class ESP extends Module {
     private void onRender3D(Render3DEvent event) {
         if (blocks.isEmpty()) return;
 
-        for (BlockVec vec : Lists.newArrayList(blocks)) {
-            if (vec.getDistance(mc.player.position()) > range.getValue()) {
-                blocks.remove(vec);
+        for (BlockPos blockPos : Lists.newArrayList(blocks)) {
+            if (blockPos.distToCenterSqr(mc.player.position()) > range.getValue() * range.getValue()) {
+                blocks.remove(blockPos);
                 continue;
             }
 
-            AABB b = new AABB(vec.x, vec.y, vec.z, vec.x + 1, vec.y + 1, vec.z + 1);
+            AABB b = getShapeAABB(blockPos);
 
             if (blur.getValue()) Managers.RENDER.addBlurredBox(b, blurStrength.getValue());
             Managers.RENDER.addFilledBox(b, sideColor.getValue());
@@ -105,8 +107,8 @@ public class ESP extends Module {
         }
     }
 
-    private List<BlockVec> scan() {
-        List<BlockVec> blocks = new ArrayList<>();
+    private List<BlockPos> scan() {
+        List<BlockPos> blocks = new ArrayList<>();
         int startX = Mth.floor(mc.player.getX() - range.getValue());
         int endX = Mth.ceil(mc.player.getX() + range.getValue());
         int startY = mc.level.getMinY() + 1;
@@ -117,10 +119,10 @@ public class ESP extends Module {
         for (int x = startX; x <= endX; x++) {
             for (int y = startY; y <= endY; y++) {
                 for (int z = startZ; z <= endZ; z++) {
-                    BlockPos pos = new BlockPos(x, y, z);
-                    BlockState bs = mc.level.getBlockState(pos);
-                    if (shouldAdd(bs.getBlock(), pos)) {
-                        blocks.add(new BlockVec(pos.getX(), pos.getY(), pos.getZ()));
+                    BlockPos blockPos = new BlockPos(x, y, z);
+                    BlockState bs = mc.level.getBlockState(blockPos);
+                    if (shouldAdd(bs.getBlock(), blockPos)) {
+                        blocks.add(blockPos);
                     }
                 }
             }
@@ -128,8 +130,8 @@ public class ESP extends Module {
         return blocks;
     }
 
-    private void sync(List<BlockVec> b) {
-        blocks = b;
+    private void sync(List<BlockPos> newList) {
+        blocks = newList;
         canContinue = true;
     }
 
@@ -144,7 +146,7 @@ public class ESP extends Module {
         if (block instanceof CommandBlock || block instanceof BarrierBlock) return true;
 
         if (block == Blocks.BEDROCK) {
-            if (false/*!mc.level.getEntityInAnyDimension()*/) {
+            if (!Level.NETHER.equals(mc.level.dimension())) {
                 return pos.getY() > 4;
             } else {
                 return pos.getY() > 127 || (pos.getY() < 123 && pos.getY() > 4);
@@ -153,19 +155,9 @@ public class ESP extends Module {
         return false;
     }
 
-    public record BlockVec(double x, double y, double z) {
-
-        public double getDistance(Vec3 v) {
-            double dx = x - v.x;
-            double dy = y - v.y;
-            double dz = z - v.z;
-            return dx * dx + dy * dy + dz * dz;
-        }
-
-        public Vec3 getVector() {
-            return new Vec3(x + 0.5f, y + 0.5f, z + 0.5f);
-        }
-
+    private AABB getShapeAABB(BlockPos blockPos) {
+        VoxelShape shape = mc.level.getBlockState(blockPos).getShape(mc.level, blockPos);
+        return shape.isEmpty() ? new AABB(blockPos) : shape.bounds().move(blockPos);
     }
 
 }

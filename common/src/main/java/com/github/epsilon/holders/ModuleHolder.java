@@ -17,6 +17,7 @@ import com.github.epsilon.modules.impl.movement.*;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.modules.impl.player.*;
 import com.github.epsilon.modules.impl.render.*;
+import com.github.epsilon.modules.impl.render.ESP;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
