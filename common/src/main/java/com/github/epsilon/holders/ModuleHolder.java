@@ -71,6 +71,7 @@ public class ModuleHolder {
         addModule(SilentAim.INSTANCE);
         addModule(SpearKill.INSTANCE);
         addModule(TriggerBot.INSTANCE);
+        addModule(AutoCity.INSTANCE);
 
         // Player
         addModule(AutoFirework.INSTANCE);
