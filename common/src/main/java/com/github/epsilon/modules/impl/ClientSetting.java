@@ -82,8 +82,6 @@ public class ClientSetting extends Module {
 
     public final EnumSetting<EpsilonLanguage> language = enumSetting("Language", EpsilonLanguage.English, EpsilonLanguageManager.INSTANCE::selectLanguage).group(sgGeneral);
 
-    public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).rootSetting();
-
     public final StringSetting customLanguage = stringSetting("Custom Language", "", () -> language.is(EpsilonLanguage.Custom), _ -> EpsilonLanguageManager.INSTANCE.refreshCustomLanguage()).group(sgGeneral);
 
     private final DoubleSetting renderScale = doubleSetting("Render Scale", 2.0, 1.0, 6.0, 0.5).group(sgGeneral);
@@ -124,6 +122,8 @@ public class ClientSetting extends Module {
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
+
+    public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).group(sgAppearance).rootSetting();
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
