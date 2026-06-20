@@ -81,23 +81,23 @@ public class PlayerUtils {
         return false;
     }
 
-    public static BlockHitResult getPlaceResult(BlockPos bp, HelperMode interact, boolean ignoreEntities) {
+    public static BlockHitResult getPlaceResult(BlockPos pos, HelperMode interact, boolean ignoreEntities) {
         if (!ignoreEntities) {
-            for (Entity entity : mc.level.getEntitiesOfClass(Entity.class, new AABB(bp))) {
+            for (Entity entity : mc.level.getEntitiesOfClass(Entity.class, new AABB(pos))) {
                 if (!(entity instanceof ItemEntity) && !(entity instanceof ExperienceOrb)) {
                     return null;
                 }
             }
         }
 
-        if (!mc.level.getBlockState(bp).canBeReplaced()) {
+        if (!mc.level.getBlockState(pos).canBeReplaced()) {
             return null;
         }
 
-        List<BlockPosWithFacing> supports = getSupportBlocks(bp);
+        List<BlockPosWithFacing> supports = getSupportBlocks(pos);
         for (BlockPosWithFacing support : supports) {
             if (interact != HelperMode.NCP) {
-                List<Direction> dirs = getStrictDirections(bp);
+                List<Direction> dirs = getStrictDirections(pos);
                 if (dirs.isEmpty()) {
                     return null;
                 }
@@ -125,31 +125,18 @@ public class PlayerUtils {
         return null;
     }
 
-    private static List<BlockPosWithFacing> getSupportBlocks(BlockPos bp) {
+    /**
+     * 获取可以支持该方块被放置的放置点方块
+     * @param pos 被放置方块的位置
+     * @return 支持方块
+     */
+    private static List<BlockPosWithFacing> getSupportBlocks(BlockPos pos) {
         List<BlockPosWithFacing> list = new ArrayList<>();
 
-        if (isValidBlock(bp.below())) {
-            list.add(new BlockPosWithFacing(bp.below(), Direction.UP));
-        }
-
-        if (isValidBlock(bp.above())) {
-            list.add(new BlockPosWithFacing(bp.above(), Direction.DOWN));
-        }
-
-        if (isValidBlock(bp.west())) {
-            list.add(new BlockPosWithFacing(bp.west(), Direction.EAST));
-        }
-
-        if (isValidBlock(bp.east())) {
-            list.add(new BlockPosWithFacing(bp.east(), Direction.WEST));
-        }
-
-        if (isValidBlock(bp.south())) {
-            list.add(new BlockPosWithFacing(bp.south(), Direction.NORTH));
-        }
-
-        if (isValidBlock(bp.north())) {
-            list.add(new BlockPosWithFacing(bp.north(), Direction.SOUTH));
+        for (Direction direction : Direction.values()) {
+            if (isValidBlock(pos.relative(direction))) {
+                list.add(new BlockPosWithFacing(pos.relative(direction), direction.getOpposite()));
+            }
         }
 
         return list;
@@ -212,6 +199,11 @@ public class PlayerUtils {
         return visibleSides;
     }
 
+    /**
+     * 判断该方块是否为空气、流体或者可替换方块
+     * @param bp 方块位置
+     * @return 是否有效
+     */
     public static boolean isValidBlock(BlockPos bp) {
         BlockState state = mc.level.getBlockState(bp);
         return !state.isAir() && !state.canBeReplaced() && state.getFluidState().isEmpty();
