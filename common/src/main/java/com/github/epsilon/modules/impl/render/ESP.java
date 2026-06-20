@@ -18,12 +18,14 @@ import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,6 +43,14 @@ public class ESP extends Module {
             List.of(
                     Blocks.CHEST,
                     Blocks.TRAPPED_CHEST,
+                    Blocks.COPPER_CHEST,
+                    Blocks.EXPOSED_COPPER_CHEST,
+                    Blocks.WEATHERED_COPPER_CHEST,
+                    Blocks.OXIDIZED_COPPER_CHEST,
+                    Blocks.WAXED_COPPER_CHEST,
+                    Blocks.WAXED_EXPOSED_COPPER_CHEST,
+                    Blocks.WAXED_WEATHERED_COPPER_CHEST,
+                    Blocks.WAXED_OXIDIZED_COPPER_CHEST,
                     Blocks.ENDER_CHEST,
                     Blocks.BARREL,
                     Blocks.SHULKER_BOX,
@@ -104,6 +114,8 @@ public class ESP extends Module {
 
     private List<AABB> scan() {
         List<AABB> boxes = new ArrayList<>();
+        Set<BlockPos> processed = new HashSet<>();
+
         int startX = Mth.floor(mc.player.getX() - range.getValue());
         int endX = Mth.ceil(mc.player.getX() + range.getValue());
         int startY = mc.level.getMinY() + 1;
@@ -115,9 +127,11 @@ public class ESP extends Module {
             for (int y = startY; y <= endY; y++) {
                 for (int z = startZ; z <= endZ; z++) {
                     BlockPos blockPos = new BlockPos(x, y, z);
-                    BlockState bs = mc.level.getBlockState(blockPos);
-                    if (shouldAdd(bs.getBlock(), blockPos)) {
-                        boxes.add(getShapeAABB(blockPos));
+                    if (!processed.contains(blockPos)) {
+                        BlockState blockState = mc.level.getBlockState(blockPos);
+                        if (shouldAdd(blockState.getBlock(), blockPos)) {
+                            boxes.add(getConnectedShapeAABB(blockPos, blockState, processed));
+                        }
                     }
                 }
             }
@@ -145,9 +159,36 @@ public class ESP extends Module {
         return false;
     }
 
-    private AABB getShapeAABB(BlockPos blockPos) {
-        VoxelShape shape = mc.level.getBlockState(blockPos).getShape(mc.level, blockPos);
-        return shape.isEmpty() ? new AABB(blockPos) : shape.bounds().move(blockPos);
+    private AABB getConnectedShapeAABB(BlockPos blockPos, BlockState state, Set<BlockPos> processed) {
+        processed.add(blockPos);
+        AABB box = getShapeAABB(blockPos, state);
+
+        if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+            BlockPos connectedPos = ChestBlock.getConnectedBlockPos(blockPos, state);
+            BlockState connectedState = mc.level.getBlockState(connectedPos);
+            if (isConnectedChestPart(blockPos, state, connectedState, connectedPos)) {
+                processed.add(connectedPos);
+                box = box.minmax(getShapeAABB(connectedPos, connectedState));
+            }
+        }
+
+        return box;
+    }
+
+    private boolean isConnectedChestPart(BlockPos blockPos, BlockState state, BlockState connectedState, BlockPos connectedPos) {
+        if (!(state.getBlock() instanceof ChestBlock chestBlock)) return false;
+        if (!chestBlock.chestCanConnectTo(connectedState)) return false;
+        if (!connectedState.hasProperty(ChestBlock.TYPE) || !connectedState.hasProperty(ChestBlock.FACING))
+            return false;
+        if (connectedState.getValue(ChestBlock.TYPE) == ChestType.SINGLE) return false;
+        if (connectedState.getValue(ChestBlock.FACING) != state.getValue(ChestBlock.FACING)) return false;
+        if (!ChestBlock.getConnectedBlockPos(connectedPos, connectedState).equals(blockPos)) return false;
+
+        return shouldAdd(connectedState.getBlock(), connectedPos);
+    }
+
+    private AABB getShapeAABB(BlockPos blockPos, BlockState state) {
+        return state.getShape(mc.level, blockPos).bounds().move(blockPos);
     }
 
 }
