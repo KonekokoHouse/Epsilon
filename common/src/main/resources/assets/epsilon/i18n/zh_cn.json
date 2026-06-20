@@ -82,6 +82,7 @@
   "epsilon.modules.client setting.language.english": "英语",
   "epsilon.modules.client setting.language.chinese simplified": "简体中文",
   "epsilon.modules.client setting.language.custom": "自定义",
+  "epsilon.modules.client setting.show welcome screen": "启动时显示欢迎页",
   "epsilon.modules.client setting.custom language": "自定义语言",
   "epsilon.modules.client setting.i18n fallback": "无国际化自动生成",
   "epsilon.modules.client setting.font anti aliasing": "字体抗锯齿",
