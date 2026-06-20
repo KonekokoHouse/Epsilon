@@ -17,15 +17,6 @@ import static com.github.epsilon.Constants.mc;
 public class MixinTitleScreen {
 
     @Unique
-<<<<<<< HEAD
-    private static boolean epsilon$freeNoticeShown;
-
-    @Inject(method = "init", at = @At("HEAD"), cancellable = true)
-    private void redirectToMainMenu(CallbackInfo ci) {
-        if (!epsilon$freeNoticeShown) {
-            epsilon$freeNoticeShown = true;
-            Constants.LOGGER.warn("Epsilon 客户端完全免费，请勿向任何人付费购买。官方群：3787275604");
-=======
     private static boolean epsilon$welcomeHandled;
 
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
@@ -34,10 +25,9 @@ public class MixinTitleScreen {
             epsilon$welcomeHandled = true;
             if (ClientSetting.INSTANCE.showWelcomeScreen.getValue()) {
                 ci.cancel();
-                mc.setScreen(WelcomeScreen.INSTANCE);
+                mc.gui.setScreen(WelcomeScreen.INSTANCE);
                 return;
             }
->>>>>>> 2532907 (添加 Welcome Screen (#282))
         }
 
         if (ClientSetting.INSTANCE.useMainMenu.getValue()) {
