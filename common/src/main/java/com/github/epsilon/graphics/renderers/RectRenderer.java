@@ -40,6 +40,14 @@ public class RectRenderer implements IRenderer {
         addRectGradient(x, y, width, height, color, color, color, color);
     }
 
+    public void addOutline(float x, float y, float width, float height, float outline, Color color) {
+        float sideHeight = height - outline * 2.0f;
+        addRect(x, y, width, outline, color);
+        addRect(x, y + height - outline, width, outline, color);
+        addRect(x, y + outline, outline, sideHeight, color);
+        addRect(x + width - outline, y + outline, outline, sideHeight, color);
+    }
+
     public void addVerticalGradient(float x, float y, float width, float height, Color top, Color bottom) {
         addRectGradient(x, y, width, height, top, bottom, bottom, top);
     }

@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -35,6 +36,7 @@ public class ConfigHolder {
     private static final String FRIENDS_FILE_NAME = "friends.json";
     private static final String ADDON_SETTINGS_FILE_NAME = "addon-settings.json";
     private static final String ACTIVE_CONFIG_FILE_NAME = "active-config.txt";
+    private static final String ROOT_SETTINGS_FILE_NAME = "client-settings.json";
     private static final String EXPORT_METADATA_FILE_NAME = "config-info.json";
     private static final Pattern INVALID_CONFIG_NAME_PATTERN = Pattern.compile("[\\\\/:*?\"<>|\\p{Cntrl}]");
 
@@ -43,6 +45,7 @@ public class ConfigHolder {
     private static final Path importsDir = configDir.resolve(IMPORTS_FOLDER);
     private static final Path exportsDir = configDir.resolve(EXPORTS_FOLDER);
     private static final Path activeConfigFile = configDir.resolve(ACTIVE_CONFIG_FILE_NAME);
+    private static final Path rootSettingsFile = configDir.resolve(ROOT_SETTINGS_FILE_NAME);
     private static final Path legacyFriendFile = configDir.resolve(FRIENDS_FILE_NAME);
 
     public static final ConfigHolder INSTANCE = new ConfigHolder();
@@ -62,7 +65,7 @@ public class ConfigHolder {
     public void initConfig() {
         try {
             ensureRootDirectories();
-            migrateLegacyLayoutsIfNeeded(ModuleHolder.INSTANCE.getModules());
+            migrateLegacyLayoutsIfNeeded(getConfigurableModules());
             activeConfigName = resolveStoredActiveConfigName();
             ensureConfigExists(activeConfigName);
             loadActiveConfigSnapshot();
@@ -333,6 +336,9 @@ public class ConfigHolder {
         JsonObject settingsObj = getObject(moduleObj, "settings");
         if (settingsObj != null) {
             for (Setting<?> setting : module.getSettings()) {
+                if (setting != null && setting.isRootSetting()) {
+                    continue;
+                }
                 applySetting(setting, settingsObj.get(setting.getName()));
             }
         }
@@ -382,6 +388,7 @@ public class ConfigHolder {
         JsonObject settingsObj = new JsonObject();
         for (Setting<?> setting : module.getSettings()) {
             if (setting == null) continue;
+            if (setting.isRootSetting()) continue;
             JsonElement value = serializeSetting(setting);
             if (value != null) settingsObj.add(setting.getName(), value);
         }
@@ -508,6 +515,13 @@ public class ConfigHolder {
         if (setting instanceof IntSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof DoubleSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof StringSetting s) return new JsonPrimitive(s.getValue());
+        if (setting instanceof BlockListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) {
+                array.add(id);
+            }
+            return array;
+        }
         if (setting instanceof EnumSetting s) return new JsonPrimitive(s.getValue().toString());
         if (setting instanceof ColorSetting s) {
             Color c = s.getValue();
@@ -517,8 +531,19 @@ public class ConfigHolder {
     }
 
     private static void applySetting(Setting<?> setting, JsonElement value) {
-        if (value == null || !value.isJsonPrimitive()) return;
+        if (value == null) return;
         try {
+            if (setting instanceof BlockListSetting s && value.isJsonArray()) {
+                List<String> ids = new java.util.ArrayList<>();
+                for (JsonElement element : value.getAsJsonArray()) {
+                    if (element != null && element.isJsonPrimitive()) {
+                        ids.add(element.getAsString());
+                    }
+                }
+                s.setIds(ids);
+                return;
+            }
+            if (!value.isJsonPrimitive()) return;
             if (setting instanceof BoolSetting s) s.setValue(value.getAsBoolean());
             else if (setting instanceof KeybindSetting s) s.setValue(value.getAsInt());
             else if (setting instanceof IntSetting s) s.setUnboundedValue(value.getAsInt());
@@ -591,6 +616,13 @@ public class ConfigHolder {
         return configsDir.resolve(configName);
     }
 
+    private List<Module> getConfigurableModules() {
+        List<Module> modules = new ArrayList<>();
+        modules.addAll(ModuleHolder.INSTANCE.getModules());
+        modules.addAll(HudElementHolder.INSTANCE.getElements());
+        return modules;
+    }
+
     private void resetModulesToDefaults(List<Module> modules) {
         if (modules == null) {
             return;
@@ -639,13 +671,14 @@ public class ConfigHolder {
         ensureRootDirectories();
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
-        List<Module> modules = ModuleHolder.INSTANCE.getModules();
+        List<Module> modules = getConfigurableModules();
         List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         resetModulesToDefaults(modules);
         resetAddonsToDefaults(addons);
         applyToModules(modules);
         applyToAddons(addons);
         loadFriends(getActiveConfigStorageDir());
+        loadRootClientSettings();
     }
 
     private void saveActiveConfigSnapshot() throws IOException {
@@ -653,16 +686,76 @@ public class ConfigHolder {
         ensureConfigExists(activeConfigName);
         writeActiveConfigName(activeConfigName);
         Path configStorageDir = getActiveConfigStorageDir();
-        List<Module> modules = ModuleHolder.INSTANCE.getModules();
-        if (modules != null) {
-            for (Module module : modules) {
-                if (module != null) {
-                    saveModuleToDisk(module, configStorageDir);
-                }
+        List<Module> modules = getConfigurableModules();
+        for (Module module : modules) {
+            if (module != null) {
+                saveModuleToDisk(module, configStorageDir);
             }
         }
         saveAddonsToDisk(AddonHolder.INSTANCE.getAddons(), configStorageDir);
         saveFriends(configStorageDir);
+        saveRootClientSettings();
+    }
+
+    private void loadRootClientSettings() {
+        try {
+            if (Files.exists(rootSettingsFile)) {
+                String json = Files.readString(rootSettingsFile, StandardCharsets.UTF_8);
+                JsonElement parsed = JsonParser.parseString(json);
+                if (parsed != null && parsed.isJsonObject()) {
+                    JsonElement value = parsed.getAsJsonObject().get("showWelcomeScreen");
+                    if (value != null && value.isJsonPrimitive()) {
+                        ClientSetting.INSTANCE.showWelcomeScreen.setValueSilently(value.getAsBoolean());
+                    }
+                }
+                return;
+            }
+
+            Boolean legacyValue = readLegacyShowWelcomeScreen();
+            if (legacyValue != null) {
+                ClientSetting.INSTANCE.showWelcomeScreen.setValueSilently(legacyValue);
+            }
+            saveRootClientSettings();
+        } catch (Exception e) {
+            Constants.LOGGER.error("读取根配置失败", e);
+        }
+    }
+
+    private void saveRootClientSettings() {
+        try {
+            ensureRootDirectories();
+            JsonObject root = new JsonObject();
+            root.addProperty("showWelcomeScreen", ClientSetting.INSTANCE.showWelcomeScreen.getValue());
+            Files.writeString(rootSettingsFile, gson.toJson(root), StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE);
+        } catch (Exception e) {
+            Constants.LOGGER.error("写入根配置失败", e);
+        }
+    }
+
+    private Boolean readLegacyShowWelcomeScreen() {
+        Path legacyClientSettingFile = getModuleFile(getActiveConfigStorageDir(), ClientSetting.INSTANCE);
+        if (!Files.exists(legacyClientSettingFile)) {
+            return null;
+        }
+        try {
+            String json = Files.readString(legacyClientSettingFile, StandardCharsets.UTF_8);
+            JsonElement parsed = JsonParser.parseString(json);
+            if (parsed != null && parsed.isJsonObject()) {
+                JsonObject settingsObj = getObject(parsed.getAsJsonObject(), "settings");
+                if (settingsObj != null) {
+                    JsonElement value = settingsObj.get(ClientSetting.INSTANCE.showWelcomeScreen.getName());
+                    if (value != null && value.isJsonPrimitive()) {
+                        return value.getAsBoolean();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Constants.LOGGER.error("读取旧版欢迎页配置失败", e);
+        }
+        return null;
     }
 
     private void migrateLegacyLayoutsIfNeeded(List<Module> modules) throws IOException {

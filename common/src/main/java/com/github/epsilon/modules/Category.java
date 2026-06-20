@@ -8,8 +8,7 @@ public enum Category {
     COMBAT("b", "combat"),
     PLAYER("5", "player"),
     MOVEMENT("@", "movement"),
-    RENDER("a", "render"),
-    HUD("E", "hud");
+    RENDER("a", "render");
 
     public final String icon;
     private final String name;

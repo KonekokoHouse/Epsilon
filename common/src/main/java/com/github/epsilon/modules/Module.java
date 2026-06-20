@@ -8,9 +8,11 @@ import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.block.Block;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -240,8 +242,24 @@ public class Module {
         return addSetting(new StringSetting(name, defaultValue, dependency));
     }
 
+    protected StringSetting stringSetting(String name, String defaultValue, Setting.Dependency dependency, Consumer<String> onChanged) {
+        return addSetting(new StringSetting(name, defaultValue, dependency, onChanged));
+    }
+
     protected StringSetting stringSetting(String name, String defaultValue) {
         return addSetting(new StringSetting(name, defaultValue, () -> true));
+    }
+
+    protected StringSetting stringSetting(String name, String defaultValue, Consumer<String> onChanged) {
+        return addSetting(new StringSetting(name, defaultValue, () -> true, onChanged));
+    }
+
+    protected BlockListSetting blockListSetting(String name, Collection<Block> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new BlockListSetting(name, defaultValue, dependency));
+    }
+
+    protected BlockListSetting blockListSetting(String name, Collection<Block> defaultValue) {
+        return addSetting(new BlockListSetting(name, defaultValue, () -> true));
     }
 
     protected <E extends Enum<E>> EnumSetting<E> enumSetting(String name, E defaultValue, Setting.Dependency dependency, Consumer<E> onChanged) {

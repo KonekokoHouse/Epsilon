@@ -1,11 +1,9 @@
-package com.github.epsilon.managers.impl;
+package com.github.epsilon.managers.rotations;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
-import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.modules.impl.movement.MovementFix;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -17,7 +15,7 @@ import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
-public class RotationManager {
+public abstract class RotationManager {
 
     private final Rot2f offset = new Rot2f(0, 0);
     public Rot2f rotations = new Rot2f(0, 0);
@@ -26,19 +24,15 @@ public class RotationManager {
     public Rot2f animationRotation = null;
     public Rot2f lastAnimationRotation = null;
 
-    private boolean active;
-    private boolean smoothed;
-    private double rotationSpeed;
-    private Function<Rot2f, Boolean> raytrace;
+    protected boolean active;
+    protected boolean smoothed;
+    protected double rotationSpeed;
+    protected Function<Rot2f, Boolean> raytrace;
     private float randomAngle;
     private boolean s08;
 
-    private int priority;
-    private Runnable callback;
-
-    public RotationManager() {
-        EventBus.INSTANCE.subscribe(this);
-    }
+    protected int priority;
+    protected Runnable callback;
 
     public void setRotations(Rot2f rotations, double rotationSpeed) {
         setRotations(rotations, rotationSpeed, null, Priority.Medium, null);
@@ -66,6 +60,7 @@ public class RotationManager {
         if (s08) {
             this.rotations = this.lastRotations = this.targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
             this.callback = null;
+            resetModeState();
             s08 = false;
             return;
         }
@@ -78,9 +73,16 @@ public class RotationManager {
         this.active = true;
 
         smooth();
+        onRotationsSet();
     }
 
-    private void smooth() {
+    protected void onRotationsSet() {
+    }
+
+    protected void resetModeState() {
+    }
+
+    protected void smooth() {
         if (!smoothed) {
             float targetYaw = targetRotations.getYaw();
             float targetPitch = targetRotations.getPitch();
@@ -130,7 +132,7 @@ public class RotationManager {
         mc.pick(1.0f);
     }
 
-    private void correctDisabledRotations() {
+    protected void correctDisabledRotations() {
         Rot2f rotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         Rot2f fixedRotations = RotationUtils.resetRotation(RotationUtils.applySensitivityPatch(rotations, lastRotations));
         mc.player.setYRot(fixedRotations.getYaw());
@@ -169,8 +171,22 @@ public class RotationManager {
         this.smoothed = smoothed;
     }
 
+    public void copyStateFrom(RotationManager manager) {
+        this.rotations = manager.rotations;
+        this.lastRotations = manager.lastRotations;
+        this.targetRotations = manager.targetRotations;
+        this.animationRotation = manager.animationRotation;
+        this.lastAnimationRotation = manager.lastAnimationRotation;
+        this.active = manager.active;
+        this.smoothed = manager.smoothed;
+        this.rotationSpeed = manager.rotationSpeed;
+        this.raytrace = manager.raytrace;
+        this.priority = manager.priority;
+        this.callback = manager.callback;
+    }
+
     @EventHandler
-    private void onRespawn(RespawnEvent event) {
+    protected void onRespawn(RespawnEvent event) {
         offset.set(0, 0);
         rotations = new Rot2f(0, 0);
         lastRotations = new Rot2f(0, 0);
@@ -183,18 +199,19 @@ public class RotationManager {
         smoothed = false;
         raytrace = null;
         randomAngle = 0;
+        resetModeState();
         s08 = false;
     }
 
     @EventHandler
-    private void onPacketReceive(PacketEvent.Receive event) {
+    protected void onPacketReceive(PacketEvent.Receive event) {
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket || event.getPacket() instanceof ClientboundPlayerRotationPacket) {
             s08 = true;
         }
     }
 
     @EventHandler(priority = -1000)
-    private void onPlayerTick(PlayerTickEvent.Pre event) {
+    protected void onPlayerTick(PlayerTickEvent.Pre event) {
         if (!active || rotations == null || lastRotations == null || targetRotations == null) {
             rotations = lastRotations = targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         }
@@ -202,16 +219,24 @@ public class RotationManager {
         if (active) {
             smooth();
             EventBus.INSTANCE.post(new AfterRotationEvent());
+            runCallback();
+            afterPlayerTick();
+        }
+    }
 
-            if (callback != null) {
-                callback.run();
-                callback = null;
-            }
+    protected void afterPlayerTick() {
+    }
+
+    protected void runCallback() {
+        if (callback != null) {
+            Runnable pendingCallback = callback;
+            callback = null;
+            pendingCallback.run();
         }
     }
 
     @EventHandler
-    private void onAnimation(RotationAnimationEvent event) {
+    protected void onAnimation(RotationAnimationEvent event) {
         if (active && animationRotation != null && lastAnimationRotation != null) {
             event.setYaw(animationRotation.getYaw());
             event.setLastYaw(lastAnimationRotation.getYaw());
@@ -221,15 +246,9 @@ public class RotationManager {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    private void onSendPosition(SendPositionEvent event) {
+    protected void onSendPosition(SendPositionEvent event) {
         if (active && rotations != null) {
-            float yaw = rotations.getYaw();
-            float pitch = rotations.getPitch();
-
-            if (!Float.isNaN(yaw) && !Float.isNaN(pitch)) {
-                event.setYaw(yaw);
-                event.setPitch(pitch);
-            }
+            handleSendPosition(event);
 
             if (Math.abs((rotations.getYaw() - mc.player.getYRot()) % 360) < 1 && Math.abs((rotations.getPitch() - mc.player.getXRot())) < 1) {
                 active = false;
@@ -250,73 +269,11 @@ public class RotationManager {
         smoothed = false;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    private void onMoveInput(KeyboardInputEvent event) {
-        MovementFix moveFix = MovementFix.INSTANCE;
-        if (moveFix.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
-            moveFix.fixMovement(event, rotations.getYaw());
-        }
-    }
+    protected abstract void handleSendPosition(SendPositionEvent event);
 
-    @EventHandler
-    private void onRaytrace(RaytraceEvent event) {
-        if (ClientSetting.INSTANCE.modifyCrosshair.getValue() && active && rotations != null) {
-            event.setYaw(rotations.getYaw());
-            event.setPitch(rotations.getPitch());
-        }
-    }
-
-    @EventHandler
-    private void onItemRaytrace(UseItemRaytraceEvent event) {
-        if (active && rotations != null) {
-            event.setYaw(rotations.getYaw());
-            event.setPitch(rotations.getPitch());
-        }
-    }
-
-    @EventHandler
-    private void onStrafe(StrafeEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
-            event.setYaw(rotations.getYaw());
-        }
-    }
-
-    @EventHandler
-    private void onJump(JumpEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null && !mc.player.isFallFlying()) {
-            event.setYaw(rotations.getYaw());
-        }
-    }
-
-    @EventHandler
-    private void onFallFlying(FallFlyingEvent event) {
-        if (MovementFix.INSTANCE.isEnabled() && active && rotations != null) {
-            event.setYaw(rotations.getYaw());
-            event.setPitch(rotations.getPitch());
-        }
-    }
-
-    @EventHandler
-    private void onUseItem(UseItemEvent event) {
-        if (active && rotations != null) {
-            event.setYaw(rotations.getYaw());
-            event.setPitch(rotations.getPitch());
-        }
-    }
-
-    @EventHandler
-    private void onFireworkUpdate(FireworkUpdateEvent event) {
-        if (active && rotations != null) {
-            event.setYaw(rotations.getYaw());
-            event.setPitch(rotations.getPitch());
-        }
-    }
-
-    @EventHandler
-    private void onAttack(AttackYawEvent event) {
-        if (rotations != null) {
-            event.setYaw(rotations.getYaw());
-        }
+    public enum RotationMode {
+        SILENT,
+        SNAP
     }
 
 }

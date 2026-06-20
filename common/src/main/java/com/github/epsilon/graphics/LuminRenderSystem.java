@@ -97,6 +97,14 @@ public class LuminRenderSystem {
         return mouseY * mc.getWindow().getGuiScale() / getGuiScale();
     }
 
+    public static double toMinecraftGuiX(double epsilonX) {
+        return epsilonX * getGuiScale() / mc.getWindow().getGuiScale();
+    }
+
+    public static double toMinecraftGuiY(double epsilonY) {
+        return epsilonY * getGuiScale() / mc.getWindow().getGuiScale();
+    }
+
     public static int toEpsilonMouseX(int mouseX) {
         return (int) Math.round(toEpsilonMouseX((double) mouseX));
     }

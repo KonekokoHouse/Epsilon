@@ -4,7 +4,6 @@ import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -23,7 +22,7 @@ public class NotificationsHUD extends HudModule {
     public static final NotificationsHUD INSTANCE = new NotificationsHUD();
 
     private NotificationsHUD() {
-        super("Notifications HUD", Category.HUD, 3.2f, 3.2f, 120f, 28f);
+        super("Notifications HUD", 3.2f, 3.2f, 120f, 28f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

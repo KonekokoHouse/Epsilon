@@ -6,7 +6,6 @@ import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -27,7 +26,7 @@ public class ScaffoldBlockHUD extends HudModule {
     public static final ScaffoldBlockHUD INSTANCE = new ScaffoldBlockHUD();
 
     private ScaffoldBlockHUD() {
-        super("Scaffold Block HUD", Category.HUD, 0f, 0f, 84f, 28f);
+        super("Scaffold Block HUD", 0f, 0f, 84f, 28f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

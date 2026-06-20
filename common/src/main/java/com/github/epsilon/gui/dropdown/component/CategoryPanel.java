@@ -29,7 +29,18 @@ public class CategoryPanel extends AbstractDropdownPanel {
         List<Module> modules = ModuleHolder.INSTANCE.getModules().stream()
                 .filter(m -> m.getCategory() == category)
                 .toList();
+        initModuleButtons(modules);
+    }
+
+    public CategoryPanel(String id, String title, String icon, int panelIndex, List<? extends Module> modules) {
+        super(id, title, icon, panelIndex);
+        this.category = null;
+        initModuleButtons(modules);
+    }
+
+    private void initModuleButtons(List<? extends Module> modules) {
         for (Module module : modules) {
+            if (module == null) continue;
             moduleButtons.add(new ModuleButton(module));
         }
         refreshSortedModuleButtons();

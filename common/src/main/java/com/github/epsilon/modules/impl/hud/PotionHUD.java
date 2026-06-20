@@ -5,7 +5,6 @@ import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.renderers.TextureRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -31,7 +30,7 @@ public class PotionHUD extends HudModule {
     public static final PotionHUD INSTANCE = new PotionHUD();
 
     private PotionHUD() {
-        super("Potion HUD", Category.HUD, 0f, 0f, 160f, 60f);
+        super("Potion HUD", 0f, 0f, 160f, 60f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.5, 0.05);

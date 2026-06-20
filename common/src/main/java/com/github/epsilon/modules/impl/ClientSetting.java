@@ -1,12 +1,17 @@
 package com.github.epsilon.modules.impl;
 
+import com.github.epsilon.assets.i18n.EpsilonLanguage;
+import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
+import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
@@ -77,6 +82,10 @@ public class ClientSetting extends Module {
 
     public final EnumSetting<ModuleSort> moduleSort = enumSetting("Module Sort", ModuleSort.Name).group(sgGeneral);
 
+    public final EnumSetting<EpsilonLanguage> language = enumSetting("Language", EpsilonLanguage.English, EpsilonLanguageManager.INSTANCE::selectLanguage).group(sgGeneral);
+
+    public final StringSetting customLanguage = stringSetting("Custom Language", "", () -> language.is(EpsilonLanguage.Custom), _ -> EpsilonLanguageManager.INSTANCE.refreshCustomLanguage()).group(sgGeneral);
+
     private final DoubleSetting renderScale = doubleSetting("Render Scale", 2.0, 1.0, 6.0, 0.5).group(sgGeneral);
 
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
@@ -94,14 +103,21 @@ public class ClientSetting extends Module {
     public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
 
     // Anti Cheat
+    public final EnumSetting<RotationManager.RotationMode> rotationMode =
+            enumSetting("Rotation Mode", RotationManager.RotationMode.SILENT, mode -> {
+                if (Managers.ROTATION != null) {
+                    Managers.switchRotationManager(mode);
+                }
+            }).group(sgAntiCheat);
+
     public final BoolSetting modifyCrosshair = boolSetting("Modify Crosshair", true).group(sgAntiCheat);
 
     public final EnumSetting<HideMode> hideMode = enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat);
 
     // Appearance
-    public final EnumSetting<ThemeMode> themeMode = enumSetting("Theme Mode", ThemeMode.Dark).group(sgAppearance);
+    public final EnumSetting<ThemeMode> themeMode = enumSetting("Theme Mode", ThemeMode.Dark, _ -> MD3Theme.syncFromSettings()).group(sgAppearance);
 
-    public final EnumSetting<ThemePreset> themePreset = enumSetting("Theme Preset", ThemePreset.TonalSpot).group(sgAppearance);
+    public final EnumSetting<ThemePreset> themePreset = enumSetting("Theme Preset", ThemePreset.TonalSpot, _ -> MD3Theme.syncFromSettings()).group(sgAppearance);
 
     public final BoolSetting customIcon = boolSetting("Custom Icon", true, _ -> {
         try {
@@ -115,6 +131,8 @@ public class ClientSetting extends Module {
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
+
+    public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).group(sgAppearance).rootSetting();
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
@@ -131,6 +149,14 @@ public class ClientSetting extends Module {
 
     public double getScale() {
         return renderScale.getValue();
+    }
+
+    public boolean snapRotation() {
+        return rotationMode.is(RotationManager.RotationMode.SNAP);
+    }
+
+    public boolean silentRotation() {
+        return rotationMode.is(RotationManager.RotationMode.SILENT);
     }
 
 }

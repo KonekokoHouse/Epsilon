@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.hud;
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.HudModule;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -22,7 +21,7 @@ public class InventoryHUD extends HudModule {
     public static final InventoryHUD INSTANCE = new InventoryHUD();
 
     private InventoryHUD() {
-        super("Inventory HUD", Category.HUD, 0f, 0f, 180f, 80f);
+        super("Inventory HUD", 0f, 0f, 180f, 80f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

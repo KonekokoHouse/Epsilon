@@ -141,6 +141,12 @@ public class PanelUiCompiler {
             target.rectRenderer().addRectGradient(x1, y1, width, height, topLeft, bottomLeft, bottomRight, topRight);
             return;
         }
+        if (node instanceof PanelUiTree.RectOutlineNode(
+                float x1, float y1, float width, float height, float outlineWidth, Color color
+        )) {
+            target.rectRenderer().addOutline(x1, y1, width, height, outlineWidth, color);
+            return;
+        }
         if (node instanceof PanelUiTree.OutlineNode(
                 float x1, float y1, float width, float height, float radiusTopLeft, float radiusTopRight,
                 float radiusBottomRight, float radiusBottomLeft, float outlineWidth, Color color
