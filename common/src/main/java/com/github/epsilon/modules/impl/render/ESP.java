@@ -19,7 +19,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.awt.*;
@@ -73,42 +72,38 @@ public class ESP extends Module {
     private final TimerUtils searchTimer = new TimerUtils();
     private boolean canContinue;
 
-    public static List<BlockPos> blocks = new ArrayList<>();
+    public static List<AABB> boxes = new ArrayList<>();
 
     @Override
     protected void onEnable() {
-        blocks.clear();
+        boxes.clear();
         canContinue = true;
     }
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (searchTimer.every(1000) && canContinue) {
-            CompletableFuture.supplyAsync(this::scan, searchThread).thenAcceptAsync(this::sync, Util.backgroundExecutor());
+            CompletableFuture.supplyAsync(this::scan, searchThread).thenAcceptAsync(newAABBList -> {
+                boxes = newAABBList;
+                canContinue = true;
+            }, Util.backgroundExecutor());
             canContinue = false;
         }
     }
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (blocks.isEmpty()) return;
-
-        for (BlockPos blockPos : Lists.newArrayList(blocks)) {
-            if (blockPos.distToCenterSqr(mc.player.position()) > range.getValue() * range.getValue()) {
-                blocks.remove(blockPos);
-                continue;
+        if (!boxes.isEmpty()) {
+            for (AABB aabb : Lists.newArrayList(boxes)) {
+                if (blur.getValue()) Managers.RENDER.addBlurredBox(aabb, blurStrength.getValue());
+                Managers.RENDER.addFilledBox(aabb, sideColor.getValue());
+                Managers.RENDER.addOutlineBox(aabb, lineColor.getValue());
             }
-
-            AABB b = getShapeAABB(blockPos);
-
-            if (blur.getValue()) Managers.RENDER.addBlurredBox(b, blurStrength.getValue());
-            Managers.RENDER.addFilledBox(b, sideColor.getValue());
-            Managers.RENDER.addOutlineBox(b, lineColor.getValue());
         }
     }
 
-    private List<BlockPos> scan() {
-        List<BlockPos> blocks = new ArrayList<>();
+    private List<AABB> scan() {
+        List<AABB> boxes = new ArrayList<>();
         int startX = Mth.floor(mc.player.getX() - range.getValue());
         int endX = Mth.ceil(mc.player.getX() + range.getValue());
         int startY = mc.level.getMinY() + 1;
@@ -122,17 +117,12 @@ public class ESP extends Module {
                     BlockPos blockPos = new BlockPos(x, y, z);
                     BlockState bs = mc.level.getBlockState(blockPos);
                     if (shouldAdd(bs.getBlock(), blockPos)) {
-                        blocks.add(blockPos);
+                        boxes.add(getShapeAABB(blockPos));
                     }
                 }
             }
         }
-        return blocks;
-    }
-
-    private void sync(List<BlockPos> newList) {
-        blocks = newList;
-        canContinue = true;
+        return boxes;
     }
 
     private boolean shouldAdd(Block block, BlockPos pos) {
