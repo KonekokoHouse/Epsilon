@@ -274,6 +274,7 @@
   "epsilon.modules.client setting.language.english": "English",
   "epsilon.modules.client setting.language.chinese simplified": "Simplified Chinese",
   "epsilon.modules.client setting.language.custom": "Custom",
+  "epsilon.modules.client setting.show welcome screen": "Show Welcome Screen",
   "epsilon.modules.client setting.custom language": "Custom Language",
   "epsilon.modules.client setting.anti cheat": "Anti Cheat",
   "epsilon.modules.client setting.modify crosshair": "Modify Crosshair",

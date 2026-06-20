@@ -12,6 +12,7 @@ public abstract class Setting<V> {
     protected final Dependency dependency;
     protected Consumer<V> onChanged;
     protected SettingGroup group;
+    protected boolean rootSetting;
 
     protected TranslateComponent translateComponent;
 
@@ -70,6 +71,16 @@ public abstract class Setting<V> {
     public <S extends Setting<V>> S group(SettingGroup group) {
         this.group = group;
         return (S) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <S extends Setting<V>> S rootSetting() {
+        this.rootSetting = true;
+        return (S) this;
+    }
+
+    public boolean isRootSetting() {
+        return rootSetting;
     }
 
     @FunctionalInterface
