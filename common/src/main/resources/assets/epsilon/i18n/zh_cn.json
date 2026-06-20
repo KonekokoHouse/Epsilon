@@ -12,7 +12,6 @@
   "epsilon.module.from": "来自:",
   "epsilon.module.state.enabled": "开启",
   "epsilon.module.state.disabled": "关闭",
-  "epsilon.notification.chat_notify": "%s %s",
   "epsilon.gui.search": "搜索 ...",
   "epsilon.gui.dropdown.hint.search": "Ctrl + F 打开搜索",
   "epsilon.gui.dropdown.hint.panels": "点击分类展开面板",

@@ -66,7 +66,6 @@
   "epsilon.module.state.disabled": "disabled",
   "epsilon.module.state.enabled": "enabled",
   "epsilon.module.visible": "Visible",
-  "epsilon.notification.chat_notify": "%s %s",
   "epsilon.modules.aim assist": "Aim Assist",
   "epsilon.modules.aim assist.aim mode": "Aim Mode",
   "epsilon.modules.aim assist.aim mode.body": "Body",
