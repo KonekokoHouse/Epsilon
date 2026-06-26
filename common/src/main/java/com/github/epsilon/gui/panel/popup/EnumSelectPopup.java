@@ -21,11 +21,9 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
     private static final float ITEM_HEIGHT = 24.0f;
     private static final float ITEM_INNER_HEIGHT = 22.0f;
     private static final float CONTENT_PADDING = 6.0f;
-    private static final String DROPDOWN_ICON = IconChars.KEYBOARD_ARROW_DOWN;
 
     private final PanelLayout.Rect bounds;
     private final EnumSetting<?> setting;
-    private final PanelLayout.Rect anchorBounds;
     private final boolean scrollable;
     private final float maxScroll;
     private float scroll;
@@ -34,8 +32,7 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 140L);
     private int hoveredIndex = -1;
 
-    public EnumSelectPopup(PanelLayout.Rect bounds, PanelLayout.Rect anchorBounds, EnumSetting<?> setting) {
-        this.anchorBounds = anchorBounds;
+    public EnumSelectPopup(PanelLayout.Rect bounds, EnumSetting<?> setting) {
         this.setting = setting;
 
         int optionCount = setting.getModes().length;
@@ -102,7 +99,7 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                     Color textColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : (hovered ? MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255) : MD3Theme.TEXT_SECONDARY);
                     content.roundRect(itemBounds.x(), itemY, itemBounds.width(), itemBounds.height(), 8.0f, background);
                     if (selected) {
-                        content.text("V", itemBounds.x() + 8.0f, itemY + 6.5f, 0.72f, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+                        content.text(IconChars.KEYBOARD_ARROW_DOWN, itemBounds.x() + 8.0f, itemY + 6.5f, 0.72f, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
                     }
                     content.text(setting.getTranslatedValueByIndex(i), itemBounds.x() + (selected ? 22.0f : 10.0f), itemY + 7.0f, 0.62f, textColor);
                 }

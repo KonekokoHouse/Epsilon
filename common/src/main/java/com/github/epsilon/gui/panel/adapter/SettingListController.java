@@ -407,7 +407,7 @@ public class SettingListController {
         if (popupY + popupHeight > maxBottom) {
             popupY = chipBounds.y() - popupHeight - 4.0f;
         }
-        return new EnumSelectPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), chipBounds, enumRow.getSetting());
+        return new EnumSelectPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), enumRow.getSetting());
     }
 
     private ColorPickerPopup createColorPopup(ColorSettingRow colorRow, PanelLayout.Rect rowBounds, PanelLayout.Rect popupBounds) {
