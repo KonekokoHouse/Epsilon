@@ -261,17 +261,6 @@ public class DropdownRenderer {
             return measureTextRenderer.getHeight(scale, fontLoader);
         }
 
-<<<<<<< HEAD
-        public float getLineHeight(float scale) {
-            return measureTextRenderer.getLineHeight(scale);
-        }
-
-        public float getLineHeight(float scale, TtfFontLoader fontLoader) {
-            return measureTextRenderer.getLineHeight(scale, fontLoader);
-        }
-
-=======
->>>>>>> 0d2c546 (使 GUI 基本所有元素保持垂直居中 (#309))
         public float getWidth(String text, float scale) {
             return measureTextRenderer.getWidth(text, scale);
         }

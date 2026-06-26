@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup;
 
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -20,10 +21,6 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
     private static final float ITEM_HEIGHT = 24.0f;
     private static final float ITEM_INNER_HEIGHT = 22.0f;
     private static final float CONTENT_PADDING = 6.0f;
-<<<<<<< HEAD
-    private static final String DROPDOWN_ICON = "v";
-=======
->>>>>>> 0d2c546 (使 GUI 基本所有元素保持垂直居中 (#309))
 
     private final PanelLayout.Rect bounds;
     private final EnumSetting<?> setting;
