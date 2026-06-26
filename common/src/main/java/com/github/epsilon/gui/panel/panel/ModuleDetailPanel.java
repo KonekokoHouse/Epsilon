@@ -101,7 +101,10 @@ public class ModuleDetailPanel {
 
         Module module = state.getSelectedModule();
         String detailTitle = module == null ? noModuleComponent.getTranslatedName() : module.getTranslatedName();
-        PanelUiTree headerTree = PanelUiTree.build(scope -> scope.text(detailTitle, bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY));
+        float titleScale = 0.78f;
+        float titleHeight = textRenderer.getHeight(titleScale);
+        float titleY = bounds.y() + 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f;
+        PanelUiTree headerTree = PanelUiTree.build(scope -> scope.text(detailTitle, bounds.x() + MD3Theme.PANEL_TITLE_INSET, titleY, titleScale, MD3Theme.TEXT_PRIMARY));
         PanelUiCompiler.render(headerTree, roundRectRenderer, rectRenderer, textRenderer);
 
         if (module == null) {
@@ -437,7 +440,7 @@ public class ModuleDetailPanel {
         float textWidth = textRenderer.getWidth(label, scale);
         float textHeight = textRenderer.getHeight(scale);
         float textX = keybindBounds.x() + (keybindBounds.width() - textWidth) / 2.0f;
-        float textY = keybindBounds.y() + (keybindBounds.height() - textHeight) / 2.0f - 1.0f;
+        float textY = keybindBounds.y() + (keybindBounds.height() - textHeight) / 2.0f;
         scope.text(label, textX, textY, scale, foreground);
     }
 
