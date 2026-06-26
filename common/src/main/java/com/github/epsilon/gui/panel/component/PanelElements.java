@@ -143,13 +143,13 @@ public class PanelElements {
                                       String label, float textScale, Color background, Color foreground,
                                       @Nullable String trailingIcon, float trailingIconScale, @Nullable TtfFontLoader trailingIconFont) {
         roundRectRenderer.addRoundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CONTROL_RADIUS, background);
-        float textY = bounds.y() + (bounds.height() - textRenderer.getHeight(textScale)) / 2.0f - 1.0f;
+        float textY = bounds.y() + (bounds.height() - textRenderer.getHeight(textScale)) / 2.0f;
         textRenderer.addText(label, bounds.x() + 8.0f, textY, textScale, foreground);
         if (trailingIcon == null || trailingIcon.isEmpty() || trailingIconFont == null) {
             return;
         }
         float iconWidth = textRenderer.getWidth(trailingIcon, trailingIconScale, trailingIconFont);
-        float iconY = bounds.y() + (bounds.height() - textRenderer.getHeight(trailingIconScale, trailingIconFont)) / 2.0f - 1.0f;
+        float iconY = bounds.y() + (bounds.height() - textRenderer.getHeight(trailingIconScale, trailingIconFont)) / 2.0f;
         textRenderer.addText(trailingIcon, bounds.right() - 8.0f - iconWidth, iconY, trailingIconScale, foreground, trailingIconFont);
     }
 
@@ -179,7 +179,7 @@ public class PanelElements {
         float indicatorHeight = innerHeight - indicatorInset * 2.0f;
         float indicatorRadius = Math.max(4.0f, outerRadius - 2.0f);
         float labelScale = 0.52f;
-        float labelY = innerY + (innerHeight - textRenderer.getHeight(labelScale)) / 2.0f - 1.0f;
+        float labelY = innerY + (innerHeight - textRenderer.getHeight(labelScale)) / 2.0f;
         Color inactiveLabel = MD3Theme.segmentedControlInactiveLabel();
         Color activeLabel = MD3Theme.segmentedControlActiveLabel();
 
@@ -216,7 +216,7 @@ public class PanelElements {
         float textHeight = textRenderer.getHeight(scale);
         textRenderer.addText(label,
                 bounds.x() + (bounds.width() - textWidth) / 2.0f,
-                bounds.y() + (bounds.height() - textHeight) / 2.0f - 1.0f,
+                bounds.y() + (bounds.height() - textHeight) / 2.0f,
                 scale,
                 labelColor);
     }

@@ -303,7 +303,7 @@ public class SettingListController {
 
         float labelScale = 0.66f;
         String label = trimToWidth(group.getDisplayName(), labelScale, headerBounds.width() - 74.0f, textRenderer);
-        float labelY = headerBounds.y() + (GROUP_HEADER_HEIGHT - textRenderer.getHeight(labelScale)) / 2.0f - 1.0f;
+        float labelY = headerBounds.y() + (GROUP_HEADER_HEIGHT - textRenderer.getHeight(labelScale)) / 2.0f;
         scope.text(label, headerBounds.x() + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
         String countLabel = Integer.toString(section.settings().size());
@@ -315,7 +315,7 @@ public class SettingListController {
                 MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 210));
         scope.text(countLabel,
                 countX + (countWidth - textRenderer.getWidth(countLabel, countScale)) / 2.0f,
-                countY + (GROUP_COUNT_CHIP_HEIGHT - textRenderer.getHeight(countScale)) / 2.0f - 1.0f,
+                countY + (GROUP_COUNT_CHIP_HEIGHT - textRenderer.getHeight(countScale)) / 2.0f,
                 countScale,
                 MD3Theme.ON_SECONDARY_CONTAINER);
 
@@ -407,7 +407,7 @@ public class SettingListController {
         if (popupY + popupHeight > maxBottom) {
             popupY = chipBounds.y() - popupHeight - 4.0f;
         }
-        return new EnumSelectPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), chipBounds, enumRow.getSetting());
+        return new EnumSelectPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), enumRow.getSetting());
     }
 
     private ColorPickerPopup createColorPopup(ColorSettingRow colorRow, PanelLayout.Rect rowBounds, PanelLayout.Rect popupBounds) {

@@ -360,7 +360,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         float labelHeight = textRenderer.getHeight(labelScale);
         scope.text(button.label(),
                 button.bounds().x() + (button.bounds().width() - labelWidth) / 2.0f,
-                button.bounds().y() + (button.bounds().height() - labelHeight) / 2.0f - 1.0f,
+                button.bounds().y() + (button.bounds().height() - labelHeight) / 2.0f,
                 labelScale,
                 textColor);
     }
@@ -393,7 +393,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY);
             scope.text(chipText,
                     chipX + (chipWidth - textRenderer.getWidth(chipText, chipScale)) / 2.0f,
-                    chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f - 1.0f,
+                    chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f,
                     chipScale,
                     MD3Theme.ON_PRIMARY);
         }
@@ -405,7 +405,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         String removeIcon = "✕";
         scope.text(removeIcon,
                 deleteBounds.x() + (deleteBounds.width() - textRenderer.getWidth(removeIcon, removeScale)) / 2.0f,
-                deleteBounds.y() + (deleteBounds.height() - textRenderer.getHeight(removeScale)) / 2.0f - 1.0f,
+                deleteBounds.y() + (deleteBounds.height() - textRenderer.getHeight(removeScale)) / 2.0f,
                 removeScale,
                 MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.ERROR, deleteHover));
     }

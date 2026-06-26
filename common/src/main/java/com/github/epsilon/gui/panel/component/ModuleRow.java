@@ -96,11 +96,11 @@ public class ModuleRow {
         float titleHeight = textRenderer.getHeight(titleScale);
         float subHeight = textRenderer.getHeight(subScale);
         float keyHeight = textRenderer.getHeight(keyScale);
-        float lineGap = 3.0f;
+        float lineGap = 2.0f;
         float totalTextHeight = titleHeight + lineGap + subHeight;
-        float titleY = bounds.y() + (bounds.height() - totalTextHeight) / 2.0f - 1.0f;
-        float subY = titleY + titleHeight + lineGap - 1.0f;
-        float keyY = bounds.y() + (bounds.height() - keyHeight) / 2.0f - 1.0f;
+        float titleY = centerTextBlockY(bounds, totalTextHeight);
+        float subY = titleY + titleHeight + lineGap;
+        float keyY = centerTextY(bounds, keyHeight);
         Color titleColor = MD3Theme.lerp(MD3Theme.TEXT_PRIMARY, MD3Theme.ON_PRIMARY_CONTAINER, selectedProgress);
         Color subColor = MD3Theme.lerp(MD3Theme.TEXT_SECONDARY, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180), selectedProgress);
         Color keyColor = MD3Theme.isLightTheme() ? MD3Theme.TEXT_SECONDARY : MD3Theme.TEXT_MUTED;
@@ -109,15 +109,11 @@ public class ModuleRow {
         float clipRight = toggleBounds.x() - KEYBIND_TOGGLE_GAP;
         float clipWidth = Math.min(keyWidth, KEYBIND_CLIP_WIDTH);
         float clipX = clipRight - clipWidth;
-        // Vertical padding makes sure descenders/ascenders are not clipped.
-        float clipY = keyY - 1.0f;
-        float clipHeight = keyHeight + 2.0f;
-        PanelLayout.Rect keybindClip = new PanelLayout.Rect(clipX, clipY, clipWidth, clipHeight);
+        PanelLayout.Rect keybindClip = new PanelLayout.Rect(clipX, keyY, clipWidth, keyHeight);
 
         scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
         if (selectedProgress > 0.01f) {
-            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS,
-                    MD3Theme.stateLayer(MD3Theme.PRIMARY, selectedProgress, 42));
+            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, selectedProgress, 42));
         }
 
         scope.text(module.displayName(), PanelElements.rowLabelX(bounds), titleY, titleScale, titleColor);
@@ -158,6 +154,14 @@ public class ModuleRow {
 
     private String formatKeybind(int keyCode) {
         return KeybindUtils.format(keyCode).toUpperCase();
+    }
+
+    private float centerTextBlockY(PanelLayout.Rect bounds, float textHeight) {
+        return bounds.y() + (bounds.height() - textHeight) / 2.0f;
+    }
+
+    private float centerTextY(PanelLayout.Rect bounds, float textHeight) {
+        return bounds.y() + (bounds.height() - textHeight) / 2.0f;
     }
 
 }

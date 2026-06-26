@@ -37,7 +37,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f - 1.0f;
+        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         hoverAnimation.run(dragging ? 1.0f : hoverProgress);
         pressAnimation.run(dragging ? 1.0f : 0.0f);
         indicatorAnimation.run((dragging || hoverProgress > 0.01f) ? 1.0f : 0.0f);
@@ -75,7 +75,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
             float textWidth = textRenderer.getWidth(label, textScale);
             float textHeight = textRenderer.getHeight(textScale);
             float textX = bubbleX + (bubbleWidth - textWidth) / 2.0f;
-            float textY = bubbleY + (bubbleHeight - textHeight) / 2.0f - 1.0f;
+            float textY = bubbleY + (bubbleHeight - textHeight) / 2.0f;
             scope.text(label, textX, textY, textScale, MD3Theme.withAlpha(MD3Theme.INVERSE_ON_SURFACE, bubbleAlpha));
         }
 
