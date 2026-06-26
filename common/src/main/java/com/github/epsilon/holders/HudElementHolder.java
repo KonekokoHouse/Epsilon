@@ -1,13 +1,13 @@
 package com.github.epsilon.holders;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.elements.impl.*;
+import com.github.epsilon.elements.impl.notification.Notifications;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.elements.impl.notification.Notifications;
 import com.github.epsilon.utils.client.ClientUtils;
 
 import java.util.ArrayList;

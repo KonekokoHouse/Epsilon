@@ -1,10 +1,10 @@
 package com.github.epsilon.elements.impl.notification;
 
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.animation.Easing;

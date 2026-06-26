@@ -1,11 +1,11 @@
 package com.github.epsilon.elements.impl;
 
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;

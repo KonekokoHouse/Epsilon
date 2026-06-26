@@ -1,12 +1,12 @@
 package com.github.epsilon.elements.impl;
 
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;

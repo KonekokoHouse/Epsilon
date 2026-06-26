@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.hudeditor;
 
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
@@ -10,7 +11,6 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;

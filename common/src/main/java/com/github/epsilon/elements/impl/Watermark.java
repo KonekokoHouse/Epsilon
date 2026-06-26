@@ -1,8 +1,8 @@
 package com.github.epsilon.elements.impl;
 
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.google.common.base.Suppliers;

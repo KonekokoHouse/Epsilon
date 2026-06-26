@@ -2,9 +2,9 @@ package com.github.epsilon.managers.impl;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.elements.impl.notification.Notification;
 import com.github.epsilon.elements.impl.notification.NotificationMode;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.player.ChatUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
