@@ -39,8 +39,7 @@ public class EnumSettingRow extends SettingRow<EnumSetting<?>> {
         scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
         scope.text(setting.getDisplayName(), bounds.x() + MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
         PanelLayout.Rect chipBounds = getChipBounds(textRenderer, bounds);
-        scope.chip(chipBounds, setting.getTranslatedValue(), chipTextScale, MD3Theme.SECONDARY_CONTAINER, MD3Theme.ON_SECONDARY_CONTAINER,
-                null, 0.58f, null);
+        scope.chip(chipBounds, setting.getTranslatedValue(), chipTextScale, MD3Theme.SECONDARY_CONTAINER, MD3Theme.ON_SECONDARY_CONTAINER, null, 0.58f, null);
 
         float chevronProgress = scope.animate(dropdownAnimation, dropdownOpen);
         float chevronSize = 3.0f;
