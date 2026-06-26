@@ -239,7 +239,7 @@ public class PanelUiCompiler {
             float indicatorHeight = innerHeight - indicatorInset * 2.0f;
             float indicatorRadius = Math.max(4.0f, outerRadius - 2.0f);
             float labelScale = 0.52f;
-            float labelY = innerY + (innerHeight - target.textRenderer().getHeight(labelScale)) / 2.0f - 1.0f;
+            float labelY = innerY + (innerHeight - target.textRenderer().getHeight(labelScale)) / 2.0f;
             Color inactiveLabel = MD3Theme.segmentedControlInactiveLabel();
             Color activeLabel = MD3Theme.segmentedControlActiveLabel();
 
@@ -267,7 +267,7 @@ public class PanelUiCompiler {
             float labelHeight = target.textRenderer().getHeight(scale);
             target.textRenderer().addText(label,
                     bounds.x() + (bounds.width() - labelWidth) / 2.0f,
-                    bounds.y() + (bounds.height() - labelHeight) / 2.0f - 1.0f,
+                    bounds.y() + (bounds.height() - labelHeight) / 2.0f,
                     scale,
                     labelColor);
             return;

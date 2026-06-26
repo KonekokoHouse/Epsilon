@@ -307,7 +307,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         float bubbleY = rowTop - 14.0f - (1.0f - progress) * 4.0f;
         int bubbleAlpha = (int) (255 * progress);
         scope.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 8.0f, MD3Theme.withAlpha(MD3Theme.INVERSE_SURFACE, bubbleAlpha));
-        float textY = bubbleY + (bubbleHeight - textRenderer.getHeight(textScale)) / 2.0f - 1.0f;
+        float textY = bubbleY + (bubbleHeight - textRenderer.getHeight(textScale)) / 2.0f;
         scope.text(valueText, bubbleX + (bubbleWidth - textRenderer.getWidth(valueText, textScale)) / 2.0f, textY, textScale, MD3Theme.withAlpha(MD3Theme.INVERSE_ON_SURFACE, bubbleAlpha));
     }
 
@@ -321,7 +321,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         float textWidth = textRenderer.getWidth(valueText, textScale);
         float textHeight = textRenderer.getHeight(textScale);
         float textX = bounds.x() + (bounds.width() - textWidth) / 2.0f;
-        float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f - 1.0f;
+        float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
         scope.text(valueText, textX, textY, textScale, textColor);
         if (focused) {
             float caretX = textX + textRenderer.getWidth(valueText.substring(0, Math.min(cursorIndex, valueText.length())), textScale);

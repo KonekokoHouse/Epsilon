@@ -28,7 +28,7 @@ public class BoolSettingRow extends SettingRow<BoolSetting> {
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f - 1.0f;
+        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         float animatedHover = scope.animate(hoverAnimation, hoverProgress);
         float toggleProgress = scope.animate(toggleAnimation, setting.getValue());
 

@@ -51,7 +51,7 @@ public class ClientSettingTextField {
         float textInset = 10.0f;
         float textHeight = textRenderer.getHeight(textScale);
         float textX = bounds.x() + textInset;
-        float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f - 1.0f;
+        float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;

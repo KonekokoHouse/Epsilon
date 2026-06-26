@@ -281,8 +281,8 @@ public class CategoryRailPanel {
         float labelHeight = clippedTextRenderer.getHeight(itemLabelScale);
         float countHeight = clippedTextRenderer.getHeight(itemCountScale);
         float iconY = itemRect.y() + (itemRect.height() - iconHeight) / 2.0f - 2.0f;
-        float labelY = itemRect.y() + (itemRect.height() - labelHeight) / 2.0f - 1.0f;
-        float countY = itemRect.y() + (itemRect.height() - countHeight) / 2.0f - 1.0f;
+        float labelY = itemRect.y() + (itemRect.height() - labelHeight) / 2.0f;
+        float countY = itemRect.y() + (itemRect.height() - countHeight) / 2.0f;
 
         scope.roundRect(itemRect.x(), itemRect.y(), itemRect.width(), itemRect.height(), MD3Theme.CARD_RADIUS, background);
         float iconWidth = clippedTextRenderer.getWidth(category.icon, itemIconScale, StaticFontLoader.ICONS);
@@ -315,7 +315,7 @@ public class CategoryRailPanel {
             float textOffset = (1.0f - contentProgress) * 5.0f;
             Color animatedLabel = MD3Theme.withAlpha(settingsLabelColor, (int) (255 * contentProgress));
             float settingsLabelHeight = clippedTextRenderer.getHeight(itemLabelScale);
-            float settingsLabelY = settingsRect.y() + (settingsRect.height() - settingsLabelHeight) / 2.0f - 1.0f;
+            float settingsLabelY = settingsRect.y() + (settingsRect.height() - settingsLabelHeight) / 2.0f;
             scope.text(settingsLabelComponent.getTranslatedName(), settingsRect.x() + 30.0f + textOffset, settingsLabelY, itemLabelScale, animatedLabel);
         }
     }
