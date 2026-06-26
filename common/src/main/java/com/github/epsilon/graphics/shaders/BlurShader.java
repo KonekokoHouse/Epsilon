@@ -97,7 +97,7 @@ public class BlurShader {
     }
 
     public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength) {
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
 
         this.ensureProgram();
 
@@ -105,11 +105,7 @@ public class BlurShader {
             return;
         }
 
-<<<<<<< HEAD
-        RenderTarget fb = mc.gameRenderer.mainRenderTarget();
-=======
-        RenderTarget target = mc.getMainRenderTarget();
->>>>>>> f54f496 (修复 HudEditor 无法绘制 BlurShader 的问题 (#305))
+        RenderTarget target = mc.gameRenderer.mainRenderTarget();
         LuminRenderSystem.LuminRenderTarget activeTarget = LuminRenderSystem.getActiveTarget();
         GpuTexture targetTexture = activeTarget == null ? target.getColorTexture() : activeTarget.colorTexture();
         GpuTextureView targetView = activeTarget == null ? target.getColorTextureView() : activeTarget.colorView();
