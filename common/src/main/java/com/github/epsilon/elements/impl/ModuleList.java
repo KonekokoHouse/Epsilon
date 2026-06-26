@@ -349,8 +349,8 @@ public class ModuleList extends HudModule {
                 float iconScale = scale.getValue().floatValue();
                 float iconWidth = textRenderer.getWidth(iconChar, iconScale, StaticFontLoader.ICONS);
                 float iconHeight = textRenderer.getHeight(iconScale, StaticFontLoader.ICONS);
-                float iconX = iconBoxX + (rowHeight - iconWidth) / 2.0f - 1.0f * scale.getValue().floatValue();
-                float iconY = rowY + (visibleHeight - iconHeight) / 2.0f - 2.0f * scale.getValue().floatValue();
+                float iconX = iconBoxX + (rowHeight - iconWidth) / 2.0f;
+                float iconY = rowY + (visibleHeight - iconHeight) / 2.0f;
                 textRenderer.addText(iconChar, iconX, iconY, iconScale, withAlpha(accent, alpha * 0.82f), StaticFontLoader.ICONS);
             }
 
@@ -359,16 +359,18 @@ public class ModuleList extends HudModule {
                         ? textBoxX + row.line.openNameBoxWidth + iconGap
                         : iconBoxX - iconGap - row.line.openInfoBoxWidth;
                 drawOpenBox(roundRectRenderer, shadowRenderer, infoBoxX, rowY, row.line.openInfoBoxWidth, visibleHeight, radius, alpha);
-                float infoY = rowY + (visibleHeight - textRenderer.getHeight(textScale, StaticFontLoader.DEFAULT)) / 2.0f - 1.0f;
-                textRenderer.addText(row.line.info, infoBoxX + infoPadStart, infoY, textScale, withAlpha(infoColor.getValue(), alpha), StaticFontLoader.DEFAULT);
+                float infoX = infoBoxX + (row.line.openInfoBoxWidth - row.line.infoWidth) / 2.0f;
+                float infoY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
+                textRenderer.addText(row.line.info, infoX, infoY, textScale, withAlpha(infoColor.getValue(), alpha));
             }
         } else {
             textBoxX = rowX;
         }
 
         drawOpenBox(roundRectRenderer, shadowRenderer, textBoxX, rowY, row.line.openNameBoxWidth, visibleHeight, radius, alpha);
-        float textY = rowY + (visibleHeight - textRenderer.getHeight(textScale, StaticFontLoader.DEFAULT)) / 2.0f - 1.0f;
-        textRenderer.addText(row.line.name, textBoxX + namePadStart, textY, textScale, withAlpha(accent, alpha), StaticFontLoader.DEFAULT);
+        float textX = textBoxX + (row.line.openNameBoxWidth - row.line.nameWidth) / 2.0f;
+        float textY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
+        textRenderer.addText(row.line.name, textX, textY, textScale, withAlpha(accent, alpha));
     }
 
     private void drawOpenBox(RoundRectRenderer roundRectRenderer, ShadowRenderer shadowRenderer, float x, float y, float width, float height, float radius, float alpha) {
@@ -383,7 +385,7 @@ public class ModuleList extends HudModule {
     }
 
     private void drawCompactLine(TextRenderer textRenderer, ModuleLine line, float x, float y, float textScale, Color nameColor, float alpha) {
-        textRenderer.addText(line.name, x, y, textScale, nameColor, StaticFontLoader.DEFAULT);
+        textRenderer.addText(line.name, x, y, textScale, nameColor);
         float cursorX = x + line.nameWidth;
 
         if (line.info.isEmpty()) return;
@@ -391,11 +393,11 @@ public class ModuleList extends HudModule {
         Color bracket = withAlpha(bracketColor.getValue(), alpha);
         Color info = withAlpha(infoColor.getValue(), alpha);
 
-        textRenderer.addText(" [", cursorX, y, textScale, bracket, StaticFontLoader.DEFAULT);
+        textRenderer.addText(" [", cursorX, y, textScale, bracket);
         cursorX += line.openBracketWidth;
-        textRenderer.addText(line.info, cursorX, y, textScale, info, StaticFontLoader.DEFAULT);
+        textRenderer.addText(line.info, cursorX, y, textScale, info);
         cursorX += line.infoWidth;
-        textRenderer.addText("]", cursorX, y, textScale, bracket, StaticFontLoader.DEFAULT);
+        textRenderer.addText("]", cursorX, y, textScale, bracket);
     }
 
     private float timedHue() {
@@ -496,10 +498,10 @@ public class ModuleList extends HudModule {
                 info = "";
             }
 
-            float nameWidth = textRenderer.getWidth(name, textScale, StaticFontLoader.DEFAULT);
-            float openBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(" [", textScale, StaticFontLoader.DEFAULT);
-            float infoWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(info, textScale, StaticFontLoader.DEFAULT);
-            float closeBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth("]", textScale, StaticFontLoader.DEFAULT);
+            float nameWidth = textRenderer.getWidth(name, textScale);
+            float openBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(" [", textScale);
+            float infoWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(info, textScale);
+            float closeBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth("]", textScale);
             return new ModuleLine(name, info, nameWidth, openBracketWidth, infoWidth, closeBracketWidth);
         }
     }
