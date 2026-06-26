@@ -3,6 +3,7 @@ package com.github.epsilon.gui.dropdown.component;
 import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
@@ -43,10 +44,10 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         add(Category.PLAYER::getName, Category.PLAYER.icon, "category:player", togglePanel, panelVisibleResolver);
         add(Category.MOVEMENT::getName, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver);
         add(Category.RENDER::getName, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver);
-        add(friendComponent::getTranslatedName, "4", "friend", togglePanel, panelVisibleResolver);
-        add(configComponent::getTranslatedName, "O", "config", togglePanel, panelVisibleResolver);
-        add(addonComponent::getTranslatedName, "+", "addon", togglePanel, panelVisibleResolver);
-        entries.add(new Entry(collapseComponent::getTranslatedName, "X", "__collapse_all__", togglePanel, anySubPanelVisible));
+        add(friendComponent::getTranslatedName, IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver);
+        add(configComponent::getTranslatedName, IconChars.SETTINGS, "config", togglePanel, panelVisibleResolver);
+        add(addonComponent::getTranslatedName, IconChars.ADD, "addon", togglePanel, panelVisibleResolver);
+        entries.add(new Entry(collapseComponent::getTranslatedName, IconChars.CLOSE, "__collapse_all__", togglePanel, anySubPanelVisible));
     }
 
     private void add(LabelSupplier labelSupplier, String icon, String panelId, Consumer<String> togglePanel, PanelVisibleResolver panelVisibleResolver) {

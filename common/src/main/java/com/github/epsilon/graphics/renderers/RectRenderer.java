@@ -3,7 +3,6 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.graphics.elements.RectElement;
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -61,6 +60,7 @@ public class RectRenderer implements IRenderer {
         addRawRect(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight);
     }
 
+<<<<<<< HEAD
     public void addElement(RectElement element) {
         addRawRect(
                 element.x(),
@@ -94,6 +94,8 @@ public class RectRenderer implements IRenderer {
         addVertex(x + w, y, argb4);
     }
 
+=======
+>>>>>>> 914573e (更换客户端所有图标 添加紧凑布局的 ModuleList 修复存在LuminGraphics 三个月的 BUG (#307))
     private void addVertex(float vx, float vy, int color) {
         long baseAddr = MemoryUtil.memAddress(buffer.getMappedBuffer());
         long p = baseAddr + currentOffset;

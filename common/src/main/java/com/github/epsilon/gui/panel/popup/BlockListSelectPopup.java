@@ -354,7 +354,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     }
 
     private float centeredTextY(float boxY, float boxHeight, float scale) {
-        return boxY + (boxHeight - textRenderer.getLineHeight(scale)) * 0.5f;
+        return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f;
     }
 
     private void drawItemPreview(GuiGraphicsExtractor guiGraphics, ItemPreview preview) {

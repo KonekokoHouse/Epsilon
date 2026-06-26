@@ -1,7 +1,6 @@
 package com.github.epsilon.graphics.renderers;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.elements.TextElement;
 import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
@@ -34,8 +33,16 @@ public class TextRenderer implements IRenderer {
         textRenderer.addText(text, x, y, scale, color, fontLoader);
     }
 
+    public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
+        textRenderer.addGradientText(text, x, y, scale, startColor, endColor, fontLoader);
+    }
+
     public void addText(String text, float x, float y, float scale, Color color) {
         textRenderer.addText(text, x, y, scale, color, StaticFontLoader.DEFAULT);
+    }
+
+    public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {
+        textRenderer.addGradientText(text, x, y, scale, startColor, endColor, StaticFontLoader.DEFAULT);
     }
 
     public void addText(String text, float x, float y, Color color, TtfFontLoader fontLoader) {
@@ -46,37 +53,12 @@ public class TextRenderer implements IRenderer {
         textRenderer.addText(text, x, y, 1.0f, color, StaticFontLoader.DEFAULT);
     }
 
-    public void addElement(TextElement element) {
-        textRenderer.addText(
-                element.text(),
-                element.x(),
-                element.y(),
-                element.scale(),
-                element.color(),
-                element.fontLoader()
-        );
-    }
-
-    public void addElements(Iterable<TextElement> elements) {
-        for (TextElement element : elements) {
-            addElement(element);
-        }
-    }
-
     public float getHeight(float scale) {
         return textRenderer.getHeight(scale, StaticFontLoader.DEFAULT);
     }
 
     public float getHeight(float scale, TtfFontLoader fontLoader) {
         return textRenderer.getHeight(scale, fontLoader);
-    }
-
-    public float getLineHeight(float scale) {
-        return textRenderer.getLineHeight(scale, StaticFontLoader.DEFAULT);
-    }
-
-    public float getLineHeight(float scale, TtfFontLoader fontLoader) {
-        return textRenderer.getLineHeight(scale, fontLoader);
     }
 
     public float getWidth(String text, float scale) {

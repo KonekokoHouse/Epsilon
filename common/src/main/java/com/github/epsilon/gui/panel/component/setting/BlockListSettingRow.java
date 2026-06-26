@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -30,7 +31,7 @@ public class BlockListSettingRow extends SettingRow<BlockListSetting> {
 
         PanelLayout.Rect chipBounds = PanelElements.measureAssistChipBounds(textRenderer, bounds, summary, chipTextScale, 8.0f, 12.0f, 94.0f);
         scope.chip(chipBounds, summary, chipTextScale, MD3Theme.SECONDARY_CONTAINER, MD3Theme.ON_SECONDARY_CONTAINER,
-                "+", 0.58f, StaticFontLoader.ICONS);
+                IconChars.ADD, 0.58f, StaticFontLoader.ICONS);
     }
 
     @Override

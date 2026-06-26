@@ -7,6 +7,7 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dsl.PanelUiCompiler;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -30,7 +31,7 @@ public class CategoryRailPanel {
     private static final float CATEGORY_ITEM_SPACING = 38.0f;
     private static final float CATEGORY_START_Y = 40.0f;
     private static final float RAIL_ICON_CENTER_X_OFFSET = 2.0f;
-    private static final String SETTINGS_ICON = "7";
+    private static final String SETTINGS_ICON = IconChars.SETTINGS;
 
     protected final PanelState state;
     private final RectRenderer rectRenderer;

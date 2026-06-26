@@ -2,6 +2,7 @@ package com.github.epsilon.gui.hudeditor;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
@@ -524,7 +525,7 @@ public class HudEditorScreen extends Screen {
 
         float x = hudPanel == null ? DropdownTheme.PANEL_MARGIN_X : hudPanel.getX();
         float y = hudPanel == null ? DropdownTheme.PANEL_MARGIN_Y : hudPanel.getY();
-        hudPanel = new CategoryPanel("hud_elements", "HUD", "E", 0, HudElementHolder.INSTANCE.getElements());
+        hudPanel = new CategoryPanel("hud_elements", "HUD", IconChars.WIDGETS, 0, HudElementHolder.INSTANCE.getElements());
         hudPanel.setVisible(true);
         hudPanel.setOpened(true);
         hudPanel.setPosition(x, y);
