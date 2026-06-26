@@ -212,11 +212,11 @@ public class PanelUiCompiler {
                 String trailingIcon, float trailingIconScale, TtfFontLoader trailingIconFont
         )) {
             target.roundRectRenderer().addRoundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CONTROL_RADIUS, background);
-            float textY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(textScale)) / 2.0f - 1.0f;
+            float textY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(textScale)) / 2.0f;
             target.textRenderer().addText(label, bounds.x() + 8.0f, textY, textScale, foreground);
             if (trailingIcon != null && !trailingIcon.isEmpty() && trailingIconFont != null) {
                 float iconWidth = target.textRenderer().getWidth(trailingIcon, trailingIconScale, trailingIconFont);
-                float iconY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(trailingIconScale, trailingIconFont)) / 2.0f - 1.0f;
+                float iconY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(trailingIconScale, trailingIconFont)) / 2.0f;
                 target.textRenderer().addText(trailingIcon, bounds.right() - 8.0f - iconWidth, iconY, trailingIconScale, foreground, trailingIconFont);
             }
             return;
@@ -239,7 +239,7 @@ public class PanelUiCompiler {
             float indicatorHeight = innerHeight - indicatorInset * 2.0f;
             float indicatorRadius = Math.max(4.0f, outerRadius - 2.0f);
             float labelScale = 0.52f;
-            float labelY = innerY + (innerHeight - target.textRenderer().getHeight(labelScale)) / 2.0f - 1.0f;
+            float labelY = innerY + (innerHeight - target.textRenderer().getHeight(labelScale)) / 2.0f;
             Color inactiveLabel = MD3Theme.segmentedControlInactiveLabel();
             Color activeLabel = MD3Theme.segmentedControlActiveLabel();
 
@@ -267,7 +267,7 @@ public class PanelUiCompiler {
             float labelHeight = target.textRenderer().getHeight(scale);
             target.textRenderer().addText(label,
                     bounds.x() + (bounds.width() - labelWidth) / 2.0f,
-                    bounds.y() + (bounds.height() - labelHeight) / 2.0f - 1.0f,
+                    bounds.y() + (bounds.height() - labelHeight) / 2.0f,
                     scale,
                     labelColor);
             return;
@@ -310,7 +310,7 @@ public class PanelUiCompiler {
         float labelHeight = target.textRenderer().getHeight(labelScale);
         target.textRenderer().addText(label,
                 x + (width - labelWidth) / 2.0f,
-                y + (height - labelHeight) / 2.0f - 1.0f,
+                y + (height - labelHeight) / 2.0f,
                 labelScale,
                 labelColor);
     }
@@ -364,7 +364,7 @@ public class PanelUiCompiler {
         String text = element.text();
         if (text != null && !text.isEmpty()) {
             float textX = bounds.x() + element.textInset();
-            float textY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(element.textScale())) / 2.0f - 1.0f;
+            float textY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(element.textScale())) / 2.0f;
 
             PanelUiTree.SelectionRange selection = element.selection();
             if (selection != null && element.selectionColor() != null) {
@@ -388,7 +388,7 @@ public class PanelUiCompiler {
 
         if (element.trailingHint() != null && !element.trailingHint().isBlank() && element.trailingHintColor() != null) {
             float hintWidth = target.textRenderer().getWidth(element.trailingHint(), element.trailingHintScale());
-            float hintY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(element.trailingHintScale())) / 2.0f - 1.0f;
+            float hintY = bounds.y() + (bounds.height() - target.textRenderer().getHeight(element.trailingHintScale())) / 2.0f;
             float hintX = bounds.right() - element.textInset() - hintWidth;
             target.textRenderer().addText(element.trailingHint(), hintX, hintY, element.trailingHintScale(), element.trailingHintColor());
         }

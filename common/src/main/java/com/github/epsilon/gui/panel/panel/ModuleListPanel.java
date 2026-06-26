@@ -403,7 +403,7 @@ public class ModuleListPanel {
                 null, 0.0f, null);
 
         if (searchFocused) {
-            float textY = searchBounds.y() + (searchBounds.height() - textRenderer.getHeight(scale)) / 2.0f - 1.0f;
+            float textY = searchBounds.y() + (searchBounds.height() - textRenderer.getHeight(scale)) / 2.0f;
             float textX = searchBounds.x() + 8.0f;
             float caretX = textX + textRenderer.getWidth(query.substring(0, Math.min(searchCursorIndex, query.length())), scale);
             IMEFocusHelper.updateCursorPos(caretX, textY);

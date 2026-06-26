@@ -1,6 +1,5 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.screen.WelcomeScreen;
 import com.github.epsilon.modules.impl.ClientSetting;

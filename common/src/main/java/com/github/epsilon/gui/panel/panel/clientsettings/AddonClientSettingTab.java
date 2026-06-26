@@ -489,7 +489,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY_CONTAINER);
         scope.text(chipText,
                 chipX + (chipWidth - textRenderer.getWidth(chipText, chipScale)) / 2.0f,
-                chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f - 1.0f,
+                chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f,
                 chipScale,
                 MD3Theme.ON_PRIMARY_CONTAINER);
     }
