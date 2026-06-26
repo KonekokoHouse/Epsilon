@@ -84,18 +84,20 @@ public class BlurShader {
     }
 
     public void render(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurStrength) {
+        if (mc.screen != null) return;
+
         this.ensureProgram();
 
         if (width <= 0.0f || height <= 0.0f) {
             return;
         }
 
-        RenderTarget fb = mc.getMainRenderTarget();
+        RenderTarget target = mc.getMainRenderTarget();
         LuminRenderSystem.LuminRenderTarget activeTarget = LuminRenderSystem.getActiveTarget();
-        GpuTexture targetTexture = activeTarget == null ? fb.getColorTexture() : activeTarget.colorTexture();
-        GpuTextureView targetView = activeTarget == null ? fb.getColorTextureView() : activeTarget.colorView();
-        int targetWidth = activeTarget == null ? fb.width : activeTarget.width();
-        int targetHeight = activeTarget == null ? fb.height : activeTarget.height();
+        GpuTexture targetTexture = activeTarget == null ? target.getColorTexture() : activeTarget.colorTexture();
+        GpuTextureView targetView = activeTarget == null ? target.getColorTextureView() : activeTarget.colorView();
+        int targetWidth = activeTarget == null ? target.width : activeTarget.width();
+        int targetHeight = activeTarget == null ? target.height : activeTarget.height();
 
         if (targetWidth <= 0 || targetHeight <= 0 || targetTexture == null || targetView == null) {
             return;
