@@ -17,9 +17,13 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
@@ -57,6 +61,7 @@ public class TargetHud extends HudModule {
 
     private static final long VISIBILITY_ANIMATION_DURATION_MS = 300L;
     private static final float HEAD_DAMAGE_SCALE_FACTOR = 0.15f;
+    private static final float EQUIPMENT_ITEM_SCALE = 0.85f;
 
     private int lastTargetId = Integer.MIN_VALUE;
     private float displayedHealth = 0.0f;
@@ -136,6 +141,9 @@ public class TargetHud extends HudModule {
         float contentY = headY + 2.0f * panelScale;
         float healthTextWidth = textRenderer.getWidth(healthText, textScale);
         float healthTextX = this.x + panelWidth - pad - healthTextWidth;
+        float equipmentY = contentY + textHeight + 2.8f * panelScale;
+        float equipmentScale = EQUIPMENT_ITEM_SCALE * panelScale;
+        float equipmentGap = 1.5f * panelScale;
 
         float centerX = this.x + panelWidth / 2.0f;
         float centerY = this.y + panelHeight / 2.0f;
@@ -160,6 +168,10 @@ public class TargetHud extends HudModule {
         float scaledTextStartX = Mth.lerp(animationScale, centerX, textStartX);
         float scaledContentY = Mth.lerp(animationScale, centerY, contentY);
         float scaledHealthTextX = Mth.lerp(animationScale, centerX, healthTextX);
+        float scaledEquipmentX = Mth.lerp(animationScale, centerX, textStartX);
+        float scaledEquipmentY = Mth.lerp(animationScale, centerY, equipmentY);
+        float scaledEquipmentScale = equipmentScale * animationScale;
+        float scaledEquipmentGap = equipmentGap * animationScale;
         float damageProgress = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(target.hurtTime / 10.0f, 0.0f, 1.0f));
         float headDamageScale = 1.0f - damageProgress * HEAD_DAMAGE_SCALE_FACTOR;
         float finalHeadSize = scaledHeadSize * headDamageScale;
@@ -203,9 +215,44 @@ public class TargetHud extends HudModule {
             textureRenderer.drawAndClear();
         }
 
+        renderEquipmentItems(graphics, target, scaledEquipmentX, scaledEquipmentY, scaledEquipmentScale, scaledEquipmentGap);
         textRenderer.addText(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
         textRenderer.addText(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
         textRenderer.drawAndClear();
+    }
+
+    private void renderEquipmentItems(GuiGraphicsExtractor graphics, LivingEntity target, float startX, float y, float scale, float gap) {
+        List<ItemStack> equipmentItems = new ArrayList<>(5);
+        appendEquipmentItem(equipmentItems, target.getMainHandItem());
+        appendEquipmentItem(equipmentItems, target.getItemBySlot(EquipmentSlot.HEAD));
+        appendEquipmentItem(equipmentItems, target.getItemBySlot(EquipmentSlot.CHEST));
+        appendEquipmentItem(equipmentItems, target.getItemBySlot(EquipmentSlot.LEGS));
+        appendEquipmentItem(equipmentItems, target.getItemBySlot(EquipmentSlot.FEET));
+
+        if (equipmentItems.isEmpty()) {
+            return;
+        }
+
+        float itemSize = 16.0f * scale;
+        float itemX = startX;
+        for (int i = 0; i < equipmentItems.size(); i++) {
+            drawItem(graphics, target, equipmentItems.get(i), itemX, y, scale, target.getId() + i);
+            itemX += itemSize + gap;
+        }
+    }
+
+    private void appendEquipmentItem(List<ItemStack> items, ItemStack stack) {
+        if (!stack.isEmpty()) {
+            items.add(stack);
+        }
+    }
+
+    private void drawItem(GuiGraphicsExtractor graphics, LivingEntity owner, ItemStack stack, float x, float y, float scale, int seed) {
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x, y);
+        graphics.pose().scale(scale, scale);
+        graphics.item(owner, stack, 0, 0, seed);
+        graphics.pose().popMatrix();
     }
 
     private LivingEntity resolveTarget() {

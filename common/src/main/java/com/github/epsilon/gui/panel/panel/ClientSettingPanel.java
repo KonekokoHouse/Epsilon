@@ -166,7 +166,7 @@ public class ClientSettingPanel {
             String label = tab.component().getTranslatedName();
             float textWidth = textRenderer.getWidth(label, labelScale);
             float textX = tabBounds.x() + (tabBounds.width() - textWidth) / 2.0f;
-            float textY = tabBounds.y() + (tabBounds.height() - TAB_INDICATOR_HEIGHT - textHeight) / 2.0f - 1.0f;
+            float textY = tabBounds.y() + (tabBounds.height() - TAB_INDICATOR_HEIGHT - textHeight) / 2.0f;
             scope.text(label, textX, textY, labelScale, active ? MD3Theme.PRIMARY : MD3Theme.TEXT_MUTED);
         }
 

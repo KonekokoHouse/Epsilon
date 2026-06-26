@@ -47,7 +47,7 @@ public class ModuleList extends HudModule {
         CATEGORY
     }
 
-    private final EnumSetting<Style> style = enumSetting("Style", Style.Compact);
+    private final EnumSetting<Style> style = enumSetting("Style", Style.Open);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.LEFT_TAG, () -> style.is(Style.Compact));
     private final EnumSetting<SortingMode> sortingMode = enumSetting("Sorting Mode", SortingMode.LENGTH);
     private final BoolSetting showHidden = boolSetting("Show Hidden", false);
@@ -96,10 +96,9 @@ public class ModuleList extends HudModule {
         float textScale = style.is(Style.Open) ? Math.max(0.1f, s + openTextScaleOffset.getValue().floatValue()) : 0.72f * s;
         List<RenderRow> rows = collectRows(textRenderer, textScale);
 
-        if (style.is(Style.Open)) {
-            renderOpen(textRenderer, rows, s, textScale);
-        } else {
-            renderCompact(textRenderer, rows, s, textScale);
+        switch (style.getValue()) {
+            case Compact -> renderCompact(textRenderer, rows, s, textScale);
+            case Open -> renderOpen(textRenderer, rows, s, textScale);
         }
     }
 
@@ -254,8 +253,7 @@ public class ModuleList extends HudModule {
     }
 
     private boolean resolveState(Module module) {
-        return module.isEnabled()
-                && (showHidden.getValue() || (!module.isHidden() && (!bindOnly.getValue() || module.getKeyBind() != -1)));
+        return module.isEnabled() && (showHidden.getValue() || (!module.isHidden() && (!bindOnly.getValue() || module.getKeyBind() != -1)));
     }
 
     private float computeRowX(float rowWidth) {
@@ -312,7 +310,7 @@ public class ModuleList extends HudModule {
         float alpha = Mth.clamp(row.progress, 0.0f, 1.0f);
         float visibleHeight = rowHeight * alpha;
         float textBoxX;
-        float iconBoxX = 0.0f;
+        float iconBoxX;
         boolean hasInfoBox = row.line.openInfoBoxWidth > 0.0f;
 
         if (showOpenIcon.getValue()) {
@@ -442,29 +440,10 @@ public class ModuleList extends HudModule {
     private record RenderRow(Module module, ModuleLine line, float progress, float rowWidth) {
     }
 
-    private static class ModuleLine {
-        private final String name;
-        private final String info;
-        private final float nameWidth;
-        private final float openBracketWidth;
-        private final float infoWidth;
-        private final float width;
-        private final float openNameBoxWidth;
-        private final float openInfoBoxWidth;
-
+    private record ModuleLine(String name, String info, float nameWidth, float openBracketWidth, float infoWidth,
+                              float width, float openNameBoxWidth, float openInfoBoxWidth) {
         private ModuleLine(String name, String info, float nameWidth, float openBracketWidth, float infoWidth, float closeBracketWidth) {
             this(name, info, nameWidth, openBracketWidth, infoWidth, nameWidth + (info.isEmpty() ? 0.0f : openBracketWidth + infoWidth + closeBracketWidth), 0.0f, 0.0f);
-        }
-
-        private ModuleLine(String name, String info, float nameWidth, float openBracketWidth, float infoWidth, float width, float openNameBoxWidth, float openInfoBoxWidth) {
-            this.name = name;
-            this.info = info;
-            this.nameWidth = nameWidth;
-            this.openBracketWidth = openBracketWidth;
-            this.infoWidth = infoWidth;
-            this.width = width;
-            this.openNameBoxWidth = openNameBoxWidth;
-            this.openInfoBoxWidth = openInfoBoxWidth;
         }
 
         private ModuleLine withOpenWidths(float openNameBoxWidth, float openInfoBoxWidth) {

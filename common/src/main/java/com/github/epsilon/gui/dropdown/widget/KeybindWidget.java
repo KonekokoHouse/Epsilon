@@ -30,7 +30,7 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
 
     @Override
     public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
-        float lineHeight = renderer.text().getLineHeight(DropdownTheme.SETTING_TEXT_SCALE);
+        float lineHeight = renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE);
         float labelTextY = y + (getHeight() - lineHeight) * 0.5f;
         renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 

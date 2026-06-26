@@ -192,7 +192,7 @@ public class DropdownScreen extends Screen {
         if (ClientSetting.INSTANCE.dropdownHints.getValue()) {
             float scale = 0.62f;
             float lineGap = 5.0f;
-            float lineHeight = renderer.text().getLineHeight(scale);
+            float lineHeight = renderer.text().getHeight(scale);
             String[] hints = {
                     searchHintComponent.getTranslatedName(),
                     panelHintComponent.getTranslatedName(),

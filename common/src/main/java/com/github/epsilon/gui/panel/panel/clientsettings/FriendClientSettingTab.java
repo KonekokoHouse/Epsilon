@@ -293,13 +293,13 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         float initialHeight = textRenderer.getHeight(initialScale);
         scope.text(initial,
                 avatarX + (avatarSize - initialWidth) / 2.0f,
-                avatarY + (avatarSize - initialHeight) / 2.0f - 1.0f,
+                avatarY + (avatarSize - initialHeight) / 2.0f,
                 initialScale,
                 MD3Theme.ON_SECONDARY_CONTAINER);
 
         float nameScale = 0.66f;
         float nameX = avatarX + avatarSize + 8.0f;
-        float nameY = bounds.y() + (bounds.height() - textRenderer.getHeight(nameScale)) / 2.0f - 1.0f;
+        float nameY = bounds.y() + (bounds.height() - textRenderer.getHeight(nameScale)) / 2.0f;
         scope.text(name, nameX, nameY, nameScale, MD3Theme.TEXT_PRIMARY);
 
         PanelElements.buildIconButton(scope, textRenderer, removeBounds, "✕", 0.50f, MD3Theme.ERROR, removeHoverProgress);

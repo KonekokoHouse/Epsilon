@@ -37,7 +37,7 @@ public class DropdownTextField {
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
-        float textY = y + (height - renderer.text().getLineHeight(textScale)) / 2.0f; // i07你还挺聪明
+        float textY = y + (height - renderer.text().getHeight(textScale)) / 2.0f; // i07你还挺聪明
         float textX = x + 4.0f;
         updateCursorLayout(renderer, textX, textScale);
         renderer.text().addText(trimToWidth(display, textScale, width - 8.0f, renderer), textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
@@ -57,7 +57,7 @@ public class DropdownTextField {
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
 
-        float textY = y + (height - renderer.text().getLineHeight(textScale)) / 2.0f;
+        float textY = y + (height - renderer.text().getHeight(textScale)) / 2.0f;
         String visibleText = trimToWidth(display, textScale, width - 8.0f, renderer);
         float textX = x + (width - renderer.text().getWidth(visibleText, textScale)) * 0.5f;
         float caretBaseX = x + (width - renderer.text().getWidth(text, textScale)) * 0.5f;
@@ -248,7 +248,7 @@ public class DropdownTextField {
 
     private void drawCaret(DropdownRenderer renderer, float x, float y, float textScale) {
         if (System.currentTimeMillis() % 1000 > 500) {
-            renderer.rect().addRect(x, y, 0.8f, renderer.text().getLineHeight(textScale), MD3Theme.TEXT_PRIMARY);
+            renderer.rect().addRect(x, y, 0.8f, renderer.text().getHeight(textScale), MD3Theme.TEXT_PRIMARY);
         }
     }
 
