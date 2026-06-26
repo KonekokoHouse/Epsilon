@@ -13,8 +13,8 @@ import net.minecraft.util.ARGB;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
-import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 public class RectRenderer implements IRenderer {
 
@@ -37,7 +37,7 @@ public class RectRenderer implements IRenderer {
     }
 
     public void addRect(float x, float y, float width, float height, Color color) {
-        addRawRect(x, y, width, height, color, color, color, color);
+        addRectGradient(x, y, width, height, color, color, color, color);
     }
 
     public void addOutline(float x, float y, float width, float height, float outline, Color color) {
@@ -49,38 +49,14 @@ public class RectRenderer implements IRenderer {
     }
 
     public void addVerticalGradient(float x, float y, float width, float height, Color top, Color bottom) {
-        addRawRect(x, y, width, height, top, bottom, bottom, top);
+        addRectGradient(x, y, width, height, top, bottom, bottom, top);
     }
 
     public void addHorizontalGradient(float x, float y, float width, float height, Color left, Color right) {
-        addRawRect(x, y, width, height, left, left, right, right);
+        addRectGradient(x, y, width, height, left, left, right, right);
     }
 
-    public void addRectGradient(float x, float y, float width, float height, Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
-        addRawRect(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight);
-    }
-
-<<<<<<< HEAD
-    public void addElement(RectElement element) {
-        addRawRect(
-                element.x(),
-                element.y(),
-                element.width(),
-                element.height(),
-                element.topLeft(),
-                element.bottomLeft(),
-                element.bottomRight(),
-                element.topRight()
-        );
-    }
-
-    public void addElements(Iterable<RectElement> elements) {
-        for (RectElement element : elements) {
-            addElement(element);
-        }
-    }
-
-    public void addRawRect(float x, float y, float w, float h, Color c1, Color c2, Color c3, Color c4) {
+    public void addRectGradient(float x, float y, float w, float h, Color c1, Color c2, Color c3, Color c4) {
         buffer.tryMap();
 
         int argb1 = ARGB.toABGR(c1.getRGB());
@@ -94,8 +70,6 @@ public class RectRenderer implements IRenderer {
         addVertex(x + w, y, argb4);
     }
 
-=======
->>>>>>> 914573e (更换客户端所有图标 添加紧凑布局的 ModuleList 修复存在LuminGraphics 三个月的 BUG (#307))
     private void addVertex(float vx, float vy, int color) {
         long baseAddr = MemoryUtil.memAddress(buffer.getMappedBuffer());
         long p = baseAddr + currentOffset;
