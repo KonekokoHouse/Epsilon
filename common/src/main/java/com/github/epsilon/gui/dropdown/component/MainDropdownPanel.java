@@ -45,7 +45,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         add(Category.MOVEMENT::getName, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver);
         add(Category.RENDER::getName, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver);
         add(friendComponent::getTranslatedName, IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver);
-        add(configComponent::getTranslatedName, IconChars.C, "config", togglePanel, panelVisibleResolver);
+        add(configComponent::getTranslatedName, IconChars.SETTINGS, "config", togglePanel, panelVisibleResolver);
         add(addonComponent::getTranslatedName, IconChars.ADD, "addon", togglePanel, panelVisibleResolver);
         entries.add(new Entry(collapseComponent::getTranslatedName, IconChars.CLOSE, "__collapse_all__", togglePanel, anySubPanelVisible));
     }

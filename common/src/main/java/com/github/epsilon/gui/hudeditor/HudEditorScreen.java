@@ -2,11 +2,11 @@ package com.github.epsilon.gui.hudeditor;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.component.CategoryPanel;
-import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.holders.ConfigHolder;

@@ -10,11 +10,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.settings.impl.ColorSetting;
-import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
-import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
@@ -22,14 +18,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 
 public class ModuleList extends HudModule {
