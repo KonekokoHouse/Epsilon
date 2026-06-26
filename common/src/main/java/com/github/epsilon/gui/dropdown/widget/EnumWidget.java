@@ -88,7 +88,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     private void drawCurrentValueField(DropdownRenderer renderer, float fieldX, float fieldY, float fieldW, float hover, float expand) {
         Color background = MD3Theme.filledFieldSurface(expanded, hover);
         Color outline = MD3Theme.filledFieldIndicator(expanded, hover);
-        float textY = fieldY + (FIELD_HEIGHT - renderer.text().getLineHeight(FIELD_TEXT_SCALE)) * 0.5f;
+        float textY = fieldY + (FIELD_HEIGHT - renderer.text().getHeight(FIELD_TEXT_SCALE)) * 0.5f;
         float arrowCenterX = fieldX + fieldW - 10.0f;
         float arrowCenterY = fieldY + FIELD_HEIGHT * 0.5f;
 
@@ -190,7 +190,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
             );
         }
 
-        float lineHeight = renderer.text().getLineHeight(OPTION_TEXT_SCALE);
+        float lineHeight = renderer.text().getHeight(OPTION_TEXT_SCALE);
         float textY = optionY + (OPTION_HEIGHT - lineHeight) * 0.5f;
         if (textY + lineHeight > visibleBottom) {
             return;

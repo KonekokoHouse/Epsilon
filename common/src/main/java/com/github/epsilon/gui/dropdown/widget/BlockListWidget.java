@@ -78,7 +78,7 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
     }
 
     private float centeredTextY(DropdownRenderer renderer, float boxY, float boxHeight, float scale) {
-        return boxY + (boxHeight - renderer.text().getLineHeight(scale)) * 0.5f;
+        return boxY + (boxHeight - renderer.text().getHeight(scale)) * 0.5f;
     }
 
 }

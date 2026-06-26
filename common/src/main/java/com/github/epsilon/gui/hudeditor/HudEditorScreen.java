@@ -184,8 +184,8 @@ public class HudEditorScreen extends Screen {
         float subtitleScale = 0.56f;
         float titleW = renderer.text().getWidth(title, titleScale);
         float subW = renderer.text().getWidth(subtitle, subtitleScale);
-        float titleH = renderer.text().getLineHeight(titleScale);
-        float subtitleH = renderer.text().getLineHeight(subtitleScale);
+        float titleH = renderer.text().getHeight(titleScale);
+        float subtitleH = renderer.text().getHeight(subtitleScale);
         float boxW = Math.max(titleW, subW) + 24.0f;
         float boxH = 32.0f;
         float radius = 8.0f;
@@ -246,7 +246,7 @@ public class HudEditorScreen extends Screen {
         float textW = renderer.text().getWidth(label, scale);
         float labelW = textW + 10.0f;
         float labelY = frameY - LABEL_HEIGHT - 3.0f;
-        float textY = labelY + (LABEL_HEIGHT - renderer.text().getLineHeight(scale)) * 0.5f;
+        float textY = labelY + (LABEL_HEIGHT - renderer.text().getHeight(scale)) * 0.5f;
         renderer.roundRect().addRoundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
         renderer.text().addText(label, frameX + (labelW - textW) / 2.0f, textY, scale, MD3Theme.ON_PRIMARY_CONTAINER);
     }
