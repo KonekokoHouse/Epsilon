@@ -98,10 +98,17 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                     Color background = selected ? selectedBackground : (hovered ? hoverBackground : baseBackground);
                     Color textColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : (hovered ? MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255) : MD3Theme.TEXT_SECONDARY);
                     content.roundRect(itemBounds.x(), itemY, itemBounds.width(), itemBounds.height(), 8.0f, background);
+                    float textScale = 0.62f;
+                    float textHeight = contentBuffer.textRenderer().getHeight(textScale);
+                    float textY = itemBounds.y() + (itemBounds.height() - textHeight) / 2.0f;
                     if (selected) {
-                        content.text(IconChars.KEYBOARD_ARROW_DOWN, itemBounds.x() + 8.0f, itemY + 6.5f, 0.72f, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+                        float iconScale = 0.72f;
+                        float iconHeight = contentBuffer.textRenderer().getHeight(iconScale, StaticFontLoader.ICONS);
+                        float iconY = itemBounds.y() + (itemBounds.height() - iconHeight) / 2.0f;
+                        // TODO: 换个更合适的 icon
+                        content.text(IconChars.KEYBOARD_ARROW_DOWN, itemBounds.x() + 8.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
                     }
-                    content.text(setting.getTranslatedValueByIndex(i), itemBounds.x() + (selected ? 22.0f : 10.0f), itemY + 7.0f, 0.62f, textColor);
+                    content.text(setting.getTranslatedValueByIndex(i), itemBounds.x() + (selected ? 22.0f : 10.0f), textY, textScale, textColor);
                 }
             });
         });
