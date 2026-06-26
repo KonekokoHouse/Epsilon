@@ -91,6 +91,7 @@ public class ESP extends Module {
 
         if (mc.getFps() < 8 && mc.player.tickCount > 100) {
             ChatUtils.addChatMessage("就你这 FPS 你还开 ESP 呢? 该换电脑了!");
+            toggle();
             return;
         }
 
