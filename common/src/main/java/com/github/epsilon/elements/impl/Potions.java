@@ -1,11 +1,11 @@
-package com.github.epsilon.modules.impl.hud;
+package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.renderers.TextureRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -25,12 +25,12 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class PotionHUD extends HudModule {
+public class Potions extends HudModule {
 
-    public static final PotionHUD INSTANCE = new PotionHUD();
+    public static final Potions INSTANCE = new Potions();
 
-    private PotionHUD() {
-        super("Potion HUD", 0f, 0f, 160f, 60f);
+    private Potions() {
+        super("Potions", 0f, 0f, 160f, 60f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.5, 0.05);

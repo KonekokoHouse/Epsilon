@@ -1,8 +1,8 @@
-package com.github.epsilon.modules.impl.hud;
+package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.google.common.base.Suppliers;
@@ -12,12 +12,12 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import java.awt.*;
 import java.util.function.Supplier;
 
-public class WatermarkHUD extends HudModule {
+public class Watermark extends HudModule {
 
-    public static final WatermarkHUD INSTANCE = new WatermarkHUD();
+    public static final Watermark INSTANCE = new Watermark();
 
-    private WatermarkHUD() {
-        super("Watermark HUD", 0f, 0f, 200f, 28f);
+    private Watermark() {
+        super("Watermark", 0f, 0f, 200f, 28f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

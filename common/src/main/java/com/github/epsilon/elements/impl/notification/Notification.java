@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.hud.notification;
+package com.github.epsilon.elements.impl.notification;
 
 public class Notification {
 
@@ -75,7 +75,7 @@ public class Notification {
     }
 
     public int getDisplayTime() {
-        return NotificationsHUD.INSTANCE.displayTime.getValue();
+        return Notifications.INSTANCE.displayTime.getValue();
     }
 
     public int getId() {

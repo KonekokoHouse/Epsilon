@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.hudeditor;
 
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 
 public class HudLayoutHelper {
 

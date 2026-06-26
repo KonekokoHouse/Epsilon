@@ -4,7 +4,7 @@ import com.github.epsilon.Constants;
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.config.LegacyConfigMigrator;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.Setting;

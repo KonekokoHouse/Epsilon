@@ -1,10 +1,10 @@
-package com.github.epsilon.modules.impl.hud.notification;
+package com.github.epsilon.elements.impl.notification;
 
 import com.github.epsilon.graphics.renderers.RectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -17,12 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class NotificationsHUD extends HudModule {
+public class Notifications extends HudModule {
 
-    public static final NotificationsHUD INSTANCE = new NotificationsHUD();
+    public static final Notifications INSTANCE = new Notifications();
 
-    private NotificationsHUD() {
-        super("Notifications HUD", 3.2f, 3.2f, 120f, 28f);
+    private Notifications() {
+        super("Notifications", 3.2f, 3.2f, 120f, 28f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

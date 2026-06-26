@@ -1,9 +1,9 @@
-package com.github.epsilon.modules.impl.hud;
+package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -16,11 +16,11 @@ import net.minecraft.world.item.ItemStack;
 import java.awt.*;
 import java.util.function.Supplier;
 
-public class InventoryHUD extends HudModule {
+public class Inventory extends HudModule {
 
-    public static final InventoryHUD INSTANCE = new InventoryHUD();
+    public static final Inventory INSTANCE = new Inventory();
 
-    private InventoryHUD() {
+    private Inventory() {
         super("Inventory HUD", 0f, 0f, 180f, 80f);
     }
 

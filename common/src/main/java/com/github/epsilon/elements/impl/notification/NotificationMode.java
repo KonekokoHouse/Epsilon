@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.hud.notification;
+package com.github.epsilon.elements.impl.notification;
 
 import java.awt.*;
 

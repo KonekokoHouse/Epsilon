@@ -1,10 +1,10 @@
-package com.github.epsilon.modules.impl.hud;
+package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -18,13 +18,13 @@ import java.awt.*;
 import java.util.Locale;
 import java.util.function.Supplier;
 
-public class BPSHUD extends HudModule {
+public class BPS extends HudModule {
 
-    public static final BPSHUD INSTANCE = new BPSHUD();
+    public static final BPS INSTANCE = new BPS();
 
     private static final int GRAPH_SIZE = 72;
 
-    private BPSHUD() {
+    private BPS() {
         super("BPS HUD", 0f, 0f, 158f, 68f);
     }
 

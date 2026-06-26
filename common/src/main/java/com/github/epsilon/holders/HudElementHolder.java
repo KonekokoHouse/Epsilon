@@ -1,13 +1,13 @@
 package com.github.epsilon.holders;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
+import com.github.epsilon.elements.impl.*;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.modules.HudModule;
-import com.github.epsilon.modules.impl.hud.*;
-import com.github.epsilon.modules.impl.hud.notification.NotificationsHUD;
+import com.github.epsilon.elements.HudModule;
+import com.github.epsilon.elements.impl.notification.Notifications;
 import com.github.epsilon.utils.client.ClientUtils;
 
 import java.util.ArrayList;
@@ -26,14 +26,14 @@ public class HudElementHolder {
     private final List<HudModule> elements = new ArrayList<>();
 
     public void initElements() {
-        addElement(NotificationsHUD.INSTANCE);
-        addElement(BPSHUD.INSTANCE);
-        addElement(InventoryHUD.INSTANCE);
-        addElement(ModuleListHUD.INSTANCE);
-        addElement(PotionHUD.INSTANCE);
-        addElement(ScaffoldBlockHUD.INSTANCE);
-        addElement(TargetHUD.INSTANCE);
-        addElement(WatermarkHUD.INSTANCE);
+        addElement(Notifications.INSTANCE);
+        addElement(BPS.INSTANCE);
+        addElement(Inventory.INSTANCE);
+        addElement(ModuleList.INSTANCE);
+        addElement(Potions.INSTANCE);
+        addElement(ScaffoldBlock.INSTANCE);
+        addElement(TargetHud.INSTANCE);
+        addElement(Watermark.INSTANCE);
     }
 
     private void addElement(HudModule module) {

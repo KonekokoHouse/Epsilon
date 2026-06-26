@@ -1,7 +1,8 @@
-package com.github.epsilon.modules;
+package com.github.epsilon.elements;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
+import com.github.epsilon.modules.Module;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;

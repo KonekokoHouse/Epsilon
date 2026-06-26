@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.hud;
+package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
@@ -6,7 +6,7 @@ import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -21,12 +21,12 @@ import net.minecraft.util.Mth;
 import java.awt.*;
 import java.util.function.Supplier;
 
-public class ScaffoldBlockHUD extends HudModule {
+public class ScaffoldBlock extends HudModule {
 
-    public static final ScaffoldBlockHUD INSTANCE = new ScaffoldBlockHUD();
+    public static final ScaffoldBlock INSTANCE = new ScaffoldBlock();
 
-    private ScaffoldBlockHUD() {
-        super("Scaffold Block HUD", 0f, 0f, 84f, 28f);
+    private ScaffoldBlock() {
+        super("Scaffold Block", 0f, 0f, 84f, 28f);
     }
 
     private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);

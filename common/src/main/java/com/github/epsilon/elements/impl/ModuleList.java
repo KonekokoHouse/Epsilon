@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.hud;
+package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.ShadowRenderer;
@@ -6,7 +6,7 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.modules.HudModule;
+import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -22,11 +22,11 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class ModuleListHUD extends HudModule {
+public class ModuleList extends HudModule {
 
-    public static final ModuleListHUD INSTANCE = new ModuleListHUD();
+    public static final ModuleList INSTANCE = new ModuleList();
 
-    private ModuleListHUD() {
+    private ModuleList() {
         super("Module List HUD", 0f, 0f, 50f, 50f);
     }
 
