@@ -34,8 +34,16 @@ public class TextRenderer implements IRenderer {
         textRenderer.addText(text, x, y, scale, color, fontLoader);
     }
 
+    public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
+        textRenderer.addGradientText(text, x, y, scale, startColor, endColor, fontLoader);
+    }
+
     public void addText(String text, float x, float y, float scale, Color color) {
         textRenderer.addText(text, x, y, scale, color, StaticFontLoader.DEFAULT);
+    }
+
+    public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {
+        textRenderer.addGradientText(text, x, y, scale, startColor, endColor, StaticFontLoader.DEFAULT);
     }
 
     public void addText(String text, float x, float y, Color color, TtfFontLoader fontLoader) {
