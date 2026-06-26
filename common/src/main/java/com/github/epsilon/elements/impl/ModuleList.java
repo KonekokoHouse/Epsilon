@@ -36,18 +36,8 @@ public class ModuleList extends HudModule {
 
     public static final ModuleList INSTANCE = new ModuleList();
 
-    private static final long ANIMATION_DURATION_MS = 300L;
-    private static final float MIN_BOUNDS = 20.0f;
-    private static final float OPEN_ROW_HEIGHT = 18.0f;
-    private static final float OPEN_ROW_SPACING = 2.0f;
-    private static final float OPEN_NAME_PADDING_START = 3.5f;
-    private static final float OPEN_NAME_PADDING_END = 5.0f;
-    private static final float OPEN_ICON_GAP = 2.0f;
-    private static final float OPEN_INFO_PADDING_START = 2.5f;
-    private static final float OPEN_INFO_PADDING_END = 3.5f;
-
     private ModuleList() {
-        super("Active Modules", 0f, 2f, 96f, 20f);
+        super("Module List", 0f, 2f, 96f, 20f);
     }
 
     private enum Style {
@@ -99,6 +89,15 @@ public class ModuleList extends HudModule {
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     private final Map<Module, ModuleToggleFlag> toggleFlags = new HashMap<>();
+
+    private static final float MIN_BOUNDS = 20.0f;
+    private static final float OPEN_ROW_HEIGHT = 18.0f;
+    private static final float OPEN_ROW_SPACING = 2.0f;
+    private static final float OPEN_NAME_PADDING_START = 3.5f;
+    private static final float OPEN_NAME_PADDING_END = 5.0f;
+    private static final float OPEN_ICON_GAP = 2.0f;
+    private static final float OPEN_INFO_PADDING_START = 2.5f;
+    private static final float OPEN_INFO_PADDING_END = 3.5f;
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
@@ -199,9 +198,7 @@ public class ModuleList extends HudModule {
         float totalHeight = rows.isEmpty() ? MIN_BOUNDS : 0.0f;
         boolean first = true;
         for (RenderRow row : rows) {
-            float infoBoxWidth = row.line.info.isEmpty() || !showOpenIcon.getValue()
-                    ? 0.0f
-                    : infoPadStart + row.line.infoWidth + infoPadEnd;
+            float infoBoxWidth = row.line.info.isEmpty() || !showOpenIcon.getValue() ? 0.0f : infoPadStart + row.line.infoWidth + infoPadEnd;
             float nameBoxWidth = namePadStart + row.line.nameWidth + namePadEnd;
             float rowWidth = nameBoxWidth;
             if (showOpenIcon.getValue()) {
@@ -240,8 +237,7 @@ public class ModuleList extends HudModule {
 
             float rowX = computeRowX(row.rowWidth);
             Color accent = rainbow.getValue() ? rainbowColor(timedHue, i) : textColor.getValue();
-            drawOpenRow(roundRectRenderer, shadowRenderer, textRenderer, row, rowX, currentY, rowHeight, radius,
-                    iconGap, namePadStart, infoPadStart, iconOnLeft, textScale, accent);
+            drawOpenRow(roundRectRenderer, shadowRenderer, textRenderer, row, rowX, currentY, rowHeight, radius, iconGap, iconOnLeft, textScale, accent);
 
             if (!bottomAligned) {
                 currentY += rowStep;
@@ -319,8 +315,6 @@ public class ModuleList extends HudModule {
             float rowHeight,
             float radius,
             float iconGap,
-            float namePadStart,
-            float infoPadStart,
             boolean iconOnLeft,
             float textScale,
             Color accent
@@ -437,7 +431,7 @@ public class ModuleList extends HudModule {
                 this.lastChangeMs = now;
             }
 
-            float delta = Mth.clamp((now - lastChangeMs) / (float) ANIMATION_DURATION_MS, 0.0f, 1.0f);
+            float delta = Mth.clamp((now - lastChangeMs) / (float) 300L, 0.0f, 1.0f);
             if (this.target) {
                 float eased = Easing.EASE_OUT_CUBIC.getFunction().apply(delta);
                 progress = startProgress + (1.0f - startProgress) * eased;
@@ -505,4 +499,5 @@ public class ModuleList extends HudModule {
             return new ModuleLine(name, info, nameWidth, openBracketWidth, infoWidth, closeBracketWidth);
         }
     }
+
 }

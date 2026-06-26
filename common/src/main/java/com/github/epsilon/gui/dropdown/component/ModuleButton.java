@@ -2,6 +2,7 @@ package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
@@ -362,14 +363,12 @@ public class ModuleButton extends Component {
         float btnY = y + (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
         boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH);
         if (!module.isHidden()) {
-            renderer.roundRect().addRoundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS,
-                    MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
-            String icon = "E";
+            renderer.roundRect().addRoundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
+            String icon = IconChars.VISIBILITY;
             float scale = 0.58f;
             float iconW = renderer.text().getWidth(icon, scale, StaticFontLoader.ICONS);
             float iconH = renderer.text().getHeight(scale, StaticFontLoader.ICONS);
-            renderer.text().addText(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f,
-                    scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+            renderer.text().addText(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
         }
         if (hovered) {
             String hint = module.isHidden() ? hiddenComponent.getTranslatedName() : visibleComponent.getTranslatedName();

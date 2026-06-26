@@ -2,13 +2,14 @@ package com.github.epsilon.modules;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.graphics.text.IconChars;
 
 public enum Category {
 
-    COMBAT("b", "combat"),
-    PLAYER("5", "player"),
-    MOVEMENT("@", "movement"),
-    RENDER("a", "render");
+    COMBAT(IconChars.SWORDS, "combat"),
+    PLAYER(IconChars.PERSON, "player"),
+    MOVEMENT(IconChars.DIRECTIONS_RUN, "movement"),
+    RENDER(IconChars.BRUSH, "render");
 
     public final String icon;
     private final String name;
