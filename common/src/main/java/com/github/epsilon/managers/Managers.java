@@ -1,14 +1,17 @@
 package com.github.epsilon.managers;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.managers.impl.*;
+import com.github.epsilon.managers.impl.FriendManager;
+import com.github.epsilon.managers.impl.HealthManager;
+import com.github.epsilon.managers.impl.NotificationManager;
+import com.github.epsilon.managers.impl.RenderManager;
 import com.github.epsilon.managers.impl.network.ClientboundPacketManager;
 import com.github.epsilon.managers.impl.network.ServerboundPacketManager;
+import com.github.epsilon.managers.impl.rotations.RotationManager;
+import com.github.epsilon.managers.impl.rotations.SilentRotationManager;
+import com.github.epsilon.managers.impl.rotations.SnapRotationManager;
 import com.github.epsilon.managers.impl.sound.SoundManager;
 import com.github.epsilon.managers.impl.target.TargetManager;
-import com.github.epsilon.managers.rotations.RotationManager;
-import com.github.epsilon.managers.rotations.SilentRotationManager;
-import com.github.epsilon.managers.rotations.SnapRotationManager;
 import com.github.epsilon.modules.impl.ClientSetting;
 
 public class Managers {

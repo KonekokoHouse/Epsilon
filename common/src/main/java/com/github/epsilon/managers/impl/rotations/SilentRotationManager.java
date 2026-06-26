@@ -1,4 +1,4 @@
-package com.github.epsilon.managers.rotations;
+package com.github.epsilon.managers.impl.rotations;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;

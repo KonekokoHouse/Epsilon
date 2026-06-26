@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 
-import java.awt.Color;
+import java.awt.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

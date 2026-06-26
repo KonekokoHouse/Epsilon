@@ -11,7 +11,7 @@ import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.managers.rotations.RotationManager;
+import com.github.epsilon.managers.impl.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;

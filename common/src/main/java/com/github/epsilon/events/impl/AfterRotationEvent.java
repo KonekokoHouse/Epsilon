@@ -1,6 +1,6 @@
 package com.github.epsilon.events.impl;
 
-import com.github.epsilon.managers.rotations.RotationManager;
+import com.github.epsilon.managers.impl.rotations.RotationManager;
 
 /**
  * 旋转完成标记事件。当前旋转角度通过 {@link RotationManager#getYaw()} / {@link RotationManager#getPitch()} 获取。
