@@ -3,7 +3,6 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.graphics.elements.RectElement;
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -68,25 +67,6 @@ public class RectRenderer implements IRenderer {
         addVertex(x, y + h, argb2);
         addVertex(x + w, y + h, argb3);
         addVertex(x + w, y, argb4);
-    }
-
-    public void addElement(RectElement element) {
-        addRectGradient(
-                element.x(),
-                element.y(),
-                element.width(),
-                element.height(),
-                element.topLeft(),
-                element.bottomLeft(),
-                element.bottomRight(),
-                element.topRight()
-        );
-    }
-
-    public void addElements(Iterable<RectElement> elements) {
-        for (RectElement element : elements) {
-            addElement(element);
-        }
     }
 
     private void addVertex(float vx, float vy, int color) {

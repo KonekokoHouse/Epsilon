@@ -262,11 +262,11 @@ public class DropdownRenderer {
         }
 
         public float getLineHeight(float scale) {
-            return measureTextRenderer.getLineHeight(scale);
+            return measureTextRenderer.getHeight(scale);
         }
 
         public float getLineHeight(float scale, TtfFontLoader fontLoader) {
-            return measureTextRenderer.getLineHeight(scale, fontLoader);
+            return measureTextRenderer.getHeight(scale, fontLoader);
         }
 
         public float getWidth(String text, float scale) {

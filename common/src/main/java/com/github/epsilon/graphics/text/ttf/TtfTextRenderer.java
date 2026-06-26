@@ -227,11 +227,6 @@ public class TtfTextRenderer implements ITextRenderer {
 
     @Override
     public float getHeight(float scale, TtfFontLoader fontLoader) {
-        return fontLoader.fontFile.pixelAscent * DEFAULT_SCALE * scale;
-    }
-
-    @Override
-    public float getLineHeight(float scale, TtfFontLoader fontLoader) {
         return fontLoader.fontFile.fontHeight * DEFAULT_SCALE * scale;
     }
 

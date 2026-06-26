@@ -3,7 +3,6 @@ package com.github.epsilon.graphics.renderers;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
-import com.github.epsilon.graphics.elements.ShadowElement;
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
@@ -54,27 +53,6 @@ public class ShadowRenderer implements IRenderer {
         addVertex(vx, vy2, x, y, bx2, by2, rTL, rTR, rBR, rBL, blurRadius, argb);
         addVertex(vx2, vy2, x, y, bx2, by2, rTL, rTR, rBR, rBL, blurRadius, argb);
         addVertex(vx2, vy, x, y, bx2, by2, rTL, rTR, rBR, rBL, blurRadius, argb);
-    }
-
-    public void addElement(ShadowElement element) {
-        addShadow(
-                element.x(),
-                element.y(),
-                element.width(),
-                element.height(),
-                element.radiusTopLeft(),
-                element.radiusTopRight(),
-                element.radiusBottomRight(),
-                element.radiusBottomLeft(),
-                element.blurRadius(),
-                element.color()
-        );
-    }
-
-    public void addElements(Iterable<ShadowElement> elements) {
-        for (ShadowElement element : elements) {
-            addElement(element);
-        }
     }
 
     private void addVertex(float vx, float vy, float rx1, float ry1, float rx2, float ry2, float r1, float r2, float r3, float r4, float blurRadius, int color) {

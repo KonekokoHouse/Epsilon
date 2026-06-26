@@ -160,7 +160,7 @@ public class Notifications extends HudModule {
     }
 
     private void renderText(TextRenderer textRenderer, Notification n, float x, float y, float boxHeight, float s, int alpha) {
-        float textY = y + boxHeight / 2.0f - s - textRenderer.getLineHeight(s) / 2.0f;
+        float textY = y + boxHeight / 2.0f - s - textRenderer.getHeight(s) / 2.0f;
         float textX = x + (isLeftDocked() ? TEXT_PADDING * s : TEXT_PADDING * 2.0f * s);
         textRenderer.addText(n.getTitle(), textX, textY, s, new Color(255, 255, 255, alpha));
         textRenderer.addText(" " + n.getSubTitle(), textX + textRenderer.getWidth(n.getTitle(), s), textY, s, n.getMode().getColor(alpha));
