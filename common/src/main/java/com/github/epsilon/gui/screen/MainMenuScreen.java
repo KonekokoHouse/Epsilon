@@ -127,7 +127,7 @@ public class MainMenuScreen extends Screen {
         String subtitle = Constants.VERSION;
 
         float titleHeight = renderBatch.textRenderer().getHeight(layout.titleScale, StaticFontLoader.JURA_LIGHT);
-        float subtitleY = layout.titleY + renderBatch.textRenderer().getLineHeight(layout.titleScale, StaticFontLoader.JURA_LIGHT) + layout.titleSubtitleGap;
+        float subtitleY = layout.titleY + renderBatch.textRenderer().getHeight(layout.titleScale, StaticFontLoader.JURA_LIGHT) + layout.titleSubtitleGap;
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             scope.layer(0, layer -> layer.rect(layout.titleX, layout.titleY + titleHeight + layout.titleAccentGap,

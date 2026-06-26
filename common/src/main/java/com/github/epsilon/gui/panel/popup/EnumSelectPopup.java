@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup;
 
+import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -20,7 +21,7 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
     private static final float ITEM_HEIGHT = 24.0f;
     private static final float ITEM_INNER_HEIGHT = 22.0f;
     private static final float CONTENT_PADDING = 6.0f;
-    private static final String DROPDOWN_ICON = "v";
+    private static final String DROPDOWN_ICON = IconChars.KEYBOARD_ARROW_DOWN;
 
     private final PanelLayout.Rect bounds;
     private final EnumSetting<?> setting;

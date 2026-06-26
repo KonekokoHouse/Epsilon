@@ -8,6 +8,10 @@ public interface ITextRenderer {
 
     void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader);
 
+    default void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
+        addText(text, x, y, scale, startColor, fontLoader);
+    }
+
     void draw();
 
     void clear();
@@ -15,8 +19,6 @@ public interface ITextRenderer {
     void close();
 
     float getHeight(float scale, TtfFontLoader fontLoader);
-
-    float getLineHeight(float scale, TtfFontLoader fontLoader);
 
     float getWidth(String text, float scale, TtfFontLoader fontLoader);
 
