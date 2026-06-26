@@ -29,7 +29,7 @@ public class HudElementHolder {
         addElement(Notifications.INSTANCE);
         addElement(BPS.INSTANCE);
         addElement(Inventory.INSTANCE);
-        addElement(ActiveModules.INSTANCE);
+        addElement(ModuleList.INSTANCE);
         addElement(Potions.INSTANCE);
         addElement(ScaffoldBlock.INSTANCE);
         addElement(TargetHud.INSTANCE);
