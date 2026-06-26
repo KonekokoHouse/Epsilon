@@ -96,7 +96,7 @@ public class ModuleRow {
         float titleHeight = textRenderer.getHeight(titleScale);
         float subHeight = textRenderer.getHeight(subScale);
         float keyHeight = textRenderer.getHeight(keyScale);
-        float lineGap = 3.0f;
+        float lineGap = 2.0f;
         float totalTextHeight = titleHeight + lineGap + subHeight;
         float titleY = centerTextBlockY(bounds, totalTextHeight);
         float subY = titleY + titleHeight + lineGap;
@@ -109,14 +109,11 @@ public class ModuleRow {
         float clipRight = toggleBounds.x() - KEYBIND_TOGGLE_GAP;
         float clipWidth = Math.min(keyWidth, KEYBIND_CLIP_WIDTH);
         float clipX = clipRight - clipWidth;
-        float clipY = keyY;
-        float clipHeight = keyHeight;
-        PanelLayout.Rect keybindClip = new PanelLayout.Rect(clipX, clipY, clipWidth, clipHeight);
+        PanelLayout.Rect keybindClip = new PanelLayout.Rect(clipX, keyY, clipWidth, keyHeight);
 
         scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
         if (selectedProgress > 0.01f) {
-            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS,
-                    MD3Theme.stateLayer(MD3Theme.PRIMARY, selectedProgress, 42));
+            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, selectedProgress, 42));
         }
 
         scope.text(module.displayName(), PanelElements.rowLabelX(bounds), titleY, titleScale, titleColor);
