@@ -6,7 +6,6 @@ import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -121,7 +120,6 @@ public class Scaffold extends Module {
     private final IntSetting rotateSpeed = intSetting("Rotation Speed", 10, 1, 10, 1, () -> rotationMode.is(RotationMode.Rise));
     private final IntSetting rotateBackSpeed = intSetting("Rotation Back Speed", 10, 1, 10, 1, () -> mode.is(Mode.TellyBridge));
     private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, () -> mode.is(Mode.TellyBridge));
-    private final BoolSetting safeWalk = boolSetting("Safe Walk", false, () -> mode.is(Mode.GodBridge));
 
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
     private final BoolSetting render = boolSetting("Render", true);
@@ -215,12 +213,6 @@ public class Scaffold extends Module {
             boolean isHoldingShift = InputConstants.isKeyDown(mc.getWindow(), mc.options.keyShift.getDefaultKey().getValue());
             mc.options.keyShift.setDown(isHoldingShift);
         }
-    }
-
-    @EventHandler
-    private void onMotion(SendPositionEvent event) {
-        if (mode.is(Mode.TellyBridge) || !safeWalk.getValue()) return;
-        mc.options.keyShift.setDown(mc.player.onGround() && SafeWalk.INSTANCE.isOnBlockEdge(0.3F));
     }
 
     @EventHandler
