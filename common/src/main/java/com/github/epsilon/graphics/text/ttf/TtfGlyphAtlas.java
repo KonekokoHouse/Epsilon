@@ -22,11 +22,7 @@ public class TtfGlyphAtlas {
 
     private static final int SIZE = 512;
     private static final int GLYPH_GUTTER = 2;
-<<<<<<< HEAD
-    private static final int UV_INSET = 1;
     private static final long TEXTURE_UPLOAD_ALIGNMENT = 4L;
-=======
->>>>>>> 5e28da7 (修复 HudEditor 闪烁的问题 (#320))
     private static final AtomicInteger NEXT_TEXTURE_ID = new AtomicInteger();
     private final LuminTexture texture;
     private final Identifier textureId;
