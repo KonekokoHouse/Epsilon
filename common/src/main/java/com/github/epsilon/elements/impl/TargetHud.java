@@ -1,6 +1,7 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.shaders.BlurShader;
@@ -248,9 +249,18 @@ public class TargetHud extends HudModule {
     }
 
     private void drawItem(GuiGraphicsExtractor graphics, LivingEntity owner, ItemStack stack, float x, float y, float scale, int seed) {
+        float renderX = x;
+        float renderY = y;
+        float renderScale = scale;
+        if (LuminRenderSystem.getActiveTarget() != null) {
+            renderX = (float) LuminRenderSystem.toMinecraftGuiX(x);
+            renderY = (float) LuminRenderSystem.toMinecraftGuiY(y);
+            renderScale = (float) (scale * LuminRenderSystem.getGuiScale() / mc.getWindow().getGuiScale());
+        }
+
         graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(scale, scale);
+        graphics.pose().translate(renderX + renderScale, renderY + renderScale);
+        graphics.pose().scale(renderScale, renderScale);
         graphics.item(owner, stack, 0, 0, seed);
         graphics.pose().popMatrix();
     }
