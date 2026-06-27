@@ -34,7 +34,8 @@ public class HudEditorScreen extends Screen {
     private static final float GUIDE_ALPHA = 95.0f;
 
     private CategoryPanel hudPanel;
-    private LuminRenderSystem.LuminRenderTarget renderTarget;
+    private final LuminRenderSystem.LuminRenderTarget[] renderTargets = new LuminRenderSystem.LuminRenderTarget[2];
+    private int renderTargetIndex;
     private int renderFrameId;
     private int panelElementCount = -1;
     private HudModule selectedElement;
@@ -44,6 +45,7 @@ public class HudEditorScreen extends Screen {
     private boolean movedDuringDrag;
     private SnapInfo currentSnap = SnapInfo.none();
 
+    private final DropdownRenderer backgroundRenderer = new DropdownRenderer();
     private final DropdownRenderer renderer = new DropdownRenderer();
 
     private HudEditorScreen() {
@@ -63,9 +65,7 @@ public class HudEditorScreen extends Screen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         final var window = minecraft.getWindow();
-        if (renderTarget == null) {
-            renderTarget = LuminRenderSystem.LuminRenderTarget.create("hud-editor-gui", window.getWidth(), window.getHeight());
-        }
+        LuminRenderSystem.LuminRenderTarget renderTarget = getRenderTarget(window.getWidth(), window.getHeight());
         renderTarget.resize(window.getWidth(), window.getHeight());
         renderTarget.clear();
 
@@ -77,6 +77,7 @@ public class HudEditorScreen extends Screen {
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        drawElementOverlays(graphics);
     }
 
     private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -88,26 +89,26 @@ public class HudEditorScreen extends Screen {
 
         validateSelection();
 
-        renderer.beginFrame();
+        backgroundRenderer.beginFrame();
 
         float screenW = LuminRenderSystem.getScaledWidth();
         float screenH = LuminRenderSystem.getScaledHeight();
 
-        renderer.beginPass();
-        renderer.rect().addRect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
-        renderer.flush();
+        backgroundRenderer.beginPass();
+        backgroundRenderer.rect().addRect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
+        backgroundRenderer.flush();
 
         float centerX = screenW / 2.0f;
         float centerY = screenH / 2.0f;
         Color centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52);
 
-        renderer.beginPass();
-        renderer.rect().addRect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
-        renderer.rect().addRect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
-        drawSnapGuides(screenW, screenH);
-        renderer.flush();
+        backgroundRenderer.beginPass();
+        backgroundRenderer.rect().addRect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
+        backgroundRenderer.rect().addRect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
+        drawSnapGuides(backgroundRenderer, screenW, screenH);
+        backgroundRenderer.flush();
 
-        renderer.endFrame();
+        backgroundRenderer.endFrame();
 
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
@@ -133,6 +134,27 @@ public class HudEditorScreen extends Screen {
         drawPanel(mouseX, mouseY);
 
         renderer.endFrame();
+    }
+
+    private LuminRenderSystem.LuminRenderTarget getRenderTarget(int width, int height) {
+        int index = renderTargetIndex++ & 1;
+        LuminRenderSystem.LuminRenderTarget target = renderTargets[index];
+        if (target == null) {
+            target = LuminRenderSystem.LuminRenderTarget.create("hud-editor-gui-" + index, width, height);
+            renderTargets[index] = target;
+        }
+        return target;
+    }
+
+    private void drawElementOverlays(GuiGraphicsExtractor graphics) {
+        float overlayScale = (float) (LuminRenderSystem.getGuiScale() / minecraft.getWindow().getGuiScale());
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(overlayScale, overlayScale);
+        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
+            if (!element.isEnabled()) continue;
+            element.renderOverlay(graphics, minecraft.getDeltaTracker());
+        }
+        graphics.pose().popMatrix();
     }
 
     private void drawPanel(int mouseX, int mouseY) {
@@ -203,7 +225,7 @@ public class HudEditorScreen extends Screen {
         renderer.flush();
     }
 
-    private void drawSnapGuides(float screenW, float screenH) {
+    private void drawSnapGuides(DropdownRenderer renderer, float screenW, float screenH) {
         if (currentSnap.hasAny()) {
             Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
             if (!Float.isNaN(currentSnap.verticalLineX())) {
@@ -502,9 +524,11 @@ public class HudEditorScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
-        if (renderTarget != null) {
-            renderTarget.close();
-            renderTarget = null;
+        for (int i = 0; i < renderTargets.length; i++) {
+            if (renderTargets[i] != null) {
+                renderTargets[i].close();
+                renderTargets[i] = null;
+            }
         }
     }
 

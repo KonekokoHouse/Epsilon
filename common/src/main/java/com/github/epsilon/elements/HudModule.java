@@ -164,4 +164,7 @@ public abstract class HudModule extends Module {
 
     public abstract void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker);
 
+    public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    }
+
 }
