@@ -80,6 +80,18 @@ public class Inventory extends HudModule {
         if (drawShadow.getValue()) shadowRenderer.drawAndClear();
         roundRectRenderer.drawAndClear();
 
+        setBounds(totalWidth, totalHeight);
+    }
+
+    @Override
+    public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        if (nullCheck()) return;
+
+        float scale = this.scale.getValue().floatValue();
+        float slotSize = SLOT_SIZE * scale;
+        float gap = SLOT_GAP * scale;
+        float padding = PADDING * scale;
+
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 int slotIndex = 9 + row * 9 + col;
@@ -87,15 +99,13 @@ public class Inventory extends HudModule {
                 if (!stack.isEmpty()) {
                     float slotX = this.x + padding + col * (slotSize + gap);
                     float slotY = this.y + padding + row * (slotSize + gap);
-                    drawItems(graphics, stack, slotX, slotY, scale);
+                    drawItem(graphics, stack, slotX, slotY, scale);
                 }
             }
         }
-
-        setBounds(totalWidth, totalHeight);
     }
 
-    private void drawItems(GuiGraphicsExtractor graphics, ItemStack stack, float slotX, float slotY, float scale) {
+    private void drawItem(GuiGraphicsExtractor graphics, ItemStack stack, float slotX, float slotY, float scale) {
         graphics.pose().pushMatrix();
         graphics.pose().translate(slotX + scale, slotY + scale);
         graphics.pose().scale(scale, scale);
