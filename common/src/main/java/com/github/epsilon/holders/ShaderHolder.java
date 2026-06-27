@@ -35,7 +35,7 @@ import java.util.Set;
 import static com.github.epsilon.Constants.mc;
 
 /**
- * @author ilove0329P
+ * @author 06789
  * Thanks to furry client.
  */
 public class ShaderHolder {
