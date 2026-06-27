@@ -58,6 +58,18 @@ public class ClientSetting extends Module {
         Light
     }
 
+    public enum IconMode {
+        Vanilla,
+        Minecraft_1_8_9,
+        Epsilon
+    }
+
+    public enum TitleMode {
+        Vanilla,
+        Minecraft_1_8_9,
+        Epsilon
+    }
+
     public enum HideMode {
         None,
         Hide,
@@ -119,14 +131,14 @@ public class ClientSetting extends Module {
 
     public final EnumSetting<ThemePreset> themePreset = enumSetting("Theme Preset", ThemePreset.TonalSpot, _ -> MD3Theme.syncFromSettings()).group(sgAppearance);
 
-    public final BoolSetting customIcon = boolSetting("Custom Icon", true, _ -> {
+    public final EnumSetting<IconMode> customIcon = enumSetting("Custom Icon", IconMode.Epsilon, _ -> {
         try {
             mc.getWindow().setIcon(mc.getVanillaPackResources(), SharedConstants.getCurrentVersion().stable() ? IconSet.RELEASE : IconSet.SNAPSHOT);
         } catch (IOException ignored) {
         }
     }).group(sgAppearance);
 
-    public final BoolSetting customTitle = boolSetting("Custom Title", true, _ -> mc.updateTitle()).group(sgAppearance);
+    public final EnumSetting<TitleMode> customTitle = enumSetting("Custom Title", TitleMode.Epsilon, _ -> mc.updateTitle()).group(sgAppearance);
 
     public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
 

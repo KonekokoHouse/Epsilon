@@ -19,11 +19,22 @@ public class MixinWindow {
 
     @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackResources;)Ljava/util/List;"))
     private List<IoSupplier<InputStream>> onSetIcon(IconSet instance, PackResources resources) throws IOException {
-        final InputStream stream16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/icon_16x16.png");
-        final InputStream stream32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/icon_32x32.png");
-        return ClientSetting.INSTANCE.customIcon.getValue() && stream16 != null && stream32 != null ?
-                List.of(() -> stream16, () -> stream32) :
-                instance.getStandardIcons(resources);
+        final InputStream epsilon_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/icon_16x16.png");
+        final InputStream epsilon_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/icon_32x32.png");
+        final InputStream table_16x16 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/table_16x16.png");
+        final InputStream table_32x32 = EpsilonCommon.class.getResourceAsStream("/assets/epsilon/textures/icons/table_32x32.png");
+
+        if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Epsilon)) {
+            if (epsilon_16x16 != null && epsilon_32x32 != null) {
+                return List.of(() -> epsilon_16x16, () -> epsilon_32x32);
+            }
+        } else if (ClientSetting.INSTANCE.customIcon.is(ClientSetting.IconMode.Minecraft_1_8_9)) {
+            if (table_16x16 != null && table_32x32 != null) {
+                return List.of(() -> table_16x16, () -> table_32x32);
+            }
+        }
+
+        return instance.getStandardIcons(resources);
     }
 
 }

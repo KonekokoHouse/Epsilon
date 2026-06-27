@@ -45,7 +45,11 @@ public class MixinMinecraft {
 
     @ModifyArg(method = "updateTitle", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setTitle(Ljava/lang/String;)V"))
     private String onUpdateTitle(String title) {
-        return ClientSetting.INSTANCE.customTitle.getValue() ? Constants.NAME + " " + Constants.VERSION + " for " + title : title;
+        return switch (ClientSetting.INSTANCE.customTitle.getValue()) {
+            case Vanilla -> title;
+            case Minecraft_1_8_9 -> "Minecraft 1.8.9";
+            case Epsilon -> Constants.NAME + " " + Constants.VERSION + " for " + title;
+        };
     }
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
