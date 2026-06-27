@@ -109,6 +109,7 @@ public class ModuleHolder {
         addModule(BlockHighlight.INSTANCE);
         addModule(CameraClip.INSTANCE);
         addModule(Chams.INSTANCE);
+        addModule(CrystalChams.INSTANCE);
         addModule(ESP.INSTANCE);
         addModule(Filter.INSTANCE);
         addModule(Fullbright.INSTANCE);

@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
 import com.github.epsilon.interfaces.EntityRenderStateAccessor;
 import com.github.epsilon.modules.impl.render.Chams;
+import com.github.epsilon.modules.impl.render.NameTags;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
@@ -16,6 +17,8 @@ import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -59,6 +62,13 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             return Mth.rotLerp(partialTicks, event.getLastPitch(), event.getPitch());
         }
         return original;
+    }
+
+    @Inject(method = "shouldShowName", at = @At("HEAD"), cancellable = true)
+    private void onShouldShowName(T entity, double distance, CallbackInfoReturnable<Boolean> cir) {
+        if (entity instanceof Player && (!NameTags.INSTANCE.vanillaNameTags.getValue()) && NameTags.INSTANCE.isEnabled()) {
+            cir.setReturnValue(false);
+        }
     }
 
 }
