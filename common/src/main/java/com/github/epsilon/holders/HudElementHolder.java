@@ -56,6 +56,15 @@ public class HudElementHolder {
                 element.render(event.getGuiGraphics(), mc.getDeltaTracker());
             }
         }
+        renderOverlays(event);
+    }
+
+    private void renderOverlays(Render2DEvent.HUD event) {
+        for (HudModule element : elements) {
+            if (element.isEnabled()) {
+                element.renderOverlay(event.getGuiGraphics(), mc.getDeltaTracker());
+            }
+        }
     }
 
 }

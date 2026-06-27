@@ -1,7 +1,6 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.shaders.BlurShader;
@@ -216,10 +215,46 @@ public class TargetHud extends HudModule {
             textureRenderer.drawAndClear();
         }
 
-        renderEquipmentItems(graphics, target, scaledEquipmentX, scaledEquipmentY, scaledEquipmentScale, scaledEquipmentGap);
         textRenderer.addText(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
         textRenderer.addText(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
         textRenderer.drawAndClear();
+    }
+
+    @Override
+    public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        float panelScale = scale.getValue().floatValue();
+        LivingEntity target = renderedTarget;
+        if (target == null || visibilityProgress <= 0.01f) return;
+
+        TextRenderer textRenderer = textRendererSupplier.get();
+        float panelWidth = width.getValue().floatValue() * panelScale;
+        float panelHeight = height.getValue().floatValue() * panelScale;
+        float animationScale = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f));
+        float pad = 5.0f * panelScale;
+        float barHeight = healthBarHeight.getValue().floatValue() * panelScale;
+        float innerHeight = Math.max(1.0f, panelHeight - pad * 2.0f);
+        float contentAreaHeight = Math.max(1.0f, innerHeight - pad - barHeight);
+        float headSize = Math.min(contentAreaHeight, Math.max(26.0f * panelScale, panelHeight * 0.6f) * 1.05f);
+        float textScale = Math.max(0.45f, nameSize.getValue().floatValue() / 14.0f) * panelScale;
+        float textHeight = textRenderer.getHeight(textScale);
+        float contentRowHeight = Math.max(headSize, textHeight);
+        float contentBlockHeight = contentRowHeight + pad + barHeight;
+        float contentStartY = this.y + pad + Math.max(0.0f, (innerHeight - contentBlockHeight) / 2.0f);
+        float headY = contentStartY + (contentRowHeight - headSize) / 2.0f;
+        float headX = this.x + pad;
+        float textStartX = headX + headSize + pad;
+        float contentY = headY + 2.0f * panelScale;
+        float equipmentY = contentY + textHeight + 2.8f * panelScale;
+        float equipmentScale = EQUIPMENT_ITEM_SCALE * panelScale;
+        float equipmentGap = 1.5f * panelScale;
+        float centerX = this.x + panelWidth / 2.0f;
+        float centerY = this.y + panelHeight / 2.0f;
+        float scaledEquipmentX = Mth.lerp(animationScale, centerX, textStartX);
+        float scaledEquipmentY = Mth.lerp(animationScale, centerY, equipmentY);
+        float scaledEquipmentScale = equipmentScale * animationScale;
+        float scaledEquipmentGap = equipmentGap * animationScale;
+
+        renderEquipmentItems(graphics, target, scaledEquipmentX, scaledEquipmentY, scaledEquipmentScale, scaledEquipmentGap);
     }
 
     private void renderEquipmentItems(GuiGraphicsExtractor graphics, LivingEntity target, float startX, float y, float scale, float gap) {
@@ -249,18 +284,9 @@ public class TargetHud extends HudModule {
     }
 
     private void drawItem(GuiGraphicsExtractor graphics, LivingEntity owner, ItemStack stack, float x, float y, float scale, int seed) {
-        float renderX = x;
-        float renderY = y;
-        float renderScale = scale;
-        if (LuminRenderSystem.getActiveTarget() != null) {
-            renderX = (float) LuminRenderSystem.toMinecraftGuiX(x);
-            renderY = (float) LuminRenderSystem.toMinecraftGuiY(y);
-            renderScale = (float) (scale * LuminRenderSystem.getGuiScale() / mc.getWindow().getGuiScale());
-        }
-
         graphics.pose().pushMatrix();
-        graphics.pose().translate(renderX + renderScale, renderY + renderScale);
-        graphics.pose().scale(renderScale, renderScale);
+        graphics.pose().translate(x + scale, y + scale);
+        graphics.pose().scale(scale, scale);
         graphics.item(owner, stack, 0, 0, seed);
         graphics.pose().popMatrix();
     }
