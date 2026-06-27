@@ -64,7 +64,7 @@ public class Eagle extends Module {
 
     @EventHandler(priority = EventPriority.LOWEST)
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
 
         if (sneakOnly.getValue() && isSneakKeyDown() && shouldSneak()) {
             event.setSneak(false);
