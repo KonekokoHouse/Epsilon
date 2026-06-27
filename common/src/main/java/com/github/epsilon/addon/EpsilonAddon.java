@@ -11,6 +11,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Base class for Epsilon addons.
@@ -114,8 +115,8 @@ public abstract class EpsilonAddon {
         return settingHost.addIntSetting(name, defaultValue, min, max, step, dependency);
     }
 
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency, boolean percentageMode) {
-        return settingHost.addIntSetting(name, defaultValue, min, max, step, dependency, percentageMode);
+    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency, Consumer<Integer> onChanged) {
+        return settingHost.addIntSetting(name, defaultValue, min, max, step, dependency, onChanged);
     }
 
     protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step) {
@@ -206,8 +207,8 @@ public abstract class EpsilonAddon {
             return super.intSetting(name, defaultValue, min, max, step, dependency);
         }
 
-        private IntSetting addIntSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency, boolean percentageMode) {
-            return super.intSetting(name, defaultValue, min, max, step, dependency, percentageMode);
+        private IntSetting addIntSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency, Consumer<Integer> onChanged) {
+            return super.intSetting(name, defaultValue, min, max, step, dependency, onChanged);
         }
 
         private IntSetting addIntSetting(String name, int defaultValue, int min, int max, int step) {

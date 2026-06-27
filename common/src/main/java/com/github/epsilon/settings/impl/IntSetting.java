@@ -3,21 +3,21 @@ package com.github.epsilon.settings.impl;
 import com.github.epsilon.settings.Setting;
 import net.minecraft.util.Mth;
 
+import java.util.function.Consumer;
+
 public class IntSetting extends Setting<Integer> {
 
     private final int min;
     private final int max;
     private final int step;
-    private final boolean percentageMode;
 
-    public IntSetting(String name, int defaultValue, int min, int max, int step, Dependency dependency, boolean percentageMode) {
-        super(name, dependency, null);
+    public IntSetting(String name, int defaultValue, int min, int max, int step, Dependency dependency, Consumer<Integer> onChanged) {
+        super(name, dependency, onChanged);
         this.value = defaultValue;
         this.defaultValue = defaultValue;
         this.min = min;
         this.max = max;
         this.step = step;
-        this.percentageMode = percentageMode;
     }
 
     @Override
@@ -39,9 +39,5 @@ public class IntSetting extends Setting<Integer> {
 
     public int getStep() {
         return step;
-    }
-
-    public boolean isPercentageMode() {
-        return percentageMode;
     }
 }

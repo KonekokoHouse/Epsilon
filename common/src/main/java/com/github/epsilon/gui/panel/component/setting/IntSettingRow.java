@@ -229,7 +229,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
     }
 
     private String formatValue() {
-        return setting.isPercentageMode() ? setting.getValue() + "%" : Integer.toString(setting.getValue());
+        return Integer.toString(setting.getValue());
     }
 
     private String formatPlainValue() {

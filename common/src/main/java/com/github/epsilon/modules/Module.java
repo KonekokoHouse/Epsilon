@@ -198,16 +198,20 @@ public class Module {
         this.hidden = hidden;
     }
 
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency) {
-        return addSetting(new IntSetting(name, defaultValue, min, max, step, dependency, false));
-    }
-
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency, boolean percentageMode) {
-        return addSetting(new IntSetting(name, defaultValue, min, max, step, dependency, percentageMode));
-    }
-
     protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step) {
-        return addSetting(new IntSetting(name, defaultValue, min, max, step, () -> true, false));
+        return addSetting(new IntSetting(name, defaultValue, min, max, step, () -> true, null));
+    }
+
+    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Consumer<Integer> onChanged) {
+        return addSetting(new IntSetting(name, defaultValue, min, max, step, () -> true, onChanged));
+    }
+
+    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency) {
+        return addSetting(new IntSetting(name, defaultValue, min, max, step, dependency, null));
+    }
+
+    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency, Consumer<Integer> onChanged) {
+        return addSetting(new IntSetting(name, defaultValue, min, max, step, dependency, onChanged));
     }
 
     protected BoolSetting boolSetting(String name, boolean defaultValue, Setting.Dependency dependency) {
