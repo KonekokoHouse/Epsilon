@@ -78,13 +78,13 @@ public class FallingPlayer {
             motionZ += fw * cos + sr * sin;
         }
 
-        motionY -= 0.08D;
-        motionY *= 0.9800000190734863D;
+        motionY -= 0.08;
+        motionY *= 0.9800000190734863;
         x += motionX;
         y += motionY;
         z += motionZ;
-        motionX *= 0.91D;
-        motionZ *= 0.91D;
+        motionX *= 0.91;
+        motionZ *= 0.91;
     }
 
     public void calculate(int ticks) {

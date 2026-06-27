@@ -24,7 +24,7 @@ public class IntSliderWidget extends AbstractSliderWidget<IntSetting, Integer> {
 
     @Override
     protected String formatValue(Integer value) {
-        return setting.isPercentageMode() ? value + "%" : Integer.toString(value);
+        return Integer.toString(value);
     }
 
     @Override
