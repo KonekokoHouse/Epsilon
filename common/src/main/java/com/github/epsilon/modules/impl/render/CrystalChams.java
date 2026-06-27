@@ -28,10 +28,9 @@ public class CrystalChams extends Module {
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         for (Entity entity : mc.level.entitiesForRendering()) {
-            if (!(entity instanceof EndCrystal endCrystal)) continue;
-            if (!endCrystal.isAlive()) continue;
-
-            WireframeEntityRenderer.render(endCrystal, scale.getValue(), sideColor.getValue(), lineColor.getValue(), lineWidth.getValue().floatValue());
+            if (entity instanceof EndCrystal endCrystal && endCrystal.isAlive()) {
+                WireframeEntityRenderer.render(event.getPoseStack(), endCrystal, scale.getValue(), sideColor.getValue(), lineColor.getValue(), lineWidth.getValue().floatValue());
+            }
         }
     }
 

@@ -29,7 +29,7 @@ import static com.github.epsilon.Constants.mc;
 
 public final class WireframeEntityRenderer {
 
-    private static final PoseStack poseStack = new PoseStack();
+    private static final PoseStack modelPoseStack = new PoseStack();
     private static final SubmitNodeStorage submitNodeStorage = new SubmitNodeStorage();
     private static final WireframeBufferSource WIREFRAME_BUFFER_SOURCE = new WireframeBufferSource();
 
@@ -38,8 +38,8 @@ public final class WireframeEntityRenderer {
             mc.getModelManager(),
             WIREFRAME_BUFFER_SOURCE,
             mc.getAtlasManager(),
-            NoopOutlineBufferSource.INSTANCE,
-            NoopBufferSource.INSTANCE,
+            没鸡巴用的OutlineBufferSource.INSTANCE,
+            没鸡巴用的BufferSource.INSTANCE,
             mc.font,
             mc.gameRenderer.getGameRenderState()
     );
@@ -62,6 +62,7 @@ public final class WireframeEntityRenderer {
 
     private static LuminImmediateRenderer.PosColorQuads sidesBuilder;
     private static LuminImmediateRenderer.Lines linesBuilder;
+
     private static Matrix4f drawMatrix;
     private static PoseStack.Pose linePose;
 
@@ -73,11 +74,7 @@ public final class WireframeEntityRenderer {
     }
 
     @SuppressWarnings("unchecked")
-    public static void render(Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
-        if (entity == null || mc.level == null || mc.player == null) {
-            return;
-        }
-
+    public static void render(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
         WireframeEntityRenderer.sideColor = sideColor;
         WireframeEntityRenderer.lineColor = lineColor;
         WireframeEntityRenderer.lineWidth = lineWidth;
@@ -96,14 +93,14 @@ public final class WireframeEntityRenderer {
         offsetY += renderOffset.y;
         offsetZ += renderOffset.z;
 
-        beginDraw();
+        beginDraw(renderStack);
 
-        poseStack.pushPose();
+        modelPoseStack.pushPose();
 
-        poseStack.scale((float) scale, (float) scale, (float) scale);
-        renderer.submit(state, poseStack, submitNodeStorage, mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState);
+        modelPoseStack.scale((float) scale, (float) scale, (float) scale);
+        renderer.submit(state, modelPoseStack, submitNodeStorage, mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState);
 
-        poseStack.popPose();
+        modelPoseStack.popPose();
 
         featureRenderDispatcher.renderAllFeatures();
         submitNodeStorage.endFrame();
@@ -113,9 +110,10 @@ public final class WireframeEntityRenderer {
         WIREFRAME_BUFFER_SOURCE.reset();
     }
 
-    private static void beginDraw() {
-        drawMatrix = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
-        linePose = new PoseStack().last();
+    private static void beginDraw(PoseStack renderStack) {
+        PoseStack.Pose pose = renderStack.last();
+        drawMatrix = pose.pose();
+        linePose = pose;
         sidesBuilder = LuminImmediateRenderer.beginPosColorQuads(SIDES_PIPELINE);
         linesBuilder = LuminImmediateRenderer.beginLines(LINES_PIPELINE);
     }
@@ -191,7 +189,7 @@ public final class WireframeEntityRenderer {
         @Override
         public VertexConsumer getBuffer(RenderType renderType) {
             if (renderType.outputTarget() == OutputTarget.ITEM_ENTITY_TARGET) {
-                return NoopVertexConsumer.INSTANCE;
+                return 没鸡巴用的VertexConsumer.INSTANCE;
             }
 
             return buffers.computeIfAbsent(renderType, ignored -> new WireframeVertexConsumer());
@@ -278,8 +276,8 @@ public final class WireframeEntityRenderer {
         }
     }
 
-    private static final class NoopVertexConsumer implements VertexConsumer {
-        private static final NoopVertexConsumer INSTANCE = new NoopVertexConsumer();
+    private static final class 没鸡巴用的VertexConsumer implements VertexConsumer {
+        private static final 没鸡巴用的VertexConsumer INSTANCE = new 没鸡巴用的VertexConsumer();
 
         @Override
         public VertexConsumer addVertex(float x, float y, float z) {
@@ -322,16 +320,16 @@ public final class WireframeEntityRenderer {
         }
     }
 
-    private static final class NoopBufferSource extends MultiBufferSource.BufferSource {
-        private static final NoopBufferSource INSTANCE = new NoopBufferSource();
+    private static final class 没鸡巴用的BufferSource extends MultiBufferSource.BufferSource {
+        private static final 没鸡巴用的BufferSource INSTANCE = new 没鸡巴用的BufferSource();
 
-        private NoopBufferSource() {
+        private 没鸡巴用的BufferSource() {
             super(null, null);
         }
 
         @Override
         public VertexConsumer getBuffer(RenderType renderType) {
-            return NoopVertexConsumer.INSTANCE;
+            return 没鸡巴用的VertexConsumer.INSTANCE;
         }
 
         @Override
@@ -343,12 +341,12 @@ public final class WireframeEntityRenderer {
         }
     }
 
-    private static final class NoopOutlineBufferSource extends OutlineBufferSource {
-        private static final NoopOutlineBufferSource INSTANCE = new NoopOutlineBufferSource();
+    private static final class 没鸡巴用的OutlineBufferSource extends OutlineBufferSource {
+        private static final 没鸡巴用的OutlineBufferSource INSTANCE = new 没鸡巴用的OutlineBufferSource();
 
         @Override
         public VertexConsumer getBuffer(RenderType renderType) {
-            return NoopVertexConsumer.INSTANCE;
+            return 没鸡巴用的VertexConsumer.INSTANCE;
         }
 
         @Override
