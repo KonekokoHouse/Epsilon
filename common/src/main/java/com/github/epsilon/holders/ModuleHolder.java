@@ -84,9 +84,10 @@ public class ModuleHolder {
         addModule(UseCooldown.INSTANCE);
 
         // Movement
+        addModule(ElytraFly.INSTANCE);
         addModule(AutoSprint.INSTANCE);
         addModule(Blink.INSTANCE);
-        addModule(ElytraFly.INSTANCE);
+        addModule(Eagle.INSTANCE);
         addModule(AutoMap.INSTANCE);
         addModule(FastWeb.INSTANCE);
         addModule(GUIMove.INSTANCE);
