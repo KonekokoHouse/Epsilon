@@ -29,8 +29,6 @@ public class Chams extends Module {
         super("Chams", Category.RENDER);
     }
 
-    private static final ThreadLocal<Boolean> RENDERING_THIRD_PERSON_HAND_ITEM = ThreadLocal.withInitial(() -> false);
-
     public final BoolSetting noDepth = boolSetting("No Depth", true);
 
     private static final ThreadLocal<Boolean> RENDERING_THIRD_PERSON_HAND_ITEM = ThreadLocal.withInitial(() -> false);
