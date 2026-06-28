@@ -19,6 +19,7 @@ public class Shaders extends Module {
     private Shaders() {
         super("Shaders", Category.RENDER);
     }
+
     private final BoolSetting hands = boolSetting("Hands", true);
     private final BoolSetting players = boolSetting("Players", true);
     private final BoolSetting self = boolSetting("Self", true, players::getValue);
