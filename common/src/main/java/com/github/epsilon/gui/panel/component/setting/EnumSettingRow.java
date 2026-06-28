@@ -34,11 +34,11 @@ public class EnumSettingRow extends SettingRow<EnumSetting<?>> {
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
+        float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         float chipTextScale = 0.60f;
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
-        scope.text(setting.getDisplayName(), bounds.x() + MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
-        PanelLayout.Rect chipBounds = getChipBounds(textRenderer, bounds);
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
+        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
+        PanelLayout.Rect chipBounds = getChipBounds(textRenderer, bounds).relativeTo(bounds);
         scope.chip(chipBounds, setting.getTranslatedValue(), chipTextScale, MD3Theme.SECONDARY_CONTAINER, MD3Theme.ON_SECONDARY_CONTAINER, null, 0.58f, null);
 
         float chevronProgress = scope.animate(dropdownAnimation, dropdownOpen);

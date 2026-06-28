@@ -36,9 +36,9 @@ public class StringSettingRow extends SettingRow<StringSetting> {
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
-        scope.text(setting.getDisplayName(), bounds.x() + MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
+        float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
+        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
         PanelLayout.Rect fieldBounds = getFieldBounds(bounds);
         boolean hovered = fieldBounds.contains(mouseX, mouseY);
@@ -54,7 +54,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
                 selection = new PanelUiTree.SelectionRange(selectionStart - slice.start(), selectionEnd - slice.start());
             }
         }
-        scope.input(fieldBounds, focused, fieldHover,
+        scope.input(fieldBounds.relativeTo(bounds), focused, fieldHover,
                 0.0f, new Color(0, 0, 0, 0), 0.0f,
                 slice.textX() - fieldBounds.x(), slice.text(), FIELD_SCALE, MD3Theme.filledFieldContent(focused),
                 selection, selection == null ? null : MD3Theme.withAlpha(MD3Theme.filledFieldIndicator(focused, fieldHover), 90),

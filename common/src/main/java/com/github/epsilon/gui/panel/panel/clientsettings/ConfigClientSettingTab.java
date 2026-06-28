@@ -120,7 +120,9 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
                     deleteHover.run(deleteBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
                     contentState.noteAnimation(!rowHover.isFinished() || !deleteHover.isFinished());
 
-                    buildConfigRow(content, configName, activeConfig, rowBounds, deleteBounds, rowHover.getValue(), deleteHover.getValue());
+                    content.pushAbsolute(rowBounds, rowScope ->
+                            buildConfigRow(rowScope, configName, activeConfig, rowBounds, deleteBounds,
+                                    rowHover.getValue(), deleteHover.getValue()));
                     rowY += ROW_HEIGHT + MD3Theme.ROW_GAP;
                 }
 
@@ -128,8 +130,8 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
                     float hintScale = 0.58f;
                     String hint = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName();
                     float hintWidth = textRenderer.getWidth(hint, hintScale);
-                    float hintX = listViewport.x() + (listViewport.width() - hintWidth) / 2.0f;
-                    float hintY = listViewport.y() + listViewport.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
+                    float hintX = (listViewport.width() - hintWidth) / 2.0f;
+                    float hintY = state.getConfigScroll() + listViewport.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
                     content.text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED);
                 }
             });
@@ -318,17 +320,19 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             case EXPORT, IMPORT, NEW, OPEN_FOLDER -> MD3Theme.TEXT_PRIMARY;
         };
 
-        scope.roundRect(button.bounds().x(), button.bounds().y(), button.bounds().width(), button.bounds().height(),
-                button.bounds().height() / 2.0f, MD3Theme.lerp(baseColor, hoverColor, hover * 0.35f));
+        scope.pushAbsolute(button.bounds(), buttonScope -> {
+            buttonScope.roundRect(0.0f, 0.0f, button.bounds().width(), button.bounds().height(),
+                    button.bounds().height() / 2.0f, MD3Theme.lerp(baseColor, hoverColor, hover * 0.35f));
 
-        float labelScale = 0.56f;
-        float labelWidth = textRenderer.getWidth(button.label(), labelScale);
-        float labelHeight = textRenderer.getHeight(labelScale);
-        scope.text(button.label(),
-                button.bounds().x() + (button.bounds().width() - labelWidth) / 2.0f,
-                button.bounds().y() + (button.bounds().height() - labelHeight) / 2.0f,
-                labelScale,
-                textColor);
+            float labelScale = 0.56f;
+            float labelWidth = textRenderer.getWidth(button.label(), labelScale);
+            float labelHeight = textRenderer.getHeight(labelScale);
+            buttonScope.text(button.label(),
+                    (button.bounds().width() - labelWidth) / 2.0f,
+                    (button.bounds().height() - labelHeight) / 2.0f,
+                    labelScale,
+                    textColor);
+        });
     }
 
     private void buildConfigRow(PanelUiTree.Scope scope, String configName, String activeConfig, PanelLayout.Rect rowBounds, PanelLayout.Rect deleteBounds, float hover, float deleteHover) {
@@ -336,12 +340,12 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
         Color baseColor = MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, hover);
         Color rowColor = active ? MD3Theme.lerp(baseColor, MD3Theme.PRIMARY_CONTAINER, 0.28f) : baseColor;
-        scope.roundRect(rowBounds.x(), rowBounds.y(), rowBounds.width(), rowBounds.height(), MD3Theme.CARD_RADIUS, rowColor);
+        scope.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CARD_RADIUS, rowColor);
 
         float nameScale = 0.66f;
         float subScale = 0.52f;
-        float textX = rowBounds.x() + MD3Theme.ROW_CONTENT_INSET + 1.0f;
-        float nameY = rowBounds.y() + 7.0f;
+        float textX = MD3Theme.ROW_CONTENT_INSET + 1.0f;
+        float nameY = 7.0f;
         scope.text(trimToWidth(configName, nameScale, rowBounds.width() - 72.0f), textX, nameY, nameScale,
                 active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
 
@@ -354,8 +358,9 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             float chipScale = 0.48f;
             float chipWidth = textRenderer.getWidth(chipText, chipScale) + 10.0f;
             float chipHeight = 14.0f;
-            float chipX = deleteBounds.x() - chipWidth - 6.0f;
-            float chipY = rowBounds.y() + (rowBounds.height() - chipHeight) / 2.0f;
+            PanelLayout.Rect localDeleteBounds = deleteBounds.relativeTo(rowBounds);
+            float chipX = localDeleteBounds.x() - chipWidth - 6.0f;
+            float chipY = (rowBounds.height() - chipHeight) / 2.0f;
             scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY);
             scope.text(chipText,
                     chipX + (chipWidth - textRenderer.getWidth(chipText, chipScale)) / 2.0f,
@@ -364,14 +369,15 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
                     MD3Theme.ON_PRIMARY);
         }
 
-        scope.roundRect(deleteBounds.x(), deleteBounds.y(), deleteBounds.width(), deleteBounds.height(),
-                deleteBounds.height() / 2.0f,
+        PanelLayout.Rect localDeleteBounds = deleteBounds.relativeTo(rowBounds);
+        scope.roundRect(localDeleteBounds.x(), localDeleteBounds.y(), localDeleteBounds.width(), localDeleteBounds.height(),
+                localDeleteBounds.height() / 2.0f,
                 MD3Theme.lerp(MD3Theme.withAlpha(MD3Theme.ERROR, 0), MD3Theme.withAlpha(MD3Theme.ERROR, 32), deleteHover));
         float removeScale = 0.50f;
         String removeIcon = "✕";
         scope.text(removeIcon,
-                deleteBounds.x() + (deleteBounds.width() - textRenderer.getWidth(removeIcon, removeScale)) / 2.0f,
-                deleteBounds.y() + (deleteBounds.height() - textRenderer.getHeight(removeScale)) / 2.0f,
+                localDeleteBounds.x() + (localDeleteBounds.width() - textRenderer.getWidth(removeIcon, removeScale)) / 2.0f,
+                localDeleteBounds.y() + (localDeleteBounds.height() - textRenderer.getHeight(removeScale)) / 2.0f,
                 removeScale,
                 MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.ERROR, deleteHover));
     }

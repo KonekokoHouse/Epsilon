@@ -37,7 +37,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
+        float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         hoverAnimation.run(dragging ? 1.0f : hoverProgress);
         pressAnimation.run(dragging ? 1.0f : 0.0f);
         indicatorAnimation.run((dragging || hoverProgress > 0.01f) ? 1.0f : 0.0f);
@@ -46,8 +46,8 @@ public class IntSettingRow extends SettingRow<IntSetting> {
         float animatedPress = pressAnimation.getValue();
         float indicatorProgress = indicatorAnimation.getValue();
 
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(animatedHover));
-        scope.text(setting.getDisplayName(), bounds.x() + MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(animatedHover));
+        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
         PanelLayout.Rect trackBounds = getTrackBounds(bounds);
         PanelLayout.Rect fieldBounds = getFieldBounds(bounds);
@@ -58,7 +58,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
         float handleX = trackBounds.x() + trackBounds.width() * visualProgress - handleWidth / 2.0f;
         float handleGap = 2.5f;
 
-        scope.slider(trackBounds, visualProgress, 3.0f,
+        scope.slider(trackBounds.relativeTo(bounds), visualProgress, 3.0f,
                 MD3Theme.SECONDARY_CONTAINER,
                 handleGap, 2.0f, MD3Theme.PRIMARY,
                 handleWidth, handleHeight, 1.0f, MD3Theme.PRIMARY);
@@ -71,12 +71,14 @@ public class IntSettingRow extends SettingRow<IntSetting> {
             float bubbleX = handleX + handleWidth / 2.0f - bubbleWidth / 2.0f;
             float bubbleY = bounds.y() - 22.0f;
             int bubbleAlpha = (int) (255 * indicatorProgress);
-            scope.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 9.0f, MD3Theme.withAlpha(MD3Theme.INVERSE_SURFACE, bubbleAlpha));
-            float textWidth = textRenderer.getWidth(label, textScale);
-            float textHeight = textRenderer.getHeight(textScale);
-            float textX = bubbleX + (bubbleWidth - textWidth) / 2.0f;
-            float textY = bubbleY + (bubbleHeight - textHeight) / 2.0f;
-            scope.text(label, textX, textY, textScale, MD3Theme.withAlpha(MD3Theme.INVERSE_ON_SURFACE, bubbleAlpha));
+            scope.pushAbsolute(new PanelLayout.Rect(bubbleX, bubbleY, bubbleWidth, bubbleHeight), bubble -> {
+                bubble.roundRect(0.0f, 0.0f, bubbleWidth, bubbleHeight, 9.0f, MD3Theme.withAlpha(MD3Theme.INVERSE_SURFACE, bubbleAlpha));
+                float textWidth = textRenderer.getWidth(label, textScale);
+                float textHeight = textRenderer.getHeight(textScale);
+                float textX = (bubbleWidth - textWidth) / 2.0f;
+                float textY = (bubbleHeight - textHeight) / 2.0f;
+                bubble.text(label, textX, textY, textScale, MD3Theme.withAlpha(MD3Theme.INVERSE_ON_SURFACE, bubbleAlpha));
+            });
         }
 
         float fieldHover = animatedHover * 0.85f;
@@ -84,7 +86,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
         float displayScale = getFieldTextScale(textRenderer, display, fieldBounds);
         float textWidth = textRenderer.getWidth(display, displayScale);
         float textX = fieldBounds.x() + (fieldBounds.width() - textWidth) / 2.0f;
-        scope.input(fieldBounds, focused, fieldHover,
+        scope.input(fieldBounds.relativeTo(bounds), focused, fieldHover,
                 textX - fieldBounds.x(), display, displayScale, MD3Theme.filledFieldContent(focused),
                 focused ? Math.min(cursorIndex, display.length()) : null, focused ? MD3Theme.filledFieldCaret(focused) : null,
                 null, 0.0f, null);

@@ -28,13 +28,13 @@ public class BoolSettingRow extends SettingRow<BoolSetting> {
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
+        float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         float animatedHover = scope.animate(hoverAnimation, hoverProgress);
         float toggleProgress = scope.animate(toggleAnimation, setting.getValue());
 
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(animatedHover));
-        scope.text(setting.getDisplayName(), bounds.x() + MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
-        scope.toggle(getSwitchBounds(bounds), toggleProgress, animatedHover);
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(animatedHover));
+        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
+        scope.toggle(getSwitchBounds(bounds).relativeTo(bounds), toggleProgress, animatedHover);
     }
 
     private PanelLayout.Rect getSwitchBounds(PanelLayout.Rect bounds) {

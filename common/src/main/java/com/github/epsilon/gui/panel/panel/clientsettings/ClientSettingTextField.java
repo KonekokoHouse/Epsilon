@@ -37,7 +37,8 @@ public class ClientSettingTextField {
     public void render(PanelLayout.Rect bounds, int mouseX, int mouseY,
                        PanelRenderBatch renderBatch, TextRenderer textRenderer,
                        String placeholder, float textScale, String trailingHint) {
-        PanelUiTree tree = PanelUiTree.build(scope -> buildUi(scope, bounds, mouseX, mouseY, textRenderer, placeholder, textScale, trailingHint));
+        PanelUiTree tree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, fieldScope ->
+                buildUi(fieldScope, bounds, mouseX, mouseY, textRenderer, placeholder, textScale, trailingHint)));
         renderBatch.render(tree);
     }
 
@@ -50,11 +51,12 @@ public class ClientSettingTextField {
         float textHeight = textRenderer.getHeight(textScale);
         float textX = bounds.x() + textInset;
         float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
+        PanelLayout.Rect localBounds = bounds.atOrigin();
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
         Color textColor = showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY;
-        scope.input(bounds, focused, hovered ? 0.6f : 0.0f,
+        scope.input(localBounds, focused, hovered ? 0.6f : 0.0f,
                 focusProgress, MD3Theme.PRIMARY, 1.0f,
                 textInset, display, textScale, textColor,
                 null, null,

@@ -100,8 +100,10 @@ public class ModuleListPanel {
         }
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
-            scope.text(state.getSelectedCategory().getName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
-            scope.text(EpsilonTranslations.Gui.MODULES.getTranslatedName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 21.0f, 0.56f, MD3Theme.TEXT_SECONDARY);
+            scope.pushAbsolute(bounds, panel -> {
+                panel.text(state.getSelectedCategory().getName(), MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
+                panel.text(EpsilonTranslations.Gui.MODULES.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 21.0f, 0.56f, MD3Theme.TEXT_SECONDARY);
+            });
             buildSearchField(scope, mouseX, mouseY);
             scope.viewport(contentBuffer, viewport, guiHeight, state.getModuleScroll(), maxModuleScroll, contentHeight, content -> {
                 if (!rebuildContent) {
@@ -125,7 +127,9 @@ public class ModuleListPanel {
                             || !toggleAnimation.isFinished()
                             || !toggleHoverAnimation.isFinished()
                             || marqueeActive);
-                    row.buildUi(content, textRenderer, hoverAnimation.getValue(), selectionAnimation.getValue(), toggleAnimation.getValue(), toggleHoverAnimation.getValue());
+                    content.pushAbsolute(row.getBounds(), rowScope ->
+                            row.buildUi(rowScope, textRenderer, hoverAnimation.getValue(), selectionAnimation.getValue(),
+                                    toggleAnimation.getValue(), toggleHoverAnimation.getValue()));
                     y += ModuleRow.HEIGHT + MD3Theme.ROW_GAP;
                 }
             });
@@ -386,10 +390,11 @@ public class ModuleListPanel {
         Color textColor = showPlaceholder
                 ? MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.filledFieldContent(searchFocused), focusProgress)
                 : MD3Theme.filledFieldContent(searchFocused);
-        scope.input(searchBounds, searchFocused, fieldHover,
-                8.0f, display, scale, textColor,
-                searchFocused ? searchCursorIndex : null, searchFocused ? MD3Theme.filledFieldCaret(true) : null,
-                null, 0.0f, null);
+        scope.pushAbsolute(searchBounds, search ->
+                search.input(searchBounds.atOrigin(), searchFocused, fieldHover,
+                        8.0f, display, scale, textColor,
+                        searchFocused ? searchCursorIndex : null, searchFocused ? MD3Theme.filledFieldCaret(true) : null,
+                        null, 0.0f, null));
 
         if (searchFocused) {
             float textY = searchBounds.y() + (searchBounds.height() - textRenderer.getHeight(scale)) / 2.0f;

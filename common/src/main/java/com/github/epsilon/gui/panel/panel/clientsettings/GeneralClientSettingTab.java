@@ -102,7 +102,9 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
                                     return animation;
                                 });
                                 hoverAnimation.run(rowBounds.contains(effectiveMouseX, effectiveMouseY) ? 1.0f : 0.0f);
-                                row.buildUi(content, guiGraphics, textRenderer, rowBounds, hoverAnimation.getValue(), effectiveMouseX, effectiveMouseY, partialTick);
+                                content.pushAbsolute(rowBounds, rowScope ->
+                                        row.buildUi(rowScope, guiGraphics, textRenderer, rowBounds,
+                                                hoverAnimation.getValue(), effectiveMouseX, effectiveMouseY, partialTick));
                                 contentState.noteAnimation(!hoverAnimation.isFinished() || row.hasActiveAnimation());
                             });
                     contentState.noteAnimation(settingListController.hasActiveAnimations());

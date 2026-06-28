@@ -24,7 +24,7 @@ public class PanelElements {
     }
 
     public static void buildRowSurface(PanelUiTree.Scope scope, PanelLayout.Rect bounds, float hoverProgress) {
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
     }
 
     /**

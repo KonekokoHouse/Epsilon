@@ -174,23 +174,24 @@ public class PanelScreen extends Screen {
 
     private void drawChrome(PanelLayout.Layout layout) {
         PanelUiTree tree = PanelUiTree.build(scope -> {
-            scope.shadow(layout.panel().x(), layout.panel().y(), layout.panel().width(), layout.panel().height(),
-                    MD3Theme.PANEL_RADIUS, 18.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
-            scope.roundRect(layout.panel().x(), layout.panel().y(), layout.panel().width(), layout.panel().height(),
-                    MD3Theme.PANEL_RADIUS, MD3Theme.SURFACE);
-            scope.roundRect(layout.rail().x(), layout.rail().y(), layout.rail().width(), layout.rail().height(),
-                    MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+            scope.pushAbsolute(layout.panel(), panel -> {
+                panel.shadow(0.0f, 0.0f, layout.panel().width(), layout.panel().height(),
+                        MD3Theme.PANEL_RADIUS, 18.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
+                panel.roundRect(0.0f, 0.0f, layout.panel().width(), layout.panel().height(),
+                        MD3Theme.PANEL_RADIUS, MD3Theme.SURFACE);
+            });
+            scope.pushAbsolute(layout.rail(), rail -> rail.roundRect(0.0f, 0.0f, layout.rail().width(), layout.rail().height(),
+                    MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM));
             if (state.isClientSettingMode()) {
-                float csX = layout.modules().x();
-                float csY = layout.modules().y();
                 float csW = layout.detail().right() - layout.modules().x();
                 float csH = layout.modules().height();
-                scope.roundRect(csX, csY, csW, csH, MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+                scope.pushAbsolute(layout.modules().x(), layout.modules().y(), clientSettings ->
+                        clientSettings.roundRect(0.0f, 0.0f, csW, csH, MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM));
             } else {
-                scope.roundRect(layout.modules().x(), layout.modules().y(), layout.modules().width(), layout.modules().height(),
-                        MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
-                scope.roundRect(layout.detail().x(), layout.detail().y(), layout.detail().width(), layout.detail().height(),
-                        MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
+                scope.pushAbsolute(layout.modules(), modules -> modules.roundRect(0.0f, 0.0f, layout.modules().width(), layout.modules().height(),
+                        MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM));
+                scope.pushAbsolute(layout.detail(), detail -> detail.roundRect(0.0f, 0.0f, layout.detail().width(), layout.detail().height(),
+                        MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM));
             }
         });
         scene.submit(GuiLayer.CHROME, -20, tree);

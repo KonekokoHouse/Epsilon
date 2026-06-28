@@ -39,13 +39,14 @@ public class KeybindSettingRow extends SettingRow<KeybindSetting> {
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = bounds.y() + (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
+        float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
 
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
-        scope.text(setting.getDisplayName(), bounds.x() + MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
+        scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
-        PanelLayout.Rect chipBounds = getChipBounds(bounds);
-        chipHoverAnimation.run(chipBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
+        PanelLayout.Rect absoluteChipBounds = getChipBounds(bounds);
+        PanelLayout.Rect chipBounds = absoluteChipBounds.relativeTo(bounds);
+        chipHoverAnimation.run(absoluteChipBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
         focusAnimation.run(listening ? 1.0f : 0.0f);
         float chipHover = chipHoverAnimation.getValue();
         float focusProgress = focusAnimation.getValue();
