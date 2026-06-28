@@ -10,11 +10,10 @@ import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
-import com.github.epsilon.settings.SettingGroup;
+import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -23,26 +22,33 @@ public class SettingsContent {
     private static final TranslateComponent noSettingsComponent = EpsilonTranslateComponent.create("gui", "addon.no_settings");
 
     private final List<SettingSection> sections = new ArrayList<>();
-    private final Map<SettingGroup, Animation> groupHoverAnimations = new HashMap<>();
-    private final Map<SettingGroup, Animation> groupExpandAnimations = new HashMap<>();
+    private final Map<String, Animation> sectionHoverAnimations = new HashMap<>();
+    private final Map<String, Animation> sectionExpandAnimations = new HashMap<>();
 
-    public SettingsContent(List<Setting<?>> settings, List<SettingGroup> orderedGroups) {
-        Map<SettingGroup, SettingSection> groupedSections = new LinkedHashMap<>();
+    public SettingsContent(List<Setting<?>> settings) {
+        this("dropdown:" + System.identityHashCode(settings), settings);
+    }
 
+    public SettingsContent(String ownerKey, List<Setting<?>> settings) {
+        List<SettingLayoutPlanner.Section> plannedSections = SettingLayoutPlanner.plan(ownerKey, settings);
+        Map<Setting<?>, SettingWidget<?>> widgets = new HashMap<>();
         for (Setting<?> setting : settings) {
             SettingWidget<?> widget = createWidget(setting);
-            if (widget == null) continue;
-            SettingGroup group = setting.getGroup();
-            if (group != null) {
-                SettingSection section = groupedSections.get(group);
-                if (section == null) {
-                    section = new SettingSection(group, new ArrayList<>());
-                    groupedSections.put(group, section);
-                    sections.add(section);
+            if (widget != null) {
+                widgets.put(setting, widget);
+            }
+        }
+
+        for (SettingLayoutPlanner.Section plannedSection : plannedSections) {
+            List<SettingWidget<?>> sectionWidgets = new ArrayList<>();
+            for (Setting<?> setting : plannedSection.settings()) {
+                SettingWidget<?> widget = widgets.get(setting);
+                if (widget != null) {
+                    sectionWidgets.add(widget);
                 }
-                section.widgets().add(widget);
-            } else {
-                sections.add(new SettingSection(null, new ArrayList<>(List.of(widget))));
+            }
+            if (!sectionWidgets.isEmpty()) {
+                sections.add(new SettingSection(plannedSection, sectionWidgets));
             }
         }
     }
@@ -80,8 +86,8 @@ public class SettingsContent {
 
         float currentY = contentY + DropdownTheme.SETTING_GAP;
         for (SettingSection section : sections) {
-            if (section.isGroup()) {
-                drawGroupSection(renderer, mouseX, mouseY, section, panelX, currentY, panelWidth);
+            if (section.hasHeader()) {
+                drawSection(renderer, mouseX, mouseY, section, panelX, currentY, panelWidth);
             } else {
                 float widgetY = currentY;
                 for (SettingWidget<?> widget : section.widgets()) {
@@ -98,16 +104,16 @@ public class SettingsContent {
     public boolean mouseClicked(double mouseX, double mouseY, int button, float panelX, float contentY, float panelWidth) {
         float currentY = contentY + DropdownTheme.SETTING_GAP;
         for (SettingSection section : sections) {
-            if (section.isGroup()) {
+            if (section.hasHeader()) {
                 float headerX = panelX + DropdownTheme.SETTING_INDENT;
                 float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
                 if (isHovered(mouseX, mouseY, headerX, currentY, headerW, DropdownTheme.GROUP_HEADER_HEIGHT)) {
-                    section.group().toggleCollapsed();
-                    Managers.SOUND.playInUi(section.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                    section.toggleCollapsed();
+                    Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                     ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
-                if (!section.group().isCollapsed()) {
+                if (!section.isCollapsed()) {
                     for (SettingWidget<?> widget : section.widgets()) {
                         if (!widget.isVisible()) continue;
                         if (widget.mouseClicked(mouseX, mouseY, button)) {
@@ -183,7 +189,7 @@ public class SettingsContent {
     }
 
     private float getSectionHeight(SettingSection section) {
-        if (!section.isGroup()) {
+        if (!section.hasHeader()) {
             float h = 0.0f;
             for (SettingWidget<?> widget : section.widgets()) {
                 if (widget.isVisible()) {
@@ -193,7 +199,7 @@ public class SettingsContent {
             return h;
         }
 
-        if (section.group().isCollapsed()) {
+        if (section.isCollapsed()) {
             return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP;
         }
 
@@ -206,22 +212,21 @@ public class SettingsContent {
         return h;
     }
 
-    private void drawGroupSection(DropdownRenderer renderer, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth) {
-        SettingGroup group = section.group();
-        Animation expandAnimG = groupExpandAnimations.computeIfAbsent(group, ignored -> createGroupAnimation(group.isCollapsed() ? 0.0f : 1.0f));
-        Animation hoverAnim = groupHoverAnimations.computeIfAbsent(group, ignored -> createGroupAnimation(0.0f));
+    private void drawSection(DropdownRenderer renderer, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth) {
+        Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(section.isCollapsed() ? 0.0f : 1.0f));
+        Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(0.0f));
         float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
         float headerX = panelX + DropdownTheme.SETTING_INDENT;
         float headerH = DropdownTheme.GROUP_HEADER_HEIGHT;
         hoverAnim.run(isHovered(mouseX, mouseY, headerX, sectionY, headerW, headerH) ? 1.0f : 0.0f);
-        expandAnimG.run(group.isCollapsed() ? 0.0f : 1.0f);
+        expandAnimG.run(section.isCollapsed() ? 0.0f : 1.0f);
 
         float hoverProgress = hoverAnim.getValue();
         float expandProgress = expandAnimG.getValue();
         renderer.roundRect().addRoundRect(headerX, sectionY, headerW, headerH, DropdownTheme.BUTTON_RADIUS,
                 MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress));
 
-        String label = trimToWidth(group.getDisplayName(), DropdownTheme.GROUP_HEADER_TEXT_SCALE, headerW - 74.0f, renderer);
+        String label = trimToWidth(section.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE, headerW - 74.0f, renderer);
         float labelY = sectionY + (headerH - renderer.text().getHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
         renderer.text().addText(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
 
@@ -237,7 +242,7 @@ public class SettingsContent {
         renderer.triangle().addChevronTriangle(headerX + headerW - DropdownTheme.SETTING_PADDING_X - 2.5f,
                 sectionY + headerH * 0.5f, 2.5f, expandProgress, DropdownTheme.groupChevron(hoverProgress));
 
-        if (!group.isCollapsed()) {
+        if (!section.isCollapsed()) {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = panelX + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = panelWidth - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
@@ -273,9 +278,25 @@ public class SettingsContent {
         return ellipsis;
     }
 
-    private record SettingSection(@Nullable SettingGroup group, List<SettingWidget<?>> widgets) {
-        private boolean isGroup() {
-            return group != null;
+    private record SettingSection(SettingLayoutPlanner.Section model, List<SettingWidget<?>> widgets) {
+        private String key() {
+            return model.key();
+        }
+
+        private String title() {
+            return model.title();
+        }
+
+        private boolean hasHeader() {
+            return model.hasHeader();
+        }
+
+        private boolean isCollapsed() {
+            return model.isCollapsed();
+        }
+
+        private void toggleCollapsed() {
+            model.toggleCollapsed();
         }
     }
 

@@ -17,7 +17,9 @@ import java.util.OptionalInt;
 
 public class ShadowRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 256 * 1024;
+    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final int STRIDE = 48;
+    private static final long SHADOW_BYTES = STRIDE * 4L;
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
 
     private boolean scissorEnabled = false;
@@ -37,6 +39,7 @@ public class ShadowRenderer implements IRenderer {
     }
 
     public void addShadow(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurRadius, Color color) {
+        buffer.ensureCapacity(currentOffset + SHADOW_BYTES);
         buffer.tryMap();
 
         float vx = x - blurRadius;
@@ -74,7 +77,7 @@ public class ShadowRenderer implements IRenderer {
         MemoryUtil.memPutFloat(p + 40, r3);
         MemoryUtil.memPutFloat(p + 44, r4);
 
-        currentOffset += 48;
+        currentOffset += STRIDE;
         vertexCount++;
     }
 

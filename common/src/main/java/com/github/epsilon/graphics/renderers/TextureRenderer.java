@@ -6,6 +6,7 @@ import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.holders.TextureCacheHolder;
+import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -33,15 +34,31 @@ import static com.github.epsilon.Constants.mc;
 public class TextureRenderer implements IRenderer {
 
     private static final int STRIDE = 56;
-    private static final long BUFFER_SIZE = 32 * 1024;
+    private static final long BUFFER_SIZE = 16 * 1024;
+    private static final long QUAD_BYTES = STRIDE * 4L;
 
     private final Map<Object, Batch> batches = new LinkedHashMap<>();
+    private boolean scissorEnabled = false;
+    private int scissorX, scissorY, scissorW, scissorH;
 
     private TextureRenderer() {
     }
 
     public static TextureRenderer create() {
         return RendererHolder.INSTANCE.register(new TextureRenderer());
+    }
+
+    public void setScissor(int x, int y, int width, int height) {
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
+        scissorEnabled = true;
+        scissorX = scissor.x();
+        scissorY = scissor.y();
+        scissorW = scissor.width();
+        scissorH = scissor.height();
+    }
+
+    public void clearScissor() {
+        scissorEnabled = false;
     }
 
     public void addQuadTexture(LuminTexture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color) {
@@ -93,11 +110,8 @@ public class TextureRenderer implements IRenderer {
             return b;
         });
 
+        batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES);
         batch.buffer.tryMap();
-
-        if (batch.currentOffset + (long) STRIDE * 4L > BUFFER_SIZE) {
-            return;
-        }
 
         int argb = ARGB.toABGR(color.getRGB());
 
@@ -112,7 +126,7 @@ public class TextureRenderer implements IRenderer {
         writeVertex(p + STRIDE * 2L, x2, y2, u1, v1, argb, x, y, x2, y2, rTL, rTR, rBR, rBL);
         writeVertex(p + STRIDE * 3L, x2, y, u1, v0, argb, x, y, x2, y2, rTL, rTR, rBR, rBL);
 
-        batch.currentOffset += (long) STRIDE * 4L;
+        batch.currentOffset += QUAD_BYTES;
         batch.vertexCount += 4;
     }
 
@@ -142,6 +156,7 @@ public class TextureRenderer implements IRenderer {
 
         GpuTextureView colorView = LuminRenderSystem.resolveColorView();
         if (colorView == null) return;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
         GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
                 RenderSystem.getModelViewMatrix(),
@@ -179,6 +194,9 @@ public class TextureRenderer implements IRenderer {
                     null, OptionalDouble.empty())
             ) {
                 pass.setPipeline(LuminRenderPipelines.TEXTURE);
+                if (scissorEnabled) {
+                    ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
+                }
 
                 RenderSystem.bindDefaultUniforms(pass);
                 pass.setUniform("DynamicTransforms", dynamicUniforms);

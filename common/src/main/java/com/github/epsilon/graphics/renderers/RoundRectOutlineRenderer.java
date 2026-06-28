@@ -17,8 +17,9 @@ import java.util.OptionalInt;
 
 public class RoundRectOutlineRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 128 * 1024;
+    private static final long BUFFER_SIZE = 64 * 1024;
     private static final int STRIDE = 52;
+    private static final long OUTLINE_BYTES = STRIDE * 4L;
 
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
 
@@ -64,6 +65,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     public void addOutlineGradient(float x, float y, float width, float height, float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft, float outlineWidth, Color colorTopLeft, Color colorBottomLeft, Color colorBottomRight, Color colorTopRight) {
         if (outlineWidth <= 0.0f) return;
 
+        buffer.ensureCapacity(currentOffset + OUTLINE_BYTES);
         buffer.tryMap();
 
         float halfOutline = outlineWidth * 0.5f;

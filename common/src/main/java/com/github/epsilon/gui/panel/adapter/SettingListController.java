@@ -13,7 +13,7 @@ import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
-import com.github.epsilon.settings.SettingGroup;
+import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.input.CharacterEvent;
@@ -34,10 +34,10 @@ public class SettingListController {
     private final PanelPopupHost popupHost;
     private final TextRenderer measureTextRenderer = TextRenderer.create();
     private final Map<Setting<?>, SettingRow<?>> rowCache = new HashMap<>();
-    private final Map<SettingGroup, Animation> groupHoverAnimations = new HashMap<>();
-    private final Map<SettingGroup, Animation> groupExpandAnimations = new HashMap<>();
+    private final Map<String, Animation> sectionHoverAnimations = new HashMap<>();
+    private final Map<String, Animation> sectionExpandAnimations = new HashMap<>();
     private final List<SettingEntry> settingEntries = new ArrayList<>();
-    private final List<GroupEntry> groupEntries = new ArrayList<>();
+    private final List<SectionEntry> sectionEntries = new ArrayList<>();
 
     private SettingEntry draggingSliderEntry;
     private EnumSettingRow activeEnumRow;
@@ -55,32 +55,42 @@ public class SettingListController {
     }
 
     public void prepareLayout(List<Setting<?>> settings) {
+        prepareLayout(null, settings);
+    }
+
+    public void prepareLayout(String ownerKey, List<Setting<?>> settings) {
         rowCache.keySet().removeIf(setting -> settings == null || !settings.contains(setting));
-        List<SettingGroup> visibleGroups = settings == null
-                ? List.of()
-                : settings.stream().map(Setting::getGroup).filter(Objects::nonNull).distinct().toList();
-        groupHoverAnimations.keySet().removeIf(group -> !visibleGroups.contains(group));
-        groupExpandAnimations.keySet().removeIf(group -> !visibleGroups.contains(group));
+        List<String> visibleSections = buildSections(ownerKey, settings).stream()
+                .filter(SettingLayoutPlanner.Section::hasHeader)
+                .map(SettingLayoutPlanner.Section::key)
+                .toList();
+        sectionHoverAnimations.keySet().removeIf(key -> !visibleSections.contains(key));
+        sectionExpandAnimations.keySet().removeIf(key -> !visibleSections.contains(key));
         settingEntries.clear();
-        groupEntries.clear();
+        sectionEntries.clear();
     }
 
     public float getContentHeight(List<Setting<?>> settings) {
+        return getContentHeight(null, settings);
+    }
+
+    public float getContentHeight(String ownerKey, List<Setting<?>> settings) {
         if (settings == null || settings.isEmpty()) {
             return 0.0f;
         }
 
         float height = 0.0f;
-        for (SettingSection section : buildSections(settings)) {
-            if (section.isGroup()) {
-                height += getGroupHeight(section);
+        for (SettingLayoutPlanner.Section section : buildSections(ownerKey, settings)) {
+            if (section.hasHeader()) {
+                height += getSectionHeight(section) + MD3Theme.ROW_GAP;
             } else {
-                SettingRow<?> row = rowCache.computeIfAbsent(section.settings().getFirst(), SettingViewFactory::create);
-                if (row != null) {
-                    height += row.getHeight();
+                for (Setting<?> setting : section.settings()) {
+                    SettingRow<?> row = rowCache.computeIfAbsent(setting, SettingViewFactory::create);
+                    if (row != null) {
+                        height += row.getHeight() + MD3Theme.ROW_GAP;
+                    }
                 }
             }
-            height += MD3Theme.ROW_GAP;
         }
         return height;
     }
@@ -88,56 +98,69 @@ public class SettingListController {
     public void layoutRows(List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
                            PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
-        prepareLayout(settings);
+        layoutRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
+    }
+
+    public void layoutRows(String ownerKey, List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
+                           PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+                           RowRenderCallback callback) {
+        prepareLayout(ownerKey, settings);
 
         if (activeEnumRow != null && popupHost.getActivePopup() == null) {
             activeEnumRow.setDropdownOpen(false);
             activeEnumRow = null;
         }
 
-        appendRows(settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
+        appendRows(ownerKey, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
     }
 
     public void appendRows(List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
                            PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
-        float rowY = viewport.y() - scroll;
-        for (SettingSection section : buildSections(settings)) {
-            if (section.isGroup()) {
-                PanelLayout.Rect groupBounds = new PanelLayout.Rect(viewport.x(), rowY, rowWidth, getGroupHeight(section));
-                PanelLayout.Rect headerBounds = new PanelLayout.Rect(groupBounds.x(), groupBounds.y(), groupBounds.width(), GROUP_HEADER_HEIGHT);
-                groupEntries.add(new GroupEntry(section.group(), headerBounds));
-                buildGroupCard(scope, textRenderer, section, groupBounds, headerBounds, mouseX, mouseY);
+        appendRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
+    }
 
-                if (!section.group().isCollapsed()) {
-                    float childY = groupBounds.y() + GROUP_HEADER_HEIGHT + GROUP_ROW_INSET;
-                    float childWidth = Math.max(0.0f, groupBounds.width() - GROUP_ROW_INSET * 2.0f);
+    public void appendRows(String ownerKey, List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
+                           PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+                           RowRenderCallback callback) {
+        float rowY = viewport.y() - scroll;
+        for (SettingLayoutPlanner.Section section : buildSections(ownerKey, settings)) {
+            if (section.hasHeader()) {
+                PanelLayout.Rect sectionBounds = new PanelLayout.Rect(viewport.x(), rowY, rowWidth, getSectionHeight(section));
+                PanelLayout.Rect headerBounds = new PanelLayout.Rect(sectionBounds.x(), sectionBounds.y(), sectionBounds.width(), GROUP_HEADER_HEIGHT);
+                sectionEntries.add(new SectionEntry(section, headerBounds));
+                buildSectionCard(scope, textRenderer, section, sectionBounds, headerBounds, mouseX, mouseY);
+
+                if (!section.isCollapsed()) {
+                    float childY = sectionBounds.y() + GROUP_HEADER_HEIGHT + GROUP_ROW_INSET;
+                    float childWidth = Math.max(0.0f, sectionBounds.width() - GROUP_ROW_INSET * 2.0f);
                     for (Setting<?> setting : section.settings()) {
                         SettingRow<?> row = rowCache.computeIfAbsent(setting, SettingViewFactory::create);
                         if (row == null) {
                             continue;
                         }
 
-                        PanelLayout.Rect rowBounds = new PanelLayout.Rect(groupBounds.x() + GROUP_ROW_INSET, childY, childWidth, row.getHeight());
+                        PanelLayout.Rect rowBounds = new PanelLayout.Rect(sectionBounds.x() + GROUP_ROW_INSET, childY, childWidth, row.getHeight());
                         settingEntries.add(new SettingEntry(row, rowBounds));
                         callback.render(setting, row, rowBounds);
                         childY += row.getHeight() + MD3Theme.ROW_GAP;
                     }
                 }
 
-                rowY += groupBounds.height() + MD3Theme.ROW_GAP;
+                rowY += sectionBounds.height() + MD3Theme.ROW_GAP;
                 continue;
             }
 
-            Setting<?> setting = section.settings().getFirst();
-            SettingRow<?> row = rowCache.computeIfAbsent(setting, SettingViewFactory::create);
-            if (row == null) {
-                continue;
+            for (Setting<?> setting : section.settings()) {
+                SettingRow<?> row = rowCache.computeIfAbsent(setting, SettingViewFactory::create);
+                if (row == null) {
+                    continue;
+                }
+                PanelLayout.Rect rowBounds = new PanelLayout.Rect(viewport.x(), rowY, rowWidth, row.getHeight());
+                settingEntries.add(new SettingEntry(row, rowBounds));
+                callback.render(setting, row, rowBounds);
+                rowY += row.getHeight() + MD3Theme.ROW_GAP;
             }
-            PanelLayout.Rect rowBounds = new PanelLayout.Rect(viewport.x(), rowY, rowWidth, row.getHeight());
-            settingEntries.add(new SettingEntry(row, rowBounds));
-            callback.render(setting, row, rowBounds);
-            rowY += row.getHeight() + MD3Theme.ROW_GAP;
         }
     }
 
@@ -151,11 +174,11 @@ public class SettingListController {
         }
 
         clearFocus();
-        for (GroupEntry entry : groupEntries) {
+        for (SectionEntry entry : sectionEntries) {
             if (entry.bounds().contains(event.x(), event.y())) {
-                entry.group().toggleCollapsed();
+                entry.section().toggleCollapsed();
                 draggingSliderEntry = null;
-                Managers.SOUND.playInUi(entry.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                Managers.SOUND.playInUi(entry.section().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                 return true;
             }
         }
@@ -266,8 +289,8 @@ public class SettingListController {
         clearFocus();
         settingEntries.clear();
         rowCache.clear();
-        groupHoverAnimations.clear();
-        groupExpandAnimations.clear();
+        sectionHoverAnimations.clear();
+        sectionExpandAnimations.clear();
         if (activeEnumRow != null) {
             activeEnumRow.setDropdownOpen(false);
             activeEnumRow = null;
@@ -275,17 +298,16 @@ public class SettingListController {
     }
 
     public boolean hasActiveAnimations() {
-        return groupHoverAnimations.values().stream().anyMatch(animation -> !animation.isFinished())
-                || groupExpandAnimations.values().stream().anyMatch(animation -> !animation.isFinished());
+        return sectionHoverAnimations.values().stream().anyMatch(animation -> !animation.isFinished())
+                || sectionExpandAnimations.values().stream().anyMatch(animation -> !animation.isFinished());
     }
 
-    private void buildGroupCard(PanelUiTree.Scope scope, TextRenderer textRenderer, SettingSection section,
-                                PanelLayout.Rect groupBounds, PanelLayout.Rect headerBounds, int mouseX, int mouseY) {
-        SettingGroup group = section.group();
-        Animation hoverAnimation = groupHoverAnimations.computeIfAbsent(group, ignored -> createAnimation(120L, 0.0f));
-        Animation expandAnimation = groupExpandAnimations.computeIfAbsent(group, ignored -> createAnimation(180L, group.isCollapsed() ? 0.0f : 1.0f));
+    private void buildSectionCard(PanelUiTree.Scope scope, TextRenderer textRenderer, SettingLayoutPlanner.Section section,
+                                  PanelLayout.Rect groupBounds, PanelLayout.Rect headerBounds, int mouseX, int mouseY) {
+        Animation hoverAnimation = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createAnimation(120L, 0.0f));
+        Animation expandAnimation = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createAnimation(180L, section.isCollapsed() ? 0.0f : 1.0f));
         float hoverProgress = scope.animate(hoverAnimation, headerBounds.contains(mouseX, mouseY));
-        float expandProgress = scope.animate(expandAnimation, !group.isCollapsed());
+        float expandProgress = scope.animate(expandAnimation, !section.isCollapsed());
 
         scope.roundRect(groupBounds.x(), groupBounds.y(), groupBounds.width(), groupBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.OUTLINE_SOFT);
         scope.roundRect(
@@ -302,7 +324,7 @@ public class SettingListController {
         }
 
         float labelScale = 0.66f;
-        String label = trimToWidth(group.getDisplayName(), labelScale, headerBounds.width() - 74.0f, textRenderer);
+        String label = trimToWidth(section.title(), labelScale, headerBounds.width() - 74.0f, textRenderer);
         float labelY = headerBounds.y() + (GROUP_HEADER_HEIGHT - textRenderer.getHeight(labelScale)) / 2.0f;
         scope.text(label, headerBounds.x() + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
@@ -325,36 +347,20 @@ public class SettingListController {
         scope.triangle(chevronCenterX, chevronCenterY, chevronSize, expandProgress, MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.PRIMARY, hoverProgress));
     }
 
-    private List<SettingSection> buildSections(List<Setting<?>> settings) {
+    private List<SettingLayoutPlanner.Section> buildSections(String ownerKey, List<Setting<?>> settings) {
         if (settings == null || settings.isEmpty()) {
             return List.of();
         }
-
-        List<SettingSection> sections = new ArrayList<>();
-        Map<SettingGroup, SettingSection> groupedSections = new HashMap<>();
-        for (Setting<?> setting : settings) {
-            SettingGroup group = setting.getGroup();
-            if (group == null) {
-                sections.add(new SettingSection(null, new ArrayList<>(List.of(setting))));
-                continue;
-            }
-
-            SettingSection section = groupedSections.get(group);
-            if (section == null) {
-                section = new SettingSection(group, new ArrayList<>());
-                groupedSections.put(group, section);
-                sections.add(section);
-            }
-            section.settings().add(setting);
-        }
-        return sections;
+        return ownerKey == null || ownerKey.isBlank()
+                ? SettingLayoutPlanner.plan(settings)
+                : SettingLayoutPlanner.plan(ownerKey, settings);
     }
 
-    private float getGroupHeight(SettingSection section) {
-        if (!section.isGroup()) {
+    private float getSectionHeight(SettingLayoutPlanner.Section section) {
+        if (!section.hasHeader()) {
             return 0.0f;
         }
-        if (section.group().isCollapsed()) {
+        if (section.isCollapsed()) {
             return GROUP_HEADER_HEIGHT;
         }
 
@@ -442,13 +448,7 @@ public class SettingListController {
     private record SettingEntry(SettingRow<?> row, PanelLayout.Rect bounds) {
     }
 
-    private record GroupEntry(SettingGroup group, PanelLayout.Rect bounds) {
-    }
-
-    private record SettingSection(SettingGroup group, List<Setting<?>> settings) {
-        private boolean isGroup() {
-            return group != null;
-        }
+    private record SectionEntry(SettingLayoutPlanner.Section section, PanelLayout.Rect bounds) {
     }
 
 }

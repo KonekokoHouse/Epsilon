@@ -1,10 +1,8 @@
 package com.github.epsilon.gui.dsl;
 
-import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 
 import java.awt.*;
@@ -20,26 +18,10 @@ public class PanelUiCompiler {
     private PanelUiCompiler() {
     }
 
-    public static void render(PanelUiTree tree, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer) {
-        renderNodes(tree.nodes(), new RenderTarget(null, roundRectRenderer, null, rectRenderer, null, textRenderer));
-    }
-
-    public static void render(PanelUiTree tree, ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer) {
-        renderNodes(tree.nodes(), new RenderTarget(shadowRenderer, roundRectRenderer, null, rectRenderer, null, textRenderer));
-    }
-
-    public static void render(PanelUiTree tree, ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer, RoundRectOutlineRenderer roundRectOutlineRenderer, RectRenderer rectRenderer, TriangleRenderer triangleRenderer, TextRenderer textRenderer) {
-        renderNodes(tree.nodes(), new RenderTarget(shadowRenderer, roundRectRenderer, roundRectOutlineRenderer, rectRenderer, triangleRenderer, textRenderer));
-    }
-
-    public static void render(PanelUiTree tree, ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer, RoundRectOutlineRenderer roundRectOutlineRenderer, RectRenderer rectRenderer, TextRenderer textRenderer) {
-        render(tree, shadowRenderer, roundRectRenderer, roundRectOutlineRenderer, rectRenderer, null, textRenderer);
-    }
-
     /**
      * 将 UI 树写入支持 layer 的批次。
      * <p>
-     * layer 只在该入口生效；旧的直接 renderer 入口会按普通树顺序输出。
+     * layer 在该入口统一生效，GUI 不再直接写入具体 renderer。
      */
     static void renderIntoLayeredBatch(PanelUiTree tree, PanelRenderBatch batch, int baseLayer) {
         renderNodesIntoLayeredBatch(tree.nodes(), batch, baseLayer);
@@ -47,13 +29,8 @@ public class PanelUiCompiler {
 
     private static void renderNodesIntoLayeredBatch(List<PanelUiTree.UiNode> nodes, PanelRenderBatch batch, int layer) {
         PanelRenderBatch.LayerRenderers renderers = batch.layer(layer);
-        RenderTarget target = new RenderTarget(renderers.shadowRenderer(), renderers.roundRectRenderer(),
-                renderers.roundRectOutlineRenderer(), renderers.rectRenderer(), renderers.triangleRenderer(), renderers.textRenderer());
+        RenderTarget target = RenderTarget.forBatchLayer(renderers);
         for (PanelUiTree.UiNode node : nodes) {
-            if (node instanceof PanelUiTree.GroupNode(List<PanelUiTree.UiNode> children)) {
-                renderNodesIntoLayeredBatch(children, batch, layer);
-                continue;
-            }
             if (node instanceof PanelUiTree.LayerNode(int childLayer, List<PanelUiTree.UiNode> children)) {
                 // 子树 layer 是相对偏移，允许弹窗、下拉层在调用点整体抬高。
                 renderNodesIntoLayeredBatch(children, batch, layer + childLayer);
@@ -62,29 +39,8 @@ public class PanelUiCompiler {
             if (node instanceof PanelUiTree.LayeredNode(int childLayer, PanelUiTree.UiNode child)) {
                 // 单节点 layer 直接切换目标 renderer，避免为高频图元创建临时子树。
                 PanelRenderBatch.LayerRenderers childRenderers = batch.layer(layer + childLayer);
-                RenderTarget childTarget = new RenderTarget(childRenderers.shadowRenderer(), childRenderers.roundRectRenderer(),
-                        childRenderers.roundRectOutlineRenderer(), childRenderers.rectRenderer(), childRenderers.triangleRenderer(), childRenderers.textRenderer());
+                RenderTarget childTarget = RenderTarget.forBatchLayer(childRenderers);
                 renderNode(child, childTarget);
-                continue;
-            }
-            renderNode(node, target);
-        }
-    }
-
-    private static void renderNodes(List<PanelUiTree.UiNode> nodes, RenderTarget target) {
-        for (PanelUiTree.UiNode node : nodes) {
-            if (node instanceof PanelUiTree.GroupNode(List<PanelUiTree.UiNode> children1)) {
-                renderNodes(children1, target);
-                continue;
-            }
-            if (node instanceof PanelUiTree.LayerNode(int ignored, List<PanelUiTree.UiNode> children)) {
-                // 兼容旧 renderer 入口：没有 layer 批次时，layer 节点退化为普通分组。
-                renderNodes(children, target);
-                continue;
-            }
-            if (node instanceof PanelUiTree.LayeredNode(int ignored, PanelUiTree.UiNode child)) {
-                // 兼容旧 renderer 入口：单节点 layer 只保留节点本身。
-                renderNode(child, target);
                 continue;
             }
             renderNode(node, target);
@@ -299,8 +255,24 @@ public class PanelUiCompiler {
                 float contentHeight, List<PanelUiTree.UiNode> children
         )) {
             // viewport 子树先进入私有内容缓冲；真正绘制时由 buffer 按视口 scissor 输出。
-            renderNodes(children, RenderTarget.forContentBuffer(buffer));
+            buffer.beginViewport(viewport);
+            renderNodesIntoTarget(children, RenderTarget.forContentBuffer(buffer));
             buffer.queueViewport(viewport, guiHeight, scroll, maxScroll, contentHeight);
+        }
+    }
+
+    private static void renderNodesIntoTarget(List<PanelUiTree.UiNode> nodes, RenderTarget target) {
+        for (PanelUiTree.UiNode node : nodes) {
+            if (node instanceof PanelUiTree.LayerNode(int ignoredLayer, List<PanelUiTree.UiNode> children)) {
+                // viewport 缓冲拥有自己的本地层级；内容子树中的相对 layer 只表达结构，不逃逸到外层 scene。
+                renderNodesIntoTarget(children, target);
+                continue;
+            }
+            if (node instanceof PanelUiTree.LayeredNode(int ignoredLayer, PanelUiTree.UiNode child)) {
+                renderNode(child, target);
+                continue;
+            }
+            renderNode(node, target);
         }
     }
 
@@ -338,7 +310,35 @@ public class PanelUiCompiler {
     }
 
     private static void renderSwitch(RenderTarget target, PanelLayout.Rect bounds, float toggleProgress, float hoverProgress) {
-        PanelElements.drawSwitch(target.roundRectRenderer(), target.roundRectOutlineRenderer(), bounds, toggleProgress, hoverProgress);
+        Color track = MD3Theme.switchTrack(toggleProgress);
+        Color knob = MD3Theme.switchKnob(toggleProgress);
+        Color outline = MD3Theme.switchTrackOutline(toggleProgress, hoverProgress);
+        float clampedToggle = Math.clamp(toggleProgress, 0.0f, 1.0f);
+        float knobSize = MD3Theme.SWITCH_HANDLE_SIZE_OFF
+                + (MD3Theme.SWITCH_HANDLE_SIZE_ON - MD3Theme.SWITCH_HANDLE_SIZE_OFF) * clampedToggle;
+        float stretchFactor = 4.0f * clampedToggle * (1.0f - clampedToggle);
+        float knobWidth = knobSize + 3.5f * stretchFactor;
+        float inset = MD3Theme.SWITCH_HANDLE_INSET_OFF
+                + (MD3Theme.SWITCH_HANDLE_INSET_ON - MD3Theme.SWITCH_HANDLE_INSET_OFF) * clampedToggle;
+        float knobMinX = bounds.x() + inset + knobWidth / 2.0f;
+        float knobMaxX = bounds.right() - inset - knobWidth / 2.0f;
+        float knobCenterX = knobMinX + (knobMaxX - knobMinX) * toggleProgress;
+        float knobCenterY = bounds.centerY();
+
+        target.roundRectRenderer().addRoundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), bounds.height() / 2.0f, track);
+        if (outline.getAlpha() > 0 && target.roundRectOutlineRenderer() != null) {
+            target.roundRectOutlineRenderer().addOutline(bounds.x(), bounds.y(), bounds.width(), bounds.height(),
+                    bounds.height() / 2.0f, MD3Theme.switchTrackOutlineWidth(toggleProgress), outline);
+        }
+        if (hoverProgress > 0.02f) {
+            float haloSize = MD3Theme.SWITCH_STATE_LAYER_SIZE;
+            float haloX = knobCenterX - haloSize / 2.0f;
+            float haloY = knobCenterY - haloSize / 2.0f;
+            target.roundRectRenderer().addRoundRect(haloX, haloY, haloSize, haloSize, haloSize / 2.0f,
+                    MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18));
+        }
+        target.roundRectRenderer().addRoundRect(knobCenterX - knobWidth / 2.0f, knobCenterY - knobSize / 2.0f,
+                knobWidth, knobSize, knobSize / 2.0f, knob);
     }
 
     private static void renderFilledField(RenderTarget target, PanelLayout.Rect bounds, boolean focused, float hoverProgress) {
@@ -394,19 +394,182 @@ public class PanelUiCompiler {
         }
     }
 
-    private record RenderTarget(ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer,
-                                RoundRectOutlineRenderer roundRectOutlineRenderer, RectRenderer rectRenderer,
-                                TriangleRenderer triangleRenderer, TextRenderer textRenderer,
+    private record RenderTarget(ShadowSink shadowRenderer, RoundRectSink roundRectRenderer,
+                                RoundRectOutlineSink roundRectOutlineRenderer, RectSink rectRenderer,
+                                TriangleSink triangleRenderer, TextSink textRenderer,
                                 PanelContentBuffer buffer) {
-        private RenderTarget(ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer,
-                             RoundRectOutlineRenderer roundRectOutlineRenderer, RectRenderer rectRenderer,
-                             TriangleRenderer triangleRenderer, TextRenderer textRenderer) {
-            this(shadowRenderer, roundRectRenderer, roundRectOutlineRenderer, rectRenderer, triangleRenderer, textRenderer, null);
+        private static RenderTarget forBatchLayer(PanelRenderBatch.LayerRenderers renderers) {
+            return new RenderTarget(
+                    new BatchShadowSink(renderers.shadowRenderer()),
+                    new BatchRoundRectSink(renderers.roundRectRenderer()),
+                    new BatchRoundRectOutlineSink(renderers.roundRectOutlineRenderer()),
+                    new BatchRectSink(renderers.rectRenderer()),
+                    new BatchTriangleSink(renderers.triangleRenderer()),
+                    new BatchTextSink(renderers.textRenderer()),
+                    null
+            );
         }
 
         private static RenderTarget forContentBuffer(PanelContentBuffer buffer) {
-            return new RenderTarget(buffer.shadowRenderer(), buffer.roundRectRenderer(), buffer.roundRectOutlineRenderer(),
-                    buffer.rectRenderer(), buffer.triangleRenderer(), buffer.textRenderer(), buffer);
+            return new RenderTarget(
+                    new BatchShadowSink(buffer.shadowRenderer()),
+                    new BatchRoundRectSink(buffer.roundRectRenderer()),
+                    new BatchRoundRectOutlineSink(buffer.roundRectOutlineRenderer()),
+                    new BatchRectSink(buffer.rectRenderer()),
+                    new BatchTriangleSink(buffer.triangleRenderer()),
+                    new BatchTextSink(buffer.textRenderer()),
+                    buffer
+            );
+        }
+    }
+
+    private interface ShadowSink {
+        void addShadow(float x, float y, float width, float height,
+                       float topLeft, float topRight, float bottomRight, float bottomLeft,
+                       float blurRadius, Color color);
+
+        default void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color) {
+            addShadow(x, y, width, height, radius, radius, radius, radius, blurRadius, color);
+        }
+    }
+
+    private interface RoundRectSink {
+        void addRoundRect(float x, float y, float width, float height,
+                          float topLeft, float topRight, float bottomRight, float bottomLeft,
+                          Color color);
+
+        void addRoundRectGradient(float x, float y, float width, float height,
+                                  float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius,
+                                  Color topLeft, Color bottomLeft, Color bottomRight, Color topRight);
+
+        default void addRoundRect(float x, float y, float width, float height, float radius, Color color) {
+            addRoundRect(x, y, width, height, radius, radius, radius, radius, color);
+        }
+    }
+
+    private interface RoundRectOutlineSink {
+        void addOutline(float x, float y, float width, float height,
+                        float topLeft, float topRight, float bottomRight, float bottomLeft,
+                        float outlineWidth, Color color);
+
+        default void addOutline(float x, float y, float width, float height, float radius, float outlineWidth, Color color) {
+            addOutline(x, y, width, height, radius, radius, radius, radius, outlineWidth, color);
+        }
+    }
+
+    private interface RectSink {
+        void addRect(float x, float y, float width, float height, Color color);
+
+        void addRectGradient(float x, float y, float width, float height,
+                             Color topLeft, Color bottomLeft, Color bottomRight, Color topRight);
+
+        void addOutline(float x, float y, float width, float height, float outlineWidth, Color color);
+    }
+
+    private interface TriangleSink {
+        void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color);
+    }
+
+    private interface TextSink {
+        void addText(String text, float x, float y, float scale, Color color);
+
+        void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader);
+
+        float getHeight(float scale);
+
+        float getHeight(float scale, TtfFontLoader fontLoader);
+
+        float getWidth(String text, float scale);
+
+        float getWidth(String text, float scale, TtfFontLoader fontLoader);
+    }
+
+    private record BatchShadowSink(PanelRenderBatch.ShadowFacade renderer) implements ShadowSink {
+        @Override
+        public void addShadow(float x, float y, float width, float height, float topLeft, float topRight,
+                              float bottomRight, float bottomLeft, float blurRadius, Color color) {
+            renderer.addShadow(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, blurRadius, color);
+        }
+    }
+
+    private record BatchRoundRectSink(PanelRenderBatch.RoundRectFacade renderer) implements RoundRectSink {
+        @Override
+        public void addRoundRect(float x, float y, float width, float height, float topLeft, float topRight,
+                                 float bottomRight, float bottomLeft, Color color) {
+            renderer.addRoundRect(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, color);
+        }
+
+        @Override
+        public void addRoundRectGradient(float x, float y, float width, float height,
+                                         float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius,
+                                         Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            renderer.addRoundRectGradient(x, y, width, height, topLeftRadius, topRightRadius,
+                    bottomRightRadius, bottomLeftRadius, topLeft, bottomLeft, bottomRight, topRight);
+        }
+    }
+
+    private record BatchRoundRectOutlineSink(PanelRenderBatch.RoundRectOutlineFacade renderer) implements RoundRectOutlineSink {
+        @Override
+        public void addOutline(float x, float y, float width, float height, float topLeft, float topRight,
+                               float bottomRight, float bottomLeft, float outlineWidth, Color color) {
+            renderer.addOutline(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, outlineWidth, color);
+        }
+    }
+
+    private record BatchRectSink(PanelRenderBatch.RectFacade renderer) implements RectSink {
+        @Override
+        public void addRect(float x, float y, float width, float height, Color color) {
+            renderer.addRect(x, y, width, height, color);
+        }
+
+        @Override
+        public void addRectGradient(float x, float y, float width, float height,
+                                    Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            renderer.addRectGradient(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight);
+        }
+
+        @Override
+        public void addOutline(float x, float y, float width, float height, float outlineWidth, Color color) {
+            renderer.addOutline(x, y, width, height, outlineWidth, color);
+        }
+    }
+
+    private record BatchTriangleSink(PanelRenderBatch.TriangleFacade renderer) implements TriangleSink {
+        @Override
+        public void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color) {
+            renderer.addChevronTriangle(centerX, centerY, size, progress, color);
+        }
+    }
+
+    private record BatchTextSink(PanelRenderBatch.TextFacade renderer) implements TextSink {
+        @Override
+        public void addText(String text, float x, float y, float scale, Color color) {
+            renderer.addText(text, x, y, scale, color);
+        }
+
+        @Override
+        public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
+            renderer.addText(text, x, y, scale, color, fontLoader);
+        }
+
+        @Override
+        public float getHeight(float scale) {
+            return renderer.getHeight(scale);
+        }
+
+        @Override
+        public float getHeight(float scale, TtfFontLoader fontLoader) {
+            return renderer.getHeight(scale, fontLoader);
+        }
+
+        @Override
+        public float getWidth(String text, float scale) {
+            return renderer.getWidth(text, scale);
+        }
+
+        @Override
+        public float getWidth(String text, float scale, TtfFontLoader fontLoader) {
+            return renderer.getWidth(text, scale, fontLoader);
         }
     }
 

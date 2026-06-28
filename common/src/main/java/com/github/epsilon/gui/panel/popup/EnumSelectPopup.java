@@ -117,7 +117,6 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
 
     @Override
     public void flush(PanelRenderBatch renderBatch) {
-        renderBatch.flushAndClear();
         contentBuffer.flushAndClear();
     }
 

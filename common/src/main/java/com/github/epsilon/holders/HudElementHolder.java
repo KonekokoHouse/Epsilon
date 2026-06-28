@@ -8,6 +8,8 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
+import com.github.epsilon.gui.scene.GuiLayer;
+import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.utils.client.ClientUtils;
 
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ public class HudElementHolder {
     }
 
     private final List<HudModule> elements = new ArrayList<>();
+    private final GuiScene scene = new GuiScene();
 
     public void initElements() {
         addElement(Notifications.INSTANCE);
@@ -50,12 +53,15 @@ public class HudElementHolder {
     private void onRender2D(Render2DEvent.HUD event) {
         if (ClientUtils.isLoading() || mc.level == null || mc.screen instanceof HudEditorScreen) return;
 
+        scene.beginFrame();
         for (HudModule element : elements) {
             if (element.isEnabled()) {
                 element.updateLayout();
-                element.render(event.getGuiGraphics(), mc.getDeltaTracker());
+                // HUD chrome 统一提交到 scheduler；原版物品等 overlay 在 flush 后单独绘制。
+                element.renderWithBatch(event.getGuiGraphics(), mc.getDeltaTracker(), scene.batch(GuiLayer.CONTENT));
             }
         }
+        scene.endFrame();
         renderOverlays(event);
     }
 

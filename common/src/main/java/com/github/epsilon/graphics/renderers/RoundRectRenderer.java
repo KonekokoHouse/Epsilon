@@ -17,7 +17,9 @@ import java.util.OptionalInt;
 
 public class RoundRectRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 512 * 1024;
+    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final int STRIDE = 48;
+    private static final long RECT_BYTES = STRIDE * 4L;
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
 
     private boolean scissorEnabled = false;
@@ -60,6 +62,7 @@ public class RoundRectRenderer implements IRenderer {
      * 颜色顺序对应四个角顶点：左上、左下、右下、右上 (TL, BL, BR, TR)
      */
     public void addRoundRectGradient(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, Color cTL, Color cBL, Color cBR, Color cTR) {
+        buffer.ensureCapacity(currentOffset + RECT_BYTES);
         buffer.tryMap();
         float x2 = x + width, y2 = y + height;
         int argbTL = ARGB.toABGR(cTL.getRGB());
@@ -88,7 +91,7 @@ public class RoundRectRenderer implements IRenderer {
         MemoryUtil.memPutFloat(p + 36, r2);
         MemoryUtil.memPutFloat(p + 40, r3);
         MemoryUtil.memPutFloat(p + 44, r4);
-        currentOffset += 48;
+        currentOffset += STRIDE;
         vertexCount++;
     }
 

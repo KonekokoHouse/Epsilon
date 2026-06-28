@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.*;
+import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.input.PanelInputRouter;
@@ -11,6 +11,8 @@ import com.github.epsilon.gui.panel.panel.ModuleDetailPanel;
 import com.github.epsilon.gui.panel.panel.ModuleListPanel;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.gui.scene.GuiLayer;
+import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -35,17 +37,13 @@ public class PanelScreen extends Screen {
     private final PanelState state = new PanelState();
     private final PanelDirtyState dirtyState = new PanelDirtyState();
     private final TextRenderer textRenderer = TextRenderer.create();
-    private final RectRenderer rectRenderer = RectRenderer.create();
-    private final RoundRectRenderer roundRectRenderer = RoundRectRenderer.create();
-    private final RoundRectOutlineRenderer roundRectOutlineRenderer = RoundRectOutlineRenderer.create();
-    private final ShadowRenderer shadowRenderer = ShadowRenderer.create();
-    private final PanelRenderBatch renderBatch = new PanelRenderBatch(shadowRenderer, roundRectRenderer, roundRectOutlineRenderer, rectRenderer, textRenderer);
+    private final GuiScene scene = new GuiScene();
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final PanelInputRouter inputRouter = new PanelInputRouter();
-    private final CategoryRailPanel categoryRailPanel = new CategoryRailPanel(state, rectRenderer, roundRectRenderer, textRenderer);
-    private final ModuleListPanel moduleListPanel = new ModuleListPanel(state, roundRectRenderer, rectRenderer, shadowRenderer, textRenderer);
-    private final ModuleDetailPanel moduleDetailPanel = new ModuleDetailPanel(state, roundRectRenderer, rectRenderer, shadowRenderer, textRenderer, popupHost);
-    private final ClientSettingPanel clientSettingPanel = new ClientSettingPanel(state, roundRectRenderer, rectRenderer, shadowRenderer, textRenderer, popupHost);
+    private final CategoryRailPanel categoryRailPanel = new CategoryRailPanel(state, textRenderer);
+    private final ModuleListPanel moduleListPanel = new ModuleListPanel(state, textRenderer);
+    private final ModuleDetailPanel moduleDetailPanel = new ModuleDetailPanel(state, textRenderer, popupHost);
+    private final ClientSettingPanel clientSettingPanel = new ClientSettingPanel(state, textRenderer, popupHost);
     private int lastWidth = -1;
     private int lastHeight = -1;
     private String lastSelectedCategory = "";
@@ -86,6 +84,7 @@ public class PanelScreen extends Screen {
         renderTarget.resize(window.getWidth(), window.getHeight());
 
         LuminRenderSystem.setActiveTarget(renderTarget);
+        scene.beginFrame();
 
         String currentCategory = state.getSelectedCategory().name();
         String currentModule = state.getSelectedModule() == null ? "" : state.getSelectedModule().getName();
@@ -144,22 +143,24 @@ public class PanelScreen extends Screen {
         boolean popupActive = popupHost.getActivePopup() != null;
         int panelMouseX = popupActive ? Integer.MIN_VALUE : epsilonMouseX;
         int panelMouseY = popupActive ? Integer.MIN_VALUE : epsilonMouseY;
-        categoryRailPanel.render(guiGraphics, layout.rail(), panelMouseX, panelMouseY, partialTick);
+        categoryRailPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, -20), layout.rail(), panelMouseX, panelMouseY, partialTick);
         if (state.isClientSettingMode()) {
             PanelLayout.Rect clientSettingsBounds = new PanelLayout.Rect(
                     layout.modules().x(), layout.modules().y(),
                     layout.detail().right() - layout.modules().x(),
                     layout.modules().height()
             );
-            clientSettingPanel.render(guiGraphics, clientSettingsBounds, panelMouseX, panelMouseY, partialTick);
+            clientSettingPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, 10), clientSettingsBounds, panelMouseX, panelMouseY, partialTick);
         } else {
-            moduleListPanel.render(guiGraphics, layout.modules(), panelMouseX, panelMouseY, partialTick);
-            moduleDetailPanel.render(guiGraphics, layout.detail(), panelMouseX, panelMouseY, partialTick);
+            moduleListPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, 0), layout.modules(), panelMouseX, panelMouseY, partialTick);
+            moduleDetailPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, 20), layout.detail(), panelMouseX, panelMouseY, partialTick);
         }
 
-        popupHost.render(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
+        popupHost.render(guiGraphics, scene.batch(GuiLayer.POPUP), epsilonMouseX, epsilonMouseY, partialTick);
 
-        flushQueuedRenderers();
+        scene.flush();
+        flushQueuedContentBuffers();
+        scene.clear();
 
         LuminRenderSystem.setActiveTarget(null);
 
@@ -192,11 +193,10 @@ public class PanelScreen extends Screen {
                         MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM);
             }
         });
-        renderBatch.render(tree, -20);
+        scene.submit(GuiLayer.CHROME, -20, tree);
     }
 
-    private void flushQueuedRenderers() {
-        renderBatch.flushAndClear();
+    private void flushQueuedContentBuffers() {
         if (state.isClientSettingMode()) {
             clientSettingPanel.flushContent();
         } else {

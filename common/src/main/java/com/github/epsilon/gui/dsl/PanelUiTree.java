@@ -38,8 +38,15 @@ public class PanelUiTree {
         return new PanelUiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
     }
 
-    public static void clearMemoCache() {
-        // memo 缓存已经移除；保留该方法作为兼容空实现。
+    /**
+     * 构建带自动布局的 UI 树。
+     * <p>
+     * 新 GUI 优先通过该入口描述 row/column/slot，布局作用域会自动推进游标并把结果写入底层绘制节点。
+     */
+    public static PanelUiTree layout(PanelLayout.Rect bounds, Consumer<LayoutScope> content) {
+        Scope scope = new Scope();
+        content.accept(new LayoutScope(scope, bounds));
+        return new PanelUiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
     }
 
     List<UiNode> nodes() {
@@ -60,7 +67,7 @@ public class PanelUiTree {
     /**
      * UI DSL 的构建作用域。
      * <p>
-     * 作用域负责收集节点、传播动画活动状态，并在需要时把子树包装成 group、memo 或 viewport。
+     * 作用域负责收集节点、传播动画活动状态，并在需要时把子树包装成 layer 或 viewport。
      */
     public static final class Scope {
 
@@ -97,34 +104,6 @@ public class PanelUiTree {
         public void clear() {
             nodes.clear();
             hasActiveAnimations = false;
-        }
-
-        /**
-         * 构建一个普通子分组。
-         * <p>
-         * 分组本身不引入新的绘制语义，只用于组织子节点并合并动画状态。
-         *
-         * @param content 子分组内容
-         */
-        public void group(Consumer<Scope> content) {
-            CaptureResult capture = capture(content);
-            hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
-            nodes.add(new GroupNode(capture.nodes()));
-        }
-
-        /**
-         * 构建一个语义上的 memo 子树。
-         * <p>
-         * 当前实现不再保留全局缓存；该方法仅作为兼容入口，行为等同于 {@link #group(Consumer)}。
-         *
-         * @param key       缓存的逻辑键
-         * @param signature 当前子树的状态签名
-         * @param content   子树内容
-         */
-        public void memo(Object key, long signature, Consumer<Scope> content) {
-            CaptureResult capture = capture(content);
-            hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
-            nodes.add(new GroupNode(capture.nodes()));
         }
 
         /**
@@ -564,6 +543,136 @@ public class PanelUiTree {
         }
     }
 
+    /**
+     * 自动布局作用域。
+     * <p>
+     * 该作用域负责在 row/column 中计算子元素位置，GUI 代码只需要声明间距、尺寸和内容。
+     */
+    public static final class LayoutScope {
+        private final Scope draw;
+        private final PanelLayout.Rect bounds;
+
+        private LayoutScope(Scope draw, PanelLayout.Rect bounds) {
+            this.draw = draw;
+            this.bounds = bounds;
+        }
+
+        public PanelLayout.Rect bounds() {
+            return bounds;
+        }
+
+        public Scope draw() {
+            return draw;
+        }
+
+        public void layer(int layer, Consumer<LayoutScope> content) {
+            draw.layer(layer, scope -> content.accept(new LayoutScope(scope, bounds)));
+        }
+
+        public void box(Insets insets, Consumer<LayoutScope> content) {
+            content.accept(new LayoutScope(draw, insets.apply(bounds)));
+        }
+
+        public void column(float gap, Consumer<LinearScope> content) {
+            LinearScope linear = new LinearScope(draw, bounds, Axis.VERTICAL, gap);
+            content.accept(linear);
+        }
+
+        public void row(float gap, Consumer<LinearScope> content) {
+            LinearScope linear = new LinearScope(draw, bounds, Axis.HORIZONTAL, gap);
+            content.accept(linear);
+        }
+
+        public void roundRect(float radius, Color color) {
+            draw.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), radius, color);
+        }
+
+        public void text(String text, float scale, Color color) {
+            float y = bounds.y() + (bounds.height() - drawTextHeight(scale)) / 2.0f;
+            draw.text(text, bounds.x(), y, scale, color);
+        }
+
+        public void text(String text, float scale, Color color, TtfFontLoader fontLoader) {
+            float y = bounds.y() + (bounds.height() - drawTextHeight(scale, fontLoader)) / 2.0f;
+            draw.text(text, bounds.x(), y, scale, color, fontLoader);
+        }
+
+        private float drawTextHeight(float scale) {
+            return 9.0f * 0.27f * scale;
+        }
+
+        private float drawTextHeight(float scale, TtfFontLoader fontLoader) {
+            return fontLoader.fontFile.fontHeight * 0.27f * scale;
+        }
+    }
+
+    /**
+     * row/column 的线性布局作用域。
+     * <p>
+     * 固定尺寸和 fill 尺寸可以混用；fill 会使用当前容器尚未消费的剩余空间。
+     */
+    public static final class LinearScope {
+        private final Scope draw;
+        private final PanelLayout.Rect bounds;
+        private final Axis axis;
+        private final float gap;
+        private float cursor;
+
+        private LinearScope(Scope draw, PanelLayout.Rect bounds, Axis axis, float gap) {
+            this.draw = draw;
+            this.bounds = bounds;
+            this.axis = axis;
+            this.gap = gap;
+            this.cursor = axis == Axis.VERTICAL ? bounds.y() : bounds.x();
+        }
+
+        public void item(float size, Consumer<LayoutScope> content) {
+            PanelLayout.Rect rect = nextRect(Math.max(0.0f, size));
+            content.accept(new LayoutScope(draw, rect));
+            cursor += size + gap;
+        }
+
+        public void fill(Consumer<LayoutScope> content) {
+            float end = axis == Axis.VERTICAL ? bounds.bottom() : bounds.right();
+            item(Math.max(0.0f, end - cursor), content);
+        }
+
+        public void spacer(float size) {
+            cursor += Math.max(0.0f, size) + gap;
+        }
+
+        private PanelLayout.Rect nextRect(float size) {
+            if (axis == Axis.VERTICAL) {
+                return new PanelLayout.Rect(bounds.x(), cursor, bounds.width(), size);
+            }
+            return new PanelLayout.Rect(cursor, bounds.y(), size, bounds.height());
+        }
+    }
+
+    public enum Axis {
+        HORIZONTAL,
+        VERTICAL
+    }
+
+    public record Insets(float left, float top, float right, float bottom) {
+        public static Insets all(float value) {
+            return new Insets(value, value, value, value);
+        }
+
+        public static Insets symmetric(float horizontal, float vertical) {
+            return new Insets(horizontal, vertical, horizontal, vertical);
+        }
+
+        public PanelLayout.Rect apply(PanelLayout.Rect rect) {
+            return new PanelLayout.Rect(
+                    rect.x() + left,
+                    rect.y() + top,
+                    Math.max(0.0f, rect.width() - left - right),
+                    Math.max(0.0f, rect.height() - top - bottom)
+            );
+        }
+    }
+
     private record CaptureResult(List<UiNode> nodes, boolean hasActiveAnimations) {
     }
 
@@ -573,7 +682,7 @@ public class PanelUiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到具体 renderer 或视口缓冲。
      */
-    sealed interface UiNode permits GroupNode, LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    sealed interface UiNode permits LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -607,9 +716,6 @@ public class PanelUiTree {
                                Integer caretIndex, Color caretColor,
                                String trailingHint, float trailingHintScale,
                                Color trailingHintColor) {
-    }
-
-    record GroupNode(List<UiNode> children) implements UiNode {
     }
 
     /**

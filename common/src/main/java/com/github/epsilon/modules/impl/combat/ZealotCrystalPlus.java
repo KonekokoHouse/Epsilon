@@ -11,7 +11,6 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.combat.DamageUtils;
 import com.github.epsilon.utils.player.EnchantmentUtils;
@@ -71,93 +70,85 @@ public class ZealotCrystalPlus extends Module {
         workerThread.start();
     }
 
-    // Setting Groups
-    private final SettingGroup sgGeneral = settingGroup("General");
-    private final SettingGroup sgForcePlace = settingGroup("Force Place");
-    private final SettingGroup sgCalculation = settingGroup("Calculation");
-    private final SettingGroup sgPlace = settingGroup("Place");
-    private final SettingGroup sgBreak = settingGroup("Break");
-    private final SettingGroup sgRender = settingGroup("Render");
-
     // General
-    private final BoolSetting players = boolSetting("Players", true).group(sgGeneral);
-    private final BoolSetting mobs = boolSetting("Mobs", false).group(sgGeneral);
-    private final BoolSetting animals = boolSetting("Animals", false).group(sgGeneral);
-    private final IntSetting maxTargets = intSetting("Max Targets", 4, 1, 10, 1).group(sgGeneral);
-    private final DoubleSetting targetRange = doubleSetting("Target Range", 16.0, 0.0, 32.0, 0.5).group(sgGeneral);
-    private final DoubleSetting yawSpeed = doubleSetting("Yaw Speed", 45.0, 5.0, 180.0, 5.0).group(sgGeneral);
-    private final DoubleSetting placeRotationRange = doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0).group(sgGeneral);
-    private final DoubleSetting breakRotationRange = doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0).group(sgGeneral);
-    private final BoolSetting eatingPause = boolSetting("Eating Pause", false).group(sgGeneral);
-    private final IntSetting updateDelay = intSetting("Update Delay", 5, 0, 250, 1).group(sgGeneral);
-    private final IntSetting globalDelay = intSetting("Global Delay", 1_000_000, 1_000, 10_000_000, 1_000).group(sgGeneral);
+    private final BoolSetting players = boolSetting("Players", true);
+    private final BoolSetting mobs = boolSetting("Mobs", false);
+    private final BoolSetting animals = boolSetting("Animals", false);
+    private final IntSetting maxTargets = intSetting("Max Targets", 4, 1, 10, 1);
+    private final DoubleSetting targetRange = doubleSetting("Target Range", 16.0, 0.0, 32.0, 0.5);
+    private final DoubleSetting yawSpeed = doubleSetting("Yaw Speed", 45.0, 5.0, 180.0, 5.0);
+    private final DoubleSetting placeRotationRange = doubleSetting("Place Rotation Range", 0.0, 0.0, 180.0, 5.0);
+    private final DoubleSetting breakRotationRange = doubleSetting("Break Rotation Range", 90.0, 0.0, 180.0, 5.0);
+    private final BoolSetting eatingPause = boolSetting("Eating Pause", false);
+    private final IntSetting updateDelay = intSetting("Update Delay", 5, 0, 250, 1);
+    private final IntSetting globalDelay = intSetting("Global Delay", 1_000_000, 1_000, 10_000_000, 1_000);
 
     // Force Place
-    private final DoubleSetting forcePlaceHealth = doubleSetting("Force Place Health", 8.0, 0.0, 20.0, 0.5).group(sgForcePlace);
-    private final IntSetting forcePlaceArmorRate = intSetting("Force Place Armor Rate", 3, 0, 25, 1).group(sgForcePlace);
-    private final DoubleSetting forcePlaceMinDamage = doubleSetting("Force Place Min Damage", 1.5, 0.0, 10.0, 0.25).group(sgForcePlace);
-    private final DoubleSetting forcePlaceMotion = doubleSetting("Force Place Motion", 4.0, 0.0, 10.0, 0.25).group(sgForcePlace);
-    private final DoubleSetting forcePlaceBalance = doubleSetting("Force Place Balance", -1.0, -10.0, 10.0, 0.25).group(sgForcePlace);
-    private final BoolSetting forcePlaceWhileSwording = boolSetting("Force Place While Swording", false).group(sgForcePlace);
+    private final DoubleSetting forcePlaceHealth = doubleSetting("Force Place Health", 8.0, 0.0, 20.0, 0.5);
+    private final IntSetting forcePlaceArmorRate = intSetting("Force Place Armor Rate", 3, 0, 25, 1);
+    private final DoubleSetting forcePlaceMinDamage = doubleSetting("Force Place Min Damage", 1.5, 0.0, 10.0, 0.25);
+    private final DoubleSetting forcePlaceMotion = doubleSetting("Force Place Motion", 4.0, 0.0, 10.0, 0.25);
+    private final DoubleSetting forcePlaceBalance = doubleSetting("Force Place Balance", -1.0, -10.0, 10.0, 0.25);
+    private final BoolSetting forcePlaceWhileSwording = boolSetting("Force Place While Swording", false);
 
     // Calculation
-    private final BoolSetting assumeInstantMine = boolSetting("Assume Instant Mine", true).group(sgCalculation);
-    private final DoubleSetting noSuicide = doubleSetting("No Suicide", 2.0, 0.0, 20.0, 0.25).group(sgCalculation);
-    private final DoubleSetting wallRange = doubleSetting("Wall Range", 3.0, 0.0, 8.0, 0.1).group(sgCalculation);
-    private final BoolSetting motionPredict = boolSetting("Motion Predict", true).group(sgCalculation);
-    private final IntSetting predictTicks = intSetting("Predict Ticks", 8, 0, 20, 1, motionPredict::getValue).group(sgCalculation);
-    private final EnumSetting<DamagePriority> damagePriority = enumSetting("Damage Priority", DamagePriority.Efficient).group(sgCalculation);
-    private final EnumSetting<DamageUtils.ArmorEnchantmentMode> armorMode = enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None).group(sgCalculation);
-    private final BoolSetting lethalOverride = boolSetting("Lethal Override", true).group(sgCalculation);
-    private final DoubleSetting lethalThresholdAddition = doubleSetting("Lethal Threshold Addition", 0.5, -5.0, 5.0, 0.1, lethalOverride::getValue).group(sgCalculation);
-    private final DoubleSetting lethalMaxSelfDamage = doubleSetting("Lethal Max Self Damage", 16.0, 0.0, 20.0, 0.25, lethalOverride::getValue).group(sgCalculation);
-    private final DoubleSetting safeMaxTargetDamageReduction = doubleSetting("Safe Max Target Damage Reduction", 1.0, 0.0, 10.0, 0.1).group(sgCalculation);
-    private final DoubleSetting safeMinSelfDamageReduction = doubleSetting("Safe Min Self Damage Reduction", 2.0, 0.0, 10.0, 0.1).group(sgCalculation);
-    private final DoubleSetting collidingCrystalExtraSelfDamageThreshold = doubleSetting("Colliding Crystal Extra Self Damage Threshold", 4.0, 0.0, 10.0, 0.1).group(sgCalculation);
+    private final BoolSetting assumeInstantMine = boolSetting("Assume Instant Mine", true);
+    private final DoubleSetting noSuicide = doubleSetting("No Suicide", 2.0, 0.0, 20.0, 0.25);
+    private final DoubleSetting wallRange = doubleSetting("Wall Range", 3.0, 0.0, 8.0, 0.1);
+    private final BoolSetting motionPredict = boolSetting("Motion Predict", true);
+    private final IntSetting predictTicks = intSetting("Predict Ticks", 8, 0, 20, 1, motionPredict::getValue);
+    private final EnumSetting<DamagePriority> damagePriority = enumSetting("Damage Priority", DamagePriority.Efficient);
+    private final EnumSetting<DamageUtils.ArmorEnchantmentMode> armorMode = enumSetting("Armor Mode", DamageUtils.ArmorEnchantmentMode.None);
+    private final BoolSetting lethalOverride = boolSetting("Lethal Override", true);
+    private final DoubleSetting lethalThresholdAddition = doubleSetting("Lethal Threshold Addition", 0.5, -5.0, 5.0, 0.1, lethalOverride::getValue);
+    private final DoubleSetting lethalMaxSelfDamage = doubleSetting("Lethal Max Self Damage", 16.0, 0.0, 20.0, 0.25, lethalOverride::getValue);
+    private final DoubleSetting safeMaxTargetDamageReduction = doubleSetting("Safe Max Target Damage Reduction", 1.0, 0.0, 10.0, 0.1);
+    private final DoubleSetting safeMinSelfDamageReduction = doubleSetting("Safe Min Self Damage Reduction", 2.0, 0.0, 10.0, 0.1);
+    private final DoubleSetting collidingCrystalExtraSelfDamageThreshold = doubleSetting("Colliding Crystal Extra Self Damage Threshold", 4.0, 0.0, 10.0, 0.1);
 
     // Place
-    private final EnumSetting<PlaceMode> placeMode = enumSetting("Place Mode", PlaceMode.Single).group(sgPlace);
-    private final EnumSetting<PacketPlaceMode> packetPlace = enumSetting("Packet Place", PacketPlaceMode.Weak).group(sgPlace);
-    private final BoolSetting spamPlace = boolSetting("Spam Place", false).group(sgPlace);
-    private final EnumSetting<SwitchMode> placeSwitchMode = enumSetting("Place Switch Mode", SwitchMode.Off).group(sgPlace);
-    private final BoolSetting placeSwing = boolSetting("Place Swing", false).group(sgPlace);
-    private final EnumSetting<PlaceBypass> placeSideBypass = enumSetting("Place Side Bypass", PlaceBypass.Up).group(sgPlace);
-    private final DoubleSetting placeMinDamage = doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25).group(sgPlace);
-    private final DoubleSetting placeMaxSelfDamage = doubleSetting("Place Max Self Damage", 6.0, 0.0, 20.0, 0.25).group(sgPlace);
-    private final DoubleSetting placeBalance = doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25).group(sgPlace);
-    private final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1).group(sgPlace);
-    private final DoubleSetting placeRange = doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1).group(sgPlace);
-    private final EnumSetting<RangeMode> placeRangeMode = enumSetting("Place Range Mode", RangeMode.Feet).group(sgPlace);
+    private final EnumSetting<PlaceMode> placeMode = enumSetting("Place Mode", PlaceMode.Single);
+    private final EnumSetting<PacketPlaceMode> packetPlace = enumSetting("Packet Place", PacketPlaceMode.Weak);
+    private final BoolSetting spamPlace = boolSetting("Spam Place", false);
+    private final EnumSetting<SwitchMode> placeSwitchMode = enumSetting("Place Switch Mode", SwitchMode.Off);
+    private final BoolSetting placeSwing = boolSetting("Place Swing", false);
+    private final EnumSetting<PlaceBypass> placeSideBypass = enumSetting("Place Side Bypass", PlaceBypass.Up);
+    private final DoubleSetting placeMinDamage = doubleSetting("Place Min Damage", 5.0, 0.0, 20.0, 0.25);
+    private final DoubleSetting placeMaxSelfDamage = doubleSetting("Place Max Self Damage", 6.0, 0.0, 20.0, 0.25);
+    private final DoubleSetting placeBalance = doubleSetting("Place Balance", -3.0, -10.0, 10.0, 0.25);
+    private final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1);
+    private final DoubleSetting placeRange = doubleSetting("Place Range", 5.0, 0.0, 8.0, 0.1);
+    private final EnumSetting<RangeMode> placeRangeMode = enumSetting("Place Range Mode", RangeMode.Feet);
 
     // Break
-    private final EnumSetting<BreakMode> breakMode = enumSetting("Break Mode", BreakMode.Smart).group(sgBreak);
-    private final BoolSetting bbtt = boolSetting("2B2T", false).group(sgBreak);
-    private final IntSetting bbttFactor = intSetting("2B2T Factor", 200, 0, 1000, 25, bbtt::getValue).group(sgBreak);
-    private final EnumSetting<BreakMode> packetBreak = enumSetting("Packet Break", BreakMode.Target, () -> !bbtt.getValue()).group(sgBreak);
+    private final EnumSetting<BreakMode> breakMode = enumSetting("Break Mode", BreakMode.Smart);
+    private final BoolSetting bbtt = boolSetting("2B2T", false);
+    private final IntSetting bbttFactor = intSetting("2B2T Factor", 200, 0, 1000, 25, bbtt::getValue);
+    private final EnumSetting<BreakMode> packetBreak = enumSetting("Packet Break", BreakMode.Target, () -> !bbtt.getValue());
     private final IntSetting ownTimeout = intSetting("Own Timeout", 100, 0, 2000, 25,
-            () -> breakMode.getValue() == BreakMode.Own || packetBreak.getValue() == BreakMode.Own).group(sgBreak);
-    private final EnumSetting<SwitchMode> antiWeakness = enumSetting("Anti Weakness", SwitchMode.Off).group(sgBreak);
-    private final IntSetting swapDelay = intSetting("Swap Delay", 0, 0, 20, 1).group(sgBreak);
-    private final DoubleSetting breakMinDamage = doubleSetting("Break Min Damage", 4.0, 0.0, 20.0, 0.25).group(sgBreak);
-    private final DoubleSetting breakMaxSelfDamage = doubleSetting("Break Max Self Damage", 8.0, 0.0, 20.0, 0.25).group(sgBreak);
-    private final DoubleSetting breakBalance = doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25).group(sgBreak);
-    private final IntSetting breakDelay = intSetting("Break Delay", 100, 0, 500, 1).group(sgBreak);
-    private final DoubleSetting breakRange = doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1).group(sgBreak);
-    private final EnumSetting<RangeMode> breakRangeMode = enumSetting("Break Range Mode", RangeMode.Feet).group(sgBreak);
+            () -> breakMode.getValue() == BreakMode.Own || packetBreak.getValue() == BreakMode.Own);
+    private final EnumSetting<SwitchMode> antiWeakness = enumSetting("Anti Weakness", SwitchMode.Off);
+    private final IntSetting swapDelay = intSetting("Swap Delay", 0, 0, 20, 1);
+    private final DoubleSetting breakMinDamage = doubleSetting("Break Min Damage", 4.0, 0.0, 20.0, 0.25);
+    private final DoubleSetting breakMaxSelfDamage = doubleSetting("Break Max Self Damage", 8.0, 0.0, 20.0, 0.25);
+    private final DoubleSetting breakBalance = doubleSetting("Break Balance", -4.0, -10.0, 10.0, 0.25);
+    private final IntSetting breakDelay = intSetting("Break Delay", 100, 0, 500, 1);
+    private final DoubleSetting breakRange = doubleSetting("Break Range", 5.0, 0.0, 8.0, 0.1);
+    private final EnumSetting<RangeMode> breakRangeMode = enumSetting("Break Range Mode", RangeMode.Feet);
 
     // Render
-    private final EnumSetting<SwingMode> swingMode = enumSetting("Swing Mode", SwingMode.Client).group(sgRender);
-    private final EnumSetting<SwingHand> swingHand = enumSetting("Swing Hand", SwingHand.Auto).group(sgRender);
-    private final EnumSetting<RenderPredictMode> renderPredict = enumSetting("Render Predict", RenderPredictMode.Off).group(sgRender);
-    private final EnumSetting<HudInfo> hudInfo = enumSetting("Hud Info", HudInfo.Speed).group(sgRender);
-    private final IntSetting filledAlpha = intSetting("Filled Alpha", 63, 0, 255, 1).group(sgRender);
-    private final IntSetting outlineAlpha = intSetting("Outline Alpha", 200, 0, 255, 1).group(sgRender);
-    private final BoolSetting renderTargetDamage = boolSetting("Target Damage", true).group(sgRender);
-    private final BoolSetting renderSelfDamage = boolSetting("Self Damage", true).group(sgRender);
-    private final ColorSetting renderColor = colorSetting("Render Color", new Color(255, 150, 120, 255), true).group(sgRender);
-    private final DoubleSetting outlineWidth = doubleSetting("Outline Width", 3.0, 1.0, 10.0, 0.5).group(sgRender);
-    private final IntSetting movingLength = intSetting("Moving Length", 400, 0, 1000, 50).group(sgRender);
-    private final IntSetting fadeLength = intSetting("Fade Length", 200, 0, 1000, 50).group(sgRender);
+    private final EnumSetting<SwingMode> swingMode = enumSetting("Swing Mode", SwingMode.Client);
+    private final EnumSetting<SwingHand> swingHand = enumSetting("Swing Hand", SwingHand.Auto);
+    private final EnumSetting<RenderPredictMode> renderPredict = enumSetting("Render Predict", RenderPredictMode.Off);
+    private final EnumSetting<HudInfo> hudInfo = enumSetting("Hud Info", HudInfo.Speed);
+    private final IntSetting filledAlpha = intSetting("Filled Alpha", 63, 0, 255, 1);
+    private final IntSetting outlineAlpha = intSetting("Outline Alpha", 200, 0, 255, 1);
+    private final BoolSetting renderTargetDamage = boolSetting("Target Damage", true);
+    private final BoolSetting renderSelfDamage = boolSetting("Self Damage", true);
+    private final ColorSetting renderColor = colorSetting("Render Color", new Color(255, 150, 120, 255), true);
+    private final DoubleSetting outlineWidth = doubleSetting("Outline Width", 3.0, 1.0, 10.0, 0.5);
+    private final IntSetting movingLength = intSetting("Moving Length", 400, 0, 1000, 50);
+    private final IntSetting fadeLength = intSetting("Fade Length", 200, 0, 1000, 50);
 
     private final TimerUtils placeTimer = new TimerUtils();
     private final TimerUtils breakTimer = new TimerUtils();

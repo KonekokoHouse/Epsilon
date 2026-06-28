@@ -9,6 +9,8 @@ import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.component.CategoryPanel;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.scene.GuiLayer;
+import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
@@ -47,6 +49,7 @@ public class HudEditorScreen extends Screen {
 
     private final DropdownRenderer backgroundRenderer = new DropdownRenderer();
     private final DropdownRenderer renderer = new DropdownRenderer();
+    private final GuiScene scene = new GuiScene();
 
     private HudEditorScreen() {
         super(Component.literal("HudEditor"));
@@ -70,10 +73,12 @@ public class HudEditorScreen extends Screen {
         renderTarget.clear();
 
         LuminRenderSystem.setActiveTarget(renderTarget);
+        scene.beginFrame();
 
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         drawEditor(graphics, epsilonMouseX, epsilonMouseY);
+        scene.endFrame();
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
@@ -89,6 +94,7 @@ public class HudEditorScreen extends Screen {
 
         validateSelection();
 
+        backgroundRenderer.bind(scene.batch(GuiLayer.BACKGROUND));
         backgroundRenderer.beginFrame();
 
         float screenW = LuminRenderSystem.getScaledWidth();
@@ -109,12 +115,17 @@ public class HudEditorScreen extends Screen {
         backgroundRenderer.flush();
 
         backgroundRenderer.endFrame();
+        backgroundRenderer.batch().flush();
+        backgroundRenderer.batch().clear();
 
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
-            element.render(graphics, minecraft.getDeltaTracker());
+            element.renderWithBatch(graphics, minecraft.getDeltaTracker(), scene.batch(GuiLayer.CONTENT, -40));
         }
+        scene.flush();
+        scene.clear();
 
+        renderer.bind(scene.batch(GuiLayer.CONTENT));
         renderer.beginFrame();
 
         renderer.beginPass();
@@ -134,6 +145,8 @@ public class HudEditorScreen extends Screen {
         drawPanel(mouseX, mouseY);
 
         renderer.endFrame();
+        renderer.batch().flush();
+        renderer.batch().clear();
     }
 
     private LuminRenderSystem.LuminRenderTarget getRenderTarget(int width, int height) {

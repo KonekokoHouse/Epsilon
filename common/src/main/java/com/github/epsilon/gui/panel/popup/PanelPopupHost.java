@@ -17,8 +17,7 @@ public class PanelPopupHost {
 
     private Popup activePopup;
     private PanelLayout.Rect overlayBounds;
-    private final PanelRenderBatch renderBatch = new PanelRenderBatch();
-    private boolean pending;
+    private PanelRenderBatch pendingBatch;
 
     /**
      * 打开一个新的活动弹窗。
@@ -34,6 +33,7 @@ public class PanelPopupHost {
      */
     public void close() {
         this.activePopup = null;
+        this.pendingBatch = null;
     }
 
     /**
@@ -75,15 +75,13 @@ public class PanelPopupHost {
      * <p>
      * 该阶段只做 extract，不直接 flush；真正的输出由主屏幕统一调度。
      */
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         if (activePopup == null) {
-            renderBatch.clear();
-            pending = false;
+            pendingBatch = null;
             return;
         }
-        renderBatch.clear();
-        activePopup.extractGui(GuiGraphicsExtractor, renderBatch, mouseX, mouseY, partialTick);
-        pending = true;
+        activePopup.extractGui(guiGraphics, renderBatch, mouseX, mouseY, partialTick);
+        pendingBatch = renderBatch;
     }
 
     /**
@@ -93,13 +91,11 @@ public class PanelPopupHost {
      * 中一并处理。
      */
     public void flush() {
-        if (!pending || activePopup == null) {
-            renderBatch.clear();
-            pending = false;
+        if (pendingBatch == null || activePopup == null) {
             return;
         }
-        activePopup.flush(renderBatch);
-        pending = false;
+        activePopup.flush(pendingBatch);
+        pendingBatch = null;
     }
 
     public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -182,7 +178,8 @@ public class PanelPopupHost {
     /**
      * 面板弹窗协议。
      * <p>
-     * 弹窗需要实现几何区域、UI 提取以及输入事件处理；默认情况下会在 flush 时直接输出并清空给定批次。
+     * 弹窗需要实现几何区域、UI 提取以及输入事件处理；普通图元进入主 scene，
+     * 私有视口缓冲或原版物品预览等额外输出可以在 {@link #flush(PanelRenderBatch)} 中补充。
      */
     public interface Popup {
         float POPUP_SHADOW_RADIUS = 2.5f;
@@ -204,12 +201,11 @@ public class PanelPopupHost {
         void extractGui(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick);
 
         /**
-         * 输出并清空弹窗写入的渲染批次。
+         * 输出弹窗的私有附加缓冲。
          * <p>
-         * 大多数弹窗可直接使用默认实现；若弹窗还持有额外内容缓冲，可在此方法中扩展 flush 流程。
+         * 普通弹窗图元已经写入主 scene，会在帧尾统一 flush；这里仅留给 viewport、物品预览等私有资源做补充输出。
          */
         default void flush(PanelRenderBatch renderBatch) {
-            renderBatch.flushAndClear();
         }
 
         default void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {

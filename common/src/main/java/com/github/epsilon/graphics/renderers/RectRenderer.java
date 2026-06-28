@@ -17,8 +17,9 @@ import java.util.OptionalInt;
 
 public class RectRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 512 * 1024;
+    private static final long BUFFER_SIZE = 64 * 1024;
     private static final int STRIDE = 16;
+    private static final long RECT_BYTES = STRIDE * 4L;
 
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
 
@@ -56,6 +57,7 @@ public class RectRenderer implements IRenderer {
     }
 
     public void addRectGradient(float x, float y, float w, float h, Color c1, Color c2, Color c3, Color c4) {
+        buffer.ensureCapacity(currentOffset + RECT_BYTES);
         buffer.tryMap();
 
         int argb1 = ARGB.toABGR(c1.getRGB());

@@ -18,7 +18,7 @@ public class DropdownRenderer {
 
     private static final int MAX_PASSES = 96;
 
-    private final PanelRenderBatch batch = new PanelRenderBatch();
+    private PanelRenderBatch batch;
     // 整帧复用一个 Scope 收集 DSL 节点，endFrame 时再一次性编译进 batch。
     private final PanelUiTree.Scope scope = new PanelUiTree.Scope();
     // facade 不再直接持有文本绘制数据，但旧组件仍依赖 renderer 的测量 API。
@@ -64,6 +64,14 @@ public class DropdownRenderer {
         return textFacade;
     }
 
+    public void bind(PanelRenderBatch batch) {
+        this.batch = batch;
+    }
+
+    public PanelRenderBatch batch() {
+        return batch;
+    }
+
     public void setScissor(float guiX, float guiY, float guiW, float guiH, int guiHeight) {
         ensurePass();
         LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(guiX, guiY, guiW, guiH);
@@ -87,8 +95,14 @@ public class DropdownRenderer {
     }
 
     public void beginFrame() {
+        if (batch == null) {
+            // 独立模式仅用于未绑定 GuiScene 的旧入口；Screen 内会在每帧 bind 到语义 layer。
+            batch = new PanelRenderBatch();
+        }
         scope.clear();
-        batch.clear();
+        if (batch.ownsScheduler()) {
+            batch.clear();
+        }
         passIndex = -1;
         passCount = 0;
         frameOpen = true;
@@ -128,13 +142,17 @@ public class DropdownRenderer {
                 batch.setLayerScissor(i * 10, pass.scissorX, pass.scissorY, pass.scissorW, pass.scissorH);
             }
         }
-        batch.flushAndClear();
+        if (batch.ownsScheduler()) {
+            batch.flushAndClear();
+        }
         scope.clear();
         frameOpen = false;
     }
 
     public void close() {
-        batch.close();
+        if (batch != null) {
+            batch.close();
+        }
         measureTextRenderer.close();
     }
 

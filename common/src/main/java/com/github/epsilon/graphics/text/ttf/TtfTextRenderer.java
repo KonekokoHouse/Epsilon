@@ -31,6 +31,7 @@ public class TtfTextRenderer implements ITextRenderer {
     private static final float DEFAULT_SCALE = 0.27f;
     private static final float SPACING = 0f;
     private static final int STRIDE = 24;
+    private static final long GLYPH_BYTES = STRIDE * 4L;
     private final long bufferSize;
 
     private final Map<TtfGlyphAtlas, Batch> batches = new LinkedHashMap<>();
@@ -43,7 +44,7 @@ public class TtfTextRenderer implements ITextRenderer {
     }
 
     public TtfTextRenderer() {
-        this(2 * 1024 * 1024);
+        this(256 * 1024);
     }
 
     @Override
@@ -74,6 +75,7 @@ public class TtfTextRenderer implements ITextRenderer {
             TtfGlyphAtlas atlas = glyph.atlas();
 
             Batch batch = batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
+            batch.buffer.ensureCapacity(batch.offsetInAtlas + GLYPH_BYTES);
             batch.buffer.tryMap();
 
             float baselineY = yOffset + y + (fontLoader.fontFile.pixelAscent * finalScale);
@@ -90,7 +92,7 @@ public class TtfTextRenderer implements ITextRenderer {
             BufferUtils.writeUvRectToAddr(p + STRIDE * 2, x2, y2, glyph.uv().u1(), glyph.uv().v1(), argb);
             BufferUtils.writeUvRectToAddr(p + STRIDE * 3, x2, y1, glyph.uv().u1(), glyph.uv().v0(), argb);
 
-            batch.offsetInAtlas += (STRIDE * 4);
+            batch.offsetInAtlas += GLYPH_BYTES;
             xOffset += glyph.advance() * finalScale + SPACING * scale;
         }
     }
@@ -122,6 +124,7 @@ public class TtfTextRenderer implements ITextRenderer {
 
             TtfGlyphAtlas atlas = glyph.atlas();
             Batch batch = batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
+            batch.buffer.ensureCapacity(batch.offsetInAtlas + GLYPH_BYTES);
             batch.buffer.tryMap();
 
             float baselineY = yOffset + y + (fontLoader.fontFile.pixelAscent * finalScale);
@@ -143,7 +146,7 @@ public class TtfTextRenderer implements ITextRenderer {
             BufferUtils.writeUvRectToAddr(p + STRIDE * 2, x2, y2, glyph.uv().u1(), glyph.uv().v1(), rightArgb);
             BufferUtils.writeUvRectToAddr(p + STRIDE * 3, x2, y1, glyph.uv().u1(), glyph.uv().v0(), rightArgb);
 
-            batch.offsetInAtlas += (STRIDE * 4);
+            batch.offsetInAtlas += GLYPH_BYTES;
             xOffset += glyph.advance() * finalScale + SPACING * scale;
         }
     }

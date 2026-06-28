@@ -1,12 +1,10 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -73,9 +71,6 @@ public class ModuleList extends HudModule {
     private final BoolSetting openBackgroundBlur = boolSetting("Background Blur", false, () -> style.is(Style.Open));
     private final IntSetting openBlurStrength = intSetting("Blur Strength", 5, 1, 16, 1, () -> style.is(Style.Open) && openBackgroundBlur.getValue());
 
-    private final Supplier<RectRenderer> rectRendererSupplier = Suppliers.memoize(RectRenderer::create);
-    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
-    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     private final Map<Module, ModuleToggleFlag> toggleFlags = new HashMap<>();
@@ -124,7 +119,9 @@ public class ModuleList extends HudModule {
     }
 
     private void renderCompact(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
-        RectRenderer rectRenderer = rectRendererSupplier.get();
+        PanelRenderBatch batch = renderBatch();
+        PanelRenderBatch.RectFacade rectRenderer = batch.rectRenderer();
+        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
         float lineHeight = textRenderer.getHeight(textScale) + 2.0f * s;
         float paddingX = 2.0f * s;
         float tagWidth = mode.is(Mode.FRAME) ? 0.0f : 2.0f * s;
@@ -156,7 +153,7 @@ public class ModuleList extends HudModule {
             float rowX = rightAligned ? targetX + slideOffset : targetX - slideOffset;
             Color accent = rainbow.getValue() ? rainbowColor(timedHue, i) : textColor.getValue();
 
-            drawCompactRow(rectRenderer, textRenderer, row, rowX, rowY, visibleHeight, paddingX, tagWidth, textScale, accent);
+            drawCompactRow(rectRenderer, batchText, textRenderer, row, rowX, rowY, visibleHeight, paddingX, tagWidth, textScale, accent);
 
             if (bottomAligned) {
                 currentY -= visibleHeight;
@@ -165,13 +162,13 @@ public class ModuleList extends HudModule {
             }
         }
 
-        rectRenderer.drawAndClear();
-        textRenderer.drawAndClear();
     }
 
     private void renderOpen(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
-        RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
-        ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
+        PanelRenderBatch batch = renderBatch();
+        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
+        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
+        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
 
         float rowHeight = OPEN_ROW_HEIGHT * s;
         float spacing = OPEN_ROW_SPACING * s;
@@ -226,16 +223,13 @@ public class ModuleList extends HudModule {
 
             float rowX = computeRowX(row.rowWidth);
             Color accent = rainbow.getValue() ? rainbowColor(timedHue, i) : textColor.getValue();
-            drawOpenRow(roundRectRenderer, shadowRenderer, textRenderer, row, rowX, currentY, rowHeight, radius, iconGap, iconOnLeft, textScale, accent);
+            drawOpenRow(roundRectRenderer, shadowRenderer, batchText, textRenderer, row, rowX, currentY, rowHeight, radius, iconGap, iconOnLeft, textScale, accent);
 
             if (!bottomAligned) {
                 currentY += rowStep;
             }
         }
 
-        if (drawOpenShadow.getValue()) shadowRenderer.drawAndClear();
-        roundRectRenderer.drawAndClear();
-        textRenderer.drawAndClear();
     }
 
     private Comparator<RenderRow> rowComparator() {
@@ -265,7 +259,8 @@ public class ModuleList extends HudModule {
     }
 
     private void drawCompactRow(
-            RectRenderer rectRenderer,
+            PanelRenderBatch.RectFacade rectRenderer,
+            PanelRenderBatch.TextFacade batchText,
             TextRenderer textRenderer,
             RenderRow row,
             float rowX,
@@ -290,12 +285,13 @@ public class ModuleList extends HudModule {
 
         float textX = backgroundX + paddingX;
         float textY = rowY + Math.max(0.0f, (rowHeight - textRenderer.getHeight(textScale)) / 2.0f);
-        drawCompactLine(textRenderer, row.line, textX, textY, textScale, withAlpha(accent, row.progress), row.progress);
+        drawCompactLine(batchText, textRenderer, row.line, textX, textY, textScale, withAlpha(accent, row.progress), row.progress);
     }
 
     private void drawOpenRow(
-            RoundRectRenderer roundRectRenderer,
-            ShadowRenderer shadowRenderer,
+            PanelRenderBatch.RoundRectFacade roundRectRenderer,
+            PanelRenderBatch.ShadowFacade shadowRenderer,
+            PanelRenderBatch.TextFacade batchText,
             TextRenderer textRenderer,
             RenderRow row,
             float rowX,
@@ -333,7 +329,7 @@ public class ModuleList extends HudModule {
                 float iconHeight = textRenderer.getHeight(iconScale, StaticFontLoader.ICONS);
                 float iconX = iconBoxX + (rowHeight - iconWidth) / 2.0f;
                 float iconY = rowY + (visibleHeight - iconHeight) / 2.0f;
-                textRenderer.addText(iconChar, iconX, iconY, iconScale, withAlpha(accent, alpha * 0.82f), StaticFontLoader.ICONS);
+                batchText.addText(iconChar, iconX, iconY, iconScale, withAlpha(accent, alpha * 0.82f), StaticFontLoader.ICONS);
             }
 
             if (hasInfoBox) {
@@ -343,7 +339,7 @@ public class ModuleList extends HudModule {
                 drawOpenBox(roundRectRenderer, shadowRenderer, infoBoxX, rowY, row.line.openInfoBoxWidth, visibleHeight, radius, alpha);
                 float infoX = infoBoxX + (row.line.openInfoBoxWidth - row.line.infoWidth) / 2.0f;
                 float infoY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
-                textRenderer.addText(row.line.info, infoX, infoY, textScale, withAlpha(infoColor.getValue(), alpha));
+                batchText.addText(row.line.info, infoX, infoY, textScale, withAlpha(infoColor.getValue(), alpha));
             }
         } else {
             textBoxX = rowX;
@@ -352,10 +348,10 @@ public class ModuleList extends HudModule {
         drawOpenBox(roundRectRenderer, shadowRenderer, textBoxX, rowY, row.line.openNameBoxWidth, visibleHeight, radius, alpha);
         float textX = textBoxX + (row.line.openNameBoxWidth - row.line.nameWidth) / 2.0f;
         float textY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
-        textRenderer.addText(row.line.name, textX, textY, textScale, withAlpha(accent, alpha));
+        batchText.addText(row.line.name, textX, textY, textScale, withAlpha(accent, alpha));
     }
 
-    private void drawOpenBox(RoundRectRenderer roundRectRenderer, ShadowRenderer shadowRenderer, float x, float y, float width, float height, float radius, float alpha) {
+    private void drawOpenBox(PanelRenderBatch.RoundRectFacade roundRectRenderer, PanelRenderBatch.ShadowFacade shadowRenderer, float x, float y, float width, float height, float radius, float alpha) {
         Color background = withAlpha(backgroundColor.getValue(), alpha);
         if (openBackgroundBlur.getValue()) {
             BlurShader.INSTANCE.render(x, y, width, height, radius, openBlurStrength.getValue());
@@ -366,8 +362,8 @@ public class ModuleList extends HudModule {
         roundRectRenderer.addRoundRect(x, y, width, height, radius, background);
     }
 
-    private void drawCompactLine(TextRenderer textRenderer, ModuleLine line, float x, float y, float textScale, Color nameColor, float alpha) {
-        textRenderer.addText(line.name, x, y, textScale, nameColor);
+    private void drawCompactLine(PanelRenderBatch.TextFacade batchText, TextRenderer textRenderer, ModuleLine line, float x, float y, float textScale, Color nameColor, float alpha) {
+        batchText.addText(line.name, x, y, textScale, nameColor);
         float cursorX = x + line.nameWidth;
 
         if (line.info.isEmpty()) return;
@@ -375,11 +371,11 @@ public class ModuleList extends HudModule {
         Color bracket = withAlpha(bracketColor.getValue(), alpha);
         Color info = withAlpha(infoColor.getValue(), alpha);
 
-        textRenderer.addText(" [", cursorX, y, textScale, bracket);
+        batchText.addText(" [", cursorX, y, textScale, bracket);
         cursorX += line.openBracketWidth;
-        textRenderer.addText(line.info, cursorX, y, textScale, info);
+        batchText.addText(line.info, cursorX, y, textScale, info);
         cursorX += line.infoWidth;
-        textRenderer.addText("]", cursorX, y, textScale, bracket);
+        batchText.addText("]", cursorX, y, textScale, bracket);
     }
 
     private float timedHue() {

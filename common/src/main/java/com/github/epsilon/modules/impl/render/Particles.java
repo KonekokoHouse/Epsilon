@@ -6,7 +6,6 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.math.MathUtils;
 import com.mojang.blaze3d.pipeline.BlendFunction;
@@ -61,11 +60,9 @@ public class Particles extends Module {
         Fly
     }
 
-    private final SettingGroup sgFireFlies = settingGroup("Fire Flies");
-
-    private final BoolSetting fireFliesEnabled = boolSetting("Fire Flies", true).group(sgFireFlies);
-    private final IntSetting ffCount = intSetting("FF Count", 30, 20, 200, 1, fireFliesEnabled::getValue).group(sgFireFlies);
-    private final DoubleSetting ffSize = doubleSetting("FF Size", 1.0, 0.1, 2.0, 0.1, fireFliesEnabled::getValue).group(sgFireFlies);
+    private final BoolSetting fireFliesEnabled = boolSetting("Fire Flies", true);
+    private final IntSetting ffCount = intSetting("FF Count", 30, 20, 200, 1, fireFliesEnabled::getValue);
+    private final DoubleSetting ffSize = doubleSetting("FF Size", 1.0, 0.1, 2.0, 0.1, fireFliesEnabled::getValue);
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.SnowFlake);
     private final IntSetting count = intSetting("Count", 100, 20, 800, 1, () -> !mode.is(Mode.Off));
     private final DoubleSetting size = doubleSetting("Size", 1.0, 0.1, 6.0, 0.1, () -> !mode.is(Mode.Off));

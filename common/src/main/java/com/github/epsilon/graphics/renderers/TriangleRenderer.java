@@ -22,8 +22,9 @@ import java.util.OptionalInt;
 
 public class TriangleRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final long BUFFER_SIZE = 16 * 1024;
     private static final int STRIDE = 16;
+    private static final long TRIANGLE_BYTES = STRIDE * 3L;
 
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
 
@@ -41,6 +42,7 @@ public class TriangleRenderer implements IRenderer {
     }
 
     public void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color) {
+        buffer.ensureCapacity(currentOffset + TRIANGLE_BYTES);
         buffer.tryMap();
 
         int abgr = ARGB.toABGR(color.getRGB());
@@ -73,6 +75,7 @@ public class TriangleRenderer implements IRenderer {
     }
 
     public void addTriangle(float x1, float y1, float x2, float y2, float x3, float y3, Color color) {
+        buffer.ensureCapacity(currentOffset + TRIANGLE_BYTES);
         buffer.tryMap();
 
         int abgr = ARGB.toABGR(color.getRGB());

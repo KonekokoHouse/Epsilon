@@ -13,13 +13,12 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
-import com.github.epsilon.settings.SettingGroup;
+import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.Nullable;
 
 import java.awt.*;
 import java.util.*;
@@ -33,8 +32,8 @@ public class ModuleButton extends Component {
 
     private final Module module;
     private final List<SettingSection> sections = new ArrayList<>();
-    private final Map<SettingGroup, Animation> groupHoverAnimations = new HashMap<>();
-    private final Map<SettingGroup, Animation> groupExpandAnimations = new HashMap<>();
+    private final Map<String, Animation> sectionHoverAnimations = new HashMap<>();
+    private final Map<String, Animation> sectionExpandAnimations = new HashMap<>();
     private final Animation expandAnim = new Animation(Easing.EASE_IN_OUT_CUBIC, DropdownTheme.ANIM_EXPAND);
     private final Animation toggleAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_TOGGLE);
     private final Animation hoverAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER);
@@ -46,27 +45,26 @@ public class ModuleButton extends Component {
 
     public ModuleButton(Module module) {
         this.module = module;
-        Map<SettingGroup, List<SettingWidget<?>>> groupedWidgets = new LinkedHashMap<>();
-        List<SettingWidget<?>> ungroupedWidgets = new ArrayList<>();
-
+        Map<Setting<?>, SettingWidget<?>> widgets = new HashMap<>();
         for (Setting<?> setting : module.getSettings()) {
             SettingWidget<?> widget = createWidget(setting);
-            if (widget == null) continue;
-
-            SettingGroup group = setting.getGroup();
-            if (group != null) {
-                groupedWidgets.computeIfAbsent(group, k -> new ArrayList<>()).add(widget);
-            } else {
-                ungroupedWidgets.add(widget);
+            if (widget != null) {
+                widgets.put(setting, widget);
             }
         }
 
-        for (SettingWidget<?> widget : ungroupedWidgets) {
-            sections.add(new SettingSection(null, List.of(widget)));
-        }
-
-        for (Map.Entry<SettingGroup, List<SettingWidget<?>>> entry : groupedWidgets.entrySet()) {
-            sections.add(new SettingSection(entry.getKey(), entry.getValue()));
+        String ownerKey = "module:" + module.getName().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "_");
+        for (SettingLayoutPlanner.Section plannedSection : SettingLayoutPlanner.plan(ownerKey, module.getSettings())) {
+            List<SettingWidget<?>> sectionWidgets = new ArrayList<>();
+            for (Setting<?> setting : plannedSection.settings()) {
+                SettingWidget<?> widget = widgets.get(setting);
+                if (widget != null) {
+                    sectionWidgets.add(widget);
+                }
+            }
+            if (!sectionWidgets.isEmpty()) {
+                sections.add(new SettingSection(plannedSection, sectionWidgets));
+            }
         }
     }
 
@@ -108,9 +106,9 @@ public class ModuleButton extends Component {
     private float computeSettingsHeight() {
         float height = DropdownTheme.SETTING_GAP + DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
         for (SettingSection section : sections) {
-            if (section.isGroup()) {
+            if (section.hasHeader()) {
                 height += DropdownTheme.GROUP_HEADER_HEIGHT;
-                if (!section.group().isCollapsed()) {
+                if (!section.isCollapsed()) {
                     height += DropdownTheme.GROUP_INSET;
                     for (SettingWidget<?> widget : section.widgets()) {
                         if (widget.isVisible()) {
@@ -131,7 +129,7 @@ public class ModuleButton extends Component {
     }
 
     private float getSectionHeight(SettingSection section) {
-        if (!section.isGroup()) {
+        if (!section.hasHeader()) {
             float h = 0.0f;
             for (SettingWidget<?> widget : section.widgets()) {
                 if (widget.isVisible()) {
@@ -141,7 +139,7 @@ public class ModuleButton extends Component {
             return h;
         }
 
-        if (section.group().isCollapsed()) {
+        if (section.isCollapsed()) {
             return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP;
         }
 
@@ -179,7 +177,7 @@ public class ModuleButton extends Component {
         float expand = expandAnim.getValue();
 
         for (SettingSection section : sections) {
-            if (section.isGroup()) {
+            if (section.hasHeader()) {
                 runGroupAnimations(section);
             }
         }
@@ -192,9 +190,9 @@ public class ModuleButton extends Component {
             settingY += DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
             for (SettingSection section : sections) {
                 float sectionH = getSectionHeight(section);
-                if (section.isGroup()) {
+                if (section.hasHeader()) {
                     if (expand > 0.5f) {
-                        drawGroupSection(renderer, mouseX, mouseY, section, settingY);
+                        drawSection(renderer, mouseX, mouseY, section, settingY);
                     }
                     settingY += sectionH;
                 } else {
@@ -212,9 +210,8 @@ public class ModuleButton extends Component {
     }
 
     private void runGroupAnimations(SettingSection section) {
-        SettingGroup group = section.group();
-        Animation expandAnimG = groupExpandAnimations.computeIfAbsent(group, k -> createGroupAnimation(180L, group.isCollapsed() ? 0.0f : 1.0f));
-        expandAnimG.run(group.isCollapsed() ? 0.0f : 1.0f);
+        Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), k -> createGroupAnimation(180L, section.isCollapsed() ? 0.0f : 1.0f));
+        expandAnimG.run(section.isCollapsed() ? 0.0f : 1.0f);
     }
 
     private void drawAddonInfo(DropdownRenderer renderer, float infoY) {
@@ -228,25 +225,23 @@ public class ModuleButton extends Component {
         renderer.text().addText(addonLabel, infoX + DropdownTheme.SETTING_PADDING_X, textY, scale, DropdownTheme.moduleAddonInfoText());
     }
 
-    private void drawGroupSection(DropdownRenderer renderer, int mouseX, int mouseY, SettingSection section, float sectionY) {
-        SettingGroup group = section.group();
-
+    private void drawSection(DropdownRenderer renderer, int mouseX, int mouseY, SettingSection section, float sectionY) {
         float headerW = width - DropdownTheme.SETTING_INDENT * 2.0f;
         float headerX = x + DropdownTheme.SETTING_INDENT;
         float headerH = DropdownTheme.GROUP_HEADER_HEIGHT;
 
-        Animation hoverAnim = groupHoverAnimations.computeIfAbsent(group, k -> createGroupAnimation(120L, 0.0f));
+        Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), k -> createGroupAnimation(120L, 0.0f));
         hoverAnim.run(isHovered(mouseX, mouseY, headerX, sectionY, headerW, headerH) ? 1.0f : 0.0f);
         float hoverProgress = hoverAnim.getValue();
 
-        Animation expandAnimG = groupExpandAnimations.get(group);
-        float expandProgress = expandAnimG != null ? expandAnimG.getValue() : (group.isCollapsed() ? 0.0f : 1.0f);
+        Animation expandAnimG = sectionExpandAnimations.get(section.key());
+        float expandProgress = expandAnimG != null ? expandAnimG.getValue() : (section.isCollapsed() ? 0.0f : 1.0f);
 
         Color headerBg = MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress);
         float headerRadius = DropdownTheme.BUTTON_RADIUS;
         renderer.roundRect().addRoundRect(headerX, sectionY, headerW, headerH, headerRadius, headerBg);
 
-        String label = group.getDisplayName();
+        String label = section.title();
         float labelY = sectionY + (headerH - renderer.text().getHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
         renderer.text().addText(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
 
@@ -264,7 +259,7 @@ public class ModuleButton extends Component {
         float chevronCenterY = sectionY + headerH * 0.5f;
         renderer.triangle().addChevronTriangle(chevronCenterX, chevronCenterY, chevronSize, expandProgress, DropdownTheme.groupChevron(hoverProgress));
 
-        if (!group.isCollapsed()) {
+        if (!section.isCollapsed()) {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = x + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = width - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
@@ -430,14 +425,14 @@ public class ModuleButton extends Component {
             float settingY = y + DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
             settingY += DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
             for (SettingSection section : sections) {
-                if (section.isGroup()) {
+                if (section.hasHeader()) {
                     float headerX = x + DropdownTheme.SETTING_INDENT;
                     if (isGroupHeaderHovered(mouseX, mouseY, headerX, settingY)) {
-                        section.group().toggleCollapsed();
-                        Managers.SOUND.playInUi(section.group().isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                        section.toggleCollapsed();
+                        Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                         return true;
                     }
-                    if (!section.group().isCollapsed()) {
+                    if (!section.isCollapsed()) {
                         for (SettingWidget<?> widget : section.widgets()) {
                             if (!widget.isVisible()) continue;
                             if (widget.mouseClicked(mouseX, mouseY, button)) {
@@ -540,9 +535,25 @@ public class ModuleButton extends Component {
         return false;
     }
 
-    private record SettingSection(@Nullable SettingGroup group, List<SettingWidget<?>> widgets) {
-        private boolean isGroup() {
-            return group != null;
+    private record SettingSection(SettingLayoutPlanner.Section model, List<SettingWidget<?>> widgets) {
+        private String key() {
+            return model.key();
+        }
+
+        private String title() {
+            return model.title();
+        }
+
+        private boolean hasHeader() {
+            return model.hasHeader();
+        }
+
+        private boolean isCollapsed() {
+            return model.isCollapsed();
+        }
+
+        private void toggleCollapsed() {
+            model.toggleCollapsed();
         }
     }
 

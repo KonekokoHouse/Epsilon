@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.utils;
 
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 
@@ -19,7 +19,7 @@ public class ScrollBarUtils {
     private ScrollBarUtils() {
     }
 
-    public static void draw(RoundRectRenderer renderer, PanelLayout.Rect viewport, float scroll, float maxScroll, float contentHeight) {
+    public static void draw(PanelRenderBatch.RoundRectFacade renderer, PanelLayout.Rect viewport, float scroll, float maxScroll, float contentHeight) {
         if (maxScroll <= 0 || contentHeight <= viewport.height()) {
             return;
         }

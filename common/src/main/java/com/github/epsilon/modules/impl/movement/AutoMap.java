@@ -8,7 +8,6 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ButtonSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -28,21 +27,17 @@ public class AutoMap extends Module {
 
     private static final int STATE_VERSION = 1;
     private static final double TWO_PI = Math.PI * 2.0;
+    private final BoolSetting autoLaunch = boolSetting("Auto Launch", true);
+    private final DoubleSetting spiralSpacing = doubleSetting("Spiral Spacing", 192.0, 16.0, 1024.0, 1.0);
+    private final IntSetting pointsPerLap = intSetting("Points Per Lap", 16, 4, 96, 1);
+    private final DoubleSetting arrivalDistance = doubleSetting("Arrival Distance", 8.0, 2.0, 64.0, 0.5);
+    private final DoubleSetting rotationSpeed = doubleSetting("Rotation Speed", 10.0, 1.0, 20.0, 0.25);
+    private final DoubleSetting takeoffHeight = doubleSetting("Takeoff Height", 192.0, 16.0, 1024.0, 1.0);
+    private final BoolSetting takeoffFirework = boolSetting("Takeoff Firework", true, autoLaunch::getValue);
 
-    private final SettingGroup sgPath = settingGroup("Path");
-    private final SettingGroup sgRecord = settingGroup("Record");
-
-    private final BoolSetting autoLaunch = boolSetting("Auto Launch", true).group(sgPath);
-    private final DoubleSetting spiralSpacing = doubleSetting("Spiral Spacing", 192.0, 16.0, 1024.0, 1.0).group(sgPath);
-    private final IntSetting pointsPerLap = intSetting("Points Per Lap", 16, 4, 96, 1).group(sgPath);
-    private final DoubleSetting arrivalDistance = doubleSetting("Arrival Distance", 8.0, 2.0, 64.0, 0.5).group(sgPath);
-    private final DoubleSetting rotationSpeed = doubleSetting("Rotation Speed", 10.0, 1.0, 20.0, 0.25).group(sgPath);
-    private final DoubleSetting takeoffHeight = doubleSetting("Takeoff Height", 192.0, 16.0, 1024.0, 1.0).group(sgPath);
-    private final BoolSetting takeoffFirework = boolSetting("Takeoff Firework", true, autoLaunch::getValue).group(sgPath);
-
-    private final IntSetting saveInterval = intSetting("Save Interval", 100, 20, 1200, 20).group(sgRecord);
-    private final ButtonSetting writeRecord = buttonSetting("Write Record", () -> writeRecord(true)).group(sgRecord);
-    private final ButtonSetting resetRecord = buttonSetting("Reset Record", () -> resetRecord(true)).group(sgRecord);
+    private final IntSetting saveInterval = intSetting("Save Interval", 100, 20, 1200, 20);
+    private final ButtonSetting writeRecord = buttonSetting("Write Record", () -> writeRecord(true));
+    private final ButtonSetting resetRecord = buttonSetting("Reset Record", () -> resetRecord(true));
 
     private boolean initializedInWorld;
     private boolean routeLoaded;

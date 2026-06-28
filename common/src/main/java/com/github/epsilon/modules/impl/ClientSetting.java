@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl;
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
-import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
@@ -13,7 +12,6 @@ import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
@@ -75,44 +73,37 @@ public class ClientSetting extends Module {
         Hide,
         Vanilla
     }
-
-    private final SettingGroup sgGeneral = settingGroup("General");
-    private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
-    private final SettingGroup sgAppearance = settingGroup("Appearance");
-    private final SettingGroup sgNotification = settingGroup("Notification");
-
     @SuppressWarnings("unused")
     private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.setScreen(HudEditorScreen.INSTANCE));
 
     // General
-    public final KeybindSetting guiKeybind = keybindSetting("Gui Keybind", GLFW.GLFW_KEY_RIGHT_SHIFT).group(sgGeneral);
+    public final KeybindSetting guiKeybind = keybindSetting("Gui Keybind", GLFW.GLFW_KEY_RIGHT_SHIFT);
 
     public final EnumSetting<GuiMode> guiMode = enumSetting("Gui Mode", GuiMode.Dropdown, _ -> mc.setScreen(switch (ClientSetting.INSTANCE.guiMode.getValue()) {
         case Panel -> PanelScreen.INSTANCE;
         case Dropdown -> DropdownScreen.INSTANCE;
-    })).group(sgGeneral);
+    }));
 
-    public final EnumSetting<ModuleSort> moduleSort = enumSetting("Module Sort", ModuleSort.Name).group(sgGeneral);
+    public final EnumSetting<ModuleSort> moduleSort = enumSetting("Module Sort", ModuleSort.Name);
 
-    public final EnumSetting<EpsilonLanguage> language = enumSetting("Language", EpsilonLanguage.English, EpsilonLanguageManager.INSTANCE::selectLanguage).group(sgGeneral);
+    public final EnumSetting<EpsilonLanguage> language = enumSetting("Language", EpsilonLanguage.English, EpsilonLanguageManager.INSTANCE::selectLanguage);
 
-    public final StringSetting customLanguage = stringSetting("Custom Language", "", () -> language.is(EpsilonLanguage.Custom), _ -> EpsilonLanguageManager.INSTANCE.refreshCustomLanguage()).group(sgGeneral);
+    public final StringSetting customLanguage = stringSetting("Custom Language", "", () -> language.is(EpsilonLanguage.Custom), _ -> EpsilonLanguageManager.INSTANCE.refreshCustomLanguage());
 
-    private final DoubleSetting renderScale = doubleSetting("Render Scale", 2.0, 1.0, 6.0, 0.5).group(sgGeneral);
+    private final DoubleSetting renderScale = doubleSetting("Render Scale", 2.0, 1.0, 6.0, 0.5);
 
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
         TranslateHolder.INSTANCE.refresh();
-        PanelUiTree.clearMemoCache();
         TextureCacheHolder.INSTANCE.clearCache();
-    }).group(sgGeneral);
+    });
 
-    public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
+    public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true);
 
-    public final BoolSetting replaceMinecraftFont = boolSetting("Replace Minecraft Font", true).group(sgGeneral);
+    public final BoolSetting replaceMinecraftFont = boolSetting("Replace Minecraft Font", true);
 
-    public final BoolSetting closeOnOutside = boolSetting("Close Gui On Outside", false, () -> guiMode.is(GuiMode.Panel)).group(sgGeneral);
+    public final BoolSetting closeOnOutside = boolSetting("Close Gui On Outside", false, () -> guiMode.is(GuiMode.Panel));
 
-    public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown)).group(sgGeneral);
+    public final BoolSetting dropdownHints = boolSetting("Dropdown Hints", true, () -> guiMode.is(GuiMode.Dropdown));
 
     // Anti Cheat
     public final EnumSetting<RotationManager.RotationMode> rotationMode =
@@ -120,44 +111,44 @@ public class ClientSetting extends Module {
                 if (Managers.ROTATION != null) {
                     Managers.switchRotationManager(mode);
                 }
-            }).group(sgAntiCheat);
+            });
 
-    public final BoolSetting modifyCrosshair = boolSetting("Modify Crosshair", true).group(sgAntiCheat);
+    public final BoolSetting modifyCrosshair = boolSetting("Modify Crosshair", true);
 
-    public final EnumSetting<HideMode> hideMode = enumSetting("Hide Mode", HideMode.None).group(sgAntiCheat);
+    public final EnumSetting<HideMode> hideMode = enumSetting("Hide Mode", HideMode.None);
 
     // Appearance
-    public final EnumSetting<ThemeMode> themeMode = enumSetting("Theme Mode", ThemeMode.Dark, _ -> MD3Theme.syncFromSettings()).group(sgAppearance);
+    public final EnumSetting<ThemeMode> themeMode = enumSetting("Theme Mode", ThemeMode.Dark, _ -> MD3Theme.syncFromSettings());
 
-    public final EnumSetting<ThemePreset> themePreset = enumSetting("Theme Preset", ThemePreset.TonalSpot, _ -> MD3Theme.syncFromSettings()).group(sgAppearance);
+    public final EnumSetting<ThemePreset> themePreset = enumSetting("Theme Preset", ThemePreset.TonalSpot, _ -> MD3Theme.syncFromSettings());
 
     public final EnumSetting<IconMode> customIcon = enumSetting("Custom Icon", IconMode.Epsilon, _ -> {
         try {
             mc.getWindow().setIcon(mc.getVanillaPackResources(), SharedConstants.getCurrentVersion().stable() ? IconSet.RELEASE : IconSet.SNAPSHOT);
         } catch (IOException ignored) {
         }
-    }).group(sgAppearance);
+    });
 
-    public final EnumSetting<TitleMode> customTitle = enumSetting("Custom Title", TitleMode.Epsilon, _ -> mc.updateTitle()).group(sgAppearance);
+    public final EnumSetting<TitleMode> customTitle = enumSetting("Custom Title", TitleMode.Epsilon, _ -> mc.updateTitle());
 
-    public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true).group(sgAppearance);
+    public final BoolSetting useMainMenu = boolSetting("Use MainMenu", true);
 
-    public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
+    public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue);
 
-    public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).group(sgAppearance).rootSetting();
+    public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).rootSetting();
 
     // Notification
-    public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
+    public final BoolSetting soundNotify = boolSetting("Sound Notify", true);
 
-    public final BoolSetting chatNotify = boolSetting("Chat Notify", true).group(sgNotification);
+    public final BoolSetting chatNotify = boolSetting("Chat Notify", true);
 
-    public final BoolSetting animatedChatPrefix = boolSetting("Animated Chat Prefix", true).group(sgNotification);
+    public final BoolSetting animatedChatPrefix = boolSetting("Animated Chat Prefix", true);
 
-    public final ColorSetting chatPrefixColorStart = colorSetting("Chat Prefix Color Start", new Color(255, 175, 210), animatedChatPrefix::getValue).group(sgNotification);
+    public final ColorSetting chatPrefixColorStart = colorSetting("Chat Prefix Color Start", new Color(255, 175, 210), animatedChatPrefix::getValue);
 
-    public final ColorSetting chatPrefixColorEnd = colorSetting("Chat Prefix Color End", new Color(150, 220, 255), animatedChatPrefix::getValue).group(sgNotification);
+    public final ColorSetting chatPrefixColorEnd = colorSetting("Chat Prefix Color End", new Color(150, 220, 255), animatedChatPrefix::getValue);
 
-    public final DoubleSetting chatPrefixGradientSpeed = doubleSetting("Chat Prefix Gradient Speed", 0.5, 0.1, 1, 0.1, animatedChatPrefix::getValue).group(sgNotification);
+    public final DoubleSetting chatPrefixGradientSpeed = doubleSetting("Chat Prefix Gradient Speed", 0.5, 0.1, 1, 0.1, animatedChatPrefix::getValue);
 
     public double getScale() {
         return renderScale.getValue();

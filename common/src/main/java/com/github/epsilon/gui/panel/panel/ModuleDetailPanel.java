@@ -2,11 +2,8 @@ package com.github.epsilon.gui.panel.panel;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -22,6 +19,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
+import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -38,8 +36,6 @@ import java.util.List;
 public class ModuleDetailPanel {
 
     protected final PanelState state;
-    private final RoundRectRenderer roundRectRenderer;
-    private final RectRenderer rectRenderer;
     private final TextRenderer textRenderer;
     private final SettingListController settingListController;
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
@@ -68,10 +64,8 @@ public class ModuleDetailPanel {
     private static final TranslateComponent hiddenComponent = EpsilonTranslateComponent.create("module", "hidden");
     private static final TranslateComponent noModuleComponent = EpsilonTranslateComponent.create("gui", "no_module");
 
-    public ModuleDetailPanel(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, ShadowRenderer shadowRenderer, TextRenderer textRenderer, PanelPopupHost popupHost) {
+    public ModuleDetailPanel(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
-        this.roundRectRenderer = roundRectRenderer;
-        this.rectRenderer = rectRenderer;
         this.textRenderer = textRenderer;
         this.settingListController = new SettingListController(popupHost);
         this.bindModeAnimation.setStartValue(0.0f);
@@ -82,7 +76,7 @@ public class ModuleDetailPanel {
         this.hiddenHoverAnimation.setStartValue(0.0f);
     }
 
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
         this.guiHeight = GuiGraphicsExtractor.guiHeight();
 
@@ -105,7 +99,7 @@ public class ModuleDetailPanel {
         float titleHeight = textRenderer.getHeight(titleScale);
         float titleY = bounds.y() + 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f;
         PanelUiTree headerTree = PanelUiTree.build(scope -> scope.text(detailTitle, bounds.x() + MD3Theme.PANEL_TITLE_INSET, titleY, titleScale, MD3Theme.TEXT_PRIMARY));
-        PanelUiCompiler.render(headerTree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(headerTree);
 
         if (module == null) {
             return;
@@ -118,16 +112,17 @@ public class ModuleDetailPanel {
             buildBindModeControl(scope, module, mouseX, mouseY);
             buildHiddenControl(scope, module, mouseX, mouseY);
         });
-        PanelUiCompiler.render(controlTree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(controlTree);
 
         PanelLayout.Rect viewport = getViewport();
         List<Setting<?>> settings = module.getSettings().stream().filter(Setting::isAvailable).toList();
-        float contentHeight = settingListController.getContentHeight(settings);
+        String settingOwnerKey = getSettingOwnerKey(module);
+        float contentHeight = settingListController.getContentHeight(settingOwnerKey, settings);
         state.setMaxDetailScroll(contentHeight - viewport.height());
         float maxDetailScroll = Math.max(0, contentHeight - viewport.height());
         boolean hasScrollBar = maxDetailScroll > 0;
         float rowWidth = hasScrollBar ? viewport.width() - ScrollBarUtils.TOTAL_WIDTH : viewport.width();
-        long contentSignature = buildContentSignature(module, settings);
+        long contentSignature = buildContentSignature(module, settings, settingOwnerKey);
         boolean rebuildContent = shouldRebuildContent(bounds, mouseX, mouseY, module, settings, GuiGraphicsExtractor.guiHeight(), contentSignature);
 
         if (rebuildContent) {
@@ -140,7 +135,7 @@ public class ModuleDetailPanel {
                     if (!rebuildContent) {
                         return;
                     }
-                    settingListController.layoutRows(settings, viewport, state.getDetailScroll(), rowWidth,
+                        settingListController.layoutRows(settingOwnerKey, settings, viewport, state.getDetailScroll(), rowWidth,
                             content, textRenderer, effectiveMouseX, effectiveMouseY, (setting, row, rowBounds) -> {
                                 if (row instanceof KeybindSettingRow keybindRow) {
                                     keybindRow.setListening(state.getListeningKeybindSetting() == keybindRow.getSetting());
@@ -152,7 +147,7 @@ public class ModuleDetailPanel {
                             });
                     contentState.noteAnimation(settingListController.hasActiveAnimations());
                 }));
-        PanelUiCompiler.render(contentTree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(contentTree);
 
         if (rebuildContent) {
             rememberSnapshot(bounds, mouseX, mouseY, module, settings, GuiGraphicsExtractor.guiHeight(), contentSignature);
@@ -535,7 +530,11 @@ public class ModuleDetailPanel {
         lastContentSignature = contentSignature;
     }
 
-    private long buildContentSignature(Module module, List<Setting<?>> settings) {
+    private String getSettingOwnerKey(Module module) {
+        return "panel-module:" + module.getName().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "_");
+    }
+
+    private long buildContentSignature(Module module, List<Setting<?>> settings, String settingOwnerKey) {
         long signature = 17L;
         signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
         signature = signature * 31L + module.getName().hashCode();
@@ -548,11 +547,8 @@ public class ModuleDetailPanel {
         for (Setting<?> setting : settings) {
             signature = signature * 31L + setting.getName().hashCode();
             signature = signature * 31L + (setting.isAvailable() ? 1 : 0);
-            if (setting.getGroup() != null) {
-                signature = signature * 31L + setting.getGroup().getName().hashCode();
-                signature = signature * 31L + (setting.getGroup().isCollapsed() ? 1 : 0);
-            }
         }
+        signature = signature * 31L + SettingLayoutPlanner.signature(settingOwnerKey, settings);
         return signature;
     }
 
