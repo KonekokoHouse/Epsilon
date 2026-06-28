@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -17,8 +16,6 @@ import net.minecraft.client.input.MouseButtonEvent;
 import java.awt.*;
 
 public class KeybindSettingRow extends SettingRow<KeybindSetting> {
-
-    private static final TranslateComponent noneComponent = EpsilonTranslateComponent.create("keybind", "none");
 
     private final Animation chipHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private final Animation focusAnimation = new Animation(Easing.EASE_OUT_CUBIC, 150L);
@@ -102,7 +99,7 @@ public class KeybindSettingRow extends SettingRow<KeybindSetting> {
 
     private String formatKeybind(int keyCode) {
         if (keyCode == KeybindUtils.NONE) {
-            return noneComponent.getTranslatedName();
+            return EpsilonTranslations.Keybind.NONE.getTranslatedName();
         }
         return KeybindUtils.format(keyCode);
     }

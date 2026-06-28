@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.panel.panel;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
@@ -46,8 +45,6 @@ public class CategoryRailPanel {
     private final Animation settingsHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private PanelLayout.Rect bounds;
     private boolean clippedTextPending;
-
-    private static final TranslateComponent settingsLabelComponent = EpsilonTranslateComponent.create("gui", "clientsettings");
 
     public CategoryRailPanel(PanelState state, TextRenderer textRenderer) {
         this.state = state;
@@ -301,7 +298,7 @@ public class CategoryRailPanel {
             Color animatedLabel = MD3Theme.withAlpha(settingsLabelColor, (int) (255 * contentProgress));
             float settingsLabelHeight = textRenderer.getHeight(itemLabelScale);
             float settingsLabelY = settingsRect.y() + (settingsRect.height() - settingsLabelHeight) / 2.0f;
-            scope.text(settingsLabelComponent.getTranslatedName(), settingsRect.x() + 30.0f + textOffset, settingsLabelY, itemLabelScale, animatedLabel);
+            scope.text(EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), settingsRect.x() + 30.0f + textOffset, settingsLabelY, itemLabelScale, animatedLabel);
         }
     }
 

@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -27,9 +26,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
 public class FriendClientSettingTab implements ClientSettingTabView {
-
-    private static final TranslateComponent noFriendsComponent = EpsilonTranslateComponent.create("gui", "friend.empty");
-    private static final TranslateComponent addFriendPlaceholderComponent = EpsilonTranslateComponent.create("gui", "friend.input.placeholder");
     private static final float FRIEND_ROW_HEIGHT = 30.0f;
     private static final float FRIEND_INPUT_HEIGHT = 28.0f;
     private static final float FRIEND_INPUT_BOTTOM_MARGIN = 4.0f;
@@ -91,7 +87,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             inputField.buildUi(scope, inputBounds, mouseX, mouseY, textRenderer,
-                    addFriendPlaceholderComponent.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵");
+                    EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵");
             scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getFriendScroll(), maxScroll, contentHeight, content -> {
                 if (!rebuildContent) {
                     return;
@@ -114,7 +110,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
                 if (friends.isEmpty()) {
                     float hintScale = 0.58f;
-                    String hint = noFriendsComponent.getTranslatedName();
+                    String hint = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName();
                     float hintWidth = textRenderer.getWidth(hint, hintScale);
                     float hintX = listViewport.x() + (listViewport.width() - hintWidth) / 2.0f;
                     float hintY = listViewport.y() + listViewport.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;

@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.dsl;
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.github.epsilon.graphics.schedulers.Render2DTexture;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -36,6 +37,10 @@ public class PanelUiTree {
         Scope scope = new Scope();
         content.accept(scope);
         return new PanelUiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
+    }
+
+    public static PanelUiTree from(Scope scope) {
+        return scope.snapshot();
     }
 
     /**
@@ -294,6 +299,22 @@ public class PanelUiTree {
 
         public void marqueeText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, PanelLayout.Rect clip) {
             nodes.add(new MarqueeTextNode(text, x, y, scale, color, fontLoader, clip));
+        }
+
+        public void texture(Render2DTexture texture, float x, float y, float width, float height,
+                            float u0, float v0, float u1, float v1, Color color) {
+            roundedTexture(texture, x, y, width, height, 0.0f, u0, v0, u1, v1, color);
+        }
+
+        public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height, float radius,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            roundedTexture(texture, x, y, width, height, radius, radius, radius, radius, u0, v0, u1, v1, color);
+        }
+
+        public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                   float topLeft, float topRight, float bottomRight, float bottomLeft,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            nodes.add(new TextureNode(texture, x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, u0, v0, u1, v1, color));
         }
 
         public void button(float x, float y, float width, float height, float radius, Color background,
@@ -682,7 +703,7 @@ public class PanelUiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到具体 renderer 或视口缓冲。
      */
-    sealed interface UiNode permits LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    sealed interface UiNode permits LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, TextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -768,6 +789,11 @@ public class PanelUiTree {
 
     record MarqueeTextNode(String text, float x, float y, float scale, Color color,
                            TtfFontLoader fontLoader, PanelLayout.Rect clip) implements UiNode {
+    }
+
+    record TextureNode(Render2DTexture texture, float x, float y, float width, float height,
+                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                       float u0, float v0, float u1, float v1, Color color) implements UiNode {
     }
 
     record ButtonNode(float x, float y, float width, float height, float radius, Color background,

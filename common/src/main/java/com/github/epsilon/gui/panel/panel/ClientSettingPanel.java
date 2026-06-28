@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.panel;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
@@ -22,17 +22,11 @@ import java.util.List;
 
 public class ClientSettingPanel {
 
-    private static final TranslateComponent titleComponent = EpsilonTranslateComponent.create("gui", "clientsettings");
-    private static final TranslateComponent generalTabComponent = EpsilonTranslateComponent.create("gui", "tab.general");
-    private static final TranslateComponent friendTabComponent = EpsilonTranslateComponent.create("gui", "tab.friend");
-    private static final TranslateComponent configTabComponent = EpsilonTranslateComponent.create("gui", "tab.config");
-    private static final TranslateComponent addonTabComponent = EpsilonTranslateComponent.create("gui", "tab.addon");
-
     private static final List<TabDefinition> TABS = List.of(
-            new TabDefinition(PanelState.ClientSettingTab.GENERAL, generalTabComponent),
-            new TabDefinition(PanelState.ClientSettingTab.FRIEND, friendTabComponent),
-            new TabDefinition(PanelState.ClientSettingTab.CONFIG, configTabComponent),
-            new TabDefinition(PanelState.ClientSettingTab.ADDON, addonTabComponent)
+            new TabDefinition(PanelState.ClientSettingTab.GENERAL, EpsilonTranslations.Gui.TAB_GENERAL),
+            new TabDefinition(PanelState.ClientSettingTab.FRIEND, EpsilonTranslations.Gui.TAB_FRIEND),
+            new TabDefinition(PanelState.ClientSettingTab.CONFIG, EpsilonTranslations.Gui.TAB_CONFIG),
+            new TabDefinition(PanelState.ClientSettingTab.ADDON, EpsilonTranslations.Gui.TAB_ADDON)
     );
 
     private static final float TAB_BAR_HEIGHT = 26.0f;
@@ -72,7 +66,7 @@ public class ClientSettingPanel {
         int effectiveMouseY = popupConsumesHover ? Integer.MIN_VALUE : mouseY;
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
-            scope.text(titleComponent.getTranslatedName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
+            scope.text(EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
             buildTabs(scope, effectiveMouseX, effectiveMouseY);
         });
         renderBatch.render(tree);

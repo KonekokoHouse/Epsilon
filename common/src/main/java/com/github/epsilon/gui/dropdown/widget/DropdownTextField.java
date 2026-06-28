@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
@@ -31,13 +31,13 @@ public class DropdownTextField {
         this.inputFilter = inputFilter == null ? value -> true : inputFilter;
     }
 
-    public void draw(DropdownRenderer renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
+    public void draw(DropdownDrawContext renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
         renderer.roundRect().addRoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
         renderer.outline().addOutline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
-        float textY = y + (height - renderer.text().getHeight(textScale)) / 2.0f; // i07你还挺聪明
+        float textY = y + (height - renderer.text().getHeight(textScale)) / 2.0f;
         float textX = x + 4.0f;
         updateCursorLayout(renderer, textX, textScale);
         renderer.text().addText(trimToWidth(display, textScale, width - 8.0f, renderer), textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
@@ -50,7 +50,7 @@ public class DropdownTextField {
         }
     }
 
-    public void drawCentered(DropdownRenderer renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
+    public void drawCentered(DropdownDrawContext renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
         renderer.roundRect().addRoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
         renderer.outline().addOutline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
@@ -222,7 +222,7 @@ public class DropdownTextField {
         return value.length() > maxLength ? value.substring(0, maxLength) : value;
     }
 
-    private void updateCursorLayout(DropdownRenderer renderer, float textX, float textScale) {
+    private void updateCursorLayout(DropdownDrawContext renderer, float textX, float textScale) {
         if (text.isEmpty()) {
             cursorMidpoints = new float[0];
             return;
@@ -246,13 +246,13 @@ public class DropdownTextField {
         return text.length();
     }
 
-    private void drawCaret(DropdownRenderer renderer, float x, float y, float textScale) {
+    private void drawCaret(DropdownDrawContext renderer, float x, float y, float textScale) {
         if (System.currentTimeMillis() % 1000 > 500) {
             renderer.rect().addRect(x, y, 0.8f, renderer.text().getHeight(textScale), MD3Theme.TEXT_PRIMARY);
         }
     }
 
-    private String trimToWidth(String value, float scale, float maxWidth, DropdownRenderer renderer) {
+    private String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
         if (value == null || value.isEmpty()) return "";
         if (renderer.text().getWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";

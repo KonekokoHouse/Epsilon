@@ -1,15 +1,15 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.addon.EpsilonAddon;
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.ColorWidget;
 import com.github.epsilon.gui.dropdown.widget.KeybindWidget;
 import com.github.epsilon.gui.dropdown.widget.SettingWidget;
 import com.github.epsilon.gui.dropdown.widget.StringWidget;
 import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.settings.Setting;
@@ -19,12 +19,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class AddonDropdownPanel extends AbstractDropdownPanel {
-
-    private static final TranslateComponent titleComponent = EpsilonTranslateComponent.create("gui", "tab.addon");
-    private static final TranslateComponent emptyComponent = EpsilonTranslateComponent.create("gui", "addon.empty");
-    private static final TranslateComponent noSettingsComponent = EpsilonTranslateComponent.create("gui", "addon.no_settings");
-    private static final TranslateComponent modulesComponent = EpsilonTranslateComponent.create("gui", "addon.info.modules");
-    private static final TranslateComponent versionComponent = EpsilonTranslateComponent.create("gui", "addon.info.version");
 
     private static final float ADDON_ROW_HEIGHT = 28.0f;
     private static final float INFO_HEIGHT = 38.0f;
@@ -36,7 +30,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
     private EpsilonAddon lastAddon;
 
     public AddonDropdownPanel(int panelIndex) {
-        super("addon", titleComponent, "", panelIndex);
+        super("addon", EpsilonTranslations.Gui.TAB_ADDON, "", panelIndex);
     }
 
     @Override
@@ -58,14 +52,14 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
         List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         EpsilonAddon selected = resolveSelectedAddon();
         if (addons.isEmpty()) {
-            renderer.text().addText(emptyComponent.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            renderer.text().addText(EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
 
@@ -86,22 +80,21 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         renderer.roundRect().addRoundRect(contentX, currentY, contentW, INFO_HEIGHT, DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
         renderer.text().addText(trimToWidth(selected.getDisplayName(), 0.58f, contentW - 10.0f, renderer),
                 contentX + 6.0f, currentY + 5.0f, 0.58f, MD3Theme.TEXT_PRIMARY);
-        String meta = modulesComponent.getTranslatedName() + " " + selected.getRegisteredModules().size();
+        String meta = EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName() + " " + selected.getRegisteredModules().size();
         if (!selected.getVersion().isBlank())
-            meta += "  " + versionComponent.getTranslatedName() + " " + selected.getVersion();
+            meta += "  " + EpsilonTranslations.Gui.ADDON_INFO_VERSION.getTranslatedName() + " " + selected.getVersion();
         renderer.text().addText(trimToWidth(meta, 0.45f, contentW - 10.0f, renderer),
                 contentX + 6.0f, currentY + 18.0f, 0.45f, MD3Theme.TEXT_MUTED);
         currentY += INFO_HEIGHT + GAP;
 
         if (widgets.isEmpty()) {
-            renderer.text().addText(noSettingsComponent.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            renderer.text().addText(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
+        DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(contentX, currentY, contentW, computeWidgetsHeight()));
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
-            widget.setPosition(contentX, currentY, contentW);
-            widget.draw(renderer, mouseX, mouseY);
-            currentY += widget.getHeight() + DropdownTheme.SETTING_GAP;
+            widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
         }
     }
 
@@ -203,6 +196,16 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             if (widget != null) widgets.add(widget);
         }
         lastAddon = addon;
+    }
+
+    private float computeWidgetsHeight() {
+        float height = 0.0f;
+        for (SettingWidget<?> widget : widgets) {
+            if (widget.isVisible()) {
+                height += widget.getHeight() + DropdownTheme.SETTING_GAP;
+            }
+        }
+        return height;
     }
 
 }

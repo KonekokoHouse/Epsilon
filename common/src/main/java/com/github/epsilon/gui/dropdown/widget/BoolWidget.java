@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.managers.Managers;
@@ -40,7 +40,7 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
     }
 
     @Override
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         float target = setting.getValue() ? 1.0f : 0.0f;
         toggleAnim.run(target);
         knobBounceAnim.run(target);

@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -27,7 +27,7 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
     }
 
     @Override
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         boolean hovered = isFieldHovered(mouseX, mouseY);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
@@ -77,7 +77,7 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
         return width - DropdownTheme.SETTING_PADDING_X * 2.0f;
     }
 
-    private float centeredTextY(DropdownRenderer renderer, float boxY, float boxHeight, float scale) {
+    private float centeredTextY(DropdownDrawContext renderer, float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - renderer.text().getHeight(scale)) * 0.5f;
     }
 

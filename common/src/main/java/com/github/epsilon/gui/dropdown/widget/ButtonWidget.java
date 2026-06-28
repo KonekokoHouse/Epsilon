@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.settings.impl.ButtonSetting;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -20,7 +20,7 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
     }
 
     @Override
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         float btnX = x + DropdownTheme.SETTING_PADDING_X;
         float btnY = y + 1.0f;
         float btnW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;

@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
+import com.github.epsilon.gui.panel.PanelLayout;
 
 public abstract class Component {
 
@@ -10,7 +11,13 @@ public abstract class Component {
 
     public abstract float getHeight();
 
-    public abstract void draw(DropdownRenderer renderer, int mouseX, int mouseY);
+    public abstract void draw(DropdownDrawContext renderer, int mouseX, int mouseY);
+
+    public final void draw(DropdownDrawContext renderer, int mouseX, int mouseY, PanelLayout.Rect bounds) {
+        // 组件只缓存本帧命中区域，位置由 PanelUiTree/stack 在调用侧统一计算。
+        setPosition(bounds.x(), bounds.y(), bounds.width());
+        draw(renderer, mouseX, mouseY);
+    }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         return false;

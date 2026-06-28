@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -34,33 +33,6 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class ConfigClientSettingTab implements ClientSettingTabView {
-
-    private static final TranslateComponent inputPlaceholderComponent = EpsilonTranslateComponent.create("gui", "config.input.placeholder");
-    private static final TranslateComponent currentComponent = EpsilonTranslateComponent.create("gui", "config.current");
-    private static final TranslateComponent switchHintComponent = EpsilonTranslateComponent.create("gui", "config.switch_hint");
-    private static final TranslateComponent emptyComponent = EpsilonTranslateComponent.create("gui", "config.empty");
-    private static final TranslateComponent saveAsComponent = EpsilonTranslateComponent.create("gui", "config.action.saveas");
-    private static final TranslateComponent reloadComponent = EpsilonTranslateComponent.create("gui", "config.action.reload");
-    private static final TranslateComponent exportComponent = EpsilonTranslateComponent.create("gui", "config.action.export");
-    private static final TranslateComponent importComponent = EpsilonTranslateComponent.create("gui", "config.action.import");
-    private static final TranslateComponent newComponent = EpsilonTranslateComponent.create("gui", "config.action.new");
-    private static final TranslateComponent openFolderComponent = EpsilonTranslateComponent.create("gui", "config.action.open_folder");
-    private static final TranslateComponent deleteConfirmTitleComponent = EpsilonTranslateComponent.create("gui", "config.delete.confirm.title");
-    private static final TranslateComponent deleteConfirmMessageComponent = EpsilonTranslateComponent.create("gui", "config.delete.confirm.message");
-    private static final TranslateComponent deleteConfirmConfirmComponent = EpsilonTranslateComponent.create("gui", "config.delete.confirm.confirm");
-    private static final TranslateComponent deleteConfirmCancelComponent = EpsilonTranslateComponent.create("gui", "config.delete.confirm.cancel");
-    private static final TranslateComponent errorTitleComponent = EpsilonTranslateComponent.create("gui", "config.error.title");
-    private static final TranslateComponent errorOkComponent = EpsilonTranslateComponent.create("gui", "config.error.ok");
-    private static final TranslateComponent saveErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.save");
-    private static final TranslateComponent reloadErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.reload");
-    private static final TranslateComponent exportErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.export");
-    private static final TranslateComponent importErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.import");
-    private static final TranslateComponent openFolderErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.open_folder");
-    private static final TranslateComponent switchErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.switch");
-    private static final TranslateComponent deleteErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.delete");
-    private static final TranslateComponent deleteLastErrorComponent = EpsilonTranslateComponent.create("gui", "config.error.delete_last");
-    private static final TranslateComponent exportSuccessTitleComponent = EpsilonTranslateComponent.create("gui", "config.export.success.title");
-    private static final TranslateComponent exportSuccessMessageComponent = EpsilonTranslateComponent.create("gui", "config.export.success.message");
     private static final float ROW_HEIGHT = 36.0f;
     private static final float FIELD_HEIGHT = 28.0f;
     private static final float BUTTON_HEIGHT = 26.0f;
@@ -128,7 +100,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             inputField.buildUi(scope, getInputFieldBounds(inputSection), mouseX, mouseY, textRenderer,
-                    inputPlaceholderComponent.getTranslatedName(), FIELD_SCALE, null);
+                    EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null);
             for (ActionButton button : getActionButtons(inputSection)) {
                 buildActionButton(scope, button, mouseX, mouseY);
             }
@@ -154,7 +126,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
                 if (configs.isEmpty()) {
                     float hintScale = 0.58f;
-                    String hint = emptyComponent.getTranslatedName();
+                    String hint = EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName();
                     float hintWidth = textRenderer.getWidth(hint, hintScale);
                     float hintX = listViewport.x() + (listViewport.width() - hintWidth) / 2.0f;
                     float hintY = listViewport.y() + listViewport.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
@@ -373,12 +345,12 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         scope.text(trimToWidth(configName, nameScale, rowBounds.width() - 72.0f), textX, nameY, nameScale,
                 active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
 
-        String subtitle = active ? currentComponent.getTranslatedName() : switchHintComponent.getTranslatedName();
+        String subtitle = active ? EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName() : EpsilonTranslations.Gui.CONFIG_SWITCH_HINT.getTranslatedName();
         Color subtitleColor = active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_MUTED;
         scope.text(subtitle, textX, nameY + 12.0f, subScale, subtitleColor);
 
         if (active) {
-            String chipText = currentComponent.getTranslatedName();
+            String chipText = EpsilonTranslations.Gui.CONFIG_CURRENT.getTranslatedName();
             float chipScale = 0.48f;
             float chipWidth = textRenderer.getWidth(chipText, chipScale) + 10.0f;
             float chipHeight = 14.0f;
@@ -427,7 +399,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             state.setConfigScroll(0.0f);
         } catch (Exception exception) {
             Constants.LOGGER.error("保存配置失败", exception);
-            openErrorPopup(saveErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_SAVE::getTranslatedName, exception);
         }
     }
 
@@ -443,7 +415,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             state.setConfigScroll(0.0f);
         } catch (Exception exception) {
             Constants.LOGGER.error("新建配置失败", exception);
-            openErrorPopup(saveErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_SAVE::getTranslatedName, exception);
         }
     }
 
@@ -453,7 +425,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             markDirty();
         } catch (Exception exception) {
             Constants.LOGGER.error("重载配置失败", exception);
-            openErrorPopup(reloadErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_RELOAD::getTranslatedName, exception);
         }
     }
 
@@ -463,7 +435,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             openExportSuccessPopup(exported);
         } catch (Exception exception) {
             Constants.LOGGER.error("导出配置失败", exception);
-            openErrorPopup(exportErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_EXPORT::getTranslatedName, exception);
         }
     }
 
@@ -478,7 +450,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             inputField.setCursorToEnd();
             state.setConfigScroll(0.0f);
         } catch (Exception exception) {
-            openErrorPopup(importErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_IMPORT::getTranslatedName, exception);
         }
     }
 
@@ -487,7 +459,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             ConfigFolderOpener.openConfigFolder();
         } catch (Exception exception) {
             Constants.LOGGER.error("打开配置文件夹失败", exception);
-            openErrorPopup(openFolderErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_OPEN_FOLDER::getTranslatedName, exception);
         }
     }
 
@@ -501,14 +473,14 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             inputField.setCursorToEnd();
         } catch (Exception exception) {
             Constants.LOGGER.error("切换配置失败", exception);
-            openErrorPopup(switchErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_SWITCH::getTranslatedName, exception);
         }
     }
 
     private void tryDeleteConfig(String configName) {
         try {
             if (!ConfigHolder.INSTANCE.deleteConfig(configName)) {
-                openErrorPopup(deleteErrorComponent::getTranslatedName, deleteLastErrorComponent.getTranslatedName());
+                openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_DELETE::getTranslatedName, EpsilonTranslations.Gui.CONFIG_ERROR_DELETE_LAST.getTranslatedName());
                 return;
             }
             if (Objects.equals(inputField.getText().trim(), configName)) {
@@ -517,7 +489,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             }
         } catch (Exception exception) {
             Constants.LOGGER.error("删除配置失败", exception);
-            openErrorPopup(deleteErrorComponent::getTranslatedName, exception);
+            openErrorPopup(EpsilonTranslations.Gui.CONFIG_ERROR_DELETE::getTranslatedName, exception);
         }
     }
 
@@ -526,11 +498,11 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         PanelLayout.Rect popupBounds = popupHost.getCenteredBounds(popupWidth, 82.0f);
         popupHost.open(new ConfirmActionPopup(
                 popupBounds,
-                deleteConfirmTitleComponent::getTranslatedName,
-                deleteConfirmMessageComponent::getTranslatedName,
+                EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_TITLE::getTranslatedName,
+                EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_MESSAGE::getTranslatedName,
                 trimToWidth(configName, 0.60f, popupWidth - 24.0f),
-                deleteConfirmConfirmComponent::getTranslatedName,
-                deleteConfirmCancelComponent::getTranslatedName,
+                EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CONFIRM::getTranslatedName,
+                EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_CANCEL::getTranslatedName,
                 () -> {
                     tryDeleteConfig(configName);
                     markDirty();
@@ -547,10 +519,10 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         float popupHeight = 84.0f;
         popupHost.open(new MessagePopup(
                 popupHost.getCenteredBounds(popupWidth, popupHeight),
-                errorTitleComponent::getTranslatedName,
+                EpsilonTranslations.Gui.CONFIG_ERROR_TITLE::getTranslatedName,
                 actionMessageSupplier,
                 trimToWidth(detail, 0.52f, popupWidth - 24.0f),
-                errorOkComponent::getTranslatedName
+                EpsilonTranslations.Gui.CONFIG_ERROR_OK::getTranslatedName
         ));
     }
 
@@ -564,10 +536,10 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         }
         popupHost.open(new MessagePopup(
                 popupHost.getCenteredBounds(popupWidth, popupHeight),
-                exportSuccessTitleComponent::getTranslatedName,
-                exportSuccessMessageComponent::getTranslatedName,
+                EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_TITLE::getTranslatedName,
+                EpsilonTranslations.Gui.CONFIG_EXPORT_SUCCESS_MESSAGE::getTranslatedName,
                 trimToWidth(detail, 0.52f, popupWidth - 24.0f),
-                errorOkComponent::getTranslatedName
+                EpsilonTranslations.Gui.CONFIG_ERROR_OK::getTranslatedName
         ));
     }
 
@@ -634,12 +606,12 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         float secondRowWidth = (inputBounds.width() - gap) / 2.0f;
         float secondRowY = y + BUTTON_HEIGHT + SECTION_GAP;
         return List.of(
-                new ActionButton(ActionButtonType.SAVE_AS, saveAsComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.RELOAD, reloadComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + width + gap, y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.EXPORT, exportComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 2.0f, y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.IMPORT, importComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 3.0f, y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.NEW, newComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), secondRowY, secondRowWidth, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.OPEN_FOLDER, openFolderComponent.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + secondRowWidth + gap, secondRowY, secondRowWidth, BUTTON_HEIGHT))
+                new ActionButton(ActionButtonType.SAVE_AS, EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.RELOAD, EpsilonTranslations.Gui.CONFIG_ACTION_RELOAD.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + width + gap, y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.EXPORT, EpsilonTranslations.Gui.CONFIG_ACTION_EXPORT.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 2.0f, y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.IMPORT, EpsilonTranslations.Gui.CONFIG_ACTION_IMPORT.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 3.0f, y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.NEW, EpsilonTranslations.Gui.CONFIG_ACTION_NEW.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), secondRowY, secondRowWidth, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.OPEN_FOLDER, EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + secondRowWidth + gap, secondRowY, secondRowWidth, BUTTON_HEIGHT))
         );
     }
 

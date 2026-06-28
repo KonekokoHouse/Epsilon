@@ -42,20 +42,21 @@ public final class SettingLayoutPlanner {
         }
 
         List<MutableSection> mutableSections = new ArrayList<>();
-        MutableSection current = null;
+        Map<String, MutableSection> groupedSections = new HashMap<>();
         for (Setting<?> setting : sanitized) {
             if (setting.isRootSetting()) {
-                current = null;
                 mutableSections.add(new MutableSection("", new ArrayList<>(List.of(setting))));
                 continue;
             }
 
             String title = inferTitle(setting);
-            if (current == null || !current.title().equals(title)) {
-                current = new MutableSection(title);
-                mutableSections.add(current);
+            MutableSection section = groupedSections.get(title);
+            if (section == null) {
+                section = new MutableSection(title);
+                groupedSections.put(title, section);
+                mutableSections.add(section);
             }
-            current.settings().add(setting);
+            section.settings().add(setting);
         }
 
         if (mutableSections.size() == 1 && sanitized.size() < SINGLE_SECTION_COLLAPSE_LIMIT) {

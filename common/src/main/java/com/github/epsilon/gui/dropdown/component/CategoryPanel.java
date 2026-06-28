@@ -1,7 +1,8 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Category;
@@ -47,22 +48,25 @@ public class CategoryPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
         List<ModuleButton> buttons = visibleButtons();
         float expand = openAnim.getValue();
-        float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll;
         int frameId = getRenderFrameId();
+        DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(
+                x,
+                y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
+                width,
+                computeContentHeight()
+        ));
         for (ModuleButton button : buttons) {
-            button.setPosition(x, currentY, width);
             float btnH = button.getHeightForFrame(frameId);
+            PanelLayout.Rect bounds = stack.item(btnH);
 
             float visibleTop = y + DropdownTheme.PANEL_HEADER_HEIGHT;
             float visibleBottom = visibleTop + visibleHeight * expand;
-            if (currentY + btnH > visibleTop && currentY < visibleBottom) {
-                button.draw(renderer, mouseX, mouseY);
+            if (bounds.bottom() > visibleTop && bounds.y() < visibleBottom) {
+                button.draw(renderer, mouseX, mouseY, bounds);
             }
-
-            currentY += btnH;
         }
     }
 

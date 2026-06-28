@@ -1,6 +1,6 @@
 package com.github.epsilon.modules.impl.movement.elytrafly;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.FireworkUpdateEvent;
@@ -19,10 +19,6 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
     private static final float ASCEND_PITCH = -54.77F;
     private static final float TAKEOFF_PITCH = ASCEND_PITCH;
     private static final double TARGET_REACH_MARGIN = 4.0;
-
-    private static final TranslateComponent TAKEOFF_COMPLETE = EpsilonTranslateComponent.create("modules.elytra fly", "pitch40_takeoff_complete");
-    private static final TranslateComponent TOO_CLOSE_TO_LOWER_BOUNDS = EpsilonTranslateComponent.create("modules.elytra fly", "pitch40_too_close_to_lower_bounds");
-    private static final TranslateComponent NO_USABLE_ELYTRA = EpsilonTranslateComponent.create("modules.elytra fly", "pitch40_no_usable_elytra");
 
     private boolean pitchingDown = true;
     private boolean pendingActivationCheck;
@@ -71,7 +67,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
         }
 
         if (mc.player.getY() - 40.0 < elytraFly.pitch40lowerBounds.getValue()) {
-            fail(TOO_CLOSE_TO_LOWER_BOUNDS);
+            fail(EpsilonTranslations.ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS);
         }
     }
 
@@ -153,7 +149,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
 
         FindItemResult elytra = InvUtils.find(Items.ELYTRA);
         if (!canGlide(elytra.found())) {
-            fail(NO_USABLE_ELYTRA);
+            fail(EpsilonTranslations.ElytraFly.PITCH40_NO_USABLE_ELYTRA);
             return;
         }
 
@@ -199,7 +195,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
         completedTakeoffTarget = getTakeoffTargetHeight();
         pitch = DESCEND_PITCH;
         maintainFallFlying();
-        Managers.NOTIFICATION.success(elytraFly.getTranslatedName(), TAKEOFF_COMPLETE.getTranslatedName());
+        Managers.NOTIFICATION.success(elytraFly.getTranslatedName(), EpsilonTranslations.ElytraFly.PITCH40_TAKEOFF_COMPLETE.getTranslatedName());
     }
 
     private void refreshArmoredFallFlying(int elytraSlot, boolean respectDelay) {

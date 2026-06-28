@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -57,13 +56,6 @@ public class ModuleDetailPanel {
     private final Animation hiddenHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private long lastContentSignature = Long.MIN_VALUE;
 
-    private static final TranslateComponent toggleComponent = EpsilonTranslateComponent.create("keybind", "toggle");
-    private static final TranslateComponent holdComponent = EpsilonTranslateComponent.create("keybind", "hold");
-    private static final TranslateComponent noneComponent = EpsilonTranslateComponent.create("keybind", "none");
-    private static final TranslateComponent visibleComponent = EpsilonTranslateComponent.create("module", "visible");
-    private static final TranslateComponent hiddenComponent = EpsilonTranslateComponent.create("module", "hidden");
-    private static final TranslateComponent noModuleComponent = EpsilonTranslateComponent.create("gui", "no_module");
-
     public ModuleDetailPanel(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
         this.textRenderer = textRenderer;
@@ -94,7 +86,7 @@ public class ModuleDetailPanel {
         int effectiveMouseY = popupConsumesHover ? Integer.MIN_VALUE : mouseY;
 
         Module module = state.getSelectedModule();
-        String detailTitle = module == null ? noModuleComponent.getTranslatedName() : module.getTranslatedName();
+        String detailTitle = module == null ? EpsilonTranslations.Gui.NO_MODULE.getTranslatedName() : module.getTranslatedName();
         float titleScale = 0.78f;
         float titleHeight = textRenderer.getHeight(titleScale);
         float titleY = bounds.y() + 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f;
@@ -407,7 +399,7 @@ public class ModuleDetailPanel {
         float bindProgress = scope.animate(bindModeAnimation, module.getBindMode() == Module.BindMode.Hold);
         float hoverProgress = scope.animate(bindModeHoverAnimation, bindModeBounds.contains(mouseX, mouseY));
         PanelElements.buildSegmentedControl(scope, textRenderer, bindModeBounds,
-                toggleComponent.getTranslatedName(), holdComponent.getTranslatedName(),
+                EpsilonTranslations.Keybind.TOGGLE.getTranslatedName(), EpsilonTranslations.Keybind.HOLD.getTranslatedName(),
                 bindProgress, hoverProgress);
     }
 
@@ -444,13 +436,13 @@ public class ModuleDetailPanel {
         float hiddenProgress = scope.animate(hiddenAnimation, module.isHidden());
         float hoverProgress = scope.animate(hiddenHoverAnimation, hiddenBounds.contains(mouseX, mouseY));
         PanelElements.buildSegmentedControl(scope, textRenderer, hiddenBounds,
-                visibleComponent.getTranslatedName(), hiddenComponent.getTranslatedName(),
+                EpsilonTranslations.Module.VISIBLE.getTranslatedName(), EpsilonTranslations.Module.HIDDEN.getTranslatedName(),
                 hiddenProgress, hoverProgress);
     }
 
     private String formatCompactKeybind(int keyCode) {
         if (keyCode == KeybindUtils.NONE) {
-            return noneComponent.getTranslatedName();
+            return EpsilonTranslations.Keybind.NONE.getTranslatedName();
         }
         if (KeybindUtils.isMouseButton(keyCode)) {
             return "M" + (KeybindUtils.decodeMouseButton(keyCode) + 1);

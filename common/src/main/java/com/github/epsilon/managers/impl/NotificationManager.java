@@ -1,7 +1,6 @@
 package com.github.epsilon.managers.impl;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.elements.impl.notification.Notification;
 import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -18,9 +17,6 @@ public class NotificationManager {
 
     private final Queue<Notification> notifications = new ArrayDeque<>();
     private final Map<Integer, Notification> hashCodeMap = new HashMap<>();
-
-    private final TranslateComponent enableComponent = EpsilonTranslateComponent.create("elements.notifications hud", "enabled");
-    private final TranslateComponent disableComponent = EpsilonTranslateComponent.create("elements.notifications hud", "disabled");
 
     public void success(String title, String subTitle) {
         notify(title, subTitle, NotificationMode.Success, ChatFormatting.GREEN);
@@ -132,7 +128,7 @@ public class NotificationManager {
     }
 
     private String getModuleStateText(boolean enabled) {
-        return enabled ? enableComponent.getTranslatedName() : disableComponent.getTranslatedName();
+        return enabled ? EpsilonTranslations.Notifications.ENABLED.getTranslatedName() : EpsilonTranslations.Notifications.DISABLED.getTranslatedName();
     }
 
     private void sendNotificationMessage(String title, String subTitle, ChatFormatting chatColor) {
