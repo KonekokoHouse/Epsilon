@@ -140,8 +140,8 @@ flowchart TD
     B --> C["CommandStore"]
     C --> D["LayerBucket"]
     D --> E{"count >= threshold?"}
-    E -->|"否" F["Flat ArrayList"]
-    E -->|"是" G["QuadTreeBucket"]
+    E -->|"否"| F["Flat ArrayList"]
+    E -->|"是"| G["QuadTreeBucket"]
     F --> H["stable sequence sort"]
     G --> H
     H --> I["group by kind + scissor"]
