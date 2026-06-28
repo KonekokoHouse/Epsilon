@@ -286,7 +286,7 @@ public class MainMenuScreen extends Screen {
             float titleY = Math.max(8.0f * scale, titleX * 0.5f);
             float titleScale = 2.36f * scale;
             float subtitleScale = 0.62f * scale;
-            float titleSubtitleGap = 7.0f * scale;
+            float titleSubtitleGap = 12.0f * scale;
             float titleAccentGap = 6.0f * scale;
             float titleAccentWidth = 68.0f * scale;
             float titleAccentHeight = Math.max(1.6f, 1.8f * scale);
@@ -294,7 +294,7 @@ public class MainMenuScreen extends Screen {
             float buttonGap = 10.0f * scale;
             float rowInset = Math.max(14.0f * scale, width / 12.0f);
             float maxButtonWidth = Math.max(36.0f * scale, (width - rowInset * 2.0f - buttonGap * Math.max(0, entryCount - 1)) / Math.max(1, entryCount));
-            float buttonWidth = Math.max(42.0f * scale, Math.min(112.0f * scale, maxButtonWidth));
+            float buttonWidth = Math.clamp(112.0f * scale, 42.0f * scale, maxButtonWidth);
             float totalButtonsWidth = entryCount * buttonWidth + Math.max(0, entryCount - 1) * buttonGap;
             float buttonsStartX = (width - totalButtonsWidth) * 0.5f;
             float buttonsY = height - Math.min((width + height * 2.0f) / 25.0f, 54.0f * scale);
