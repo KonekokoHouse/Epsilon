@@ -53,7 +53,7 @@ public class SilentAim extends Module {
         }
 
         Rot2f rotations = RotationUtils.calculate(target.getEyePosition());
-        Managers.ROTATION.setRotations(rotations, 10, Priority.High);
+        Managers.ROTATION.setRotations(rotations, 180, Priority.High);
 
         HitResult hitResult = mc.hitResult;
         if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {

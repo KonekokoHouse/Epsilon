@@ -57,7 +57,7 @@ public class KillAura extends Module {
 
     private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
 
-    private final DoubleSetting rotationSpeed = doubleSetting("Rotation Speed", 10.0, 1.0, 10.0, 0.5);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10);
 
     private final IntSetting minCPS = intSetting("Min CPS", 10, 1, 20, 1, () -> mode.is(Mode.OnePointEight));
     private final IntSetting maxCPS = intSetting("Max CPS", 12, 1, 20, 1, () -> mode.is(Mode.OnePointEight));

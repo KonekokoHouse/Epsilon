@@ -117,8 +117,8 @@ public class Scaffold extends Module {
     private final BoolSetting snap = boolSetting("Snap", false, () -> mode.is(Mode.GodBridge));
     private final EnumSetting<RotationMode> rotationMode = enumSetting("Rotation Mode", RotationMode.Rise);
     private final EnumSetting<RaytraceMode> raytrace = enumSetting("Raytrace Mode", RaytraceMode.Normal);
-    private final IntSetting rotateSpeed = intSetting("Rotation Speed", 10, 1, 10, 1, () -> rotationMode.is(RotationMode.Rise));
-    private final IntSetting rotateBackSpeed = intSetting("Rotation Back Speed", 10, 1, 10, 1, () -> mode.is(Mode.TellyBridge));
+    private final IntSetting rotateSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, () -> rotationMode.is(RotationMode.Rise));
+    private final IntSetting rotateBackSpeed = intSetting("Rotation Back Speed", 180, 10, 180, 10, () -> mode.is(Mode.TellyBridge));
     private final IntSetting tellyTicks = intSetting("Telly Ticks", 1, 0, 6, 1, () -> mode.is(Mode.TellyBridge));
 
     private final BoolSetting swingHand = boolSetting("Swing Hand", true);
@@ -312,7 +312,7 @@ public class Scaffold extends Module {
         double speed = rotateSpeed.getValue();
 
         if (rotationMode.is(RotationMode.Hypixel)) {
-            speed = airTicks <= 1 ? 7.055 : 1.944;
+            speed = airTicks <= 1 ? 127 : 35;
         }
 
         Managers.ROTATION.setRotations(rotation, speed);

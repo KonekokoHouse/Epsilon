@@ -1,8 +1,8 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 import java.awt.*;
+
 public class Inventory extends HudModule {
 
     public static final Inventory INSTANCE = new Inventory();

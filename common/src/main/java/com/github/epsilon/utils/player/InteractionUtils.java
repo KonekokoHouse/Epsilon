@@ -33,7 +33,7 @@ public class InteractionUtils {
         Vec3 directionVec = Vec3.atCenterOf(pos).relative(side, 0.5);
 
         if (rotate) {
-            Managers.ROTATION.setRotations(RotationUtils.calculate(directionVec), 10, Priority.High);
+            Managers.ROTATION.setRotations(RotationUtils.calculate(directionVec), 180, Priority.High);
         }
 
         BlockHitResult result = new BlockHitResult(directionVec, side, pos, false);

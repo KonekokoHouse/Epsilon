@@ -1533,7 +1533,7 @@ public class ZealotCrystalPlus extends Module {
     }
 
     private double getRotationSpeed() {
-        return Math.max(0.1, yawSpeed.getValue() / 18.0);
+        return Math.max(1.8, yawSpeed.getValue());
     }
 
     private float getRotationDelta(Rot2f from, Rot2f to) {

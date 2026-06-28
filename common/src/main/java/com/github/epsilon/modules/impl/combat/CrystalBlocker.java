@@ -40,8 +40,8 @@ public class CrystalBlocker extends Module {
     private final EnumSetting<RotateMode> rotate = enumSetting("Rotate", RotateMode.Silent);
     private final EnumSetting<SwitchMode> switchMode = enumSetting("Switch", SwitchMode.Visible);
     private final IntSetting delay = intSetting("Delay", 2, 0, 20, 1);
-    private final IntSetting visibleSwapBackDelay = intSetting("SwapBackDelay", 0, 0, 20, 1, () -> switchMode.is(SwitchMode.Visible));
-    private final DoubleSetting silentSpeed = doubleSetting("SilentSpeed", 10.0, 0.5, 20.0, 0.1, () -> rotate.is(RotateMode.Silent));
+    private final IntSetting visibleSwapBackDelay = intSetting("Swap Back Delay", 0, 0, 20, 1, () -> switchMode.is(SwitchMode.Visible));
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, () -> rotate.is(RotateMode.Silent));
 
     private int timer = 0;
     private boolean waitingSwapBack = false;
@@ -130,7 +130,7 @@ public class CrystalBlocker extends Module {
             mc.player.setYRot(rot.getYaw());
             mc.player.setXRot(Mth.clamp(rot.getPitch(), -90.0f, 90.0f));
         } else if (rotate.is(RotateMode.Silent)) {
-            Managers.ROTATION.setRotations(rot, silentSpeed.getValue(), Priority.Highest);
+            Managers.ROTATION.setRotations(rot, rotationSpeed.getValue(), Priority.Highest);
 
             if (Managers.ROTATION.rotations != null) {
                 double yawDiff = Math.abs(Mth.wrapDegrees(Managers.ROTATION.getYaw() - rot.getYaw()));

@@ -83,8 +83,8 @@ public class SafeAnchor extends Module {
     }
 
     private final EnumSetting<PlaceMode> placeMode = enumSetting("Place Mode", PlaceMode.Adaptive);
-    private final DoubleSetting placeRotationSpeed = doubleSetting("Place Speed", 20.0, 1.0, 100.0, 1.0);
-    private final DoubleSetting explodeRotationSpeed = doubleSetting("Explode Speed", 40.0, 1.0, 100.0, 1.0);
+    private final IntSetting placeRotationSpeed = intSetting("Place Rotation Speed", 180, 10, 180, 10);
+    private final IntSetting explodeRotationSpeed = intSetting("Explode Rotation Speed", 180, 10, 180, 10);
     private final IntSetting placeCps = intSetting("Place CPS", 10, 1, 20, 1);
     private final BoolSetting silentRotation = boolSetting("Silent Rotation", false, () -> false);
     private final BoolSetting dynamicSpeed = boolSetting("DynamicSpeed", true, () -> false);
@@ -435,7 +435,7 @@ public class SafeAnchor extends Module {
             if (block.found()) {
                 InvUtils.swap(block.slot(), false);
                 targetActionPos = placePos;
-                currentRotationSpeed = mapSpeedToInternal(placeRotationSpeed.getValue());
+                currentRotationSpeed = placeRotationSpeed.getValue();
 
                 if (isSidePlacement && targetPlaceSide != null) {
                     HitResult hit = getCrosshairHit();
@@ -627,7 +627,7 @@ public class SafeAnchor extends Module {
         }
 
         targetActionPos = currentAnchorPos;
-        currentRotationSpeed = mapSpeedToInternal(explodeRotationSpeed.getValue());
+        currentRotationSpeed = explodeRotationSpeed.getValue();
         targetRotation = explodeNoRotate ? null : getTargetRotation(currentAnchorPos.getCenter());
         stage = Stage.RotToExplode;
     }
@@ -771,11 +771,6 @@ public class SafeAnchor extends Module {
         double jitter = baseMs * 0.25 * ThreadLocalRandom.current().nextGaussian();
         long delayMs = (long) Mth.clamp(baseMs + jitter, 50.0, 250.0);
         nextActionTimeMs = System.currentTimeMillis() + delayMs;
-    }
-
-    private double mapSpeedToInternal(double slider) {
-        double clamped = Mth.clamp(slider, 1.0, 100.0);
-        return 0.1 + (clamped - 1.0) * (9.5 - 0.1) / 99.0;
     }
 
     private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime) {

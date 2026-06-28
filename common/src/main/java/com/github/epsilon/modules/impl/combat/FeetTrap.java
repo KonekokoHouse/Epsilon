@@ -103,7 +103,7 @@ public class FeetTrap extends Module {
     private final EnumSetting<SwitchMode> switchMode = enumSetting("Switch", SwitchMode.Visible);
     private final EnumSetting<RotateMode> rotate = enumSetting("Rotate", RotateMode.Silent);
     private final EnumSetting<PlayerUtils.HelperMode> helperMode = enumSetting("Helper Mode", PlayerUtils.HelperMode.Grim);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 10, 1, 10, 1, () -> rotate.is(RotateMode.Silent));
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, () -> rotate.is(RotateMode.Silent));
     private final BoolSetting sideCheck = boolSetting("Side Check", false, () -> rotate.is(RotateMode.Silent));
     private final IntSetting blocksPerTick = intSetting("Blocks Per Tick", 2, 1, 8, 1);
     private final IntSetting delay = intSetting("Delay", 0, 0, 20, 1);

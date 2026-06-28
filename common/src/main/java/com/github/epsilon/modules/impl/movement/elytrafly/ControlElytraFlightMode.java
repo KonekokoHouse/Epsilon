@@ -88,7 +88,7 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private void redirectRotation() {
-        Managers.ROTATION.setRotations(new Rot2f(calcYaw(), calcPitch()), 10, Priority.Highest);
+        Managers.ROTATION.setRotations(new Rot2f(calcYaw(), calcPitch()), 180, Priority.Highest);
     }
 
     private float calcYaw() {

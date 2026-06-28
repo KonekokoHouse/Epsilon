@@ -31,7 +31,7 @@ public class AutoMap extends Module {
     private final DoubleSetting spiralSpacing = doubleSetting("Spiral Spacing", 192.0, 16.0, 1024.0, 1.0);
     private final IntSetting pointsPerLap = intSetting("Points Per Lap", 16, 4, 96, 1);
     private final DoubleSetting arrivalDistance = doubleSetting("Arrival Distance", 8.0, 2.0, 64.0, 0.5);
-    private final DoubleSetting rotationSpeed = doubleSetting("Rotation Speed", 10.0, 1.0, 20.0, 0.25);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10);
     private final DoubleSetting takeoffHeight = doubleSetting("Takeoff Height", 192.0, 16.0, 1024.0, 1.0);
     private final BoolSetting takeoffFirework = boolSetting("Takeoff Firework", true, autoLaunch::getValue);
 

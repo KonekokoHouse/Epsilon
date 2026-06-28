@@ -92,7 +92,7 @@ public class MaceAura extends Module {
             return;
         }
 
-        Managers.ROTATION.setRotations(RotationUtils.getRotationsToEntity(target), 10, Priority.Medium);
+        Managers.ROTATION.setRotations(RotationUtils.getRotationsToEntity(target), 180, Priority.Medium);
 
         if (!isReadyToAttack()) return;
 

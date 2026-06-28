@@ -34,6 +34,7 @@ public class Notifications extends HudModule {
     private static final float TEXT_PADDING = 3.0f;
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
+
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         Managers.NOTIFICATION.update();

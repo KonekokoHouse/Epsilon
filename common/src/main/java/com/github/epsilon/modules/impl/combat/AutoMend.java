@@ -50,7 +50,7 @@ public class AutoMend extends Module {
         FindItemResult result = InvUtils.findInHotbar(Items.EXPERIENCE_BOTTLE);
         if (!result.found()) return;
 
-        Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), 90), 10, Priority.High);
+        Managers.ROTATION.setRotations(new Rot2f(mc.player.getYRot(), 90), 180, Priority.High);
 
         InvUtils.swap(result.slot(), true);
 

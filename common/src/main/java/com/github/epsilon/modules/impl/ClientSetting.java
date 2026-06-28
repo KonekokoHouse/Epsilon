@@ -73,6 +73,7 @@ public class ClientSetting extends Module {
         Hide,
         Vanilla
     }
+
     @SuppressWarnings("unused")
     private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.setScreen(HudEditorScreen.INSTANCE));
 
