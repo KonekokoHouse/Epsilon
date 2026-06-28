@@ -126,14 +126,7 @@ public class RectRenderer implements IRenderer {
 
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", info.dynamicUniforms());
-<<<<<<< HEAD
-
-            pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
-            pass.setIndexBuffer(info.ibo(), info.autoIndices().type());
-            pass.drawIndexed(info.indexCount(), 1, 0, 0, 0);
-=======
             drawPrepared(pass, info);
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
         }
     }
 
@@ -168,9 +161,9 @@ public class RectRenderer implements IRenderer {
             pass.disableScissor();
         }
 
-        pass.setVertexBuffer(0, buffer.getGpuBuffer());
+        pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
         pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount()), LuminRenderSystem.getQuadIndexType());
-        pass.drawIndexed(0, 0, info.indexCount(), 1);
+        pass.drawIndexed(info.indexCount(), 1, 0, 0, 0);
     }
 
     @Override

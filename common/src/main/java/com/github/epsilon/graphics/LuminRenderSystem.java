@@ -222,10 +222,10 @@ public class LuminRenderSystem {
 
     public static GpuBufferSlice writeDefaultGuiTransform() {
         return writeTransform(
-                RenderSystem.getModelViewMatrix(),
+                RenderSystem.getModelViewMatrixCopy(),
                 new Vector4f(1, 1, 1, 1),
                 new Vector3f(0, 0, 0),
-                TextureTransform.DEFAULT_TEXTURING.getMatrix()
+                TextureTransform.DEFAULT_TEXTURING.createMatrix()
         );
     }
 

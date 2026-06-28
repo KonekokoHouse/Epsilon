@@ -144,12 +144,7 @@ public class TriangleRenderer implements IRenderer {
             }
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", dynamicUniforms);
-<<<<<<< HEAD
-            pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
-            pass.draw(vertexCount, 1, 0, 0);
-=======
             drawPrepared(pass);
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
         }
     }
 
@@ -184,8 +179,8 @@ public class TriangleRenderer implements IRenderer {
             pass.disableScissor();
         }
 
-        pass.setVertexBuffer(0, buffer.getGpuBuffer());
-        pass.draw(0, vertexCount);
+        pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
+        pass.draw(vertexCount, 1, 0, 0);
     }
 
     @Override

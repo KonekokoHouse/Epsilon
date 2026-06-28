@@ -11,28 +11,18 @@ public class LuminRingBuffer {
     private static final int BUFFER_COUNT = 8;
 
     private final GpuBuffer[] buffers = new GpuBuffer[BUFFER_COUNT];
-<<<<<<< HEAD
-=======
     private final int usage;
     private int size;
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
 
     private GpuBufferSlice.MappedView mappedBuffer;
     private int current;
     private boolean mapped;
 
     public LuminRingBuffer(long size, @GpuBuffer.Usage int usage) {
-<<<<<<< HEAD
-        int bufferUsage = GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | usage;
-        for (int i = 0; i < buffers.length; i++) {
-            int index = i;
-            buffers[i] = RenderSystem.getDevice().createBuffer(() -> "lumin-ring-buffer #" + index, bufferUsage, size);
-=======
         this.size = Math.toIntExact(size);
         this.usage = GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | usage;
         for (int i = 0; i < buffers.length; i++) {
             buffers[i] = createBuffer(i, this.size);
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
         }
     }
 

@@ -6,26 +6,17 @@ import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.holders.TextureCacheHolder;
-<<<<<<< HEAD
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-=======
 import com.github.epsilon.utils.render.ScissorUtils;
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-<<<<<<< HEAD
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import net.minecraft.client.renderer.rendertype.TextureTransform;
-=======
-import com.mojang.blaze3d.textures.*;
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.Identifier;
@@ -153,7 +144,7 @@ public class TextureRenderer implements IRenderer {
         MemoryUtil.memPutFloat(addr + 28, ry1);
         MemoryUtil.memPutFloat(addr + 32, rx2);
         MemoryUtil.memPutFloat(addr + 36, ry2);
-        // Radius vector (TL, TR, BR, BL)
+        // 半径顺序为左上、右上、右下、左下。
         MemoryUtil.memPutFloat(addr + 40, r1);
         MemoryUtil.memPutFloat(addr + 44, r2);
         MemoryUtil.memPutFloat(addr + 48, r3);
@@ -170,23 +161,14 @@ public class TextureRenderer implements IRenderer {
         if (colorView == null) return;
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
-<<<<<<< HEAD
-        GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
-                RenderSystem.getModelViewMatrixCopy(),
-                new Vector4f(1, 1, 1, 1),
-                new Vector3f(0, 0, 0),
-                TextureTransform.DEFAULT_TEXTURING.createMatrix()
-        );
-=======
         int maxIndexCount = prepareTextureBatches();
         if (maxIndexCount == 0) return;
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
 
         GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
         GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount);
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Rounded Texture Draws",
-                colorView, OptionalInt.empty(),
+                colorView, Optional.empty(),
                 null, OptionalDouble.empty())
         ) {
             pass.setPipeline(LuminRenderPipelines.TEXTURE);
@@ -265,49 +247,16 @@ public class TextureRenderer implements IRenderer {
             pass.disableScissor();
         }
 
-        // 纹理解析和上传已经在 prepare 阶段完成，pass 内只允许绑定和 draw。
+        // 纹理解析和上传已经在 prepare 阶段完成，pass 内只允许绑定和提交 draw。
         for (Batch batch : batches.values()) {
             if (batch.vertexCount == 0 || batch.preparedTexture == null) continue;
 
             int indexCount = (batch.vertexCount / 4) * 6;
-<<<<<<< HEAD
-            RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
-            GpuBuffer ibo = autoIndices.getBuffer(indexCount);
-
-            LuminTexture texture;
-            if (textureKey instanceof Identifier id) {
-                texture = TextureCacheHolder.INSTANCE.textureCache.computeIfAbsent(
-                        id, key -> loadTexture(key, batch.useLinearFilter)
-                );
-            } else if (textureKey instanceof LuminTexture tex) {
-                texture = tex;
-            } else {
-                continue;
-            }
-
-            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    () -> "Rounded Texture Draw",
-                    colorView, Optional.empty(),
-                    null, OptionalDouble.empty())
-            ) {
-                pass.setPipeline(LuminRenderPipelines.TEXTURE);
-
-                RenderSystem.bindDefaultUniforms(pass);
-                pass.setUniform("DynamicTransforms", dynamicUniforms);
-
-                pass.setVertexBuffer(0, new GpuBufferSlice(batch.buffer.getGpuBuffer(), 0, batch.buffer.getGpuBuffer().size()));
-                pass.setIndexBuffer(ibo, autoIndices.type());
-                pass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
-
-                pass.drawIndexed(indexCount, 1, 0, 0, 0);
-            }
-=======
             LuminTexture texture = batch.preparedTexture;
 
-            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
+            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice());
             pass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
-            pass.drawIndexed(0, 0, indexCount, 1);
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
+            pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
     }
 

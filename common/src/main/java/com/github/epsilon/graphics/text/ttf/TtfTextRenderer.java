@@ -9,7 +9,6 @@ import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.github.epsilon.utils.render.ScissorUtils;
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -161,21 +160,14 @@ public class TtfTextRenderer implements ITextRenderer {
         if (colorView == null) return;
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
-<<<<<<< HEAD
-        GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
-                RenderSystem.getModelViewMatrixCopy(), new Vector4f(1, 1, 1, 1),
-                new Vector3f(0, 0, 0), TextureTransform.DEFAULT_TEXTURING.createMatrix()
-        );
-=======
         int maxIndexCount = prepareTextBatches();
         if (maxIndexCount == 0) return;
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
 
         GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
         GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount);
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
                 () -> "Lumin TTF Draws",
-                colorView, OptionalInt.empty(),
+                colorView, Optional.empty(),
                 depthView, OptionalDouble.empty())
         ) {
             pass.setPipeline(ClientSetting.INSTANCE.fontAntiAliasing.getValue()
@@ -251,38 +243,9 @@ public class TtfTextRenderer implements ITextRenderer {
             int vertexCount = (int) (batch.offsetInAtlas / STRIDE);
             int indexCount = (vertexCount / 4) * 6;
 
-<<<<<<< HEAD
-            RenderSystem.AutoStorageIndexBuffer autoIndices =
-                    RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
-            GpuBuffer ibo = autoIndices.getBuffer(indexCount);
-
-            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    () -> "Lumin TTF Draw",
-                    colorView, Optional.empty(),
-                    depthView, OptionalDouble.empty())
-            ) {
-                pass.setPipeline(ClientSetting.INSTANCE.fontAntiAliasing.getValue()
-                        ? LuminRenderPipelines.TTF_FONT_AA
-                        : LuminRenderPipelines.TTF_FONT_NO_AA);
-                if (scissorEnabled) {
-                    ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
-                }
-
-                RenderSystem.bindDefaultUniforms(pass);
-                pass.setUniform("DynamicTransforms", dynamicUniforms);
-
-                pass.setVertexBuffer(0, new GpuBufferSlice(batch.buffer.getGpuBuffer(), 0, batch.buffer.getGpuBuffer().size()));
-                pass.setIndexBuffer(ibo, autoIndices.type());
-                pass.bindTexture("Sampler0", atlas.getTexture().getTextureView(), atlas.getTexture().getSampler());
-
-                pass.drawIndexed(indexCount, 1, 0, 0, 0);
-            }
-=======
-            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
+            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice());
             pass.bindTexture("Sampler0", atlas.getTexture().getTextureView(), atlas.getTexture().getSampler());
-
-            pass.drawIndexed(0, 0, indexCount, 1);
->>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
+            pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
     }
 
