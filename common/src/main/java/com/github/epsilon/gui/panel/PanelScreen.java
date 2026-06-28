@@ -156,11 +156,10 @@ public class PanelScreen extends Screen {
             moduleDetailPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, 20), layout.detail(), panelMouseX, panelMouseY, partialTick);
         }
 
-        popupHost.render(guiGraphics, scene.batch(GuiLayer.POPUP), epsilonMouseX, epsilonMouseY, partialTick);
-
         scene.flush();
         flushQueuedContentBuffers();
         scene.clear();
+        renderPopup(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
 
         LuminRenderSystem.setActiveTarget(null);
 
@@ -205,7 +204,16 @@ public class PanelScreen extends Screen {
             moduleDetailPanel.flushContent();
         }
         categoryRailPanel.flushClippedText();
+    }
+
+    private void renderPopup(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (popupHost.getActivePopup() == null) {
+            return;
+        }
+        popupHost.render(guiGraphics, scene.batch(GuiLayer.POPUP), mouseX, mouseY, partialTick);
+        scene.flush();
         popupHost.flush();
+        scene.clear();
     }
 
 
