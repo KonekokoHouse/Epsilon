@@ -73,15 +73,16 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                     bounds.width() - CONTENT_PADDING * 2, viewportHeight);
 
             PanelLayout.Rect popupBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
-            scope.pushAbsolute(popupBounds, popup ->
-                    popup.popupCard(popupBounds.atOrigin(),
-                            MD3Theme.CARD_RADIUS,
-                            POPUP_SHADOW_RADIUS,
-                            MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
-                            MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)));
+            scope.pushAbsolute(popupBounds, popup -> {
+                popup.popupCard(popupBounds.atOrigin(),
+                        MD3Theme.CARD_RADIUS,
+                        POPUP_SHADOW_RADIUS,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
+                        MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
 
-            hoveredIndex = -1;
-            scope.viewport(contentBuffer, viewportBounds, guiGraphics.guiHeight(), scroll, maxScroll, fullContentHeight, content -> {
+                hoveredIndex = -1;
+                PanelLayout.Rect localViewportBounds = viewportBounds.relativeTo(popupBounds);
+                popup.viewport(contentBuffer, localViewportBounds, guiGraphics.guiHeight(), scroll, maxScroll, fullContentHeight, content -> {
                 Enum<?>[] modes = setting.getModes();
                 float itemStartY = popupY + CONTENT_PADDING - scroll;
                 for (int i = 0; i < modes.length; i++) {
@@ -113,6 +114,7 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                     }
                     content.text(setting.getTranslatedValueByIndex(i), localItemBounds.x() + (selected ? 22.0f : 10.0f), textY, textScale, textColor);
                 }
+            });
             });
         });
         renderBatch.render(popupTree);

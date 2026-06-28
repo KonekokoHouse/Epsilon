@@ -76,9 +76,8 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
                         POPUP_SHADOW_RADIUS,
                         MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
                         MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
-                PanelLayout.Rect localAnchorBounds = anchorBounds.relativeTo(popupBounds);
-                popup.roundRect(localAnchorBounds.x(), localAnchorBounds.y(),
-                        localAnchorBounds.width(), localAnchorBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 255));
+                popup.pushAbsolute(anchorBounds, anchor ->
+                        anchor.roundRect(0.0f, 0.0f, anchorBounds.width(), anchorBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 255)));
 
                 PanelLayout.Rect previewBounds = getPreviewBounds(popupY);
                 PanelLayout.Rect swatchBounds = getPreviewSwatchBounds(popupY);
@@ -324,17 +323,19 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         Color boxHover = MD3Theme.SURFACE_CONTAINER_HIGHEST;
         Color boxColor = focused ? MD3Theme.INVERSE_SURFACE : MD3Theme.withAlpha(MD3Theme.lerp(boxBase, boxHover, 0.85f), alpha);
         Color textColor = focused ? MD3Theme.INVERSE_ON_SURFACE : MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, alpha);
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), 6.0f, boxColor);
-        float textScale = 0.52f;
-        float textWidth = textRenderer.getWidth(valueText, textScale);
-        float textHeight = textRenderer.getHeight(textScale);
-        float textX = bounds.x() + (bounds.width() - textWidth) / 2.0f;
-        float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
-        scope.text(valueText, textX, textY, textScale, textColor);
-        if (focused) {
-            float caretX = textX + textRenderer.getWidth(valueText.substring(0, Math.min(cursorIndex, valueText.length())), textScale);
-            scope.rect(caretX, bounds.y() + 3.0f, 1.0f, bounds.height() - 6.0f, MD3Theme.INVERSE_ON_SURFACE);
-        }
+        scope.pushRelative(bounds, box -> {
+            box.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), 6.0f, boxColor);
+            float textScale = 0.52f;
+            float textWidth = textRenderer.getWidth(valueText, textScale);
+            float textHeight = textRenderer.getHeight(textScale);
+            float textX = (bounds.width() - textWidth) / 2.0f;
+            float textY = (bounds.height() - textHeight) / 2.0f;
+            box.text(valueText, textX, textY, textScale, textColor);
+            if (focused) {
+                float caretX = textX + textRenderer.getWidth(valueText.substring(0, Math.min(cursorIndex, valueText.length())), textScale);
+                box.rect(caretX, 3.0f, 1.0f, bounds.height() - 6.0f, MD3Theme.INVERSE_ON_SURFACE);
+            }
+        });
     }
 
     private void buildCheckerboard(PanelUiTree.Scope scope, PanelLayout.Rect bounds, int alpha) {

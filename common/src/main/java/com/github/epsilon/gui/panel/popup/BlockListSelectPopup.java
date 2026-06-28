@@ -105,7 +105,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
                 float summaryScale = 0.52f;
                 String summary = setting.size() + " selected";
                 popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY);
-                popup.text(summary, bounds.width() - PADDING - textRenderer.getWidth(summary, summaryScale),
+                popup.text(summary, animatedBounds.width() - PADDING - textRenderer.getWidth(summary, summaryScale),
                         centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED);
                 popup.input(searchBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f, query.isEmpty() ? "Search blocks" : query, 0.54f,
                         query.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY, query.length(), MD3Theme.PRIMARY, null, 0.0f, null);
@@ -122,7 +122,8 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
                 hoveredAdd = null;
                 hoveredRemove = null;
-                popup.viewport(contentBuffer, animatedViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
+                PanelLayout.Rect localViewport = animatedViewport.relativeTo(animatedBounds);
+                popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
                     buildColumn(content, available, leftX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, true, animatedViewport);
                     buildColumn(content, selected, rightX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, false, animatedViewport);
                 });
@@ -301,9 +302,11 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
             String name = trim(BlockRegistryUtils.displayName(block), 0.50f, previewX - rowBounds.x() - 12.0f);
             PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
-            scope.roundRect(localRowBounds.x(), localRowBounds.y(), localRowBounds.width(), localRowBounds.height(), MD3Theme.CONTROL_RADIUS, background);
-            scope.text(name, localRowBounds.x() + 6.0f, centeredTextY(localRowBounds.y(), localRowBounds.height(), 0.50f), 0.50f, text);
-            scope.text(addColumn ? "+" : "-", actionX - origin.x(), centeredTextY(localRowBounds.y(), localRowBounds.height(), 0.54f), 0.54f, text);
+            scope.pushRelative(localRowBounds, row -> {
+                row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS, background);
+                row.text(name, 6.0f, centeredTextY(0.0f, rowBounds.height(), 0.50f), 0.50f, text);
+                row.text(addColumn ? "+" : "-", rowBounds.width() - 12.0f, centeredTextY(0.0f, rowBounds.height(), 0.54f), 0.54f, text);
+            });
         }
     }
 
