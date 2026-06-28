@@ -96,35 +96,37 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
             PanelLayout.Rect searchBounds = getSearchBounds(popupY);
             PanelLayout.Rect animatedViewport = getViewport(popupY);
             lastViewport = animatedViewport;
+            scope.pushAbsolute(animatedBounds, popup -> {
+                popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, POPUP_SHADOW_RADIUS,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
+                        MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
 
-            scope.popupCard(animatedBounds, MD3Theme.CARD_RADIUS, POPUP_SHADOW_RADIUS,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
+                float titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f);
+                float summaryScale = 0.52f;
+                String summary = setting.size() + " selected";
+                popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY);
+                popup.text(summary, animatedBounds.width() - PADDING - textRenderer.getWidth(summary, summaryScale),
+                        centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED);
+                popup.input(searchBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f, query.isEmpty() ? "Search blocks" : query, 0.54f,
+                        query.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY, query.length(), MD3Theme.PRIMARY, null, 0.0f, null);
+                IMEFocusHelper.updateCursorPos(searchBounds.x() + 8.0f, searchBounds.y() + 4.0f);
 
-            float titleY = centeredTextY(popupY + 6.0f, TITLE_HEIGHT, 0.68f);
-            float summaryScale = 0.52f;
-            String summary = setting.size() + " selected";
-            scope.text(setting.getDisplayName(), bounds.x() + PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY);
-            scope.text(summary, bounds.right() - PADDING - textRenderer.getWidth(summary, summaryScale),
-                    centeredTextY(popupY + 6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED);
-            scope.input(searchBounds, true, 1.0f, 8.0f, query.isEmpty() ? "Search blocks" : query, 0.54f,
-                    query.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY, query.length(), MD3Theme.PRIMARY, null, 0.0f, null);
-            IMEFocusHelper.updateCursorPos(searchBounds.x() + 8.0f, searchBounds.y() + 4.0f);
+                float contentWidth = animatedViewport.width() - SCROLLBAR_GUTTER;
+                float columnWidth = (contentWidth - COLUMN_GAP) / 2.0f;
+                float leftX = animatedViewport.x();
+                float rightX = leftX + columnWidth + COLUMN_GAP;
+                float headerY = animatedViewport.y() - HEADER_HEIGHT - 2.0f;
+                float headerTextY = centeredTextY(headerY, HEADER_HEIGHT, 0.50f);
+                popup.text("Available", leftX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
+                popup.text("Selected", rightX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
 
-            float contentWidth = animatedViewport.width() - SCROLLBAR_GUTTER;
-            float columnWidth = (contentWidth - COLUMN_GAP) / 2.0f;
-            float leftX = animatedViewport.x();
-            float rightX = leftX + columnWidth + COLUMN_GAP;
-            float headerY = animatedViewport.y() - HEADER_HEIGHT - 2.0f;
-            float headerTextY = centeredTextY(headerY, HEADER_HEIGHT, 0.50f);
-            scope.text("Available", leftX + 4.0f, headerTextY, 0.50f, MD3Theme.TEXT_SECONDARY);
-            scope.text("Selected", rightX + 4.0f, headerTextY, 0.50f, MD3Theme.TEXT_SECONDARY);
-
-            hoveredAdd = null;
-            hoveredRemove = null;
-            scope.viewport(contentBuffer, animatedViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
-                buildColumn(content, available, leftX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, true, animatedViewport);
-                buildColumn(content, selected, rightX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, false, animatedViewport);
+                hoveredAdd = null;
+                hoveredRemove = null;
+                PanelLayout.Rect localViewport = animatedViewport.relativeTo(animatedBounds);
+                popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
+                    buildColumn(content, available, leftX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, true, animatedViewport);
+                    buildColumn(content, selected, rightX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, false, animatedViewport);
+                });
             });
         });
         renderBatch.render(tree);
@@ -269,6 +271,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
     private void buildColumn(PanelUiTree.Scope scope, List<Block> blocks, float columnX, float startY, float columnWidth,
                              int mouseX, int mouseY, boolean addColumn, PanelLayout.Rect viewport) {
+        PanelLayout.Rect origin = scope.bound();
         for (int i = 0; i < blocks.size(); i++) {
             Block block = blocks.get(i);
             float rowY = startY + i * (ROW_HEIGHT + ROW_GAP);
@@ -289,7 +292,6 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
                     ? MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, hovered ? 1.0f : 0.0f)
                     : MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, hovered ? 0.45f : 0.0f);
             Color text = addColumn ? (hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY) : MD3Theme.ON_SECONDARY_CONTAINER;
-            scope.roundRect(rowBounds.x(), rowBounds.y(), rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS, background);
             float actionX = rowBounds.right() - 12.0f;
             float previewX = actionX - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE;
             float previewY = rowBounds.y() + (rowBounds.height() - ITEM_PREVIEW_SIZE) * 0.5f;
@@ -299,9 +301,12 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
             }
 
             String name = trim(BlockRegistryUtils.displayName(block), 0.50f, previewX - rowBounds.x() - 12.0f);
-            scope.text(name, rowBounds.x() + 6.0f, centeredTextY(rowBounds.y(), rowBounds.height(), 0.50f), 0.50f, text);
-            scope.text(addColumn ? "+" : "-", actionX,
-                    centeredTextY(rowBounds.y(), rowBounds.height(), 0.54f), 0.54f, text);
+            PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
+            scope.pushRelative(localRowBounds, row -> {
+                row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS, background);
+                row.text(name, 6.0f, centeredTextY(0.0f, rowBounds.height(), 0.50f), 0.50f, text);
+                row.text(addColumn ? "+" : "-", rowBounds.width() - 12.0f, centeredTextY(0.0f, rowBounds.height(), 0.54f), 0.54f, text);
+            });
         }
     }
 

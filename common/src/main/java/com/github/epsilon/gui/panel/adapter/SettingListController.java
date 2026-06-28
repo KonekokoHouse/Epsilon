@@ -309,42 +309,45 @@ public class SettingListController {
         float hoverProgress = scope.animate(hoverAnimation, headerBounds.contains(mouseX, mouseY));
         float expandProgress = scope.animate(expandAnimation, !section.isCollapsed());
 
-        scope.roundRect(groupBounds.x(), groupBounds.y(), groupBounds.width(), groupBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.OUTLINE_SOFT);
-        scope.roundRect(
-                groupBounds.x() + GROUP_OUTLINE_INSET,
-                groupBounds.y() + GROUP_OUTLINE_INSET,
-                groupBounds.width() - GROUP_OUTLINE_INSET * 2.0f,
-                groupBounds.height() - GROUP_OUTLINE_INSET * 2.0f,
-                Math.max(1.0f, MD3Theme.CARD_RADIUS - GROUP_OUTLINE_INSET),
-                MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_LOW, MD3Theme.SURFACE_CONTAINER, expandProgress)
-        );
-        if (hoverProgress > 0.01f) {
-            scope.roundRect(headerBounds.x(), headerBounds.y(), headerBounds.width(), headerBounds.height(), MD3Theme.CARD_RADIUS,
-                    MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, MD3Theme.isLightTheme() ? 10 : 14));
-        }
+        scope.pushAbsolute(groupBounds, group -> {
+            PanelLayout.Rect localHeader = headerBounds.relativeTo(groupBounds);
+            group.roundRect(0.0f, 0.0f, groupBounds.width(), groupBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.OUTLINE_SOFT);
+            group.roundRect(
+                    GROUP_OUTLINE_INSET,
+                    GROUP_OUTLINE_INSET,
+                    groupBounds.width() - GROUP_OUTLINE_INSET * 2.0f,
+                    groupBounds.height() - GROUP_OUTLINE_INSET * 2.0f,
+                    Math.max(1.0f, MD3Theme.CARD_RADIUS - GROUP_OUTLINE_INSET),
+                    MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_LOW, MD3Theme.SURFACE_CONTAINER, expandProgress)
+            );
+            if (hoverProgress > 0.01f) {
+                group.roundRect(localHeader.x(), localHeader.y(), localHeader.width(), localHeader.height(), MD3Theme.CARD_RADIUS,
+                        MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, MD3Theme.isLightTheme() ? 10 : 14));
+            }
 
-        float labelScale = 0.66f;
-        String label = trimToWidth(section.title(), labelScale, headerBounds.width() - 74.0f, textRenderer);
-        float labelY = headerBounds.y() + (GROUP_HEADER_HEIGHT - textRenderer.getHeight(labelScale)) / 2.0f;
-        scope.text(label, headerBounds.x() + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
+            float labelScale = 0.66f;
+            String label = trimToWidth(section.title(), labelScale, headerBounds.width() - 74.0f, textRenderer);
+            float labelY = localHeader.y() + (GROUP_HEADER_HEIGHT - textRenderer.getHeight(labelScale)) / 2.0f;
+            group.text(label, localHeader.x() + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
-        String countLabel = Integer.toString(section.settings().size());
-        float countScale = 0.46f;
-        float countWidth = textRenderer.getWidth(countLabel, countScale) + 10.0f;
-        float countX = headerBounds.right() - MD3Theme.ROW_TRAILING_INSET - 20.0f - countWidth;
-        float countY = headerBounds.y() + (GROUP_HEADER_HEIGHT - GROUP_COUNT_CHIP_HEIGHT) / 2.0f;
-        scope.roundRect(countX, countY, countWidth, GROUP_COUNT_CHIP_HEIGHT, GROUP_COUNT_CHIP_HEIGHT / 2.0f,
-                MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 210));
-        scope.text(countLabel,
-                countX + (countWidth - textRenderer.getWidth(countLabel, countScale)) / 2.0f,
-                countY + (GROUP_COUNT_CHIP_HEIGHT - textRenderer.getHeight(countScale)) / 2.0f,
-                countScale,
-                MD3Theme.ON_SECONDARY_CONTAINER);
+            String countLabel = Integer.toString(section.settings().size());
+            float countScale = 0.46f;
+            float countWidth = textRenderer.getWidth(countLabel, countScale) + 10.0f;
+            float countX = localHeader.x() + localHeader.width() - MD3Theme.ROW_TRAILING_INSET - 20.0f - countWidth;
+            float countY = localHeader.y() + (GROUP_HEADER_HEIGHT - GROUP_COUNT_CHIP_HEIGHT) / 2.0f;
+            group.roundRect(countX, countY, countWidth, GROUP_COUNT_CHIP_HEIGHT, GROUP_COUNT_CHIP_HEIGHT / 2.0f,
+                    MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 210));
+            group.text(countLabel,
+                    countX + (countWidth - textRenderer.getWidth(countLabel, countScale)) / 2.0f,
+                    countY + (GROUP_COUNT_CHIP_HEIGHT - textRenderer.getHeight(countScale)) / 2.0f,
+                    countScale,
+                    MD3Theme.ON_SECONDARY_CONTAINER);
 
-        float chevronSize = 3.0f;
-        float chevronCenterX = headerBounds.right() - MD3Theme.ROW_TRAILING_INSET - chevronSize - 3.0f;
-        float chevronCenterY = headerBounds.y() + GROUP_HEADER_HEIGHT / 2.0f;
-        scope.triangle(chevronCenterX, chevronCenterY, chevronSize, expandProgress, MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.PRIMARY, hoverProgress));
+            float chevronSize = 3.0f;
+            float chevronCenterX = localHeader.x() + localHeader.width() - MD3Theme.ROW_TRAILING_INSET - chevronSize - 3.0f;
+            float chevronCenterY = localHeader.y() + GROUP_HEADER_HEIGHT / 2.0f;
+            group.triangle(chevronCenterX, chevronCenterY, chevronSize, expandProgress, MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.PRIMARY, hoverProgress));
+        });
     }
 
     private List<SettingLayoutPlanner.Section> buildSections(String ownerKey, List<Setting<?>> settings) {

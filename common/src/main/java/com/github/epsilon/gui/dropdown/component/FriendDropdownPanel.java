@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -14,10 +13,6 @@ import java.util.List;
 
 public class FriendDropdownPanel extends AbstractDropdownPanel {
 
-    private static final TranslateComponent titleComponent = EpsilonTranslateComponent.create("gui", "tab.friend");
-    private static final TranslateComponent noFriendsComponent = EpsilonTranslateComponent.create("gui", "friend.empty");
-    private static final TranslateComponent placeholderComponent = EpsilonTranslateComponent.create("gui", "friend.input.placeholder");
-
     private static final float ROW_HEIGHT = 20.0f;
     private static final float FIELD_HEIGHT = 18.0f;
     private static final float GAP = 4.0f;
@@ -26,7 +21,7 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
     private final DropdownTextField inputField = new DropdownTextField(32);
 
     public FriendDropdownPanel(int panelIndex) {
-        super("friend", titleComponent, "", panelIndex);
+        super("friend", EpsilonTranslations.Gui.TAB_FRIEND, "", panelIndex);
     }
 
     @Override
@@ -36,11 +31,11 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
         float fieldX = x + PADDING;
         float fieldY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float fieldW = width - PADDING * 2.0f - 24.0f;
-        inputField.draw(renderer, fieldX, fieldY, fieldW, FIELD_HEIGHT, mouseX, mouseY, placeholderComponent.getTranslatedName(), DropdownTheme.SETTING_TEXT_SCALE);
+        inputField.draw(renderer, fieldX, fieldY, fieldW, FIELD_HEIGHT, mouseX, mouseY, EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), DropdownTheme.SETTING_TEXT_SCALE);
 
         float addX = fieldX + fieldW + GAP;
         renderer.roundRect().addRoundRect(addX, fieldY, 20.0f, FIELD_HEIGHT, DropdownTheme.BUTTON_RADIUS,
@@ -50,7 +45,7 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
         List<String> friends = Managers.FRIEND.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
         float rowY = fieldY + FIELD_HEIGHT + GAP;
         if (friends.isEmpty()) {
-            renderer.text().addText(noFriendsComponent.getTranslatedName(), x + PADDING, rowY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            renderer.text().addText(EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName(), x + PADDING, rowY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
         for (String name : friends) {

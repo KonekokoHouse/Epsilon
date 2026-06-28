@@ -1,7 +1,6 @@
 package com.github.epsilon.utils.client;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import org.lwjgl.glfw.GLFW;
@@ -23,8 +22,6 @@ public class KeybindUtils {
 
     public static final int NONE = -1;
     public static final int MOUSE_OFFSET = -2;
-
-    private static final TranslateComponent NONE_COMPONENT = EpsilonTranslateComponent.create("keybind", "none");
 
     private KeybindUtils() {
     }
@@ -59,7 +56,7 @@ public class KeybindUtils {
 
     public static String format(int keyBind) {
         if (keyBind == NONE) {
-            return NONE_COMPONENT.getTranslatedName();
+            return EpsilonTranslations.Keybind.NONE.getTranslatedName();
         }
         if (isMouseButton(keyBind)) {
             return "Mouse " + (decodeMouseButton(keyBind) + 1);

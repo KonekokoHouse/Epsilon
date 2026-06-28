@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -57,13 +56,6 @@ public class ModuleDetailPanel {
     private final Animation hiddenHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private long lastContentSignature = Long.MIN_VALUE;
 
-    private static final TranslateComponent toggleComponent = EpsilonTranslateComponent.create("keybind", "toggle");
-    private static final TranslateComponent holdComponent = EpsilonTranslateComponent.create("keybind", "hold");
-    private static final TranslateComponent noneComponent = EpsilonTranslateComponent.create("keybind", "none");
-    private static final TranslateComponent visibleComponent = EpsilonTranslateComponent.create("module", "visible");
-    private static final TranslateComponent hiddenComponent = EpsilonTranslateComponent.create("module", "hidden");
-    private static final TranslateComponent noModuleComponent = EpsilonTranslateComponent.create("gui", "no_module");
-
     public ModuleDetailPanel(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
         this.textRenderer = textRenderer;
@@ -94,11 +86,12 @@ public class ModuleDetailPanel {
         int effectiveMouseY = popupConsumesHover ? Integer.MIN_VALUE : mouseY;
 
         Module module = state.getSelectedModule();
-        String detailTitle = module == null ? noModuleComponent.getTranslatedName() : module.getTranslatedName();
+        String detailTitle = module == null ? EpsilonTranslations.Gui.NO_MODULE.getTranslatedName() : module.getTranslatedName();
         float titleScale = 0.78f;
         float titleHeight = textRenderer.getHeight(titleScale);
-        float titleY = bounds.y() + 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f;
-        PanelUiTree headerTree = PanelUiTree.build(scope -> scope.text(detailTitle, bounds.x() + MD3Theme.PANEL_TITLE_INSET, titleY, titleScale, MD3Theme.TEXT_PRIMARY));
+        float titleY = 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f;
+        PanelUiTree headerTree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, panel ->
+                panel.text(detailTitle, MD3Theme.PANEL_TITLE_INSET, titleY, titleScale, MD3Theme.TEXT_PRIMARY)));
         renderBatch.render(headerTree);
 
         if (module == null) {
@@ -107,7 +100,7 @@ public class ModuleDetailPanel {
 
         headerBounds = new PanelLayout.Rect(bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET, bounds.y() + 34.0f, bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, 36.0f);
         PanelUiTree controlTree = PanelUiTree.build(scope -> {
-            scope.roundRect(headerBounds.x(), headerBounds.y(), headerBounds.width(), headerBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER);
+            scope.pushAbsolute(headerBounds, header -> header.roundRect(0.0f, 0.0f, headerBounds.width(), headerBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER));
             buildKeybindControl(scope, module, mouseX, mouseY);
             buildBindModeControl(scope, module, mouseX, mouseY);
             buildHiddenControl(scope, module, mouseX, mouseY);
@@ -142,7 +135,9 @@ public class ModuleDetailPanel {
                                 }
                                 Animation hoverAnimation = hoverAnimations.computeIfAbsent(setting, ignored -> new Animation(Easing.EASE_OUT_CUBIC, 120L));
                                 hoverAnimation.run(rowBounds.contains(effectiveMouseX, effectiveMouseY) ? 1.0f : 0.0f);
-                                row.buildUi(content, GuiGraphicsExtractor, textRenderer, rowBounds, hoverAnimation.getValue(), effectiveMouseX, effectiveMouseY, partialTick);
+                                content.pushAbsolute(rowBounds, rowScope ->
+                                        row.buildUi(rowScope, GuiGraphicsExtractor, textRenderer, rowBounds,
+                                                hoverAnimation.getValue(), effectiveMouseX, effectiveMouseY, partialTick));
                                 contentState.noteAnimation(!hoverAnimation.isFinished() || row.hasActiveAnimation());
                             });
                     contentState.noteAnimation(settingListController.hasActiveAnimations());
@@ -407,7 +402,7 @@ public class ModuleDetailPanel {
         float bindProgress = scope.animate(bindModeAnimation, module.getBindMode() == Module.BindMode.Hold);
         float hoverProgress = scope.animate(bindModeHoverAnimation, bindModeBounds.contains(mouseX, mouseY));
         PanelElements.buildSegmentedControl(scope, textRenderer, bindModeBounds,
-                toggleComponent.getTranslatedName(), holdComponent.getTranslatedName(),
+                EpsilonTranslations.Keybind.TOGGLE.getTranslatedName(), EpsilonTranslations.Keybind.HOLD.getTranslatedName(),
                 bindProgress, hoverProgress);
     }
 
@@ -417,26 +412,29 @@ public class ModuleDetailPanel {
         float hoverProgress = scope.animate(keybindHoverAnimation, keybindBounds.contains(mouseX, mouseY));
         float focusProgress = scope.animate(keybindFocusAnimation, listening);
         float radius = getKeybindControlRadius();
-        float haloInset = 1.5f * focusProgress;
-        if (haloInset > 0.01f) {
-            scope.roundRect(keybindBounds.x() - haloInset, keybindBounds.y() - haloInset, keybindBounds.width() + haloInset * 2.0f, keybindBounds.height() + haloInset * 2.0f, radius + haloInset, MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) (28 * focusProgress)));
-        }
+        scope.pushAbsolute(keybindBounds, keybind -> {
+            float haloInset = 1.5f * focusProgress;
+            if (haloInset > 0.01f) {
+                keybind.roundRect(-haloInset, -haloInset, keybindBounds.width() + haloInset * 2.0f, keybindBounds.height() + haloInset * 2.0f,
+                        radius + haloInset, MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) (28 * focusProgress)));
+            }
 
-        Color background = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, focusProgress);
-        Color foreground = MD3Theme.lerp(MD3Theme.ON_SECONDARY_CONTAINER, MD3Theme.ON_PRIMARY_CONTAINER, focusProgress);
-        scope.roundRect(keybindBounds.x(), keybindBounds.y(), keybindBounds.width(), keybindBounds.height(), radius, background);
-        if (hoverProgress > 0.01f) {
-            scope.roundRect(keybindBounds.x(), keybindBounds.y(), keybindBounds.width(), keybindBounds.height(), radius,
-                    MD3Theme.stateLayer(foreground, hoverProgress, listening ? 18 : 12));
-        }
+            Color background = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, focusProgress);
+            Color foreground = MD3Theme.lerp(MD3Theme.ON_SECONDARY_CONTAINER, MD3Theme.ON_PRIMARY_CONTAINER, focusProgress);
+            keybind.roundRect(0.0f, 0.0f, keybindBounds.width(), keybindBounds.height(), radius, background);
+            if (hoverProgress > 0.01f) {
+                keybind.roundRect(0.0f, 0.0f, keybindBounds.width(), keybindBounds.height(), radius,
+                        MD3Theme.stateLayer(foreground, hoverProgress, listening ? 18 : 12));
+            }
 
-        String label = listening ? "..." : formatCompactKeybind(module.getKeyBind());
-        float scale = label.length() >= 3 ? 0.42f : 0.5f;
-        float textWidth = textRenderer.getWidth(label, scale);
-        float textHeight = textRenderer.getHeight(scale);
-        float textX = keybindBounds.x() + (keybindBounds.width() - textWidth) / 2.0f;
-        float textY = keybindBounds.y() + (keybindBounds.height() - textHeight) / 2.0f;
-        scope.text(label, textX, textY, scale, foreground);
+            String label = listening ? "..." : formatCompactKeybind(module.getKeyBind());
+            float scale = label.length() >= 3 ? 0.42f : 0.5f;
+            float textWidth = textRenderer.getWidth(label, scale);
+            float textHeight = textRenderer.getHeight(scale);
+            float textX = (keybindBounds.width() - textWidth) / 2.0f;
+            float textY = (keybindBounds.height() - textHeight) / 2.0f;
+            keybind.text(label, textX, textY, scale, foreground);
+        });
     }
 
     private void buildHiddenControl(PanelUiTree.Scope scope, Module module, int mouseX, int mouseY) {
@@ -444,13 +442,13 @@ public class ModuleDetailPanel {
         float hiddenProgress = scope.animate(hiddenAnimation, module.isHidden());
         float hoverProgress = scope.animate(hiddenHoverAnimation, hiddenBounds.contains(mouseX, mouseY));
         PanelElements.buildSegmentedControl(scope, textRenderer, hiddenBounds,
-                visibleComponent.getTranslatedName(), hiddenComponent.getTranslatedName(),
+                EpsilonTranslations.Module.VISIBLE.getTranslatedName(), EpsilonTranslations.Module.HIDDEN.getTranslatedName(),
                 hiddenProgress, hoverProgress);
     }
 
     private String formatCompactKeybind(int keyCode) {
         if (keyCode == KeybindUtils.NONE) {
-            return noneComponent.getTranslatedName();
+            return EpsilonTranslations.Keybind.NONE.getTranslatedName();
         }
         if (KeybindUtils.isMouseButton(keyCode)) {
             return "M" + (KeybindUtils.decodeMouseButton(keyCode) + 1);

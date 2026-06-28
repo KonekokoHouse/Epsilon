@@ -29,7 +29,8 @@ public abstract class SettingRow<T extends Setting<?>> {
     }
 
     public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
-        PanelUiTree tree = PanelUiTree.build(scope -> buildUi(scope, GuiGraphicsExtractor, textRenderer, bounds, hoverProgress, mouseX, mouseY, partialTick));
+        PanelUiTree tree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, rowScope ->
+                buildUi(rowScope, GuiGraphicsExtractor, textRenderer, bounds, hoverProgress, mouseX, mouseY, partialTick)));
         renderBatch.render(tree);
     }
 

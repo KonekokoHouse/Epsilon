@@ -66,28 +66,30 @@ public class ConfirmActionPopup implements PanelPopupHost.Popup {
         confirmHoverAnimation.run(confirmButtonBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
         cancelHoverAnimation.run(cancelButtonBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
         PanelUiTree tree = PanelUiTree.build(scope -> {
-            scope.popupCard(new PanelLayout.Rect(bounds.x(), animatedY, bounds.width(), bounds.height()),
-                    MD3Theme.CARD_RADIUS,
-                    POPUP_SHADOW_RADIUS,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
+            PanelLayout.Rect popupBounds = new PanelLayout.Rect(bounds.x(), animatedY, bounds.width(), bounds.height());
+            scope.pushAbsolute(popupBounds, popup -> {
+                popup.popupCard(popupBounds.atOrigin(),
+                        MD3Theme.CARD_RADIUS,
+                        POPUP_SHADOW_RADIUS,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
+                        MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
 
-            float titleScale = 0.66f;
-            float messageScale = 0.56f;
-            float detailScale = 0.60f;
-            float textX = bounds.x() + 12.0f;
-            String title = titleSupplier.get();
-            String message = messageSupplier.get();
-            String cancelLabel = cancelLabelSupplier.get();
-            String confirmLabel = confirmLabelSupplier.get();
-            scope.text(title, textX, animatedY + 10.0f, titleScale, MD3Theme.TEXT_PRIMARY);
-            scope.text(message, textX, animatedY + 24.0f, messageScale, MD3Theme.TEXT_SECONDARY);
-            if (detail != null && !detail.isBlank()) {
-                scope.text(detail, textX, animatedY + 37.0f, detailScale, MD3Theme.PRIMARY);
-            }
+                float titleScale = 0.66f;
+                float messageScale = 0.56f;
+                float detailScale = 0.60f;
+                String title = titleSupplier.get();
+                String message = messageSupplier.get();
+                String cancelLabel = cancelLabelSupplier.get();
+                String confirmLabel = confirmLabelSupplier.get();
+                popup.text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY);
+                popup.text(message, 12.0f, 24.0f, messageScale, MD3Theme.TEXT_SECONDARY);
+                if (detail != null && !detail.isBlank()) {
+                    popup.text(detail, 12.0f, 37.0f, detailScale, MD3Theme.PRIMARY);
+                }
 
-            buildButton(scope, cancelButtonBounds, cancelLabel, false, cancelHoverAnimation.getValue());
-            buildButton(scope, confirmButtonBounds, confirmLabel, true, confirmHoverAnimation.getValue());
+                buildButton(popup, cancelButtonBounds.relativeTo(popupBounds), cancelLabel, false, cancelHoverAnimation.getValue());
+                buildButton(popup, confirmButtonBounds.relativeTo(popupBounds), confirmLabel, true, confirmHoverAnimation.getValue());
+            });
         });
         renderBatch.render(tree);
     }

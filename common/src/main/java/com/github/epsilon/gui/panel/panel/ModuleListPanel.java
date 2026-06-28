@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -58,9 +57,6 @@ public class ModuleListPanel {
     private int searchCursorIndex;
     private long lastContentSignature = Long.MIN_VALUE;
 
-    private static final TranslateComponent searchComponent = EpsilonTranslateComponent.create("gui", "search");
-    private static final TranslateComponent modulesComponent = EpsilonTranslateComponent.create("gui", "modules");
-
     public ModuleListPanel(PanelState state, TextRenderer textRenderer) {
         this.state = state;
         this.textRenderer = textRenderer;
@@ -104,8 +100,10 @@ public class ModuleListPanel {
         }
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
-            scope.text(state.getSelectedCategory().getName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
-            scope.text(modulesComponent.getTranslatedName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 21.0f, 0.56f, MD3Theme.TEXT_SECONDARY);
+            scope.pushAbsolute(bounds, panel -> {
+                panel.text(state.getSelectedCategory().getName(), MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
+                panel.text(EpsilonTranslations.Gui.MODULES.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 21.0f, 0.56f, MD3Theme.TEXT_SECONDARY);
+            });
             buildSearchField(scope, mouseX, mouseY);
             scope.viewport(contentBuffer, viewport, guiHeight, state.getModuleScroll(), maxModuleScroll, contentHeight, content -> {
                 if (!rebuildContent) {
@@ -129,7 +127,9 @@ public class ModuleListPanel {
                             || !toggleAnimation.isFinished()
                             || !toggleHoverAnimation.isFinished()
                             || marqueeActive);
-                    row.buildUi(content, textRenderer, hoverAnimation.getValue(), selectionAnimation.getValue(), toggleAnimation.getValue(), toggleHoverAnimation.getValue());
+                    content.pushAbsolute(row.getBounds(), rowScope ->
+                            row.buildUi(rowScope, textRenderer, hoverAnimation.getValue(), selectionAnimation.getValue(),
+                                    toggleAnimation.getValue(), toggleHoverAnimation.getValue()));
                     y += ModuleRow.HEIGHT + MD3Theme.ROW_GAP;
                 }
             });
@@ -385,15 +385,16 @@ public class ModuleListPanel {
 
         String query = state.getSearchQuery();
         boolean showPlaceholder = query.isEmpty() && !searchFocused;
-        String display = showPlaceholder ? searchComponent.getTranslatedName() : query;
+        String display = showPlaceholder ? EpsilonTranslations.Gui.SEARCH.getTranslatedName() : query;
         float scale = 0.52f;
         Color textColor = showPlaceholder
                 ? MD3Theme.lerp(MD3Theme.TEXT_MUTED, MD3Theme.filledFieldContent(searchFocused), focusProgress)
                 : MD3Theme.filledFieldContent(searchFocused);
-        scope.input(searchBounds, searchFocused, fieldHover,
-                8.0f, display, scale, textColor,
-                searchFocused ? searchCursorIndex : null, searchFocused ? MD3Theme.filledFieldCaret(true) : null,
-                null, 0.0f, null);
+        scope.pushAbsolute(searchBounds, search ->
+                search.input(searchBounds.atOrigin(), searchFocused, fieldHover,
+                        8.0f, display, scale, textColor,
+                        searchFocused ? searchCursorIndex : null, searchFocused ? MD3Theme.filledFieldCaret(true) : null,
+                        null, 0.0f, null));
 
         if (searchFocused) {
             float textY = searchBounds.y() + (searchBounds.height() - textRenderer.getHeight(scale)) / 2.0f;

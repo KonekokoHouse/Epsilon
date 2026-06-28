@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.settings.impl.KeybindSetting;
@@ -29,7 +29,7 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
     }
 
     @Override
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         float lineHeight = renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE);
         float labelTextY = y + (getHeight() - lineHeight) * 0.5f;
         renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());

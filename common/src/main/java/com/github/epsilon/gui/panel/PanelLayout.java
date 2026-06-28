@@ -58,6 +58,14 @@ public class PanelLayout {
         public Rect inset(float amount) {
             return new Rect(x + amount, y + amount, width - amount * 2.0f, height - amount * 2.0f);
         }
+
+        public Rect atOrigin() {
+            return new Rect(0.0f, 0.0f, width, height);
+        }
+
+        public Rect relativeTo(Rect origin) {
+            return new Rect(x - origin.x(), y - origin.y(), width, height);
+        }
     }
 
 }

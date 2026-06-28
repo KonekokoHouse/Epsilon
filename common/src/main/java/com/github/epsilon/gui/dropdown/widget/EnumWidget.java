@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.managers.Managers;
@@ -41,7 +41,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     @Override
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         float expand = updateExpandProgress();
         float hover = updateHoverProgress(isFieldHovered(mouseX, mouseY));
         float fieldX = getFieldX();
@@ -85,7 +85,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return false;
     }
 
-    private void drawCurrentValueField(DropdownRenderer renderer, float fieldX, float fieldY, float fieldW, float hover, float expand) {
+    private void drawCurrentValueField(DropdownDrawContext renderer, float fieldX, float fieldY, float fieldW, float hover, float expand) {
         Color background = MD3Theme.filledFieldSurface(expanded, hover);
         Color outline = MD3Theme.filledFieldIndicator(expanded, hover);
         float textY = fieldY + (FIELD_HEIGHT - renderer.text().getHeight(FIELD_TEXT_SCALE)) * 0.5f;
@@ -104,7 +104,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         renderer.triangle().addChevronTriangle(arrowCenterX, arrowCenterY, FIELD_ARROW_SIZE, expand, DropdownTheme.expandArrow(expand));
     }
 
-    private void drawExpandedOptions(DropdownRenderer renderer, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
+    private void drawExpandedOptions(DropdownDrawContext renderer, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
         float listX = fieldX;
         float listY = getListY();
         float listH = getListHeight();
@@ -162,12 +162,12 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return hoverAnim.getValue();
     }
 
-    private void drawExpandedBackground(DropdownRenderer renderer, float listX, float listY, float fieldW, float clipH) {
+    private void drawExpandedBackground(DropdownDrawContext renderer, float listX, float listY, float fieldW, float clipH) {
         renderer.roundRect().addRoundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface());
         renderer.outline().addOutline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96));
     }
 
-    private void drawOption(DropdownRenderer renderer, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
+    private void drawOption(DropdownDrawContext renderer, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
         float optionY = getOptionY(optionIndex);
         if (optionY >= visibleBottom) {
             return;
