@@ -1,6 +1,7 @@
 package com.github.epsilon.graphics.text;
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.mojang.blaze3d.systems.RenderPass;
 
 import java.awt.*;
 
@@ -13,6 +14,19 @@ public interface ITextRenderer {
     }
 
     void draw();
+
+    /**
+     * 在共享 RenderPass 打开前完成所有缓冲映射、uniform 写入和 atlas 准备。
+     */
+    default boolean prepareSharedDraw() {
+        return false;
+    }
+
+    /**
+     * 写入已经绑定好 pipeline 的 RenderPass，只允许绑定状态并提交 draw。
+     */
+    default void draw(RenderPass pass) {
+    }
 
     void clear();
 

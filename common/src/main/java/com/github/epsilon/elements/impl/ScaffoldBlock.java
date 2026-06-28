@@ -2,10 +2,9 @@ package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -59,8 +58,6 @@ public class ScaffoldBlock extends HudModule {
     private float visibilityProgress;
     private long lastVisibilityUpdateMs;
 
-    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
-    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
@@ -91,13 +88,12 @@ public class ScaffoldBlock extends HudModule {
             return;
         }
 
-        RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
-        ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
         TextRenderer textRenderer = textRendererSupplier.get();
+        PanelRenderBatch batch = renderBatch();
 
         Layout layout = createLayout(textRenderer);
-        drawBackground(layout, animation, roundRectRenderer, shadowRenderer);
-        drawText(textRenderer, layout, animation);
+        drawBackground(layout, animation, batch.roundRectRenderer(), batch.shadowRenderer());
+        drawText(textRenderer, batch.textRenderer(), layout, animation);
         setBounds(layout.totalWidth(), layout.height());
     }
 
@@ -136,7 +132,7 @@ public class ScaffoldBlock extends HudModule {
         return new Layout(height, radius, padX, scaled, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth, this.x);
     }
 
-    private void drawBackground(Layout layout, AnimationState animation, RoundRectRenderer roundRectRenderer, ShadowRenderer shadowRenderer) {
+    private void drawBackground(Layout layout, AnimationState animation, PanelRenderBatch.RoundRectFacade roundRectRenderer, PanelRenderBatch.ShadowFacade shadowRenderer) {
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
         float animatedRadius = Math.min(layout.radius(), animatedWidth / 2.0f);
@@ -146,14 +142,12 @@ public class ScaffoldBlock extends HudModule {
         }
         if (drawShadow.getValue()) {
             shadowRenderer.addShadow(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), animation.contentAlpha()));
-            shadowRenderer.drawAndClear();
         }
 
         roundRectRenderer.addRoundRect(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, withAlpha(backgroundColor.getValue(), animation.contentAlpha()));
-        roundRectRenderer.drawAndClear();
     }
 
-    private void drawText(TextRenderer textRenderer, Layout layout, AnimationState animation) {
+    private void drawText(TextRenderer textRenderer, PanelRenderBatch.TextFacade batchText, Layout layout, AnimationState animation) {
         float numberColumnX = layout.renderX() + layout.padX();
         float numberY = this.y + (layout.height() - textRenderer.getHeight(layout.numberScale())) / 2.0f - scale.getValue().floatValue();
         float animatedNumberColumnX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.numberColumnWidth() / 2.0f, numberColumnX);
@@ -161,21 +155,19 @@ public class ScaffoldBlock extends HudModule {
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
 
         LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(animatedX, this.y, animatedWidth, layout.height());
-        textRenderer.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+        renderBatch().setLayerScissor(0, scissor.x(), scissor.y(), scissor.width(), scissor.height());
 
         if (smoothNumber.getValue()) {
-            drawRollingNumber(textRenderer, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
+            drawRollingNumber(textRenderer, batchText, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
         } else {
-            textRenderer.addText(targetCountText, animatedNumberColumnX, numberY, layout.numberScale(), withAlpha(textColor.getValue(), animation.contentAlpha()));
+            batchText.addText(targetCountText, animatedNumberColumnX, numberY, layout.numberScale(), withAlpha(textColor.getValue(), animation.contentAlpha()));
         }
 
         float labelX = numberColumnX + layout.numberColumnWidth() + layout.labelGap();
         float animatedLabelX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.labelWidth() / 2.0f, labelX);
         float labelY = this.y + (layout.height() - textRenderer.getHeight(layout.labelScale())) / 2.0f - 0.5f * scale.getValue().floatValue();
-        textRenderer.addText(LABEL, animatedLabelX, labelY, layout.labelScale(), withAlpha(textSecondary.getValue(), animation.contentAlpha()));
-
-        textRenderer.drawAndClear();
-        textRenderer.clearScissor();
+        batchText.addText(LABEL, animatedLabelX, labelY, layout.labelScale(), withAlpha(textSecondary.getValue(), animation.contentAlpha()));
+        renderBatch().clearLayerScissor(0);
     }
 
     private void syncNumberAnimation(int blockCount, DeltaTracker deltaTracker) {
@@ -245,7 +237,7 @@ public class ScaffoldBlock extends HudModule {
         return width + 4.0f * scale.getValue().floatValue();
     }
 
-    private void drawRollingNumber(TextRenderer textRenderer, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
+    private void drawRollingNumber(TextRenderer textRenderer, PanelRenderBatch.TextFacade batchText, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
         String previous = previousCountText;
         String target = targetCountText;
         int maxLen = Math.max(previous.length(), target.length());
@@ -270,17 +262,17 @@ public class ScaffoldBlock extends HudModule {
 
             if (previousChar == targetChar) {
                 if (targetChar != '\0') {
-                    textRenderer.addText(String.valueOf(targetChar), charX, textY, numberScale, withAlpha(textColor.getValue(), alphaMul));
+                    batchText.addText(String.valueOf(targetChar), charX, textY, numberScale, withAlpha(textColor.getValue(), alphaMul));
                 }
             } else {
                 float oldAlpha = 1.0f - numberAnimProgress;
                 float newAlpha = numberAnimProgress;
 
                 if (previousChar != '\0' && oldAlpha > 0.01f) {
-                    textRenderer.addText(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha * alphaMul));
+                    batchText.addText(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha * alphaMul));
                 }
                 if (targetChar != '\0' && newAlpha > 0.01f) {
-                    textRenderer.addText(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha * alphaMul));
+                    batchText.addText(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha * alphaMul));
                 }
             }
 

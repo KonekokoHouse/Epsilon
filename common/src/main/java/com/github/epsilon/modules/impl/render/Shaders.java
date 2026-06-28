@@ -4,7 +4,6 @@ import com.github.epsilon.holders.ShaderHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -20,20 +19,16 @@ public class Shaders extends Module {
     private Shaders() {
         super("Shaders", Category.RENDER);
     }
-
-    private final SettingGroup select = settingGroup("Select");
-    private final SettingGroup colors = settingGroup("Colors");
-
-    private final BoolSetting hands = boolSetting("Hands", true).group(select);
-    private final BoolSetting players = boolSetting("Players", true).group(select);
-    private final BoolSetting self = boolSetting("Self", true, players::getValue).group(select);
-    private final BoolSetting friends = boolSetting("Friends", true).group(select);
-    private final BoolSetting crystals = boolSetting("Crystals", true).group(select);
-    private final BoolSetting chests = boolSetting("Chests", true).group(select);
-    private final BoolSetting creatures = boolSetting("Creatures", false).group(select);
-    private final BoolSetting monsters = boolSetting("Monsters", false).group(select);
-    private final BoolSetting ambients = boolSetting("Ambients", false).group(select);
-    private final BoolSetting others = boolSetting("Others", false).group(select);
+    private final BoolSetting hands = boolSetting("Hands", true);
+    private final BoolSetting players = boolSetting("Players", true);
+    private final BoolSetting self = boolSetting("Self", true, players::getValue);
+    private final BoolSetting friends = boolSetting("Friends", true);
+    private final BoolSetting crystals = boolSetting("Crystals", true);
+    private final BoolSetting chests = boolSetting("Chests", true);
+    private final BoolSetting creatures = boolSetting("Creatures", false);
+    private final BoolSetting monsters = boolSetting("Monsters", false);
+    private final BoolSetting ambients = boolSetting("Ambients", false);
+    private final BoolSetting others = boolSetting("Others", false);
 
     public final EnumSetting<ShaderHolder.Shader> mode = enumSetting("Mode", ShaderHolder.Shader.Default);
     public final EnumSetting<ShaderHolder.Shader> handsMode = enumSetting("Hands Mode", ShaderHolder.Shader.Default);
@@ -49,12 +44,12 @@ public class Shaders extends Module {
     public final IntSetting fillAlpha = intSetting("Fill Alpha", 170, 0, 255, 1);
     public final BoolSetting smokeGlow = boolSetting("Smoke Glow", true);
 
-    public final ColorSetting outlineColor = colorSetting("Outline", new Color(255, 255, 255, 136)).group(colors);
-    public final ColorSetting smokeOutlineColor1 = colorSetting("Smoke Outline", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke)).group(colors);
-    public final ColorSetting smokeOutlineColor2 = colorSetting("Smoke Outline 2", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke)).group(colors);
-    public final ColorSetting fillColor1 = colorSetting("Fill", new Color(255, 255, 255, 136)).group(colors);
-    public final ColorSetting fillColor2 = colorSetting("Smoke Fill", new Color(255, 255, 255, 136)).group(colors);
-    public final ColorSetting fillColor3 = colorSetting("Smoke Fill 2", new Color(255, 255, 255, 136)).group(colors);
+    public final ColorSetting outlineColor = colorSetting("Outline", new Color(255, 255, 255, 136));
+    public final ColorSetting smokeOutlineColor1 = colorSetting("Smoke Outline", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke));
+    public final ColorSetting smokeOutlineColor2 = colorSetting("Smoke Outline 2", new Color(255, 0, 0, 136), () -> mode.is(ShaderHolder.Shader.Smoke) || handsMode.is(ShaderHolder.Shader.Smoke) || chestMode.is(ShaderHolder.Shader.Smoke));
+    public final ColorSetting fillColor1 = colorSetting("Fill", new Color(255, 255, 255, 136));
+    public final ColorSetting fillColor2 = colorSetting("Smoke Fill", new Color(255, 255, 255, 136));
+    public final ColorSetting fillColor3 = colorSetting("Smoke Fill 2", new Color(255, 255, 255, 136));
 
     public boolean shouldRenderHands() {
         return hands.getValue();

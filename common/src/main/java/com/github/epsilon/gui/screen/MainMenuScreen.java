@@ -7,10 +7,11 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.shaders.GlslSandBox;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
+import com.github.epsilon.gui.scene.GuiLayer;
+import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -31,7 +32,7 @@ public class MainMenuScreen extends Screen {
 
     public static final MainMenuScreen INSTANCE = new MainMenuScreen();
 
-    private final PanelRenderBatch renderBatch = new PanelRenderBatch();
+    private final GuiScene scene = new GuiScene();
 
     private final List<MenuEntry> entries = new ArrayList<>();
     private static final TranslateComponent singleplayerComponent = EpsilonTranslateComponent.create("gui", "mainmenu.singleplayer");
@@ -109,7 +110,9 @@ public class MainMenuScreen extends Screen {
         uiRenderTarget.resize(window.getWidth(), window.getHeight());
         LuminRenderSystem.setActiveTarget(uiRenderTarget);
 
+        scene.beginFrame();
         drawMenu(LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
+        scene.endFrame();
 
         LuminRenderSystem.setActiveTarget(null);
         graphics.blit(uiRenderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
@@ -126,8 +129,8 @@ public class MainMenuScreen extends Screen {
         String title = "EPSILON";
         String subtitle = Constants.VERSION;
 
-        float titleHeight = renderBatch.textRenderer().getHeight(layout.titleScale, StaticFontLoader.JURA_LIGHT);
-        float subtitleY = layout.titleY + renderBatch.textRenderer().getHeight(layout.titleScale, StaticFontLoader.JURA_LIGHT) + layout.titleSubtitleGap;
+        float titleHeight = scene.scheduler().textMetrics().getHeight(layout.titleScale, StaticFontLoader.JURA_LIGHT);
+        float subtitleY = layout.titleY + scene.scheduler().textMetrics().getHeight(layout.titleScale, StaticFontLoader.JURA_LIGHT) + layout.titleSubtitleGap;
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             scope.layer(0, layer -> layer.rect(layout.titleX, layout.titleY + titleHeight + layout.titleAccentGap,
@@ -141,8 +144,7 @@ public class MainMenuScreen extends Screen {
             }
         });
 
-        renderBatch.render(tree);
-        renderBatch.flushAndClear();
+        scene.submit(GuiLayer.CONTENT, tree);
     }
 
     private void buildEntry(PanelUiTree.Scope scope, MenuEntry entry, int index, int mouseX, int mouseY, float introProgress, Layout layout) {

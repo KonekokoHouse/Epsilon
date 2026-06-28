@@ -11,16 +11,18 @@ public class LuminRingBuffer {
     private static final int BUFFER_COUNT = 8;
 
     private final GpuBuffer[] buffers = new GpuBuffer[BUFFER_COUNT];
+    private final int usage;
+    private int size;
 
     private GpuBufferSlice.MappedView mappedBuffer;
     private int current;
     private boolean mapped;
 
     public LuminRingBuffer(long size, @GpuBuffer.Usage int usage) {
-        int bufferUsage = GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | usage;
+        this.size = Math.toIntExact(size);
+        this.usage = GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | usage;
         for (int i = 0; i < buffers.length; i++) {
-            int index = i;
-            buffers[i] = RenderSystem.getDevice().createBuffer(() -> "lumin-ring-buffer #" + index, bufferUsage, size);
+            buffers[i] = createBuffer(i, this.size);
         }
     }
 
@@ -30,6 +32,17 @@ public class LuminRingBuffer {
 
     public ByteBuffer getMappedBuffer() {
         return mappedBuffer.data();
+    }
+
+    public void ensureCapacity(long requiredBytes) {
+        if (requiredBytes <= size) {
+            return;
+        }
+        int nextSize = size;
+        while (requiredBytes > nextSize) {
+            nextSize = Math.multiplyExact(nextSize, 2);
+        }
+        resize(nextSize);
     }
 
     public void tryMap() {
@@ -65,6 +78,22 @@ public class LuminRingBuffer {
         for (GpuBuffer buffer : buffers) {
             buffer.close();
         }
+    }
+
+    private void resize(int nextSize) {
+        if (mapped) {
+            unmap();
+        }
+        for (int i = 0; i < buffers.length; i++) {
+            buffers[i].close();
+            buffers[i] = createBuffer(i, nextSize);
+        }
+        size = nextSize;
+        current = 0;
+    }
+
+    private GpuBuffer createBuffer(int index, int size) {
+        return RenderSystem.getDevice().createBuffer(() -> "lumin-ring-buffer #" + index, usage, size);
     }
 
 }

@@ -10,6 +10,8 @@ import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.gui.scene.GuiLayer;
+import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -44,6 +46,7 @@ public class DropdownScreen extends Screen {
 
     private final List<DropdownPanel> panels = new ArrayList<>();
     private final DropdownRenderer renderer = new DropdownRenderer();
+    private final GuiScene scene = new GuiScene();
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final Animation scrimAnim = new Animation(Easing.EASE_OUT_SINE, 200L);
     private final DropdownTextField searchField = new DropdownTextField(64);
@@ -87,10 +90,12 @@ public class DropdownScreen extends Screen {
         renderTarget.resize(window.getWidth(), window.getHeight());
         renderTarget.clear();
         LuminRenderSystem.setActiveTarget(renderTarget);
+        scene.beginFrame();
 
         int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
         int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
         drawGui(graphics, epsilonMouseX, epsilonMouseY, partialTick);
+        scene.clear();
 
         LuminRenderSystem.setActiveTarget(null);
         if (preeditOverlay != null) {
@@ -103,6 +108,7 @@ public class DropdownScreen extends Screen {
 
     private void drawGui(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         scrimAnim.run(1.0f);
+        renderer.bind(scene.batch(GuiLayer.CONTENT));
         renderer.beginFrame();
         popupHost.setOverlayBounds(new PanelLayout.Rect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()));
         updatePanelHeightLimits();
@@ -175,7 +181,8 @@ public class DropdownScreen extends Screen {
 
         drawSearch(backgroundMouseX, backgroundMouseY);
         renderer.endFrame();
-        popupHost.render(graphics, mouseX, mouseY, partialTick);
+        popupHost.render(graphics, scene.batch(GuiLayer.POPUP), mouseX, mouseY, partialTick);
+        scene.flush();
         popupHost.flush();
     }
 

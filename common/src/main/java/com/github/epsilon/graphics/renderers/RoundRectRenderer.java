@@ -18,13 +18,16 @@ import java.util.OptionalDouble;
 
 public class RoundRectRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 512 * 1024;
+    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final int STRIDE = 48;
+    private static final long RECT_BYTES = STRIDE * 4L;
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
 
     private boolean scissorEnabled = false;
     private int scissorX, scissorY, scissorW, scissorH;
     private long currentOffset = 0;
     private int vertexCount = 0;
+    private LuminRenderSystem.QuadRenderingInfo sharedInfo;
 
     private RoundRectRenderer() {
     }
@@ -61,6 +64,7 @@ public class RoundRectRenderer implements IRenderer {
      * 颜色顺序对应四个角顶点：左上、左下、右下、右上 (TL, BL, BR, TR)
      */
     public void addRoundRectGradient(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, Color cTL, Color cBL, Color cBR, Color cTR) {
+        buffer.ensureCapacity(currentOffset + RECT_BYTES);
         buffer.tryMap();
         float x2 = x + width, y2 = y + height;
         int argbTL = ARGB.toABGR(cTL.getRGB());
@@ -89,7 +93,7 @@ public class RoundRectRenderer implements IRenderer {
         MemoryUtil.memPutFloat(p + 36, r2);
         MemoryUtil.memPutFloat(p + 40, r3);
         MemoryUtil.memPutFloat(p + 44, r4);
-        currentOffset += 48;
+        currentOffset += STRIDE;
         vertexCount++;
     }
 
@@ -110,10 +114,40 @@ public class RoundRectRenderer implements IRenderer {
             if (scissorEnabled) ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", info.dynamicUniforms());
-            pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
-            pass.setIndexBuffer(info.ibo(), info.autoIndices().type());
-            pass.drawIndexed(info.indexCount(), 1, 0, 0, 0);
+            drawPrepared(pass, info);
         }
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        sharedInfo = null;
+        if (vertexCount == 0) return false;
+        if (buffer.isMapped()) buffer.unmap();
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false;
+
+        sharedInfo = LuminRenderSystem.prepareQuadRendering(vertexCount, false);
+        return sharedInfo != null && sharedInfo.colorView() != null;
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        if (sharedInfo == null) return;
+        pass.setUniform("DynamicTransforms", sharedInfo.dynamicUniforms());
+        drawPrepared(pass, sharedInfo);
+    }
+
+    private void drawPrepared(RenderPass pass, LuminRenderSystem.QuadRenderingInfo info) {
+        if (scissorEnabled) {
+            if (!ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)) {
+                return;
+            }
+        } else {
+            pass.disableScissor();
+        }
+
+        pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
+        pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount()), LuminRenderSystem.getQuadIndexType());
+        pass.drawIndexed(info.indexCount(), 1, 0, 0, 0);
     }
 
     @Override
@@ -124,6 +158,7 @@ public class RoundRectRenderer implements IRenderer {
         }
         vertexCount = 0;
         currentOffset = 0;
+        sharedInfo = null;
     }
 
     @Override

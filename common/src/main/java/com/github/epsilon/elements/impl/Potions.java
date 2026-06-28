@@ -1,11 +1,9 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.renderers.TextureRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -52,9 +50,6 @@ public class Potions extends HudModule {
     private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
-    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
-    private final Supplier<TextureRenderer> textureRendererSupplier = Suppliers.memoize(TextureRenderer::create);
 
     private static final float ROW_HEIGHT = 22.0f;
     private static final float ROW_SPACING = 2.0f;
@@ -77,9 +72,11 @@ public class Potions extends HudModule {
         if (items.isEmpty()) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
-        ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
-        TextureRenderer textureRenderer = textureRendererSupplier.get();
+        PanelRenderBatch batch = renderBatch();
+        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
+        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
+        PanelRenderBatch.TextureFacade textureRenderer = batch.textureRenderer();
+        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
 
         float scale = this.scale.getValue().floatValue();
         float rowHeight = ROW_HEIGHT * scale;
@@ -146,8 +143,8 @@ public class Potions extends HudModule {
             Color nameColor = tintNameWithEffect.getValue() ? withAlpha(brighten(info.effectColor, 1.15f), alpha) : new Color(255, 255, 255, (int) (235 * alpha));
             Color durationColor = new Color(180, 180, 180, (int) (220 * alpha));
 
-            textRenderer.addText(info.name, cursorX, nameY, nameRenderScale, nameColor);
-            textRenderer.addText(info.duration, cursorX, durationY, durationRenderScale, durationColor);
+            batchText.addText(info.name, cursorX, nameY, nameRenderScale, nameColor);
+            batchText.addText(info.duration, cursorX, durationY, durationRenderScale, durationColor);
 
             if (showPill.getValue()) {
                 float pillX = rowX + rowWidth - padX - pillWidth;
@@ -164,17 +161,12 @@ public class Potions extends HudModule {
                     float topRadius = fullFill ? pillRadius : 0f;
                     Color top = withAlpha(brighten(info.effectColor, 1.3f), alpha);
                     Color bottom = withAlpha(info.effectColor, alpha);
-                    roundRectRenderer.addVerticalGradient(pillX, fillY, pillWidth, fillH, topRadius, topRadius, pillRadius, pillRadius, top, bottom);
+                    roundRectRenderer.addRoundRectGradient(pillX, fillY, pillWidth, fillH, topRadius, topRadius, pillRadius, pillRadius, top, bottom, bottom, top);
                 }
             }
 
             currentY += rowHeight * alpha;
         }
-
-        if (drawShadow.getValue()) shadowRenderer.drawAndClear();
-        roundRectRenderer.drawAndClear();
-        if (showIcon.getValue()) textureRenderer.drawAndClear();
-        textRenderer.drawAndClear();
 
         setBounds(maxWidth, totalHeight);
     }

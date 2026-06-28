@@ -1,6 +1,7 @@
 package com.github.epsilon.elements;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
 import com.github.epsilon.modules.Module;
 import net.minecraft.client.DeltaTracker;
@@ -29,6 +30,8 @@ public abstract class HudModule extends Module {
 
     private HorizontalAnchor horizontalAnchor = HorizontalAnchor.Left;
     private VerticalAnchor verticalAnchor = VerticalAnchor.Top;
+    private PanelRenderBatch currentRenderBatch;
+    private final PanelRenderBatch fallbackRenderBatch = new PanelRenderBatch();
 
     public HudModule(String name, float width, float height) {
         this(name, 0f, 0f, width, height);
@@ -160,6 +163,20 @@ public abstract class HudModule extends Module {
             return 0;
         }
         return LuminRenderSystem.getScaledHeightInt();
+    }
+
+    public final void renderWithBatch(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, PanelRenderBatch renderBatch) {
+        PanelRenderBatch previous = currentRenderBatch;
+        currentRenderBatch = renderBatch;
+        try {
+            render(graphics, deltaTracker);
+        } finally {
+            currentRenderBatch = previous;
+        }
+    }
+
+    protected final PanelRenderBatch renderBatch() {
+        return currentRenderBatch != null ? currentRenderBatch : fallbackRenderBatch;
     }
 
     public abstract void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker);

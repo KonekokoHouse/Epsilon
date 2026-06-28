@@ -1,9 +1,8 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -52,8 +51,6 @@ public class BPS extends HudModule {
     private final BoolSetting smoothNumber = boolSetting("Smooth Number", true);
     private final DoubleSetting numberDelay = doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, smoothNumber::getValue);
 
-    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
-    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     private final float[] graphValues = new float[GRAPH_SIZE];
@@ -88,9 +85,11 @@ public class BPS extends HudModule {
 
         updateBps();
 
-        RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
-        ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
         TextRenderer textRenderer = textRendererSupplier.get();
+        PanelRenderBatch batch = renderBatch();
+        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
+        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
+        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
 
         float s = scale.getValue().floatValue();
         float radius = cornerRadius.getValue().floatValue() * s;
@@ -104,7 +103,6 @@ public class BPS extends HudModule {
 
         if (drawShadow.getValue()) {
             shadowRenderer.addShadow(this.x, this.y, panelW, panelH, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
-            shadowRenderer.drawAndClear();
         }
 
         roundRectRenderer.addRoundRect(this.x, this.y, panelW, panelH, radius, backgroundColor.getValue());
@@ -114,7 +112,7 @@ public class BPS extends HudModule {
         roundRectRenderer.addRoundRect(this.x + 8f * s, this.y + 9f * s, dotSize, dotSize, dotRadius, accentColor.getValue());
 
         float titleScale = 0.62f * s;
-        textRenderer.addText("Movement", this.x + 18f * s, this.y + 7f * s, titleScale, textColor.getValue());
+        batchText.addText("Movement", this.x + 18f * s, this.y + 7f * s, titleScale, textColor.getValue());
 
         String bpsText = formatBps(animatedBps);
         float numberScale = 1.08f * s;
@@ -141,17 +139,17 @@ public class BPS extends HudModule {
                     previousBpsText = targetBpsText;
                 }
             }
-            drawRollingNumber(textRenderer, numberScale, s);
+            drawRollingNumber(textRenderer, batchText, numberScale, s);
             float targetWidth = textRenderer.getWidth(targetBpsText, numberScale);
-            textRenderer.addText("bps", this.x + 9f * s + targetWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
+            batchText.addText("bps", this.x + 9f * s + targetWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
         } else {
-            textRenderer.addText(bpsText, this.x + 9f * s, this.y + 23f * s, numberScale, textColor.getValue());
+            batchText.addText(bpsText, this.x + 9f * s, this.y + 23f * s, numberScale, textColor.getValue());
             float numberWidth = textRenderer.getWidth(bpsText, numberScale);
-            textRenderer.addText("bps", this.x + 9f * s + numberWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
+            batchText.addText("bps", this.x + 9f * s + numberWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
         }
 
         String peakText = "Maximum " + formatBps(highestBps);
-        textRenderer.addText(peakText, this.x + 9f * s, this.y + 44f * s, peakScale, textMuted.getValue());
+        batchText.addText(peakText, this.x + 9f * s, this.y + 44f * s, peakScale, textMuted.getValue());
 
         float graphX = this.x + 62f * s;
         float graphY = this.y + 15f * s;
@@ -159,13 +157,10 @@ public class BPS extends HudModule {
         float graphH = graphHeight.getValue().floatValue() * s;
         drawGraph(roundRectRenderer, graphX, graphY, graphW, graphH, s);
 
-        roundRectRenderer.drawAndClear();
-        textRenderer.drawAndClear();
-
         setBounds(panelW, panelH);
     }
 
-    private void drawGraph(RoundRectRenderer rr, float x, float y, float w, float h, float s) {
+    private void drawGraph(PanelRenderBatch.RoundRectFacade rr, float x, float y, float w, float h, float s) {
         float graphRadius = 4f * s;
 
         rr.addRoundRect(x, y, w, h, graphRadius, graphBgColor.getValue());
@@ -305,7 +300,7 @@ public class BPS extends HudModule {
         return Math.max(max, 8f);
     }
 
-    private void drawRollingNumber(TextRenderer textRenderer, float numberScale, float s) {
+    private void drawRollingNumber(TextRenderer textRenderer, PanelRenderBatch.TextFacade batchText, float numberScale, float s) {
         float progress = numberAnimProgress;
         String prev = previousBpsText;
         String target = targetBpsText;
@@ -329,17 +324,17 @@ public class BPS extends HudModule {
 
             if (prevChar == targetChar) {
                 if (targetChar != '\0') {
-                    textRenderer.addText(String.valueOf(targetChar), charX, baseY, numberScale, textColor.getValue());
+                    batchText.addText(String.valueOf(targetChar), charX, baseY, numberScale, textColor.getValue());
                 }
             } else {
                 float oldAlpha = 1f - progress;
                 float newAlpha = progress;
 
                 if (prevChar != '\0' && oldAlpha > 0.01f) {
-                    textRenderer.addText(String.valueOf(prevChar), charX, baseY - progress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha));
+                    batchText.addText(String.valueOf(prevChar), charX, baseY - progress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha));
                 }
                 if (targetChar != '\0' && newAlpha > 0.01f) {
-                    textRenderer.addText(String.valueOf(targetChar), charX, baseY + (1f - progress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha));
+                    batchText.addText(String.valueOf(targetChar), charX, baseY + (1f - progress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha));
                 }
             }
 

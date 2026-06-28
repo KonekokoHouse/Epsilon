@@ -1,71 +1,98 @@
 package com.github.epsilon.gui.dsl;
 
-import com.github.epsilon.graphics.renderers.*;
+import com.github.epsilon.graphics.schedulers.Render2DScheduler;
+import com.github.epsilon.graphics.schedulers.Render2DTexture;
+import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.github.epsilon.graphics.LuminTexture;
+import net.minecraft.resources.Identifier;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
- * 面板 UI 的通用 renderer 批次封装。
+ * 面板 UI 的调度批次门面。
  * <p>
- * 批次按 layer 管理 renderer：同一 layer 内按 renderer 类型合批，flush 时按 layer
- * 从小到大输出，从而兼顾绘制顺序和批处理效率。
+ * 旧 GUI 仍通过 renderer 风格的 facade 提交图元，内部会转成 {@link Render2DScheduler}
+ * 命令。这样上层可以逐步迁移到自动布局，而底层已经统一进入新的 layer/scheduler 管线。
  */
-public final class PanelRenderBatch {
+public final class PanelRenderBatch implements AutoCloseable {
 
-    // layer 0 复用调用方传入的根 renderer，便于 PanelScreen 等旧路径继续共享已有资源。
+    private final Render2DScheduler scheduler;
+    private final boolean ownsScheduler;
+    private final int baseLayer;
     private final LayerRenderers rootLayer;
-    // 非 0 layer 按需创建 renderer 组，TreeMap 保证输出顺序稳定。
-    private final TreeMap<Integer, LayerRenderers> extraLayers = new TreeMap<>();
+    private final Set<Integer> touchedLayers = new HashSet<>();
 
     public PanelRenderBatch() {
-        this(ShadowRenderer.create(), RoundRectRenderer.create(), RoundRectOutlineRenderer.create(), RectRenderer.create(),
-                TriangleRenderer.create(), TextRenderer.create());
+        this(new Render2DScheduler(), true, 0);
     }
 
-    public PanelRenderBatch(ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer,
-                            RoundRectOutlineRenderer roundRectOutlineRenderer, RectRenderer rectRenderer,
-                            TextRenderer textRenderer) {
-        this(shadowRenderer, roundRectRenderer, roundRectOutlineRenderer, rectRenderer,
-                TriangleRenderer.create(), textRenderer);
+    public PanelRenderBatch(Render2DScheduler scheduler, int baseLayer) {
+        this(scheduler, false, baseLayer);
     }
 
-    public PanelRenderBatch(ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer,
-                            RoundRectOutlineRenderer roundRectOutlineRenderer, RectRenderer rectRenderer,
-                            TriangleRenderer triangleRenderer, TextRenderer textRenderer) {
-        this.rootLayer = new LayerRenderers(shadowRenderer, roundRectRenderer, roundRectOutlineRenderer, rectRenderer, triangleRenderer, textRenderer);
+    private PanelRenderBatch(Render2DScheduler scheduler, boolean ownsScheduler, int baseLayer) {
+        this.scheduler = scheduler;
+        this.ownsScheduler = ownsScheduler;
+        this.baseLayer = baseLayer;
+        this.rootLayer = new LayerRenderers(scheduler, baseLayer);
     }
 
-    public ShadowRenderer shadowRenderer() {
+    public PanelRenderBatch view(int relativeBaseLayer) {
+        return new PanelRenderBatch(scheduler, false, baseLayer + relativeBaseLayer);
+    }
+
+    public Render2DScheduler scheduler() {
+        return scheduler;
+    }
+
+    public int baseLayer() {
+        return baseLayer;
+    }
+
+    public boolean ownsScheduler() {
+        return ownsScheduler;
+    }
+
+    public ShadowFacade shadowRenderer() {
         return rootLayer.shadowRenderer();
     }
 
-    public RoundRectRenderer roundRectRenderer() {
+    public RoundRectFacade roundRectRenderer() {
         return rootLayer.roundRectRenderer();
     }
 
-    public RoundRectOutlineRenderer roundRectOutlineRenderer() {
+    public RoundRectOutlineFacade roundRectOutlineRenderer() {
         return rootLayer.roundRectOutlineRenderer();
     }
 
-    public RectRenderer rectRenderer() {
+    public RectFacade rectRenderer() {
         return rootLayer.rectRenderer();
     }
 
-    public TriangleRenderer triangleRenderer() {
+    public TriangleFacade triangleRenderer() {
         return rootLayer.triangleRenderer();
     }
 
-    public TextRenderer textRenderer() {
+    public TextureFacade textureRenderer() {
+        return rootLayer.textureRenderer();
+    }
+
+    public TextFacade textRenderer() {
         return rootLayer.textRenderer();
     }
 
     LayerRenderers layer(int layer) {
-        if (layer == 0) {
+        touchedLayers.add(layer);
+        if (layer == baseLayer) {
             return rootLayer;
         }
-        // 只有真正写入额外层时才分配 renderer，避免普通 GUI 帧产生多余 GPU 资源。
-        return extraLayers.computeIfAbsent(layer, ignored -> LayerRenderers.create());
+        // LayerRenderers 很薄，只保存 scheduler 的 layer handle facade；按需创建不会分配 GPU 资源。
+        return new LayerRenderers(scheduler, layer);
     }
 
     public void render(PanelUiTree tree) {
@@ -73,37 +100,40 @@ public final class PanelRenderBatch {
     }
 
     public void render(PanelUiTree tree, int baseLayer) {
-        PanelUiCompiler.renderIntoLayeredBatch(tree, this, baseLayer);
+        PanelUiCompiler.renderIntoLayeredBatch(tree, this, this.baseLayer + baseLayer);
     }
 
     public void setLayerScissor(int layer, int x, int y, int width, int height) {
-        // scissor 绑定在整个 layer 上，Dropdown 的一个 pass 会对应一个独立 layer。
-        layer(layer).setScissor(x, y, width, height);
+        int resolvedLayer = baseLayer + layer;
+        touchedLayers.add(resolvedLayer);
+        scheduler.layer(resolvedLayer).setScissor(x, y, width, height);
     }
 
     public void clearLayerScissor(int layer) {
-        layer(layer).clearScissor();
+        int resolvedLayer = baseLayer + layer;
+        touchedLayers.add(resolvedLayer);
+        scheduler.layer(resolvedLayer).clearScissor();
     }
 
     public void flush() {
-        // layer 0 使用外部传入的根 renderer，需要夹在负层和正层之间输出。
-        for (Map.Entry<Integer, LayerRenderers> entry : extraLayers.entrySet()) {
-            if (entry.getKey() < 0) {
-                entry.getValue().draw();
-            }
-        }
-        rootLayer.draw();
-        for (Map.Entry<Integer, LayerRenderers> entry : extraLayers.entrySet()) {
-            if (entry.getKey() > 0) {
-                entry.getValue().draw();
+        if (ownsScheduler) {
+            scheduler.flush();
+        } else {
+            // 非 owning batch 只刷自己触碰过的 layer，避免干扰同一 scene 中其他 GUI 区域。
+            for (int layer : sortedTouchedLayers()) {
+                scheduler.flushLayer(layer);
             }
         }
     }
 
     public void clear() {
-        rootLayer.clear();
-        for (LayerRenderers renderers : extraLayers.values()) {
-            renderers.clear();
+        if (ownsScheduler) {
+            scheduler.clear();
+        } else {
+            for (int layer : sortedTouchedLayers()) {
+                scheduler.clearLayer(layer);
+            }
+            touchedLayers.clear();
         }
     }
 
@@ -112,108 +142,272 @@ public final class PanelRenderBatch {
         clear();
     }
 
+    @Override
     public void close() {
-        rootLayer.close();
-        for (LayerRenderers renderers : extraLayers.values()) {
-            renderers.close();
+        if (ownsScheduler) {
+            scheduler.close();
         }
-        extraLayers.clear();
     }
 
-    public static final class LayerRenderers {
-        // 每个 layer 拥有一套 renderer，同层同类型图元可以继续合批。
-        private final ShadowRenderer shadowRenderer;
-        private final RoundRectRenderer roundRectRenderer;
-        private final RoundRectOutlineRenderer roundRectOutlineRenderer;
-        private final RectRenderer rectRenderer;
-        private final TriangleRenderer triangleRenderer;
-        private final TextRenderer textRenderer;
+    private List<Integer> sortedTouchedLayers() {
+        List<Integer> layers = new ArrayList<>(touchedLayers);
+        Collections.sort(layers);
+        return layers;
+    }
 
-        private LayerRenderers(ShadowRenderer shadowRenderer, RoundRectRenderer roundRectRenderer,
-                               RoundRectOutlineRenderer roundRectOutlineRenderer, RectRenderer rectRenderer,
-                               TriangleRenderer triangleRenderer, TextRenderer textRenderer) {
-            this.shadowRenderer = shadowRenderer;
-            this.roundRectRenderer = roundRectRenderer;
-            this.roundRectOutlineRenderer = roundRectOutlineRenderer;
-            this.rectRenderer = rectRenderer;
-            this.triangleRenderer = triangleRenderer;
-            this.textRenderer = textRenderer;
+    public final class LayerRenderers {
+        private final Render2DScheduler.LayerHandle layer;
+        private final ShadowFacade shadowRenderer;
+        private final RoundRectFacade roundRectRenderer;
+        private final RoundRectOutlineFacade roundRectOutlineRenderer;
+        private final RectFacade rectRenderer;
+        private final TriangleFacade triangleRenderer;
+        private final TextureFacade textureRenderer;
+        private final TextFacade textRenderer;
+        private final int layerIndex;
+
+        private LayerRenderers(Render2DScheduler scheduler, int layer) {
+            this.layer = scheduler.layer(layer);
+            this.layerIndex = layer;
+            this.shadowRenderer = new ShadowFacade(this.layer);
+            this.roundRectRenderer = new RoundRectFacade(this.layer);
+            this.roundRectOutlineRenderer = new RoundRectOutlineFacade(this.layer);
+            this.rectRenderer = new RectFacade(this.layer);
+            this.triangleRenderer = new TriangleFacade(this.layer);
+            this.textureRenderer = new TextureFacade(this.layer);
+            this.textRenderer = new TextFacade(this.layer, scheduler);
         }
 
-        private static LayerRenderers create() {
-            return new LayerRenderers(ShadowRenderer.create(), RoundRectRenderer.create(), RoundRectOutlineRenderer.create(),
-                    RectRenderer.create(), TriangleRenderer.create(), TextRenderer.create());
-        }
-
-        public ShadowRenderer shadowRenderer() {
+        public ShadowFacade shadowRenderer() {
             return shadowRenderer;
         }
 
-        public RoundRectRenderer roundRectRenderer() {
+        public RoundRectFacade roundRectRenderer() {
             return roundRectRenderer;
         }
 
-        public RoundRectOutlineRenderer roundRectOutlineRenderer() {
+        public RoundRectOutlineFacade roundRectOutlineRenderer() {
             return roundRectOutlineRenderer;
         }
 
-        public RectRenderer rectRenderer() {
+        public RectFacade rectRenderer() {
             return rectRenderer;
         }
 
-        public TriangleRenderer triangleRenderer() {
+        public TriangleFacade triangleRenderer() {
             return triangleRenderer;
         }
 
-        public TextRenderer textRenderer() {
+        public TextureFacade textureRenderer() {
+            return textureRenderer;
+        }
+
+        public TextFacade textRenderer() {
             return textRenderer;
         }
 
-        private void draw() {
-            shadowRenderer.draw();
-            roundRectRenderer.draw();
-            roundRectOutlineRenderer.draw();
-            rectRenderer.draw();
-            triangleRenderer.draw();
-            textRenderer.draw();
+        void setScissor(int x, int y, int width, int height) {
+            touch();
+            layer.setScissor(x, y, width, height);
         }
 
-        private void setScissor(int x, int y, int width, int height) {
-            shadowRenderer.setScissor(x, y, width, height);
-            roundRectRenderer.setScissor(x, y, width, height);
-            roundRectOutlineRenderer.setScissor(x, y, width, height);
-            rectRenderer.setScissor(x, y, width, height);
-            triangleRenderer.setScissor(x, y, width, height);
-            textRenderer.setScissor(x, y, width, height);
+        void clearScissor() {
+            touch();
+            layer.clearScissor();
         }
 
-        private void clearScissor() {
-            shadowRenderer.clearScissor();
-            roundRectRenderer.clearScissor();
-            roundRectOutlineRenderer.clearScissor();
-            rectRenderer.clearScissor();
-            triangleRenderer.clearScissor();
-            textRenderer.clearScissor();
+        private void touch() {
+            touchedLayers.add(layerIndex);
+        }
+    }
+
+    public final class ShadowFacade {
+        private final Render2DScheduler.LayerHandle layer;
+
+        private ShadowFacade(Render2DScheduler.LayerHandle layer) {
+            this.layer = layer;
         }
 
-        private void clear() {
-            clearScissor();
-            shadowRenderer.clear();
-            roundRectRenderer.clear();
-            roundRectOutlineRenderer.clear();
-            rectRenderer.clear();
-            triangleRenderer.clear();
-            textRenderer.clear();
+        public void addShadow(float x, float y, float width, float height, float radius, float blurRadius, Color color) {
+            touchLayer(layer);
+            layer.addShadow(x, y, width, height, radius, blurRadius, color);
         }
 
-        private void close() {
-            shadowRenderer.close();
-            roundRectRenderer.close();
-            roundRectOutlineRenderer.close();
-            rectRenderer.close();
-            triangleRenderer.close();
-            textRenderer.close();
+        public void addShadow(float x, float y, float width, float height, float topLeft, float topRight,
+                              float bottomRight, float bottomLeft, float blurRadius, Color color) {
+            touchLayer(layer);
+            layer.addShadow(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, blurRadius, color);
         }
+    }
+
+    public final class RoundRectFacade {
+        private final Render2DScheduler.LayerHandle layer;
+
+        private RoundRectFacade(Render2DScheduler.LayerHandle layer) {
+            this.layer = layer;
+        }
+
+        public void addRoundRect(float x, float y, float width, float height, float radius, Color color) {
+            touchLayer(layer);
+            layer.addRoundRect(x, y, width, height, radius, color);
+        }
+
+        public void addRoundRect(float x, float y, float width, float height, float topLeft, float topRight,
+                                 float bottomRight, float bottomLeft, Color color) {
+            touchLayer(layer);
+            layer.addRoundRect(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, color);
+        }
+
+        public void addRoundRectGradient(float x, float y, float width, float height, float topLeftRadius,
+                                         float topRightRadius, float bottomRightRadius, float bottomLeftRadius,
+                                         Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            touchLayer(layer);
+            layer.addRoundRectGradient(x, y, width, height, topLeftRadius, topRightRadius,
+                    bottomRightRadius, bottomLeftRadius, topLeft, bottomLeft, bottomRight, topRight);
+        }
+    }
+
+    public final class RoundRectOutlineFacade {
+        private final Render2DScheduler.LayerHandle layer;
+
+        private RoundRectOutlineFacade(Render2DScheduler.LayerHandle layer) {
+            this.layer = layer;
+        }
+
+        public void addOutline(float x, float y, float width, float height, float radius, float outlineWidth, Color color) {
+            touchLayer(layer);
+            layer.addOutline(x, y, width, height, radius, outlineWidth, color);
+        }
+
+        public void addOutline(float x, float y, float width, float height, float topLeft, float topRight,
+                               float bottomRight, float bottomLeft, float outlineWidth, Color color) {
+            touchLayer(layer);
+            layer.addOutline(x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, outlineWidth, color);
+        }
+    }
+
+    public final class RectFacade {
+        private final Render2DScheduler.LayerHandle layer;
+
+        private RectFacade(Render2DScheduler.LayerHandle layer) {
+            this.layer = layer;
+        }
+
+        public void addRect(float x, float y, float width, float height, Color color) {
+            touchLayer(layer);
+            layer.addRect(x, y, width, height, color);
+        }
+
+        public void addOutline(float x, float y, float width, float height, float outlineWidth, Color color) {
+            touchLayer(layer);
+            layer.addRectOutline(x, y, width, height, outlineWidth, color);
+        }
+
+        public void addRectGradient(float x, float y, float width, float height,
+                                    Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
+            touchLayer(layer);
+            layer.addRectGradient(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight);
+        }
+    }
+
+    public final class TriangleFacade {
+        private final Render2DScheduler.LayerHandle layer;
+
+        private TriangleFacade(Render2DScheduler.LayerHandle layer) {
+            this.layer = layer;
+        }
+
+        public void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color) {
+            touchLayer(layer);
+            layer.addChevronTriangle(centerX, centerY, size, progress, color);
+        }
+    }
+
+    public final class TextureFacade {
+        private final Render2DScheduler.LayerHandle layer;
+
+        private TextureFacade(Render2DScheduler.LayerHandle layer) {
+            this.layer = layer;
+        }
+
+        public void addQuadTexture(Identifier texture, float x, float y, float width, float height,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            addQuadTexture(texture, x, y, width, height, u0, v0, u1, v1, color, false);
+        }
+
+        public void addQuadTexture(Identifier texture, float x, float y, float width, float height,
+                                   float u0, float v0, float u1, float v1, Color color, boolean linearFilter) {
+            touchLayer(layer);
+            layer.addTexture(new Render2DTexture.IdentifierRef(texture, linearFilter), x, y, width, height, u0, v0, u1, v1, color);
+        }
+
+        public void addQuadTexture(LuminTexture texture, float x, float y, float width, float height,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            touchLayer(layer);
+            layer.addTexture(new Render2DTexture.LuminRef(texture), x, y, width, height, u0, v0, u1, v1, color);
+        }
+
+        public void addRoundedTexture(Identifier texture, float x, float y, float width, float height, float radius,
+                                      float u0, float v0, float u1, float v1, Color color) {
+            addRoundedTexture(texture, x, y, width, height, radius, u0, v0, u1, v1, color, false);
+        }
+
+        public void addRoundedTexture(Identifier texture, float x, float y, float width, float height, float radius,
+                                      float u0, float v0, float u1, float v1, Color color, boolean linearFilter) {
+            touchLayer(layer);
+            layer.addRoundedTexture(new Render2DTexture.IdentifierRef(texture, linearFilter), x, y, width, height, radius, u0, v0, u1, v1, color);
+        }
+
+        public void addRoundedTexture(LuminTexture texture, float x, float y, float width, float height, float radius,
+                                      float u0, float v0, float u1, float v1, Color color) {
+            touchLayer(layer);
+            layer.addRoundedTexture(new Render2DTexture.LuminRef(texture), x, y, width, height, radius, u0, v0, u1, v1, color);
+        }
+
+        public void addPlayerHead(LuminTexture texture, float x, float y, float size, float radius, Color color) {
+            addRoundedTexture(texture, x, y, size, size, radius, 8.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 16.0f / 64.0f, color);
+            addRoundedTexture(texture, x, y, size, size, radius, 40.0f / 64.0f, 8.0f / 64.0f, 48.0f / 64.0f, 16.0f / 64.0f, color);
+        }
+    }
+
+    public final class TextFacade {
+        private final Render2DScheduler.LayerHandle layer;
+        private final Render2DScheduler scheduler;
+
+        private TextFacade(Render2DScheduler.LayerHandle layer, Render2DScheduler scheduler) {
+            this.layer = layer;
+            this.scheduler = scheduler;
+        }
+
+        public void addText(String text, float x, float y, float scale, Color color) {
+            touchLayer(layer);
+            layer.addText(text, x, y, scale, color);
+        }
+
+        public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
+            touchLayer(layer);
+            layer.addText(text, x, y, scale, color, fontLoader);
+        }
+
+        public float getHeight(float scale) {
+            return scheduler.textMetrics().getHeight(scale);
+        }
+
+        public float getHeight(float scale, TtfFontLoader fontLoader) {
+            return scheduler.textMetrics().getHeight(scale, fontLoader);
+        }
+
+        public float getWidth(String text, float scale) {
+            return scheduler.textMetrics().getWidth(text, scale);
+        }
+
+        public float getWidth(String text, float scale, TtfFontLoader fontLoader) {
+            return scheduler.textMetrics().getWidth(text, scale, fontLoader);
+        }
+    }
+
+    private void touchLayer(Render2DScheduler.LayerHandle layer) {
+        touchedLayers.add(layer.layer());
     }
 
 }

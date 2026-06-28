@@ -22,8 +22,9 @@ import java.util.OptionalDouble;
 
 public class TriangleRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final long BUFFER_SIZE = 16 * 1024;
     private static final int STRIDE = 16;
+    private static final long TRIANGLE_BYTES = STRIDE * 3L;
 
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
 
@@ -32,6 +33,7 @@ public class TriangleRenderer implements IRenderer {
 
     private boolean scissorEnabled = false;
     private int scissorX, scissorY, scissorW, scissorH;
+    private GpuBufferSlice sharedDynamicUniforms;
 
     public static TriangleRenderer create() {
         return RendererHolder.INSTANCE.register(new TriangleRenderer());
@@ -41,6 +43,7 @@ public class TriangleRenderer implements IRenderer {
     }
 
     public void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color) {
+        buffer.ensureCapacity(currentOffset + TRIANGLE_BYTES);
         buffer.tryMap();
 
         int abgr = ARGB.toABGR(color.getRGB());
@@ -73,6 +76,7 @@ public class TriangleRenderer implements IRenderer {
     }
 
     public void addTriangle(float x1, float y1, float x2, float y2, float x3, float y3, Color color) {
+        buffer.ensureCapacity(currentOffset + TRIANGLE_BYTES);
         buffer.tryMap();
 
         int abgr = ARGB.toABGR(color.getRGB());
@@ -140,9 +144,43 @@ public class TriangleRenderer implements IRenderer {
             }
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", dynamicUniforms);
-            pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
-            pass.draw(vertexCount, 1, 0, 0);
+            drawPrepared(pass);
         }
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        sharedDynamicUniforms = null;
+        if (vertexCount == 0) return false;
+
+        if (buffer.isMapped()) {
+            buffer.unmap();
+        }
+
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false;
+
+        sharedDynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        return sharedDynamicUniforms != null;
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        if (sharedDynamicUniforms == null) return;
+        pass.setUniform("DynamicTransforms", sharedDynamicUniforms);
+        drawPrepared(pass);
+    }
+
+    private void drawPrepared(RenderPass pass) {
+        if (scissorEnabled) {
+            if (!ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)) {
+                return;
+            }
+        } else {
+            pass.disableScissor();
+        }
+
+        pass.setVertexBuffer(0, new GpuBufferSlice(buffer.getGpuBuffer(), 0, buffer.getGpuBuffer().size()));
+        pass.draw(vertexCount, 1, 0, 0);
     }
 
     @Override
@@ -156,6 +194,7 @@ public class TriangleRenderer implements IRenderer {
 
         vertexCount = 0;
         currentOffset = 0;
+        sharedDynamicUniforms = null;
     }
 
     @Override

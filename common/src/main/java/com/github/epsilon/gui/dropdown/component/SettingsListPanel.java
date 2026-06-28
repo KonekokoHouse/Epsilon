@@ -4,7 +4,6 @@ import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.gui.dropdown.DropdownRenderer;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.settings.Setting;
-import com.github.epsilon.settings.SettingGroup;
 
 import java.util.List;
 
@@ -13,17 +12,13 @@ public class SettingsListPanel extends AbstractDropdownPanel {
     private final SettingsContent settingsContent;
 
     public SettingsListPanel(String id, String title, String icon, int panelIndex, List<Setting<?>> settings) {
-        this(id, title, icon, panelIndex, settings, List.of());
-    }
-
-    public SettingsListPanel(String id, TranslateComponent titleComponent, String icon, int panelIndex, List<Setting<?>> settings, List<SettingGroup> orderedGroups) {
-        super(id, titleComponent, icon, panelIndex);
-        this.settingsContent = new SettingsContent(settings, orderedGroups);
-    }
-
-    public SettingsListPanel(String id, String title, String icon, int panelIndex, List<Setting<?>> settings, List<SettingGroup> orderedGroups) {
         super(id, title, icon, panelIndex);
-        this.settingsContent = new SettingsContent(settings, orderedGroups);
+        this.settingsContent = new SettingsContent("dropdown-panel:" + id, settings);
+    }
+
+    public SettingsListPanel(String id, TranslateComponent titleComponent, String icon, int panelIndex, List<Setting<?>> settings) {
+        super(id, titleComponent, icon, panelIndex);
+        this.settingsContent = new SettingsContent("dropdown-panel:" + id, settings);
     }
 
     @Override

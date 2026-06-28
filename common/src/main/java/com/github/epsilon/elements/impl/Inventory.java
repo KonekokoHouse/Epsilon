@@ -1,21 +1,17 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 import java.awt.*;
-import java.util.function.Supplier;
-
 public class Inventory extends HudModule {
 
     public static final Inventory INSTANCE = new Inventory();
@@ -36,9 +32,6 @@ public class Inventory extends HudModule {
 
     private final BoolSetting showCount = boolSetting("Show Count", true);
 
-    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
-    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
-
     private static final float SLOT_SIZE = 17.0f;
     private static final float SLOT_GAP = 1.5f;
     private static final float PADDING = 4.5f;
@@ -47,8 +40,9 @@ public class Inventory extends HudModule {
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         if (nullCheck()) return;
 
-        RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
-        ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
+        PanelRenderBatch batch = renderBatch();
+        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
+        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
 
         float scale = this.scale.getValue().floatValue();
         float slotSize = SLOT_SIZE * scale;
@@ -76,9 +70,6 @@ public class Inventory extends HudModule {
                 roundRectRenderer.addRoundRect(slotX, slotY, slotSize, slotSize, slotRadius, slotColor.getValue());
             }
         }
-
-        if (drawShadow.getValue()) shadowRenderer.drawAndClear();
-        roundRectRenderer.drawAndClear();
 
         setBounds(totalWidth, totalHeight);
     }

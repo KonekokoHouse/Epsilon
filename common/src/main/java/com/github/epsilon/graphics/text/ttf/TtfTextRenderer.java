@@ -9,16 +9,12 @@ import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ColorUtils;
 import com.github.epsilon.utils.render.ScissorUtils;
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import net.minecraft.client.renderer.rendertype.TextureTransform;
 import net.minecraft.util.ARGB;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
@@ -32,19 +28,22 @@ public class TtfTextRenderer implements ITextRenderer {
     private static final float DEFAULT_SCALE = 0.27f;
     private static final float SPACING = 0f;
     private static final int STRIDE = 24;
+    private static final long GLYPH_BYTES = STRIDE * 4L;
     private final long bufferSize;
 
     private final Map<TtfGlyphAtlas, Batch> batches = new LinkedHashMap<>();
 
     private boolean scissorEnabled = false;
     private int scissorX, scissorY, scissorW, scissorH;
+    private GpuBufferSlice sharedDynamicUniforms;
+    private int sharedMaxIndexCount;
 
     public TtfTextRenderer(long bufferSize) {
         this.bufferSize = bufferSize;
     }
 
     public TtfTextRenderer() {
-        this(2 * 1024 * 1024);
+        this(256 * 1024);
     }
 
     @Override
@@ -74,6 +73,7 @@ public class TtfTextRenderer implements ITextRenderer {
             TtfGlyphAtlas atlas = glyph.atlas();
 
             Batch batch = batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
+            batch.buffer.ensureCapacity(batch.offsetInAtlas + GLYPH_BYTES);
             batch.buffer.tryMap();
 
             float baselineY = yOffset + y + (fontLoader.fontFile.pixelAscent * finalScale);
@@ -90,7 +90,7 @@ public class TtfTextRenderer implements ITextRenderer {
             BufferUtils.writeUvRectToAddr(p + STRIDE * 2, x2, y2, glyph.uv().u1(), glyph.uv().v1(), argb);
             BufferUtils.writeUvRectToAddr(p + STRIDE * 3, x2, y1, glyph.uv().u1(), glyph.uv().v0(), argb);
 
-            batch.offsetInAtlas += (STRIDE * 4);
+            batch.offsetInAtlas += GLYPH_BYTES;
             xOffset += glyph.advance() * finalScale + SPACING * scale;
         }
     }
@@ -122,6 +122,7 @@ public class TtfTextRenderer implements ITextRenderer {
 
             TtfGlyphAtlas atlas = glyph.atlas();
             Batch batch = batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
+            batch.buffer.ensureCapacity(batch.offsetInAtlas + GLYPH_BYTES);
             batch.buffer.tryMap();
 
             float baselineY = yOffset + y + (fontLoader.fontFile.pixelAscent * finalScale);
@@ -143,7 +144,7 @@ public class TtfTextRenderer implements ITextRenderer {
             BufferUtils.writeUvRectToAddr(p + STRIDE * 2, x2, y2, glyph.uv().u1(), glyph.uv().v1(), rightArgb);
             BufferUtils.writeUvRectToAddr(p + STRIDE * 3, x2, y1, glyph.uv().u1(), glyph.uv().v0(), rightArgb);
 
-            batch.offsetInAtlas += (STRIDE * 4);
+            batch.offsetInAtlas += GLYPH_BYTES;
             xOffset += glyph.advance() * finalScale + SPACING * scale;
         }
     }
@@ -159,49 +160,92 @@ public class TtfTextRenderer implements ITextRenderer {
         if (colorView == null) return;
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
-        GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
-                RenderSystem.getModelViewMatrixCopy(), new Vector4f(1, 1, 1, 1),
-                new Vector3f(0, 0, 0), TextureTransform.DEFAULT_TEXTURING.createMatrix()
-        );
+        int maxIndexCount = prepareTextBatches();
+        if (maxIndexCount == 0) return;
 
+        GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount);
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+                () -> "Lumin TTF Draws",
+                colorView, Optional.empty(),
+                depthView, OptionalDouble.empty())
+        ) {
+            pass.setPipeline(ClientSetting.INSTANCE.fontAntiAliasing.getValue()
+                    ? LuminRenderPipelines.TTF_FONT_AA
+                    : LuminRenderPipelines.TTF_FONT_NO_AA);
+            if (scissorEnabled) {
+                ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
+            }
+
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", dynamicUniforms);
+            pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
+
+            drawPrepared(pass);
+        }
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        sharedDynamicUniforms = null;
+        sharedMaxIndexCount = 0;
+        if (batches.isEmpty()) return false;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false;
+
+        sharedMaxIndexCount = prepareTextBatches();
+        if (sharedMaxIndexCount == 0) return false;
+
+        LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount);
+        sharedDynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        return sharedDynamicUniforms != null;
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        if (sharedDynamicUniforms == null || sharedMaxIndexCount == 0) return;
+
+        GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount);
+        pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
+        pass.setUniform("DynamicTransforms", sharedDynamicUniforms);
+        drawPrepared(pass);
+    }
+
+    private int prepareTextBatches() {
+        int maxIndexCount = 0;
+        for (Batch batch : batches.values()) {
+            if (batch.offsetInAtlas == 0) continue;
+            if (batch.buffer.isMapped()) {
+                batch.buffer.unmap();
+            }
+
+            int vertexCount = (int) (batch.offsetInAtlas / STRIDE);
+            maxIndexCount = Math.max(maxIndexCount, (vertexCount / 4) * 6);
+        }
+        return maxIndexCount;
+    }
+
+    private void drawPrepared(RenderPass pass) {
+        if (scissorEnabled) {
+            if (!ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)) {
+                return;
+            }
+        } else {
+            pass.disableScissor();
+        }
+
+        // 不同 atlas 共享同一字体 pipeline，在同一个 pass 内只切换纹理并连续 draw。
         for (Map.Entry<TtfGlyphAtlas, Batch> entry : batches.entrySet()) {
             final var atlas = entry.getKey();
             final var batch = entry.getValue();
 
             if (batch.offsetInAtlas == 0) continue;
 
-            if (batch.buffer.isMapped()) {
-                batch.buffer.unmap();
-            }
-
             int vertexCount = (int) (batch.offsetInAtlas / STRIDE);
             int indexCount = (vertexCount / 4) * 6;
 
-            RenderSystem.AutoStorageIndexBuffer autoIndices =
-                    RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
-            GpuBuffer ibo = autoIndices.getBuffer(indexCount);
-
-            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    () -> "Lumin TTF Draw",
-                    colorView, Optional.empty(),
-                    depthView, OptionalDouble.empty())
-            ) {
-                pass.setPipeline(ClientSetting.INSTANCE.fontAntiAliasing.getValue()
-                        ? LuminRenderPipelines.TTF_FONT_AA
-                        : LuminRenderPipelines.TTF_FONT_NO_AA);
-                if (scissorEnabled) {
-                    ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
-                }
-
-                RenderSystem.bindDefaultUniforms(pass);
-                pass.setUniform("DynamicTransforms", dynamicUniforms);
-
-                pass.setVertexBuffer(0, new GpuBufferSlice(batch.buffer.getGpuBuffer(), 0, batch.buffer.getGpuBuffer().size()));
-                pass.setIndexBuffer(ibo, autoIndices.type());
-                pass.bindTexture("Sampler0", atlas.getTexture().getTextureView(), atlas.getTexture().getSampler());
-
-                pass.drawIndexed(indexCount, 1, 0, 0, 0);
-            }
+            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer().slice());
+            pass.bindTexture("Sampler0", atlas.getTexture().getTextureView(), atlas.getTexture().getSampler());
+            pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
     }
 
@@ -216,6 +260,8 @@ public class TtfTextRenderer implements ITextRenderer {
             }
             batch.offsetInAtlas = 0;
         }
+        sharedDynamicUniforms = null;
+        sharedMaxIndexCount = 0;
     }
 
     @Override

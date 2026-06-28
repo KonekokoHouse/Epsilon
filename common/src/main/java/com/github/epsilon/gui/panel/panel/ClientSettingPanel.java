@@ -2,11 +2,8 @@ package com.github.epsilon.gui.panel.panel;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -42,8 +39,6 @@ public class ClientSettingPanel {
     private static final float TAB_INDICATOR_HEIGHT = 2.5f;
 
     protected final PanelState state;
-    private final RoundRectRenderer roundRectRenderer;
-    private final RectRenderer rectRenderer;
     private final TextRenderer textRenderer;
     private final EnumMap<PanelState.ClientSettingTab, ClientSettingTabView> tabViews = new EnumMap<>(PanelState.ClientSettingTab.class);
     private final EnumMap<PanelState.ClientSettingTab, Animation> tabHoverAnimations = new EnumMap<>(PanelState.ClientSettingTab.class);
@@ -51,16 +46,14 @@ public class ClientSettingPanel {
 
     private PanelLayout.Rect bounds;
 
-    public ClientSettingPanel(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, ShadowRenderer shadowRenderer, TextRenderer textRenderer, PanelPopupHost popupHost) {
+    public ClientSettingPanel(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
-        this.roundRectRenderer = roundRectRenderer;
-        this.rectRenderer = rectRenderer;
         this.textRenderer = textRenderer;
 
-        tabViews.put(PanelState.ClientSettingTab.GENERAL, new GeneralClientSettingTab(state, roundRectRenderer, rectRenderer, textRenderer, popupHost));
-        tabViews.put(PanelState.ClientSettingTab.FRIEND, new FriendClientSettingTab(state, roundRectRenderer, rectRenderer, textRenderer));
-        tabViews.put(PanelState.ClientSettingTab.CONFIG, new ConfigClientSettingTab(state, roundRectRenderer, rectRenderer, textRenderer, popupHost));
-        tabViews.put(PanelState.ClientSettingTab.ADDON, new AddonClientSettingTab(state, roundRectRenderer, rectRenderer, textRenderer, popupHost));
+        tabViews.put(PanelState.ClientSettingTab.GENERAL, new GeneralClientSettingTab(state, textRenderer, popupHost));
+        tabViews.put(PanelState.ClientSettingTab.FRIEND, new FriendClientSettingTab(state, textRenderer));
+        tabViews.put(PanelState.ClientSettingTab.CONFIG, new ConfigClientSettingTab(state, textRenderer, popupHost));
+        tabViews.put(PanelState.ClientSettingTab.ADDON, new AddonClientSettingTab(state, textRenderer, popupHost));
 
         for (PanelState.ClientSettingTab tab : PanelState.ClientSettingTab.values()) {
             Animation animation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
@@ -70,7 +63,7 @@ public class ClientSettingPanel {
         tabIndicatorAnimation.setStartValue(getTabIndex(state.getClientSettingTab()));
     }
 
-    public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         ClientSettingTabView activeTab = getCurrentTabView();
@@ -82,9 +75,9 @@ public class ClientSettingPanel {
             scope.text(titleComponent.getTranslatedName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
             buildTabs(scope, effectiveMouseX, effectiveMouseY);
         });
-        PanelUiCompiler.render(tree, null, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(tree);
 
-        activeTab.render(guiGraphics, getContentBounds(), effectiveMouseX, effectiveMouseY, partialTick);
+        activeTab.render(guiGraphics, renderBatch.view(10), getContentBounds(), effectiveMouseX, effectiveMouseY, partialTick);
     }
 
     public void flushContent() {

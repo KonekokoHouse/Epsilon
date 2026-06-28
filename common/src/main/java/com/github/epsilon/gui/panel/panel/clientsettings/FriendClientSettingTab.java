@@ -2,10 +2,8 @@ package com.github.epsilon.gui.panel.panel.clientsettings;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -39,8 +37,6 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     private static final int MAX_FRIEND_NAME_LENGTH = 32;
 
     private final PanelState state;
-    private final RoundRectRenderer roundRectRenderer;
-    private final RectRenderer rectRenderer;
     private final TextRenderer textRenderer;
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
     private final PanelContentInvalidationState contentState = new PanelContentInvalidationState();
@@ -56,15 +52,13 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     private long lastContentSignature = Long.MIN_VALUE;
     private float scrollVelocity = 0;
 
-    public FriendClientSettingTab(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer) {
+    public FriendClientSettingTab(PanelState state, TextRenderer textRenderer) {
         this.state = state;
-        this.roundRectRenderer = roundRectRenderer;
-        this.rectRenderer = rectRenderer;
         this.textRenderer = textRenderer;
     }
 
     @Override
-    public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         if (Math.abs(scrollVelocity) > 0.01f) {
@@ -128,7 +122,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
                 }
             });
         });
-        PanelUiCompiler.render(tree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(tree);
 
         if (rebuildContent) {
             rememberSnapshot(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature);

@@ -1,9 +1,7 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.PanelState;
@@ -17,6 +15,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.Setting;
+import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -32,9 +31,9 @@ import java.util.Objects;
 
 public class GeneralClientSettingTab implements ClientSettingTabView {
 
+    private static final String SETTING_OWNER_KEY = "client-settings:panel-general";
+
     private final PanelState state;
-    private final RoundRectRenderer roundRectRenderer;
-    private final RectRenderer rectRenderer;
     private final TextRenderer textRenderer;
     private final SettingListController settingListController;
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
@@ -49,16 +48,14 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
     private long lastContentSignature = Long.MIN_VALUE;
     private float scrollVelocity = 0;
 
-    public GeneralClientSettingTab(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer, PanelPopupHost popupHost) {
+    public GeneralClientSettingTab(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
-        this.roundRectRenderer = roundRectRenderer;
-        this.rectRenderer = rectRenderer;
         this.textRenderer = textRenderer;
         this.settingListController = new SettingListController(popupHost);
     }
 
     @Override
-    public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         if (Math.abs(scrollVelocity) > 0.01f) {
@@ -73,7 +70,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
         List<Setting<?>> settings = ClientSetting.INSTANCE.getSettings().stream()
                 .filter(Setting::isAvailable)
                 .toList();
-        float contentHeight = settingListController.getContentHeight(settings);
+        float contentHeight = settingListController.getContentHeight(SETTING_OWNER_KEY, settings);
         state.setMaxClientSettingScroll(contentHeight - bounds.height());
         float maxScroll = Math.max(0.0f, contentHeight - bounds.height());
         boolean hasScrollBar = maxScroll > 0.0f;
@@ -94,7 +91,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
                     if (!rebuildContent) {
                         return;
                     }
-                    settingListController.layoutRows(settings, bounds, state.getClientSettingScroll(), rowWidth,
+                    settingListController.layoutRows(SETTING_OWNER_KEY, settings, bounds, state.getClientSettingScroll(), rowWidth,
                             content, textRenderer, effectiveMouseX, effectiveMouseY, (setting, row, rowBounds) -> {
                                 if (row instanceof KeybindSettingRow keybindRow) {
                                     keybindRow.setListening(state.getListeningKeybindSetting() == keybindRow.getSetting());
@@ -110,7 +107,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
                             });
                     contentState.noteAnimation(settingListController.hasActiveAnimations());
                 }));
-        PanelUiCompiler.render(tree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(tree);
 
         if (rebuildContent) {
             rememberSnapshot(bounds, mouseX, mouseY, settings, guiGraphics.guiHeight(), contentSignature);
@@ -294,11 +291,8 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
         for (Setting<?> setting : settings) {
             signature = signature * 31L + setting.getName().hashCode();
             signature = signature * 31L + (setting.isAvailable() ? 1 : 0);
-            if (setting.getGroup() != null) {
-                signature = signature * 31L + setting.getGroup().getName().hashCode();
-                signature = signature * 31L + (setting.getGroup().isCollapsed() ? 1 : 0);
-            }
         }
+        signature = signature * 31L + SettingLayoutPlanner.signature(SETTING_OWNER_KEY, settings);
         return signature;
     }
 

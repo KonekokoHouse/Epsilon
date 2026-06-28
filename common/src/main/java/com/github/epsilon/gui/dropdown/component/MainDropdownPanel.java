@@ -37,7 +37,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     public MainDropdownPanel(int panelIndex, Consumer<String> togglePanel, BooleanSupplier anySubPanelVisible, PanelVisibleResolver panelVisibleResolver) {
         super("main", Constants.NAME, "", panelIndex);
         this.width = 160.0f;
-        this.settingsContent = new SettingsContent(ClientSetting.INSTANCE.getSettings(), ClientSetting.INSTANCE.getSettingGroups());
+        this.settingsContent = new SettingsContent("client-settings:dropdown-main", ClientSetting.INSTANCE.getSettings());
         setVisible(true);
         setOpened(true);
         add(Category.COMBAT::getName, Category.COMBAT.icon, "category:combat", togglePanel, panelVisibleResolver);

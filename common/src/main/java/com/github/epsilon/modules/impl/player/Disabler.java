@@ -4,7 +4,6 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.network.PacketUtils;
 import net.minecraft.network.protocol.Packet;
@@ -19,12 +18,10 @@ public class Disabler extends Module {
         super("Disabler", Category.PLAYER);
     }
 
-    private SettingGroup sgMultiActionsC = settingGroup("MultiActionsC");
-
     private final BoolSetting badPacketsA = boolSetting("BadPacketsA", true);
 
-    private final BoolSetting sprinting = boolSetting("Sprinting", true).group(sgMultiActionsC);
-    private final BoolSetting input = boolSetting("Input", true).group(sgMultiActionsC);
+    private final BoolSetting sprinting = boolSetting("Sprinting", true);
+    private final BoolSetting input = boolSetting("Input", true);
 
     private int lastSendSlot = -1;
     private boolean hasOldInput;

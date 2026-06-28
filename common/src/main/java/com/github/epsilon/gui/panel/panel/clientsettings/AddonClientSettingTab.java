@@ -3,10 +3,8 @@ package com.github.epsilon.gui.panel.panel.clientsettings;
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -21,6 +19,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.settings.Setting;
+import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -49,8 +48,6 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     private static final float DETAIL_SETTINGS_MIN_HEIGHT = 96.0f;
 
     private final PanelState state;
-    private final RoundRectRenderer roundRectRenderer;
-    private final RectRenderer rectRenderer;
     private final TextRenderer textRenderer;
     private final SettingListController settingListController;
     private final PanelContentBuffer listBuffer = new PanelContentBuffer();
@@ -74,16 +71,14 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     private float listScrollVelocity = 0;
     private float detailScrollVelocity = 0;
 
-    public AddonClientSettingTab(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer, PanelPopupHost popupHost) {
+    public AddonClientSettingTab(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
-        this.roundRectRenderer = roundRectRenderer;
-        this.rectRenderer = rectRenderer;
         this.textRenderer = textRenderer;
         this.settingListController = new SettingListController(popupHost);
     }
 
     @Override
-    public void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         if (Math.abs(listScrollVelocity) > 0.01f) {
@@ -121,13 +116,14 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         boolean listHasScrollBar = maxListScroll > 0.0f;
         float listRowWidth = listHasScrollBar ? listViewport.width() - ScrollBarUtils.TOTAL_WIDTH : listViewport.width();
 
-        float settingsContentHeight = settingListController.getContentHeight(selectedSettings);
+        String settingOwnerKey = selectedAddon == null ? "addon-settings:none" : "addon-settings:" + selectedAddon.getAddonId();
+        float settingsContentHeight = settingListController.getContentHeight(settingOwnerKey, selectedSettings);
         state.setMaxAddonDetailScroll(settingsContentHeight - settingsViewport.height());
         float maxDetailScroll = Math.max(0.0f, settingsContentHeight - settingsViewport.height());
         boolean detailHasScrollBar = maxDetailScroll > 0.0f;
         float settingsRowWidth = detailHasScrollBar ? settingsViewport.width() - ScrollBarUtils.TOTAL_WIDTH : settingsViewport.width();
 
-        long contentSignature = buildContentSignature(addons, selectedAddon, selectedSettings);
+        long contentSignature = buildContentSignature(addons, selectedAddon, selectedSettings, settingOwnerKey);
         boolean popupConsumesHover = settingListController.isPopupHovered(mouseX, mouseY);
         int effectiveMouseX = popupConsumesHover ? Integer.MIN_VALUE : mouseX;
         int effectiveMouseY = popupConsumesHover ? Integer.MIN_VALUE : mouseY;
@@ -137,7 +133,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             listBuffer.clear();
             detailBuffer.clear();
             contentState.beginRebuild();
-            settingListController.prepareLayout(selectedSettings);
+            settingListController.prepareLayout(settingOwnerKey, selectedSettings);
             rowEntries.clear();
             List<String> addonIds = addons.stream().map(EpsilonAddon::getAddonId).toList();
             rowHoverAnimations.keySet().removeIf(id -> !addonIds.contains(id));
@@ -188,7 +184,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                         if (!rebuildContent) {
                             return;
                         }
-                        settingListController.layoutRows(selectedSettings, settingsViewport, state.getAddonDetailScroll(), settingsRowWidth,
+                        settingListController.layoutRows(settingOwnerKey, selectedSettings, settingsViewport, state.getAddonDetailScroll(), settingsRowWidth,
                                 content, textRenderer, effectiveMouseX, effectiveMouseY, (setting, row, rowBounds) -> {
                                     if (row instanceof KeybindSettingRow keybindRow) {
                                         keybindRow.setListening(state.getListeningKeybindSetting() == keybindRow.getSetting());
@@ -207,7 +203,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                 }
             }
         });
-        PanelUiCompiler.render(tree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(tree);
 
         if (rebuildContent) {
             rememberSnapshot(bounds, mouseX, mouseY, addons, selectedAddon, selectedSettings, guiGraphics.guiHeight(), contentSignature);
@@ -587,7 +583,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         lastContentSignature = contentSignature;
     }
 
-    private long buildContentSignature(List<EpsilonAddon> addons, EpsilonAddon selectedAddon, List<Setting<?>> selectedSettings) {
+    private long buildContentSignature(List<EpsilonAddon> addons, EpsilonAddon selectedAddon, List<Setting<?>> selectedSettings, String settingOwnerKey) {
         long signature = 17L;
         signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
         signature = signature * 31L + Float.floatToIntBits(state.getAddonListScroll());
@@ -610,11 +606,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         for (Setting<?> setting : selectedSettings) {
             signature = signature * 31L + setting.getName().hashCode();
             signature = signature * 31L + (setting.isAvailable() ? 1 : 0);
-            if (setting.getGroup() != null) {
-                signature = signature * 31L + setting.getGroup().getName().hashCode();
-                signature = signature * 31L + (setting.getGroup().isCollapsed() ? 1 : 0);
-            }
         }
+        signature = signature * 31L + SettingLayoutPlanner.signature(settingOwnerKey, selectedSettings);
         return signature;
     }
 

@@ -1,9 +1,7 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -37,10 +35,10 @@ public class ClientSettingTextField {
     }
 
     public void render(PanelLayout.Rect bounds, int mouseX, int mouseY,
-                       RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer,
+                       PanelRenderBatch renderBatch, TextRenderer textRenderer,
                        String placeholder, float textScale, String trailingHint) {
         PanelUiTree tree = PanelUiTree.build(scope -> buildUi(scope, bounds, mouseX, mouseY, textRenderer, placeholder, textScale, trailingHint));
-        PanelUiCompiler.render(tree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(tree);
     }
 
     public void buildUi(PanelUiTree.Scope scope, PanelLayout.Rect bounds, int mouseX, int mouseY,
