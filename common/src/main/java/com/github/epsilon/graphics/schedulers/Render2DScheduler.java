@@ -1,7 +1,14 @@
 package com.github.epsilon.graphics.schedulers;
 
+import com.github.epsilon.graphics.LuminRenderPipelines;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.github.epsilon.modules.impl.ClientSetting;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -9,6 +16,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 /**
  * 2D GUI 渲染调度器。
@@ -77,14 +86,7 @@ public final class Render2DScheduler implements AutoCloseable {
             return;
         }
 
-        List<Integer> layers = new ArrayList<>(commandStore.layers());
-        Collections.sort(layers);
-        for (int layer : layers) {
-            LayerBucket bucket = commandStore.layer(layer);
-            if (bucket != null) {
-                flushLayer(bucket);
-            }
-        }
+        flushBatchGroups(FrameBatchPlanner.plan(commandStore.planBatches()));
         rendererPool.clear();
     }
 
@@ -113,20 +115,94 @@ public final class Render2DScheduler implements AutoCloseable {
         if (bucket.count() == 0) {
             return;
         }
-        for (BatchGroup group : bucket.planBatches()) {
-            flushBatchGroup(group);
-        }
+        flushBatchGroups(FrameBatchPlanner.plan(bucket.planBatches()));
     }
 
-    private void flushBatchGroup(BatchGroup group) {
-        if (group.commands().isEmpty() || group.scissor() != null && !group.scissor().visible()) {
+    private void flushBatchGroups(List<BatchGroup> groups) {
+        if (groups.isEmpty()) {
             return;
+        }
+        List<PreparedBatch> prepared = new ArrayList<>(groups.size());
+        for (BatchGroup group : groups) {
+            PreparedBatch batch = prepareBatchGroup(group);
+            if (batch != null) {
+                prepared.add(batch);
+            }
+        }
+        flushPreparedBatches(prepared);
+    }
+
+    private PreparedBatch prepareBatchGroup(BatchGroup group) {
+        if (group.commands().isEmpty() || group.scissor() != null && !group.scissor().visible()) {
+            return null;
         }
         RendererBundle renderers = rendererPool.acquire(group.kind(), group.scissor());
         for (Render2DCommand command : group.commands()) {
             emit(command, renderers);
         }
-        renderers.draw();
+        return new PreparedBatch(pipelineFor(group.kind()), renderers);
+    }
+
+    private void flushPreparedBatches(List<PreparedBatch> batches) {
+        if (batches.isEmpty()) {
+            return;
+        }
+
+        LuminRenderSystem.applyOrthoProjection();
+        List<PreparedBatch> drawable = new ArrayList<>(batches.size());
+        for (PreparedBatch batch : batches) {
+            if (batch.renderers().prepareSharedDraw()) {
+                drawable.add(batch);
+            }
+        }
+        if (drawable.isEmpty()) {
+            return;
+        }
+
+        int index = 0;
+        while (index < drawable.size()) {
+            RenderPipeline pipeline = drawable.get(index).pipeline();
+            int end = index + 1;
+            while (end < drawable.size() && drawable.get(end).pipeline() == pipeline) {
+                end++;
+            }
+            flushPipelineRun(pipeline, drawable, index, end);
+            index = end;
+        }
+    }
+
+    private void flushPipelineRun(RenderPipeline pipeline, List<PreparedBatch> batches, int start, int end) {
+        GpuTextureView colorView = LuminRenderSystem.resolveColorView();
+        if (colorView == null) {
+            return;
+        }
+
+        GpuTextureView depthView = pipeline == LuminRenderPipelines.TEXTURE ? null : LuminRenderSystem.resolveDepthView();
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+                () -> "Lumin 2D Pipeline Run",
+                colorView, OptionalInt.empty(),
+                depthView, OptionalDouble.empty())
+        ) {
+            pass.setPipeline(pipeline);
+            RenderSystem.bindDefaultUniforms(pass);
+            for (int i = start; i < end; i++) {
+                batches.get(i).renderers().draw(pass);
+            }
+        }
+    }
+
+    private static RenderPipeline pipelineFor(Render2DCommandKind kind) {
+        return switch (kind) {
+            case SHADOW -> LuminRenderPipelines.SHADOW;
+            case ROUND_RECT -> LuminRenderPipelines.ROUND_RECT;
+            case ROUND_RECT_OUTLINE -> LuminRenderPipelines.ROUND_RECT_OUTLINE;
+            case RECT -> LuminRenderPipelines.RECTANGLE;
+            case TRIANGLE -> LuminRenderPipelines.TRIANGLE;
+            case TEXTURE -> LuminRenderPipelines.TEXTURE;
+            case TEXT -> ClientSetting.INSTANCE.fontAntiAliasing.getValue()
+                    ? LuminRenderPipelines.TTF_FONT_AA
+                    : LuminRenderPipelines.TTF_FONT_NO_AA;
+        };
     }
 
     private static void emit(Render2DCommand command, RendererBundle renderers) {
@@ -335,6 +411,25 @@ public final class Render2DScheduler implements AutoCloseable {
             return layers.get(layer);
         }
 
+        private List<BatchGroup> planBatches() {
+            List<Integer> orderedLayers = new ArrayList<>(layers.keySet());
+            Collections.sort(orderedLayers);
+
+            List<BatchGroup> result = new ArrayList<>();
+            for (int layer : orderedLayers) {
+                LayerBucket bucket = layers.get(layer);
+                if (bucket == null || bucket.count() == 0) {
+                    continue;
+                }
+                for (BatchGroup group : bucket.planBatches()) {
+                    if (group.visible()) {
+                        result.add(group);
+                    }
+                }
+            }
+            return result;
+        }
+
         private void clear() {
             layers.clear();
         }
@@ -484,7 +579,7 @@ public final class Render2DScheduler implements AutoCloseable {
             Map<BatchKey, BatchGroup> groups = new LinkedHashMap<>();
             for (Render2DCommand command : commands) {
                 BatchKey key = new BatchKey(command.kind(), command.scissor());
-                groups.computeIfAbsent(key, ignored -> new BatchGroup(command.kind(), command.scissor())).commands().add(command);
+                groups.computeIfAbsent(key, ignored -> new BatchGroup(command.kind(), command.scissor())).add(command);
             }
 
             List<BatchGroup> result = new ArrayList<>(groups.values());
@@ -499,12 +594,163 @@ public final class Render2DScheduler implements AutoCloseable {
         }
     }
 
+    private static final class FrameBatchPlanner {
+        private FrameBatchPlanner() {
+        }
+
+        private static List<BatchGroup> plan(List<BatchGroup> groups) {
+            int count = groups.size();
+            if (count <= 1) {
+                return groups;
+            }
+
+            List<List<Integer>> outgoing = new ArrayList<>(count);
+            for (int i = 0; i < count; i++) {
+                outgoing.add(new ArrayList<>());
+            }
+            int[] incomingCounts = new int[count];
+
+            for (int i = 0; i < count; i++) {
+                BatchGroup before = groups.get(i);
+                for (int j = i + 1; j < count; j++) {
+                    BatchGroup after = groups.get(j);
+                    if (mustKeepOrder(before, after)) {
+                        outgoing.get(i).add(j);
+                        incomingCounts[j]++;
+                    }
+                }
+            }
+
+            boolean[] scheduled = new boolean[count];
+            List<BatchGroup> result = new ArrayList<>(count);
+            Render2DCommandKind preferredKind = null;
+            int scheduledCount = 0;
+
+            while (scheduledCount < count) {
+                int next = selectReady(groups, scheduled, incomingCounts, preferredKind);
+                if (next < 0) {
+                    next = selectFirstUnscheduled(scheduled);
+                }
+
+                BatchGroup merged = groups.get(next);
+                scheduledCount += schedule(next, outgoing, incomingCounts, scheduled);
+
+                BatchKey mergeKey = merged.key();
+                int sameKey;
+                while ((sameKey = selectReady(groups, scheduled, incomingCounts, mergeKey)) >= 0) {
+                    merged.append(groups.get(sameKey));
+                    scheduledCount += schedule(sameKey, outgoing, incomingCounts, scheduled);
+                }
+
+                result.add(merged);
+                preferredKind = merged.kind();
+            }
+
+            return result;
+        }
+
+        private static boolean mustKeepOrder(BatchGroup before, BatchGroup after) {
+            return before.bounds().intersects(after.bounds());
+        }
+
+        private static int selectReady(List<BatchGroup> groups, boolean[] scheduled, int[] incomingCounts,
+                                       Render2DCommandKind preferredKind) {
+            int fallback = -1;
+            for (int i = 0; i < groups.size(); i++) {
+                if (scheduled[i] || incomingCounts[i] > 0) {
+                    continue;
+                }
+                if (fallback < 0) {
+                    fallback = i;
+                }
+                if (preferredKind != null && groups.get(i).kind() == preferredKind) {
+                    return i;
+                }
+            }
+            return fallback;
+        }
+
+        private static int selectReady(List<BatchGroup> groups, boolean[] scheduled, int[] incomingCounts,
+                                       BatchKey key) {
+            for (int i = 0; i < groups.size(); i++) {
+                if (!scheduled[i] && incomingCounts[i] == 0 && groups.get(i).key().equals(key)) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private static int selectFirstUnscheduled(boolean[] scheduled) {
+            for (int i = 0; i < scheduled.length; i++) {
+                if (!scheduled[i]) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private static int schedule(int index, List<List<Integer>> outgoing, int[] incomingCounts, boolean[] scheduled) {
+            if (index < 0 || scheduled[index]) {
+                return 0;
+            }
+            scheduled[index] = true;
+            for (int target : outgoing.get(index)) {
+                incomingCounts[target]--;
+            }
+            return 1;
+        }
+    }
+
     private record BatchKey(Render2DCommandKind kind, Render2DScissor scissor) {
     }
 
-    private record BatchGroup(Render2DCommandKind kind, Render2DScissor scissor, List<Render2DCommand> commands) {
+    private static final class BatchGroup {
+        private final Render2DCommandKind kind;
+        private final Render2DScissor scissor;
+        private final List<Render2DCommand> commands = new ArrayList<>();
+        private Render2DBounds bounds;
+
         private BatchGroup(Render2DCommandKind kind, Render2DScissor scissor) {
-            this(kind, scissor, new ArrayList<>());
+            this.kind = kind;
+            this.scissor = scissor;
+        }
+
+        private Render2DCommandKind kind() {
+            return kind;
+        }
+
+        private Render2DScissor scissor() {
+            return scissor;
+        }
+
+        private List<Render2DCommand> commands() {
+            return commands;
+        }
+
+        private Render2DBounds bounds() {
+            return bounds;
+        }
+
+        private BatchKey key() {
+            return new BatchKey(kind, scissor);
+        }
+
+        private void add(Render2DCommand command) {
+            commands.add(command);
+            Render2DBounds orderingBounds = command.orderingBounds();
+            bounds = bounds == null ? orderingBounds : bounds.include(orderingBounds);
+        }
+
+        private void append(BatchGroup other) {
+            if (other.commands.isEmpty()) {
+                return;
+            }
+            commands.addAll(other.commands);
+            bounds = bounds == null ? other.bounds : bounds.include(other.bounds);
+        }
+
+        private boolean visible() {
+            return !commands.isEmpty() && (scissor == null || scissor.visible());
         }
 
         private long firstSequence() {
@@ -550,6 +796,9 @@ public final class Render2DScheduler implements AutoCloseable {
     }
 
     private record RendererKey(Render2DCommandKind kind, Render2DScissor scissor) {
+    }
+
+    private record PreparedBatch(RenderPipeline pipeline, RendererBundle renderers) {
     }
 
     private static final class RendererBundle implements AutoCloseable {
@@ -645,6 +894,14 @@ public final class Render2DScheduler implements AutoCloseable {
 
         private void draw() {
             renderer.draw();
+        }
+
+        private boolean prepareSharedDraw() {
+            return renderer.prepareSharedDraw();
+        }
+
+        private void draw(RenderPass pass) {
+            renderer.draw(pass);
         }
 
         private void clear() {

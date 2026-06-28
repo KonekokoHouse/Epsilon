@@ -27,6 +27,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     private int scissorX, scissorY, scissorW, scissorH;
     private long currentOffset = 0;
     private int vertexCount = 0;
+    private LuminRenderSystem.QuadRenderingInfo sharedInfo;
 
     private RoundRectOutlineRenderer() {
     }
@@ -137,10 +138,40 @@ public class RoundRectOutlineRenderer implements IRenderer {
             if (scissorEnabled) ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", info.dynamicUniforms());
-            pass.setVertexBuffer(0, buffer.getGpuBuffer());
-            pass.setIndexBuffer(info.ibo(), info.indexType());
-            pass.drawIndexed(0, 0, info.indexCount(), 1);
+            drawPrepared(pass, info);
         }
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        sharedInfo = null;
+        if (vertexCount == 0) return false;
+        if (buffer.isMapped()) buffer.unmap();
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false;
+
+        sharedInfo = LuminRenderSystem.prepareQuadRendering(vertexCount, false);
+        return sharedInfo != null && sharedInfo.colorView() != null;
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        if (sharedInfo == null) return;
+        pass.setUniform("DynamicTransforms", sharedInfo.dynamicUniforms());
+        drawPrepared(pass, sharedInfo);
+    }
+
+    private void drawPrepared(RenderPass pass, LuminRenderSystem.QuadRenderingInfo info) {
+        if (scissorEnabled) {
+            if (!ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)) {
+                return;
+            }
+        } else {
+            pass.disableScissor();
+        }
+
+        pass.setVertexBuffer(0, buffer.getGpuBuffer());
+        pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(info.indexCount()), LuminRenderSystem.getQuadIndexType());
+        pass.drawIndexed(0, 0, info.indexCount(), 1);
     }
 
     @Override
@@ -151,6 +182,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
         }
         vertexCount = 0;
         currentOffset = 0;
+        sharedInfo = null;
     }
 
     @Override

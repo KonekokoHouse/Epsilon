@@ -13,13 +13,10 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.*;
-import net.minecraft.client.renderer.rendertype.TextureTransform;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
@@ -40,6 +37,8 @@ public class TextureRenderer implements IRenderer {
     private final Map<Object, Batch> batches = new LinkedHashMap<>();
     private boolean scissorEnabled = false;
     private int scissorX, scissorY, scissorW, scissorH;
+    private GpuBufferSlice sharedDynamicUniforms;
+    private int sharedMaxIndexCount;
 
     private TextureRenderer() {
     }
@@ -158,56 +157,102 @@ public class TextureRenderer implements IRenderer {
         if (colorView == null) return;
         if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
-        GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeTransform(
-                RenderSystem.getModelViewMatrix(),
-                new Vector4f(1, 1, 1, 1),
-                new Vector3f(0, 0, 0),
-                TextureTransform.DEFAULT_TEXTURING.getMatrix()
-        );
+        int maxIndexCount = prepareTextureBatches();
+        if (maxIndexCount == 0) return;
 
+        GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount);
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+                () -> "Rounded Texture Draws",
+                colorView, OptionalInt.empty(),
+                null, OptionalDouble.empty())
+        ) {
+            pass.setPipeline(LuminRenderPipelines.TEXTURE);
+            if (scissorEnabled) {
+                ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
+            }
+
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", dynamicUniforms);
+            pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
+
+            drawPrepared(pass);
+        }
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        sharedDynamicUniforms = null;
+        sharedMaxIndexCount = 0;
+        if (batches.isEmpty()) return false;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false;
+
+        sharedMaxIndexCount = prepareTextureBatches();
+        if (sharedMaxIndexCount == 0) return false;
+
+        LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount);
+        sharedDynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        return sharedDynamicUniforms != null;
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        if (sharedDynamicUniforms == null || sharedMaxIndexCount == 0) return;
+
+        pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount), LuminRenderSystem.getQuadIndexType());
+        pass.setUniform("DynamicTransforms", sharedDynamicUniforms);
+        drawPrepared(pass);
+    }
+
+    private int prepareTextureBatches() {
+        int maxIndexCount = 0;
         for (Map.Entry<Object, Batch> entry : batches.entrySet()) {
-            Object textureKey = entry.getKey();
             Batch batch = entry.getValue();
+            batch.preparedTexture = null;
             if (batch.vertexCount == 0) continue;
 
             if (batch.buffer.isMapped()) {
                 batch.buffer.unmap();
             }
 
+            batch.preparedTexture = resolveTexture(entry.getKey(), batch.useLinearFilter);
+            if (batch.preparedTexture == null) continue;
+            maxIndexCount = Math.max(maxIndexCount, (batch.vertexCount / 4) * 6);
+        }
+        return maxIndexCount;
+    }
+
+    private LuminTexture resolveTexture(Object textureKey, boolean useLinearFilter) {
+        if (textureKey instanceof Identifier id) {
+            return TextureCacheHolder.INSTANCE.textureCache.computeIfAbsent(
+                    id, key -> loadTexture(key, useLinearFilter)
+            );
+        }
+        if (textureKey instanceof LuminTexture tex) {
+            return tex;
+        }
+        return null;
+    }
+
+    private void drawPrepared(RenderPass pass) {
+        if (scissorEnabled) {
+            if (!ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)) {
+                return;
+            }
+        } else {
+            pass.disableScissor();
+        }
+
+        // 纹理解析和上传已经在 prepare 阶段完成，pass 内只允许绑定和 draw。
+        for (Batch batch : batches.values()) {
+            if (batch.vertexCount == 0 || batch.preparedTexture == null) continue;
+
             int indexCount = (batch.vertexCount / 4) * 6;
-            GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(indexCount);
+            LuminTexture texture = batch.preparedTexture;
 
-            LuminTexture texture;
-            if (textureKey instanceof Identifier id) {
-                texture = TextureCacheHolder.INSTANCE.textureCache.computeIfAbsent(
-                        id, key -> loadTexture(key, batch.useLinearFilter)
-                );
-            } else if (textureKey instanceof LuminTexture tex) {
-                texture = tex;
-            } else {
-                continue;
-            }
-
-            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    () -> "Rounded Texture Draw",
-                    colorView, OptionalInt.empty(),
-                    null, OptionalDouble.empty())
-            ) {
-                pass.setPipeline(LuminRenderPipelines.TEXTURE);
-                if (scissorEnabled) {
-                    ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
-                }
-
-                RenderSystem.bindDefaultUniforms(pass);
-                pass.setUniform("DynamicTransforms", dynamicUniforms);
-
-                // 使用 RingBuffer 当前指向的 GpuBuffer
-                pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
-                pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
-                pass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
-
-                pass.drawIndexed(0, 0, indexCount, 1);
-            }
+            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
+            pass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
+            pass.drawIndexed(0, 0, indexCount, 1);
         }
     }
 
@@ -256,7 +301,10 @@ public class TextureRenderer implements IRenderer {
             }
             batch.currentOffset = 0;
             batch.vertexCount = 0;
+            batch.preparedTexture = null;
         }
+        sharedDynamicUniforms = null;
+        sharedMaxIndexCount = 0;
     }
 
     @Override
@@ -274,6 +322,7 @@ public class TextureRenderer implements IRenderer {
         long currentOffset = 0;
         int vertexCount = 0;
         boolean useLinearFilter;
+        LuminTexture preparedTexture;
 
         private Batch(LuminRingBuffer buffer) {
             this.buffer = buffer;

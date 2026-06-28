@@ -6,6 +6,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.graphics.text.ttf.TtfTextRenderer;
 import com.github.epsilon.holders.RendererHolder;
+import com.mojang.blaze3d.systems.RenderPass;
 
 import java.awt.*;
 
@@ -81,6 +82,16 @@ public class TextRenderer implements IRenderer {
     public void draw() {
         LuminRenderSystem.applyOrthoProjection();
         textRenderer.draw();
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        return textRenderer.prepareSharedDraw();
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        textRenderer.draw(pass);
     }
 
     @Override

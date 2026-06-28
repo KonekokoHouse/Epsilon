@@ -19,8 +19,7 @@ public class DropdownRenderer {
     private static final int MAX_PASSES = 96;
 
     private PanelRenderBatch batch;
-    // 整帧复用一个 Scope 收集 DSL 节点，endFrame 时再一次性编译进 batch。
-    private final PanelUiTree.Scope scope = new PanelUiTree.Scope();
+    // 每个 pass 拥有独立 Scope，保证 scissor 在命令提交前绑定到对应 layer。
     // facade 不再直接持有文本绘制数据，但旧组件仍依赖 renderer 的测量 API。
     private final TextRenderer measureTextRenderer = TextRenderer.create();
     private final ShadowFacade shadowFacade = new ShadowFacade();
@@ -76,7 +75,7 @@ public class DropdownRenderer {
         ensurePass();
         LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(guiX, guiY, guiW, guiH);
         Pass pass = currentPass();
-        // 裁剪状态记录在当前 pass，帧尾再绑定到对应 layer 的 renderer 组。
+        // 裁剪状态记录在当前 pass，帧尾会先绑定到 layer，再把节点编译进 scheduler。
         pass.scissorEnabled = true;
         pass.scissorX = scissor.x();
         pass.scissorY = scissor.y();
@@ -99,7 +98,6 @@ public class DropdownRenderer {
             // 独立模式仅用于未绑定 GuiScene 的旧入口；Screen 内会在每帧 bind 到语义 layer。
             batch = new PanelRenderBatch();
         }
-        scope.clear();
         if (batch.ownsScheduler()) {
             batch.clear();
         }
@@ -134,18 +132,24 @@ public class DropdownRenderer {
         if (!frameOpen) {
             return;
         }
-        // 所有 facade 调用都已经写入 scope；这里只编译一次，减少 renderer draw/clear 次数。
-        batch.render(scope.snapshot());
+        // scissor 会在命令提交时被 scheduler 采样，因此必须逐 pass 先绑定裁剪再编译节点。
         for (int i = 0; i < passCount; i++) {
             Pass pass = passes[i];
-            if (pass != null && pass.scissorEnabled) {
+            if (pass == null) {
+                continue;
+            }
+            if (pass.scissorEnabled) {
                 batch.setLayerScissor(i * 10, pass.scissorX, pass.scissorY, pass.scissorW, pass.scissorH);
+            }
+            batch.render(pass.scope.snapshot());
+            if (pass.scissorEnabled) {
+                batch.clearLayerScissor(i * 10);
             }
         }
         if (batch.ownsScheduler()) {
             batch.flushAndClear();
         }
-        scope.clear();
+        clearPassScopes();
         frameOpen = false;
     }
 
@@ -177,12 +181,13 @@ public class DropdownRenderer {
     }
 
     private PanelUiTree.Scope targetScope() {
-        return scope;
+        return currentPass().scope;
     }
 
     private final Pass[] passes = new Pass[MAX_PASSES];
 
     private static final class Pass {
+        private final PanelUiTree.Scope scope = new PanelUiTree.Scope();
         private boolean scissorEnabled;
         private boolean flushed;
         private int scissorX;
@@ -197,6 +202,16 @@ public class DropdownRenderer {
             scissorY = 0;
             scissorW = 0;
             scissorH = 0;
+            scope.clear();
+        }
+    }
+
+    private void clearPassScopes() {
+        for (int i = 0; i < passCount; i++) {
+            Pass pass = passes[i];
+            if (pass != null) {
+                pass.scope.clear();
+            }
         }
     }
 

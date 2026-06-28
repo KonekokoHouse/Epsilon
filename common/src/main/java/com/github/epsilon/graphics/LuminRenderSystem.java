@@ -160,7 +160,13 @@ public class LuminRenderSystem {
     }
 
     public static QuadRenderingInfo prepareQuadRendering(int vertexCount) {
-        LuminRenderSystem.applyOrthoProjection();
+        return prepareQuadRendering(vertexCount, true);
+    }
+
+    public static QuadRenderingInfo prepareQuadRendering(int vertexCount, boolean applyProjection) {
+        if (applyProjection) {
+            LuminRenderSystem.applyOrthoProjection();
+        }
 
         GpuTextureView colorView = resolveColorView();
         GpuTextureView depthView = resolveDepthView();
@@ -194,6 +200,15 @@ public class LuminRenderSystem {
     public static GpuBufferSlice writeTransform(Matrix4fc modelView, Vector4fc colorModulator, Vector3fc modelOffset, Matrix4fc textureMatrix) {
         return RenderSystem.getDynamicUniforms().writeTransform(
                 modelView, colorModulator, modelOffset, textureMatrix
+        );
+    }
+
+    public static GpuBufferSlice writeDefaultGuiTransform() {
+        return writeTransform(
+                RenderSystem.getModelViewMatrix(),
+                new Vector4f(1, 1, 1, 1),
+                new Vector3f(0, 0, 0),
+                TextureTransform.DEFAULT_TEXTURING.getMatrix()
         );
     }
 

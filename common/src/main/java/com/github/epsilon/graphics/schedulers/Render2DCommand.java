@@ -18,9 +18,20 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
 
     Render2DScissor scissor();
 
+    default Render2DBounds orderingBounds() {
+        return bounds();
+    }
+
     record Shadow(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
                   float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                   float blurRadius, Color color) implements Render2DCommand {
+        @Override
+        public Render2DBounds orderingBounds() {
+            float pad = Math.max(0.0f, blurRadius);
+            return Render2DBounds.of(bounds.x() - pad, bounds.y() - pad,
+                    bounds.width() + pad * 2.0f, bounds.height() + pad * 2.0f);
+        }
+
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.SHADOW;
@@ -39,6 +50,13 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
     record RoundRectOutline(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
                             float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                             float outlineWidth, Color color) implements Render2DCommand {
+        @Override
+        public Render2DBounds orderingBounds() {
+            float pad = Math.max(0.0f, outlineWidth * 0.5f);
+            return Render2DBounds.of(bounds.x() - pad, bounds.y() - pad,
+                    bounds.width() + pad * 2.0f, bounds.height() + pad * 2.0f);
+        }
+
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.ROUND_RECT_OUTLINE;

@@ -33,6 +33,7 @@ public class TriangleRenderer implements IRenderer {
 
     private boolean scissorEnabled = false;
     private int scissorX, scissorY, scissorW, scissorH;
+    private GpuBufferSlice sharedDynamicUniforms;
 
     private TriangleRenderer() {
     }
@@ -143,9 +144,43 @@ public class TriangleRenderer implements IRenderer {
             }
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", dynamicUniforms);
-            pass.setVertexBuffer(0, buffer.getGpuBuffer());
-            pass.draw(0, vertexCount);
+            drawPrepared(pass);
         }
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        sharedDynamicUniforms = null;
+        if (vertexCount == 0) return false;
+
+        if (buffer.isMapped()) {
+            buffer.unmap();
+        }
+
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false;
+
+        sharedDynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        return sharedDynamicUniforms != null;
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        if (sharedDynamicUniforms == null) return;
+        pass.setUniform("DynamicTransforms", sharedDynamicUniforms);
+        drawPrepared(pass);
+    }
+
+    private void drawPrepared(RenderPass pass) {
+        if (scissorEnabled) {
+            if (!ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)) {
+                return;
+            }
+        } else {
+            pass.disableScissor();
+        }
+
+        pass.setVertexBuffer(0, buffer.getGpuBuffer());
+        pass.draw(0, vertexCount);
     }
 
     @Override
@@ -159,6 +194,7 @@ public class TriangleRenderer implements IRenderer {
 
         vertexCount = 0;
         currentOffset = 0;
+        sharedDynamicUniforms = null;
     }
 
     @Override
