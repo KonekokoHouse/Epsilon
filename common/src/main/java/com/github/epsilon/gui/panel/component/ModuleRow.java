@@ -1,9 +1,7 @@
 package com.github.epsilon.gui.panel.component;
 
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -74,9 +72,9 @@ public class ModuleRow {
      * @param toggleProgress      开关进度
      * @param toggleHoverProgress 开关悬停进度
      */
-    public void render(RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, TextRenderer textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
+    public void render(PanelRenderBatch renderBatch, TextRenderer textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
         PanelUiTree tree = PanelUiTree.build(scope -> buildUi(scope, textRenderer, hoverProgress, selectedProgress, toggleProgress, toggleHoverProgress));
-        PanelUiCompiler.render(tree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(tree);
     }
 
     /**

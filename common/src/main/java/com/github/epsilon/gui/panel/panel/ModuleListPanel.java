@@ -2,11 +2,8 @@ package com.github.epsilon.gui.panel.panel;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.RoundRectRenderer;
-import com.github.epsilon.graphics.renderers.ShadowRenderer;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiCompiler;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -38,8 +35,6 @@ import java.util.List;
 public class ModuleListPanel {
 
     protected final PanelState state;
-    private final RoundRectRenderer roundRectRenderer;
-    private final RectRenderer rectRenderer;
     private final TextRenderer textRenderer;
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
     private final PanelContentInvalidationState contentState = new PanelContentInvalidationState();
@@ -66,10 +61,8 @@ public class ModuleListPanel {
     private static final TranslateComponent searchComponent = EpsilonTranslateComponent.create("gui", "search");
     private static final TranslateComponent modulesComponent = EpsilonTranslateComponent.create("gui", "modules");
 
-    public ModuleListPanel(PanelState state, RoundRectRenderer roundRectRenderer, RectRenderer rectRenderer, ShadowRenderer shadowRenderer, TextRenderer textRenderer) {
+    public ModuleListPanel(PanelState state, TextRenderer textRenderer) {
         this.state = state;
-        this.roundRectRenderer = roundRectRenderer;
-        this.rectRenderer = rectRenderer;
         this.textRenderer = textRenderer;
         this.searchHoverAnimation.setStartValue(0.0f);
         this.searchFocusAnimation.setStartValue(0.0f);
@@ -81,7 +74,7 @@ public class ModuleListPanel {
      * 面板标题与搜索框会直接写入主批次；滚动列表内容则写入独立的 viewport 缓冲，
      * 并在之后的统一 flush 阶段输出。
      */
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
         this.guiHeight = GuiGraphicsExtractor.guiHeight();
 
@@ -141,7 +134,7 @@ public class ModuleListPanel {
                 }
             });
         });
-        PanelUiCompiler.render(tree, roundRectRenderer, rectRenderer, textRenderer);
+        renderBatch.render(tree);
 
         if (rebuildContent) {
             rememberSnapshot(bounds, mouseX, mouseY, modules, GuiGraphicsExtractor.guiHeight(), contentSignature);

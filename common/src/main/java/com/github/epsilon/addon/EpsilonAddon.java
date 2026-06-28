@@ -4,7 +4,6 @@ import com.github.epsilon.assets.i18n.DefaultTranslateComponent;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.Setting;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 
 import java.awt.*;
@@ -56,10 +55,6 @@ public abstract class EpsilonAddon {
         return Collections.unmodifiableList(settingHost.getSettings());
     }
 
-    public List<SettingGroup> getSettingGroups() {
-        return Collections.unmodifiableList(settingHost.getSettingGroups());
-    }
-
     public List<Module> getRegisteredModules() {
         return Collections.unmodifiableList(registeredModules);
     }
@@ -73,11 +68,6 @@ public abstract class EpsilonAddon {
     }
 
     public void initAddonI18n() {
-        for (SettingGroup group : settingHost.getSettingGroups()) {
-            if (group != null) {
-                group.initTranslateComponent(DefaultTranslateComponent.create(addonId + ".settings." + group.getName().toLowerCase()));
-            }
-        }
         for (Setting<?> setting : settingHost.getSettings()) {
             if (setting != null) {
                 setting.initTranslateComponent(DefaultTranslateComponent.create(addonId + ".settings." + setting.getName().toLowerCase()));
@@ -105,10 +95,6 @@ public abstract class EpsilonAddon {
 
     protected BoolSetting boolSetting(String name, boolean defaultValue) {
         return settingHost.addBoolSetting(name, defaultValue);
-    }
-
-    protected SettingGroup settingGroup(String name) {
-        return settingHost.addSettingGroup(name);
     }
 
     protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency) {
@@ -197,10 +183,6 @@ public abstract class EpsilonAddon {
 
         private BoolSetting addBoolSetting(String name, boolean defaultValue) {
             return super.boolSetting(name, defaultValue);
-        }
-
-        private SettingGroup addSettingGroup(String name) {
-            return super.settingGroup(name);
         }
 
         private IntSetting addIntSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency) {

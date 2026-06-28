@@ -132,7 +132,6 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
     @Override
     public void flush(PanelRenderBatch renderBatch) {
-        renderBatch.flushAndClear();
         contentBuffer.flushAndClear();
     }
 

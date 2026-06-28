@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.panel.PanelLayout;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
@@ -8,7 +9,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 
 public interface ClientSettingTabView {
 
-    void render(GuiGraphicsExtractor guiGraphics, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick);
+    void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick);
 
     void flushContent();
 

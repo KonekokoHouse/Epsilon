@@ -4,7 +4,6 @@ import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.Setting;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
@@ -42,7 +41,6 @@ public class Module {
     private boolean defaultEnabled = false;
 
     public final List<Setting<?>> settings = new ArrayList<>();
-    public final List<SettingGroup> settingGroups = new ArrayList<>();
 
     protected final Minecraft mc;
 
@@ -56,9 +54,6 @@ public class Module {
 
     public void initI18n(TranslateComponent moduleComponent) {
         this.translateComponent = moduleComponent;
-        for (SettingGroup group : settingGroups) {
-            group.initTranslateComponent(moduleComponent.createChild(group.getName().toLowerCase()));
-        }
         for (Setting<?> setting : settings) {
             setting.initTranslateComponent(moduleComponent.createChild(setting.getName().toLowerCase()));
         }
@@ -143,18 +138,8 @@ public class Module {
         return setting;
     }
 
-    protected SettingGroup settingGroup(String name) {
-        SettingGroup group = new SettingGroup(name);
-        settingGroups.add(group);
-        return group;
-    }
-
     public List<Setting<?>> getSettings() {
         return settings;
-    }
-
-    public List<SettingGroup> getSettingGroups() {
-        return settingGroups;
     }
 
 

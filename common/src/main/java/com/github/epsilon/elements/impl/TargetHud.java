@@ -4,6 +4,7 @@ import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.*;
 import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.combat.KillAura;
@@ -91,11 +92,13 @@ public class TargetHud extends HudModule {
         float animationScale = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f));
         if (target == null || animationScale <= 0.01f) return;
 
-        RoundRectRenderer roundRectRenderer = roundRectRendererSupplier.get();
-        RoundRectOutlineRenderer roundRectOutlineRenderer = roundRectOutlineRendererSupplier.get();
         TextRenderer textRenderer = textRendererSupplier.get();
-        TextureRenderer textureRenderer = textureRendererSupplier.get();
-        ShadowRenderer shadowRenderer = shadowRendererSupplier.get();
+        PanelRenderBatch batch = renderBatch();
+        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
+        PanelRenderBatch.RoundRectOutlineFacade roundRectOutlineRenderer = batch.roundRectOutlineRenderer();
+        PanelRenderBatch.TextureFacade textureRenderer = batch.textureRenderer();
+        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
+        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
 
         LivingEntity liveTarget = resolveTarget();
         float maxHealth = lastKnownMaxHealth;
@@ -184,7 +187,6 @@ public class TargetHud extends HudModule {
 
         if (drawShadow.getValue()) {
             shadowRenderer.addShadow(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, shadowBlur.getValue().floatValue() * animationScale, withAlpha(shadowColor.getValue(), animationScale));
-            shadowRenderer.drawAndClear();
         }
 
         roundRectRenderer.addRoundRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, withAlpha(backgroundColor.getValue(), animationScale));
@@ -196,14 +198,12 @@ public class TargetHud extends HudModule {
         if (!(target instanceof AbstractClientPlayer)) {
             roundRectRenderer.addRoundRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize, finalHeadRadius, withAlpha(tintColor(new Color(80, 80, 80, 200), damageProgress), animationScale));
         }
-        roundRectRenderer.drawAndClear();
 
         if (barOutline.getValue() && scaledBarOutlineWidth > 0.0f) {
             roundRectOutlineRenderer.addOutline(
                     scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius,
                     scaledBarOutlineWidth, withAlpha(barOutlineColor.getValue(), animationScale)
             );
-            roundRectOutlineRenderer.drawAndClear();
         }
 
         if (target instanceof AbstractClientPlayer player) {
@@ -212,12 +212,10 @@ public class TargetHud extends HudModule {
                     new LuminTexture(abstractTexture.getTexture(), abstractTexture.getTextureView(), abstractTexture.getSampler()),
                     finalHeadX, finalHeadY, finalHeadSize, finalHeadRadius, headTintColor
             );
-            textureRenderer.drawAndClear();
         }
 
-        textRenderer.addText(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
-        textRenderer.addText(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
-        textRenderer.drawAndClear();
+        batchText.addText(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
+        batchText.addText(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
     }
 
     @Override

@@ -6,24 +6,30 @@ import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.holders.TextureCacheHolder;
+<<<<<<< HEAD
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.PrimitiveTopology;
+=======
+import com.github.epsilon.utils.render.ScissorUtils;
+>>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+<<<<<<< HEAD
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
+=======
+import com.mojang.blaze3d.textures.*;
+>>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
@@ -38,15 +44,33 @@ import static com.github.epsilon.Constants.mc;
 public class TextureRenderer implements IRenderer {
 
     private static final int STRIDE = 56;
-    private static final long BUFFER_SIZE = 32 * 1024;
+    private static final long BUFFER_SIZE = 16 * 1024;
+    private static final long QUAD_BYTES = STRIDE * 4L;
 
     private final Map<Object, Batch> batches = new LinkedHashMap<>();
+    private boolean scissorEnabled = false;
+    private int scissorX, scissorY, scissorW, scissorH;
+    private GpuBufferSlice sharedDynamicUniforms;
+    private int sharedMaxIndexCount;
 
     private TextureRenderer() {
     }
 
     public static TextureRenderer create() {
         return RendererHolder.INSTANCE.register(new TextureRenderer());
+    }
+
+    public void setScissor(int x, int y, int width, int height) {
+        LuminRenderSystem.ScissorRect scissor = ScissorUtils.clampFramebufferScissor(x, y, width, height);
+        scissorEnabled = true;
+        scissorX = scissor.x();
+        scissorY = scissor.y();
+        scissorW = scissor.width();
+        scissorH = scissor.height();
+    }
+
+    public void clearScissor() {
+        scissorEnabled = false;
     }
 
     public void addQuadTexture(LuminTexture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color) {
@@ -98,11 +122,8 @@ public class TextureRenderer implements IRenderer {
             return b;
         });
 
+        batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES);
         batch.buffer.tryMap();
-
-        if (batch.currentOffset + (long) STRIDE * 4L > BUFFER_SIZE) {
-            return;
-        }
 
         int argb = ARGB.toABGR(color.getRGB());
 
@@ -117,7 +138,7 @@ public class TextureRenderer implements IRenderer {
         writeVertex(p + STRIDE * 2L, x2, y2, u1, v1, argb, x, y, x2, y2, rTL, rTR, rBR, rBL);
         writeVertex(p + STRIDE * 3L, x2, y, u1, v0, argb, x, y, x2, y2, rTL, rTR, rBR, rBL);
 
-        batch.currentOffset += (long) STRIDE * 4L;
+        batch.currentOffset += QUAD_BYTES;
         batch.vertexCount += 4;
     }
 
@@ -147,24 +168,109 @@ public class TextureRenderer implements IRenderer {
 
         GpuTextureView colorView = LuminRenderSystem.resolveColorView();
         if (colorView == null) return;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return;
 
+<<<<<<< HEAD
         GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(
                 RenderSystem.getModelViewMatrixCopy(),
                 new Vector4f(1, 1, 1, 1),
                 new Vector3f(0, 0, 0),
                 TextureTransform.DEFAULT_TEXTURING.createMatrix()
         );
+=======
+        int maxIndexCount = prepareTextureBatches();
+        if (maxIndexCount == 0) return;
+>>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
 
+        GpuBufferSlice dynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        GpuBuffer ibo = LuminRenderSystem.getQuadIndexBuffer(maxIndexCount);
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+                () -> "Rounded Texture Draws",
+                colorView, OptionalInt.empty(),
+                null, OptionalDouble.empty())
+        ) {
+            pass.setPipeline(LuminRenderPipelines.TEXTURE);
+            if (scissorEnabled) {
+                ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH);
+            }
+
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", dynamicUniforms);
+            pass.setIndexBuffer(ibo, LuminRenderSystem.getQuadIndexType());
+
+            drawPrepared(pass);
+        }
+    }
+
+    @Override
+    public boolean prepareSharedDraw() {
+        sharedDynamicUniforms = null;
+        sharedMaxIndexCount = 0;
+        if (batches.isEmpty()) return false;
+        if (scissorEnabled && !ScissorUtils.isVisible(scissorW, scissorH)) return false;
+
+        sharedMaxIndexCount = prepareTextureBatches();
+        if (sharedMaxIndexCount == 0) return false;
+
+        LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount);
+        sharedDynamicUniforms = LuminRenderSystem.writeDefaultGuiTransform();
+        return sharedDynamicUniforms != null;
+    }
+
+    @Override
+    public void draw(RenderPass pass) {
+        if (sharedDynamicUniforms == null || sharedMaxIndexCount == 0) return;
+
+        pass.setIndexBuffer(LuminRenderSystem.getQuadIndexBuffer(sharedMaxIndexCount), LuminRenderSystem.getQuadIndexType());
+        pass.setUniform("DynamicTransforms", sharedDynamicUniforms);
+        drawPrepared(pass);
+    }
+
+    private int prepareTextureBatches() {
+        int maxIndexCount = 0;
         for (Map.Entry<Object, Batch> entry : batches.entrySet()) {
-            Object textureKey = entry.getKey();
             Batch batch = entry.getValue();
+            batch.preparedTexture = null;
             if (batch.vertexCount == 0) continue;
 
             if (batch.buffer.isMapped()) {
                 batch.buffer.unmap();
             }
 
+            batch.preparedTexture = resolveTexture(entry.getKey(), batch.useLinearFilter);
+            if (batch.preparedTexture == null) continue;
+            maxIndexCount = Math.max(maxIndexCount, (batch.vertexCount / 4) * 6);
+        }
+        return maxIndexCount;
+    }
+
+    private LuminTexture resolveTexture(Object textureKey, boolean useLinearFilter) {
+        if (textureKey instanceof Identifier id) {
+            return TextureCacheHolder.INSTANCE.textureCache.computeIfAbsent(
+                    id, key -> loadTexture(key, useLinearFilter)
+            );
+        }
+        if (textureKey instanceof LuminTexture tex) {
+            return tex;
+        }
+        return null;
+    }
+
+    private void drawPrepared(RenderPass pass) {
+        if (scissorEnabled) {
+            if (!ScissorUtils.enableScissor(pass, scissorX, scissorY, scissorW, scissorH)) {
+                return;
+            }
+        } else {
+            pass.disableScissor();
+        }
+
+        // 纹理解析和上传已经在 prepare 阶段完成，pass 内只允许绑定和 draw。
+        for (Batch batch : batches.values()) {
+            if (batch.vertexCount == 0 || batch.preparedTexture == null) continue;
+
             int indexCount = (batch.vertexCount / 4) * 6;
+<<<<<<< HEAD
             RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
             GpuBuffer ibo = autoIndices.getBuffer(indexCount);
 
@@ -195,6 +301,13 @@ public class TextureRenderer implements IRenderer {
 
                 pass.drawIndexed(indexCount, 1, 0, 0, 0);
             }
+=======
+            LuminTexture texture = batch.preparedTexture;
+
+            pass.setVertexBuffer(0, batch.buffer.getGpuBuffer());
+            pass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
+            pass.drawIndexed(0, 0, indexCount, 1);
+>>>>>>> 175aecd (重构 GUI 渲染逻辑，重构合批系统提升性能 (#324))
         }
     }
 
@@ -243,7 +356,10 @@ public class TextureRenderer implements IRenderer {
             }
             batch.currentOffset = 0;
             batch.vertexCount = 0;
+            batch.preparedTexture = null;
         }
+        sharedDynamicUniforms = null;
+        sharedMaxIndexCount = 0;
     }
 
     @Override
@@ -261,6 +377,7 @@ public class TextureRenderer implements IRenderer {
         long currentOffset = 0;
         int vertexCount = 0;
         boolean useLinearFilter;
+        LuminTexture preparedTexture;
 
         private Batch(LuminRingBuffer buffer) {
             this.buffer = buffer;
