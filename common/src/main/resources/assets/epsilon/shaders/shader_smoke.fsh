@@ -124,7 +124,7 @@ void main() {
 
         for (int x = -quality; x < quality; x++) {
             for (int y = -quality; y < quality; y++) {
-                vec2 offset = vec2(x, y);
+                vec2 offset = vec2(float(x) + 0.5, float(y) + 0.5);
                 vec2 coord = texCoord + offset * oneTexel;
                 float sampleHit = alphaMask(texture(InputSampler, coord).a);
                 outlineHit += sampleHit;

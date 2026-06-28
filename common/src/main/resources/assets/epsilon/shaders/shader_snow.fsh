@@ -66,8 +66,9 @@ float glowShader() {
 
     for (float x = -quality; x < quality; x++) {
         for (float y = -quality; y < quality; y++) {
-            vec4 currentColor = texture(InputSampler, texCoord + vec2(texelSize.x * x, texelSize.y * y));
-            alpha += alphaMask(currentColor.a) * glowFalloff(vec2(x, y), maxSample, divider);
+            vec2 offset = vec2(x + 0.5, y + 0.5);
+            vec4 currentColor = texture(InputSampler, texCoord + vec2(texelSize.x * offset.x, texelSize.y * offset.y));
+            alpha += alphaMask(currentColor.a) * glowFalloff(offset, maxSample, divider);
         }
     }
     return alpha;
