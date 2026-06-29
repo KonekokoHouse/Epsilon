@@ -11,11 +11,13 @@ import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.WireframeEntityRenderer;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -82,7 +84,7 @@ public class PopChams extends Module {
         private double scale = 1.0;
 
         private GhostPlayer(Player player) {
-            super(mc.level, new GameProfile(player.getGameProfile().id(), player.getGameProfile().name()));
+            super(mc.level, new GameProfile(UUID.randomUUID(), "ghost"));
             uuid = player.getUUID();
 
             copyPosition(player);
@@ -96,7 +98,6 @@ public class PopChams extends Module {
             setPose(player.getPose());
             setHealth(player.getHealth());
             setAbsorptionAmount(player.getAbsorptionAmount());
-            getInventory().replaceWith(player.getInventory());
             setOldPosAndRot();
         }
 
@@ -119,12 +120,22 @@ public class PopChams extends Module {
             Color side = withAlpha(sideColor.getValue(), Math.round(alphaSide * fadeFactor));
             Color line = withAlpha(lineColor.getValue(), Math.round(alphaLine * fadeFactor));
 
-            WireframeEntityRenderer.renderMainModelOnly(event.getPoseStack(), this, scale, side, line, 2.0f);
+            WireframeEntityRenderer.render(event.getPoseStack(), this, scale, side, line, 2.0f);
             return false;
         }
 
         private Color withAlpha(Color color, int alpha) {
             return new Color(color.getRed(), color.getGreen(), color.getBlue(), Mth.clamp(alpha, 0, 255));
+        }
+
+        @Override
+        public boolean shouldShowName() {
+            return false;
+        }
+
+        @Override
+        public @Nullable Component belowNameDisplay() {
+            return null;
         }
     }
 }
