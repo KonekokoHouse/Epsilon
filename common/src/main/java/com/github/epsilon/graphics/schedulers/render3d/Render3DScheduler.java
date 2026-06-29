@@ -20,7 +20,9 @@ import org.joml.Vector3f;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -145,8 +147,13 @@ public final class Render3DScheduler {
             return;
         }
 
+        Map<Double, List<AABB>> groupedBoxes = new LinkedHashMap<>();
         for (BlurredBoxCommand command : blurredBoxes) {
-            BlurShader.INSTANCE.render3DBox(command.box(), command.blurStrength());
+            groupedBoxes.computeIfAbsent(command.blurStrength(), _ -> new ArrayList<>()).add(command.box());
+        }
+
+        for (Map.Entry<Double, List<AABB>> entry : groupedBoxes.entrySet()) {
+            BlurShader.INSTANCE.render3DBoxes(entry.getValue(), entry.getKey());
         }
     }
 
@@ -156,7 +163,7 @@ public final class Render3DScheduler {
         }
 
         LuminImmediateRenderer.PosColorQuads builder = LuminImmediateRenderer.beginPosColorQuads(FILLED_BOX_PIPELINE);
-        Matrix4f matrix = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
+        Matrix4f matrix = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.viewRotationMatrix;
         Vec3 camPos = mc.getEntityRenderDispatcher().camera.position();
 
         for (FilledBoxCommand command : filledBoxes) {
