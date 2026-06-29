@@ -100,18 +100,7 @@ public class PopChams extends Module {
             setPose(player.getPose());
             setHealth(player.getHealth());
             setAbsorptionAmount(player.getAbsorptionAmount());
-            setDeltaMovement(player.getDeltaMovement());
-            copyAnimations(player);
-        }
-
-        private void copyAnimations(Player player) {
-            ((WalkAnimationStateAccessor) walkAnimation).epsilon$copyFrom((WalkAnimationStateAccessor) player.walkAnimation);
-
-            swinging = player.swinging;
             swingingArm = player.swingingArm;
-            swingTime = player.swingTime;
-            attackAnim = player.attackAnim;
-            oAttackAnim = player.oAttackAnim;
         }
 
         private boolean render(Render3DEvent event) {
