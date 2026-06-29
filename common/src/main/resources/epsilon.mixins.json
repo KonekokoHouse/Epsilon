@@ -3,6 +3,7 @@
   "package": "com.github.epsilon.mixins",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "MixinAvatar",
     "MixinAvatarRenderer",
     "MixinBaseEntityRenderer",
     "MixinBlock",
@@ -31,8 +32,8 @@
     "MixinGuiRenderer",
     "MixinHumanoidMobRenderer",
     "MixinItem",
-    "MixinItemInHandRenderer",
     "MixinItemInHandLayer",
+    "MixinItemInHandRenderer",
     "MixinItemStackLayerRenderState",
     "MixinKeyboardHandler",
     "MixinKeyboardInput",

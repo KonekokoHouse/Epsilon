@@ -39,3 +39,5 @@ accessible field net/minecraft/client/player/LocalPlayer wasSprinting Z
 mutable field net/minecraft/client/player/LocalPlayer wasSprinting Z
 
 accessible field net/minecraft/client/renderer/LevelRenderer entityOutlineTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
+
+accessible method net/minecraft/world/entity/player/Player canPlayerFitWithinBlocksAndEntitiesWhen (Lnet/minecraft/world/entity/Pose;)Z
