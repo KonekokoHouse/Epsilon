@@ -22,6 +22,9 @@ public class SettingsContent {
     private final List<SettingSection> sections = new ArrayList<>();
     private final Map<String, Animation> sectionHoverAnimations = new HashMap<>();
     private final Map<String, Animation> sectionExpandAnimations = new HashMap<>();
+    private int cachedContentHeightFrameId = Integer.MAX_VALUE;
+    private float cachedContentHeight;
+    private final List<Float> cachedSectionHeights = new ArrayList<>();
 
     public SettingsContent(List<Setting<?>> settings) {
         this("dropdown:" + System.identityHashCode(settings), settings);
@@ -65,15 +68,47 @@ public class SettingsContent {
     }
 
     public float computeContentHeight() {
+        return computeContentHeightUncached();
+    }
+
+    public float computeContentHeight(int frameId) {
+        if (frameId == Integer.MIN_VALUE) {
+            return computeContentHeightUncached();
+        }
+        if (sections.isEmpty()) return DropdownTheme.MODULE_HEIGHT;
+        if (cachedContentHeightFrameId == frameId) {
+            return cachedContentHeight;
+        }
+
+        cachedSectionHeights.clear();
+        float height = computeContentHeightInto(cachedSectionHeights);
+        cachedContentHeightFrameId = frameId;
+        cachedContentHeight = height;
+        return cachedContentHeight;
+    }
+
+    private float computeContentHeightUncached() {
+        return computeContentHeightInto(null);
+    }
+
+    private float computeContentHeightInto(List<Float> sectionHeights) {
         if (sections.isEmpty()) return DropdownTheme.MODULE_HEIGHT;
         float height = DropdownTheme.SETTING_GAP;
         for (SettingSection section : sections) {
-            height += getSectionHeight(section);
+            float sectionHeight = getSectionHeight(section);
+            if (sectionHeights != null) {
+                sectionHeights.add(sectionHeight);
+            }
+            height += sectionHeight;
         }
         return height;
     }
 
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY, float panelX, float contentY, float panelWidth) {
+        draw(renderer, mouseX, mouseY, panelX, contentY, panelWidth, Integer.MIN_VALUE);
+    }
+
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY, float panelX, float contentY, float panelWidth, int frameId) {
         if (sections.isEmpty()) {
             String label = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
             float labelScale = 0.58f;
@@ -82,23 +117,31 @@ public class SettingsContent {
             return;
         }
 
+        if (frameId == Integer.MIN_VALUE) {
+            cachedSectionHeights.clear();
+            computeContentHeightInto(cachedSectionHeights);
+        } else {
+            computeContentHeight(frameId);
+        }
         float currentY = contentY + DropdownTheme.SETTING_GAP;
-        for (SettingSection section : sections) {
+        for (int index = 0; index < sections.size(); index++) {
+            SettingSection section = sections.get(index);
+            float sectionHeight = cachedSectionHeights.get(index);
             if (section.hasHeader()) {
-                drawSection(renderer, mouseX, mouseY, section, panelX, currentY, panelWidth);
+                drawSection(renderer, mouseX, mouseY, section, panelX, currentY, panelWidth, sectionHeight);
             } else {
                 DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(
                         panelX + DropdownTheme.SETTING_INDENT,
                         currentY,
                         panelWidth - DropdownTheme.SETTING_INDENT * 2.0f,
-                        getSectionHeight(section)
+                        sectionHeight
                 ));
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
                     widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
                 }
             }
-            currentY += getSectionHeight(section);
+            currentY += sectionHeight;
         }
     }
 
@@ -213,7 +256,7 @@ public class SettingsContent {
         return h;
     }
 
-    private void drawSection(DropdownDrawContext renderer, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth) {
+    private void drawSection(DropdownDrawContext renderer, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth, float sectionHeight) {
         Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(section.isCollapsed() ? 0.0f : 1.0f));
         Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(0.0f));
         float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
@@ -247,7 +290,7 @@ public class SettingsContent {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = panelX + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = panelWidth - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(childX, childY, childW, getSectionHeight(section)));
+            DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(childX, childY, childW, sectionHeight));
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));

@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.mojang.blaze3d.TracyFrameCapture;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.jspecify.annotations.Nullable;
@@ -15,6 +16,7 @@ public class MixinRenderSystem {
     @Inject(method = "flipFrame", at = @At("RETURN"))
     private static void onFlipFrame(@Nullable TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
         LuminRenderSystem.endDynamicUniformFrame();
+        TtfFontLoader.beginRenderFrame();
     }
 
 }

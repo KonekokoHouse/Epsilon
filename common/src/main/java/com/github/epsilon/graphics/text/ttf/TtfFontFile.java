@@ -84,6 +84,17 @@ public class TtfFontFile {
         }
     }
 
+    public synchronized int getAdvance(char ch) {
+        final var glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, ch);
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            final var advance = stack.callocInt(1);
+            final var lsb = stack.callocInt(1);
+            STBTruetype.stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, advance, lsb);
+            return (int) (advance.get() * scale);
+        }
+    }
+
     public void destroy() {
         MemoryUtil.memFree(fontData);
     }

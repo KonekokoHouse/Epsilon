@@ -7,6 +7,7 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
+import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
@@ -106,6 +107,8 @@ public class ClientSetting extends Module {
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
 
+    public final IntSetting fontGlyphsPerFrame = intSetting("Font Glyphs Per Frame", 8, 1, 64, 1, this::applyFontGlyphUploadBudget).group(sgGeneral);
+
     public final BoolSetting replaceMinecraftFont = boolSetting("Replace Minecraft Font", true).group(sgGeneral);
 
     public final BoolSetting closeOnOutside = boolSetting("Close Gui On Outside", false, () -> guiMode.is(GuiMode.Panel)).group(sgGeneral);
@@ -159,6 +162,19 @@ public class ClientSetting extends Module {
 
     public double getScale() {
         return renderScale.getValue();
+    }
+
+    public int getFontGlyphsPerFrame() {
+        return fontGlyphsPerFrame.getValue();
+    }
+
+    public void syncFontGlyphUploadBudget() {
+        applyFontGlyphUploadBudget(fontGlyphsPerFrame.getValue());
+    }
+
+    private void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
+        int budget = Math.max(1, maxGlyphsPerFrame);
+        TtfFontLoader.setMaxGlyphUploadsPerFrame(budget);
     }
 
     public boolean snapRotation() {

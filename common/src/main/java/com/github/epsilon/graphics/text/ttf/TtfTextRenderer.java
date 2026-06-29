@@ -282,7 +282,6 @@ public class TtfTextRenderer implements ITextRenderer {
 
     @Override
     public float getWidth(String text, float scale, TtfFontLoader fontLoader) {
-        fontLoader.checkAndLoadChars(text);
         final var finalScale = scale * DEFAULT_SCALE;
         float maxLine = 0.0f;
         float currentLine = 0.0f;
@@ -294,10 +293,7 @@ public class TtfTextRenderer implements ITextRenderer {
                 maxLine = Math.max(maxLine, currentLine);
                 currentLine = 0.0f;
             } else {
-                GlyphDescriptor glyph = fontLoader.getGlyph(ch);
-                if (glyph != null) {
-                    currentLine += glyph.advance() * finalScale + SPACING * scale;
-                }
+                currentLine += fontLoader.getAdvance(ch) * finalScale + SPACING * scale;
             }
         }
         return Math.max(maxLine, currentLine);
