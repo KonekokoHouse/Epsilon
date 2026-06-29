@@ -20,6 +20,7 @@
   "epsilon.gui.mainmenu.multiplayer": "Multiplayer",
   "epsilon.gui.mainmenu.options": "Options",
   "epsilon.gui.mainmenu.quit": "Quit",
+  "epsilon.gui.mainmenu.vanilla": "VanillaMainMenu",
   "epsilon.gui.tab.general": "General",
   "epsilon.gui.tab.friend": "Friend",
   "epsilon.gui.tab.config": "Config",
