@@ -23,6 +23,8 @@ public class CategoryPanel extends AbstractDropdownPanel {
     private long cachedSortSignature = Long.MIN_VALUE;
     private long cachedFilterSignature = Long.MIN_VALUE;
     private long cachedSearchTextRevision = Long.MIN_VALUE;
+    private int cachedContentHeightFrameId = Integer.MIN_VALUE;
+    private float cachedContentHeight;
 
     public CategoryPanel(Category category, int panelIndex) {
         super("category:" + category, category::getName, category.icon, panelIndex);
@@ -72,12 +74,18 @@ public class CategoryPanel extends AbstractDropdownPanel {
 
     @Override
     protected float computeContentHeight() {
+        int frameId = getRenderFrameId();
+        if (cachedContentHeightFrameId == frameId) {
+            return cachedContentHeight;
+        }
+
         List<ModuleButton> buttons = visibleButtons();
         float total = 0.0f;
-        int frameId = getRenderFrameId();
         for (ModuleButton button : buttons) {
             total += button.getHeightForFrame(frameId);
         }
+        cachedContentHeightFrameId = frameId;
+        cachedContentHeight = total;
         return total;
     }
 

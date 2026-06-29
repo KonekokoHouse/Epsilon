@@ -679,6 +679,7 @@ public class ConfigHolder {
         applyToAddons(addons);
         loadFriends(getActiveConfigStorageDir());
         loadRootClientSettings();
+        ClientSetting.INSTANCE.syncFontGlyphUploadBudget();
     }
 
     private void saveActiveConfigSnapshot() throws IOException {

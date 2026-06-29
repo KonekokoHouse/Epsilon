@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TtfGlyphAtlas {
 
-    private static final int SIZE = 512;
+    private static final int SIZE = 1024;
     private static final int GLYPH_GUTTER = 2;
     private static final long TEXTURE_UPLOAD_ALIGNMENT = 4L;
     private static final AtomicInteger NEXT_TEXTURE_ID = new AtomicInteger();
@@ -163,6 +163,10 @@ public class TtfGlyphAtlas {
 
     public LuminTexture getTexture() {
         return texture;
+    }
+
+    public static int getSize() {
+        return SIZE;
     }
 
     public Identifier getTextureId() {

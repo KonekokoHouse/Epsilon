@@ -68,7 +68,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     @Override
     protected float computeContentHeight() {
         int rows = getIconRows();
-        return CONTENT_PADDING + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING + settingsContent.computeContentHeight();
+        return CONTENT_PADDING + rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 8.0f + CONTENT_PADDING + settingsContent.computeContentHeight(getRenderFrameId());
     }
 
     @Override
@@ -101,7 +101,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         int rows = getIconRows();
         currentY += rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 4.0f + CONTENT_PADDING;
         renderer.rect().addRect(x + CONTENT_PADDING, currentY - 3.0f, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
-        settingsContent.draw(renderer, mouseX, mouseY, x, currentY, width);
+        settingsContent.draw(renderer, mouseX, mouseY, x, currentY, width, getRenderFrameId());
     }
 
     @Override
