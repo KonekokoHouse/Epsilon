@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.render;
 
-import com.github.epsilon.interfaces.WalkAnimationStateAccessor;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.interfaces.WalkAnimationStateAccessor;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -37,7 +37,7 @@ public class PopChams extends Module {
     private final BoolSetting ignoreSelf = boolSetting("Ignore Self", true);
     private final DoubleSetting renderTime = doubleSetting("Render Time", 1.0, 0.1, 6.0, 0.1);
     private final DoubleSetting yModifier = doubleSetting("Y Modifier", 0.75, -4.0, 4.0, 0.05);
-    private final EnumSetting<Easing> easing = enumSetting("Y Easing", Easing.EASE_IN_OUT_EXPO);
+    private final EnumSetting<Easing> yEasing = enumSetting("Y Easing", Easing.EASE_IN_OUT_EXPO);
     private final DoubleSetting scaleModifier = doubleSetting("Scale Modifier", -0.25, -4.0, 4.0, 0.05);
     private final BoolSetting fadeOut = boolSetting("Fade Out", true);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 255, 255, 25));
@@ -74,12 +74,12 @@ public class PopChams extends Module {
     }
 
     private final class GhostPlayer extends RemotePlayer {
-        private final double startY;
         private double timer;
         private double scale = 1.0;
         private final float walkPosition;
         private final float walkSpeed;
         private final float attackAnimation;
+        private final double startY;
 
         private GhostPlayer(Player player) {
             super(mc.level, new GameProfile(player.getGameProfile().id(), player.getGameProfile().name()));
@@ -108,7 +108,7 @@ public class PopChams extends Module {
             tickCount = (int) (timer * 20.0);
 
             float progress = Mth.clamp((float) (timer / renderTime.getValue()), 0.0f, 1.0f);
-            float easedProgress = easing.getValue().getFunction().apply(progress);
+            float easedProgress = yEasing.getValue().getFunction().apply(progress);
             setPos(getX(), startY + yModifier.getValue() * renderTime.getValue() * easedProgress, getZ());
             setOldPosAndRot();
             yHeadRotO = yHeadRot;
