@@ -104,11 +104,7 @@ public class PopChams extends Module {
 
             double targetY = getY() + yModifier.getValue() * frameTime;
             setPos(getX(), targetY, getZ());
-            xo = xOld = getX();
-            yo = yOld = targetY;
-            zo = zOld = getZ();
-            yRotO = getYRot();
-            xRotO = getXRot();
+            setOldPosAndRot();
             yHeadRotO = yHeadRot;
             yBodyRotO = yBodyRot;
             oAttackAnim = capturedAttackAnim;
