@@ -124,6 +124,7 @@ public class ModuleHolder {
         addModule(Particles.INSTANCE);
         addModule(PopChams.INSTANCE);
         addModule(Shaders.INSTANCE);
+        addModule(SneakTweak.INSTANCE);
         addModule(Xray.INSTANCE);
     }
 

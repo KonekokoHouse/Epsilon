@@ -3,21 +3,21 @@ package com.github.epsilon.settings.impl;
 import com.github.epsilon.settings.Setting;
 import net.minecraft.util.Mth;
 
+import java.util.function.Consumer;
+
 public class DoubleSetting extends Setting<Double> {
 
     private final double min;
     private final double max;
     private final double step;
-    private final boolean percentageMode;
 
-    public DoubleSetting(String name, double defaultValue, double min, double max, double step, Dependency dependency, boolean percentageMode) {
-        super(name, dependency, null);
+    public DoubleSetting(String name, double defaultValue, double min, double max, double step, Dependency dependency, Consumer<Double> onChanged) {
+        super(name, dependency, onChanged);
         this.value = defaultValue;
         this.defaultValue = defaultValue;
         this.min = min;
         this.max = max;
         this.step = step;
-        this.percentageMode = percentageMode;
     }
 
     @Override
@@ -41,7 +41,4 @@ public class DoubleSetting extends Setting<Double> {
         return step;
     }
 
-    public boolean isPercentageMode() {
-        return percentageMode;
-    }
 }
