@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.dsl;
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
-import com.github.epsilon.graphics.schedulers.Render2DTexture;
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.utils.render.animation.Animation;

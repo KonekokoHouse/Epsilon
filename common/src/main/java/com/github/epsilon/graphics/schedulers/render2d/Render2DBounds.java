@@ -1,4 +1,4 @@
-package com.github.epsilon.graphics.schedulers;
+package com.github.epsilon.graphics.schedulers.render2d;
 
 public record Render2DBounds(float x, float y, float width, float height) {
 

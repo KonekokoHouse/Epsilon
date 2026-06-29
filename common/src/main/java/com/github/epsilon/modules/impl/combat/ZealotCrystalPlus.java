@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.managers.Managers;
@@ -315,10 +316,10 @@ public class ZealotCrystalPlus extends Module {
         Color outline = new Color(base.getRed(), base.getGreen(), base.getBlue(), Math.clamp((int) (outlineAlpha.getValue() * renderScale), 0, 255));
 
         if (filledAlpha.getValue() > 0) {
-            Managers.RENDER.addFilledBox(box, filled);
+            Render3DScheduler.INSTANCE.addFilledBox(box, filled);
         }
         if (outlineAlpha.getValue() > 0) {
-            Managers.RENDER.addOutlineBox(box, outline.getRGB(), outlineWidth.getValue().floatValue());
+            Render3DScheduler.INSTANCE.addOutlineBox(box, outline.getRGB(), outlineWidth.getValue().floatValue());
         }
 
         renderLastRenderedPos = renderPos;
@@ -1655,8 +1656,8 @@ public class ZealotCrystalPlus extends Module {
                 continue;
             }
 
-            Managers.RENDER.addFilledBox(targetInfo.box(), filled);
-            Managers.RENDER.addOutlineBox(targetInfo.box(), outline.getRGB(), 1.5f);
+            Render3DScheduler.INSTANCE.addFilledBox(targetInfo.box(), filled);
+            Render3DScheduler.INSTANCE.addOutlineBox(targetInfo.box(), outline.getRGB(), 1.5f);
         }
     }
 

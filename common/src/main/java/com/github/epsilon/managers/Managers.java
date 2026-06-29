@@ -1,10 +1,10 @@
 package com.github.epsilon.managers;
 
 import com.github.epsilon.events.bus.EventBus;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.impl.FriendManager;
 import com.github.epsilon.managers.impl.HealthManager;
 import com.github.epsilon.managers.impl.NotificationManager;
-import com.github.epsilon.managers.impl.RenderManager;
 import com.github.epsilon.managers.impl.network.ClientboundPacketManager;
 import com.github.epsilon.managers.impl.network.ServerboundPacketManager;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
@@ -24,18 +24,17 @@ public class Managers {
     public static FriendManager FRIEND;
     public static SoundManager SOUND;
     public static NotificationManager NOTIFICATION;
-    public static RenderManager RENDER;
 
     public static void initManagers() {
         switchRotationManager(ClientSetting.INSTANCE.rotationMode.getValue());
         TARGET = new TargetManager();
         HEALTH = new HealthManager();
-        RENDER = new RenderManager();
         C2SPACKET = new ServerboundPacketManager();
         S2CPACKET = new ClientboundPacketManager();
         FRIEND = new FriendManager();
         SOUND = new SoundManager();
         NOTIFICATION = new NotificationManager();
+        Render3DScheduler.init();
     }
 
     public static void switchRotationManager(RotationManager.RotationMode mode) {

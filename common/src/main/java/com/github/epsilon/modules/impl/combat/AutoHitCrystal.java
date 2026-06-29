@@ -6,7 +6,7 @@ import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -59,8 +59,8 @@ public class AutoHitCrystal extends Module {
                         Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
                         Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
 
-                        Managers.RENDER.addFilledBox(box.aabb, side);
-                        Managers.RENDER.addOutlineBox(box.aabb, line);
+                        Render3DScheduler.INSTANCE.addFilledBox(box.aabb, side);
+                        Render3DScheduler.INSTANCE.addOutlineBox(box.aabb, line);
                     }
                 }
         ));
