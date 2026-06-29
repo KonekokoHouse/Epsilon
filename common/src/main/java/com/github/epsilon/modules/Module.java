@@ -235,16 +235,16 @@ public class Module {
         return addSetting(new BoolSetting(name, defaultValue, () -> true, onChanged));
     }
 
-    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency) {
-        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, dependency, false));
-    }
-
-    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency, boolean percentageMode) {
-        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, dependency, percentageMode));
-    }
-
     protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step) {
-        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, () -> true, false));
+        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, () -> true, null));
+    }
+
+    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency) {
+        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, dependency, null));
+    }
+
+    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency, Consumer<Double> onChanged) {
+        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, dependency, onChanged));
     }
 
     protected StringSetting stringSetting(String name, String defaultValue, Setting.Dependency dependency) {
