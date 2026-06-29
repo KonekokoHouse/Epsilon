@@ -9,7 +9,8 @@ public enum Category {
     COMBAT(IconChars.SWORDS, "combat"),
     PLAYER(IconChars.PERSON, "player"),
     MOVEMENT(IconChars.DIRECTIONS_RUN, "movement"),
-    RENDER(IconChars.BRUSH, "render");
+    RENDER(IconChars.BRUSH, "render"),
+    MISC(IconChars.CAKE, "misc");
 
     public final String icon;
     private final String name;
