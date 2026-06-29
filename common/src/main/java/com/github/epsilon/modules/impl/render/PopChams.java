@@ -75,7 +75,6 @@ public class PopChams extends Module {
 
     private final class GhostPlayer extends RemotePlayer {
         private double timer;
-        private double scale = 1.0;
         private final float walkPosition;
         private final float walkSpeed;
         private final float attackAnimation;
@@ -104,6 +103,7 @@ public class PopChams extends Module {
             float frameTime = mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0f;
             timer += frameTime;
             if (timer > renderTime.getValue()) return true;
+
             float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             tickCount = (int) (timer * 20.0);
 
@@ -116,7 +116,7 @@ public class PopChams extends Module {
             oAttackAnim = attackAnimation;
             attackAnim = attackAnimation;
 
-            scale += scaleModifier.getValue() * frameTime;
+            double scale = 1.0 + scaleModifier.getValue() * timer;
             if (scale <= 0.0) return true;
 
             int alphaSide = sideColor.getValue().getAlpha();
@@ -124,6 +124,7 @@ public class PopChams extends Module {
             float fadeFactor = fadeOut.getValue() ? (float) Math.max(0.0, 1.0 - timer / renderTime.getValue()) : 1.0f;
 
             ((WalkAnimationStateAccessor) walkAnimation).epsilon$freeze(walkPosition, walkSpeed, tickDelta);
+
             Color side = withAlpha(sideColor.getValue(), Math.round(alphaSide * fadeFactor));
             Color line = withAlpha(lineColor.getValue(), Math.round(alphaLine * fadeFactor));
 
