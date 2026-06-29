@@ -147,10 +147,11 @@ public class ESP2D extends Module {
 
         float distanceScale = getHealthBarDistanceScale(height);
         float width = healthBarWidth.getValue().floatValue() * distanceScale;
-        float barX = x - 3.0f - width;
+        float gap = 3.0f * distanceScale;
+        float outlineWidth = healthBarOutline.getValue() ? healthBarOutlineWidth.getValue().floatValue() * distanceScale : 0.0f;
+        float barX = x - gap - outlineWidth - width;
 
         if (healthBarOutline.getValue()) {
-            float outlineWidth = healthBarOutlineWidth.getValue().floatValue() * distanceScale;
             rectRenderer.addRect(barX - outlineWidth, y - outlineWidth, width + outlineWidth * 2.0f, height + outlineWidth * 2.0f, Color.BLACK);
         } else {
             rectRenderer.addRect(barX, y, width, height, Color.BLACK);
