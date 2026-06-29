@@ -74,15 +74,12 @@ public class ClientSetting extends Module {
         Hide,
         Vanilla
     }
-<<<<<<< HEAD
-=======
 
     private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgNotification = settingGroup("Notification");
 
->>>>>>> 70ede43 (继续重构 UI 系统，并修复文档错误和部分 Bugs (#328))
     @SuppressWarnings("unused")
     private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.gui.setScreen(HudEditorScreen.INSTANCE));
 
