@@ -8,7 +8,6 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.WireframeEntityRenderer;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.network.chat.Component;
@@ -19,7 +18,7 @@ import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -52,7 +51,8 @@ public class PopChams extends Module {
 
     @EventHandler
     private void onReceivePacket(PacketEvent.Receive event) {
-        if (!(event.getPacket() instanceof ClientboundEntityEventPacket packet) || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH) return;
+        if (!(event.getPacket() instanceof ClientboundEntityEventPacket packet) || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH)
+            return;
 
         Entity entity = packet.getEntity(mc.level);
         if (!(entity instanceof Player player)/* || entity == mc.player*/) return;
