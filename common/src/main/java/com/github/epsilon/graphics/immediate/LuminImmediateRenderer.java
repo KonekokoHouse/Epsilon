@@ -63,6 +63,14 @@ public final class LuminImmediateRenderer {
         return new Lines(POS_COLOR_NORMAL_LINE_WIDTH_LINES.begin(pipeline, null));
     }
 
+    public static void endFrame() {
+        POS_COLOR_QUADS.endFrame();
+        POS_COLOR_TRIANGLE_STRIP.endFrame();
+        POS_COLOR_TRIANGLE_FAN.endFrame();
+        POS_TEX_COLOR_QUADS.endFrame();
+        POS_COLOR_NORMAL_LINE_WIDTH_LINES.endFrame();
+    }
+
     public static final class PosColorQuads {
 
         private final Channel channel;
@@ -183,7 +191,10 @@ public final class LuminImmediateRenderer {
 
         private boolean building;
         private long currentOffset;
+        private long frameOffset;
+        private long batchStartOffset;
         private int vertexCount;
+        private boolean frameUsed;
 
         private long vertexBaseAddr;
 
@@ -213,7 +224,8 @@ public final class LuminImmediateRenderer {
                 throw new IllegalStateException("Immediate channel is already building");
             }
             this.building = true;
-            this.currentOffset = 0;
+            this.currentOffset = this.frameOffset;
+            this.batchStartOffset = this.frameOffset;
             this.vertexCount = 0;
             this.pipeline = pipeline;
             this.texture = texture;
@@ -294,15 +306,18 @@ public final class LuminImmediateRenderer {
                 return true;
             }
             long requiredBytes = this.mode == VertexFormat.Mode.LINES ? this.stride * 2L : this.stride;
-            if (this.currentOffset + requiredBytes > DEFAULT_BUFFER_SIZE) {
-                this.vertexBaseAddr = 0L;
-                return false;
+            this.ringBuffer.ensureCapacity(this.currentOffset + requiredBytes);
+            if (!this.ringBuffer.isMapped()) {
+                this.ringBuffer.tryMap();
             }
             this.vertexBaseAddr = MemoryUtil.memAddress(this.ringBuffer.getMappedBuffer()) + this.currentOffset;
             return true;
         }
 
         private void drawAndReset() {
+            boolean submittedDraw = false;
+            long completedOffset = this.currentOffset;
+
             try {
                 if (this.vertexCount <= 0) {
                     return;
@@ -348,25 +363,49 @@ public final class LuminImmediateRenderer {
                                 RenderSystem.AutoStorageIndexBuffer autoIndices = RenderSystem.getSequentialBuffer(this.mode);
                                 GpuBuffer ibo = autoIndices.getBuffer(indexCount);
                                 pass.setIndexBuffer(ibo, autoIndices.type());
-                                pass.drawIndexed(0, 0, indexCount, 1);
+                                pass.drawIndexed(Math.toIntExact(this.batchStartOffset / this.stride), 0, indexCount, 1);
+                                submittedDraw = true;
                             }
                         }
-                        default -> pass.draw(0, this.vertexCount);
+                        default -> {
+                            pass.draw(Math.toIntExact(this.batchStartOffset / this.stride), this.vertexCount);
+                            submittedDraw = true;
+                        }
                     }
                 }
             } finally {
                 if (this.ringBuffer.isMapped()) {
                     this.ringBuffer.unmap();
                 }
-                this.ringBuffer.rotate();
+
+                if (submittedDraw) {
+                    this.frameUsed = true;
+                    this.frameOffset = completedOffset;
+                }
 
                 this.building = false;
-                this.currentOffset = 0;
+                this.currentOffset = this.frameOffset;
+                this.batchStartOffset = this.frameOffset;
                 this.vertexCount = 0;
                 this.vertexBaseAddr = 0L;
                 this.pipeline = null;
                 this.texture = null;
             }
+        }
+
+        private void endFrame() {
+            if (this.ringBuffer.isMapped()) {
+                this.ringBuffer.unmap();
+            }
+
+            if (this.frameUsed) {
+                this.ringBuffer.rotate();
+            }
+
+            this.frameUsed = false;
+            this.frameOffset = 0L;
+            this.currentOffset = 0L;
+            this.batchStartOffset = 0L;
         }
 
         private static byte packNormal(float value) {

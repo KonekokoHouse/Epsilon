@@ -69,7 +69,16 @@ public class PopChams extends Module {
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         synchronized (ghosts) {
-            ghosts.removeIf(ghostPlayer -> ghostPlayer.render(event));
+            if (ghosts.isEmpty()) {
+                return;
+            }
+
+            WireframeEntityRenderer.beginBatch(event.getPoseStack());
+            try {
+                ghosts.removeIf(ghostPlayer -> ghostPlayer.render(event));
+            } finally {
+                WireframeEntityRenderer.endBatch();
+            }
         }
     }
 
