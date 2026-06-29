@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TtfFontLoader implements IFontLoader {
@@ -109,7 +108,6 @@ public class TtfFontLoader implements IFontLoader {
     }
 
     private void requestMissingChars(String chars) {
-
         for (int i = 0; i < chars.length(); i++) {
             char ch = chars.charAt(i);
             if (ch == ' ' || ch == '\n' || hasGlyph(ch) || hasPendingGlyph(ch)) {
@@ -229,7 +227,6 @@ public class TtfFontLoader implements IFontLoader {
             checkAndLoadChar(ch);
         }
     }
-
 
     @Override
     public void destroy() {

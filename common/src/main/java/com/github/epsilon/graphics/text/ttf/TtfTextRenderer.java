@@ -66,13 +66,7 @@ public class TtfTextRenderer implements ITextRenderer {
 
     @Override
     public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
-<<<<<<< HEAD
-        final var finalScale = scale * DEFAULT_SCALE;
-        fontLoader.checkAndLoadChars(text);
-        int argb = ARGB.toABGR(color.getRGB());
-=======
         if (text.isEmpty() || color.getAlpha() == 0) return;
->>>>>>> 39383183 (优化 GUI 打开动画和字体渲染器性能 (#333))
 
         fontLoader.prepareChars(text);
         emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()));
