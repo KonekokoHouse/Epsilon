@@ -7,7 +7,6 @@ import com.github.epsilon.graphics.buffer.LuminRingBuffer;
 import com.github.epsilon.graphics.text.GlyphDescriptor;
 import com.github.epsilon.graphics.text.ITextRenderer;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.utils.render.ColorUtils;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -18,6 +17,7 @@ import net.minecraft.util.ARGB;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.OptionalDouble;
@@ -25,13 +25,31 @@ import java.util.OptionalInt;
 
 public class TtfTextRenderer implements ITextRenderer {
 
-    private static final float DEFAULT_SCALE = 0.27f;
+    private static final float DEFAULT_SCALE = 0.35f;
     private static final float SPACING = 0f;
     private static final int STRIDE = 24;
     private static final long GLYPH_BYTES = STRIDE * 4L;
+    private static final int LAYOUT_FLOATS_PER_GLYPH = 10;
+    private static final int LAYOUT_CACHE_LIMIT = 512;
+    private static final int WIDTH_CACHE_LIMIT = 512;
+    private static final float SPACE_WIDTH = 3.0f;
     private final long bufferSize;
 
     private final Map<TtfGlyphAtlas, Batch> batches = new LinkedHashMap<>();
+    // 缓存与 scale 无关的布局数据，绘制时只做平移和缩放。
+    private final Map<LayoutKey, TextLayout> layoutCache = new LinkedHashMap<>(64, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<LayoutKey, TextLayout> eldest) {
+            return size() > LAYOUT_CACHE_LIMIT;
+        }
+    };
+    // 宽度测量调用很密集，单独缓存避免为了布局缓存而请求/上传字形。
+    private final Map<LayoutKey, Float> widthCache = new LinkedHashMap<>(64, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<LayoutKey, Float> eldest) {
+            return size() > WIDTH_CACHE_LIMIT;
+        }
+    };
 
     private boolean scissorEnabled = false;
     private int scissorX, scissorY, scissorW, scissorH;
@@ -48,106 +66,171 @@ public class TtfTextRenderer implements ITextRenderer {
 
     @Override
     public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
-        final var finalScale = scale * DEFAULT_SCALE;
-        fontLoader.requestChars(text);
-        fontLoader.drainReadyGlyphs();
-        int argb = ARGB.toABGR(color.getRGB());
+        if (text.isEmpty() || color.getAlpha() == 0) return;
 
-        float xOffset = 0f;
-        float yOffset = 0f;
-
-        for (int i = 0; i < text.length(); i++) {
-            char ch = text.charAt(i);
-            if (ch == ' ') {
-                xOffset += 3.0f * scale;
-                continue;
-            }
-            if (ch == '\n') {
-                xOffset = 0f;
-                yOffset += fontLoader.fontFile.fontHeight * finalScale;
-                continue;
-            }
-
-            GlyphDescriptor glyph = fontLoader.getGlyph(ch);
-            if (glyph == null) continue;
-
-            TtfGlyphAtlas atlas = glyph.atlas();
-
-            Batch batch = batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
-            batch.buffer.ensureCapacity(batch.offsetInAtlas + GLYPH_BYTES);
-            batch.buffer.tryMap();
-
-            float baselineY = yOffset + y + (fontLoader.fontFile.pixelAscent * finalScale);
-            float x1 = x + xOffset;
-            float x2 = x1 + glyph.width() * finalScale;
-            float y1 = baselineY + glyph.yOffset() * finalScale;
-            float y2 = y1 + glyph.height() * finalScale;
-
-            long baseAddr = MemoryUtil.memAddress(batch.buffer.getMappedBuffer());
-            long p = baseAddr + batch.offsetInAtlas;
-
-            BufferUtils.writeUvRectToAddr(p, x1, y1, glyph.uv().u0(), glyph.uv().v0(), argb);
-            BufferUtils.writeUvRectToAddr(p + STRIDE, x1, y2, glyph.uv().u0(), glyph.uv().v1(), argb);
-            BufferUtils.writeUvRectToAddr(p + STRIDE * 2, x2, y2, glyph.uv().u1(), glyph.uv().v1(), argb);
-            BufferUtils.writeUvRectToAddr(p + STRIDE * 3, x2, y1, glyph.uv().u1(), glyph.uv().v0(), argb);
-
-            batch.offsetInAtlas += GLYPH_BYTES;
-            xOffset += glyph.advance() * finalScale + SPACING * scale;
-        }
+        fontLoader.prepareChars(text);
+        emitLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()));
     }
 
     @Override
     public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
-        final var finalScale = scale * DEFAULT_SCALE;
-        fontLoader.requestChars(text);
-        fontLoader.drainReadyGlyphs();
+        if (text.isEmpty() || startColor.getAlpha() == 0 && endColor.getAlpha() == 0) return;
 
-        float totalWidth = Math.max(getWidth(text, scale, fontLoader), 1.0f);
-        float xOffset = 0f;
-        float yOffset = 0f;
+        fontLoader.prepareChars(text);
+        TextLayout layout = layoutFor(text, fontLoader);
+        float totalWidth = layout.complete ? layout.width : baseWidth(text, fontLoader);
+        emitGradientLayout(layout, x, y, scale, totalWidth, startColor.getRGB(), endColor.getRGB());
+    }
+
+    private TextLayout layoutFor(String text, TtfFontLoader fontLoader) {
+        long revision = fontLoader.getGlyphRevision();
+        long atlasRevision = fontLoader.getAtlasRevision();
+        LayoutKey key = new LayoutKey(fontLoader, text);
+        TextLayout cached = layoutCache.get(key);
+        // 完整布局可跨无关 glyph 加载复用；未完成布局等待 glyphRevision 变化后重建。
+        if (cached != null && cached.atlasRevision == atlasRevision && (cached.complete || cached.glyphRevision == revision)) {
+            return cached;
+        }
+
+        TextLayout layout = buildLayout(text, fontLoader, revision, atlasRevision);
+        layoutCache.put(key, layout);
+        return layout;
+    }
+
+    private TextLayout buildLayout(String text, TtfFontLoader fontLoader, long revision, long atlasRevision) {
+        // 坐标统一存 DEFAULT_SCALE 下的基础值，emit 时再乘调用方传入的 scale。
+        Map<TtfGlyphAtlas, LayoutRunBuilder> runBuilders = new LinkedHashMap<>();
+        float xOffset = 0.0f;
+        float yOffset = 0.0f;
+        float maxLine = 0.0f;
+        float ascent = fontLoader.fontFile.pixelAscent * DEFAULT_SCALE;
+        float lineHeight = fontLoader.fontFile.fontHeight * DEFAULT_SCALE;
+        boolean complete = true;
+        int glyphCount = 0;
 
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);
             if (ch == ' ') {
-                xOffset += 3.0f * scale;
+                xOffset += SPACE_WIDTH;
                 continue;
             }
             if (ch == '\n') {
-                xOffset = 0f;
-                yOffset += fontLoader.fontFile.fontHeight * finalScale;
+                maxLine = Math.max(maxLine, xOffset);
+                xOffset = 0.0f;
+                yOffset += lineHeight;
                 continue;
             }
 
             GlyphDescriptor glyph = fontLoader.getGlyph(ch);
-            if (glyph == null) continue;
+            if (glyph == null) {
+                complete = false;
+                continue;
+            }
 
-            TtfGlyphAtlas atlas = glyph.atlas();
-            Batch batch = batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
-            batch.buffer.ensureCapacity(batch.offsetInAtlas + GLYPH_BYTES);
-            batch.buffer.tryMap();
+            float x1 = xOffset;
+            float x2 = x1 + glyph.width() * DEFAULT_SCALE;
+            float y1 = yOffset + ascent + glyph.yOffset() * DEFAULT_SCALE;
+            float y2 = y1 + glyph.height() * DEFAULT_SCALE;
+            float advance = glyph.advance() * DEFAULT_SCALE + SPACING;
 
-            float baselineY = yOffset + y + (fontLoader.fontFile.pixelAscent * finalScale);
-            float x1 = x + xOffset;
-            float x2 = x1 + glyph.width() * finalScale;
-            float y1 = baselineY + glyph.yOffset() * finalScale;
-            float y2 = y1 + glyph.height() * finalScale;
+            runBuilders.computeIfAbsent(glyph.atlas(), LayoutRunBuilder::new)
+                    .add(x1, y1, x2, y2, glyph.uv(), xOffset, xOffset + glyph.advance() * DEFAULT_SCALE);
 
-            float leftProgress = Math.clamp(xOffset / totalWidth, 0.0f, 1.0f);
-            float rightProgress = Math.clamp(((xOffset + glyph.advance() * finalScale) / totalWidth), 0.0f, 1.0f);
-            int leftArgb = ARGB.toABGR(ColorUtils.interpolateColor(startColor, endColor, leftProgress).getRGB());
-            int rightArgb = ARGB.toABGR(ColorUtils.interpolateColor(startColor, endColor, rightProgress).getRGB());
-
-            long baseAddr = MemoryUtil.memAddress(batch.buffer.getMappedBuffer());
-            long p = baseAddr + batch.offsetInAtlas;
-
-            BufferUtils.writeUvRectToAddr(p, x1, y1, glyph.uv().u0(), glyph.uv().v0(), leftArgb);
-            BufferUtils.writeUvRectToAddr(p + STRIDE, x1, y2, glyph.uv().u0(), glyph.uv().v1(), leftArgb);
-            BufferUtils.writeUvRectToAddr(p + STRIDE * 2, x2, y2, glyph.uv().u1(), glyph.uv().v1(), rightArgb);
-            BufferUtils.writeUvRectToAddr(p + STRIDE * 3, x2, y1, glyph.uv().u1(), glyph.uv().v0(), rightArgb);
-
-            batch.offsetInAtlas += GLYPH_BYTES;
-            xOffset += glyph.advance() * finalScale + SPACING * scale;
+            xOffset += advance;
+            glyphCount++;
         }
+
+        maxLine = Math.max(maxLine, xOffset);
+
+        LayoutRun[] runs = new LayoutRun[runBuilders.size()];
+        int index = 0;
+        for (LayoutRunBuilder builder : runBuilders.values()) {
+            runs[index++] = builder.build();
+        }
+
+        return new TextLayout(runs, glyphCount, maxLine, complete, revision, atlasRevision);
+    }
+
+    private void emitLayout(TextLayout layout, float x, float y, float scale, int argb) {
+        if (layout.glyphCount == 0) return;
+
+        for (LayoutRun run : layout.runs) {
+            Batch batch = batchFor(run.atlas);
+            long p = batch.beginWrite(run.glyphCount);
+            float[] data = run.data;
+            for (int i = 0; i < run.glyphCount; i++) {
+                writeGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, argb);
+                p += GLYPH_BYTES;
+            }
+        }
+    }
+
+    private void emitGradientLayout(TextLayout layout, float x, float y, float scale, float width, int startArgb, int endArgb) {
+        if (layout.glyphCount == 0) return;
+
+        float totalWidth = Math.max(width, 1.0f);
+        for (LayoutRun run : layout.runs) {
+            Batch batch = batchFor(run.atlas);
+            long p = batch.beginWrite(run.glyphCount);
+            float[] data = run.data;
+            for (int i = 0; i < run.glyphCount; i++) {
+                int base = i * LAYOUT_FLOATS_PER_GLYPH;
+                int leftArgb = ARGB.toABGR(ARGB.srgbLerp(clamp01(data[base + 8] / totalWidth), startArgb, endArgb));
+                int rightArgb = ARGB.toABGR(ARGB.srgbLerp(clamp01(data[base + 9] / totalWidth), startArgb, endArgb));
+                writeGlyph(p, x, y, scale, data, base, leftArgb, rightArgb);
+                p += GLYPH_BYTES;
+            }
+        }
+    }
+
+    private Batch batchFor(TtfGlyphAtlas atlas) {
+        return batches.computeIfAbsent(atlas, k -> new Batch(new LuminRingBuffer(bufferSize, GpuBuffer.USAGE_VERTEX)));
+    }
+
+    private static void writeGlyph(long p, float x, float y, float scale, float[] data, int base, int leftArgb, int rightArgb) {
+        float x1 = x + data[base] * scale;
+        float y1 = y + data[base + 1] * scale;
+        float x2 = x + data[base + 2] * scale;
+        float y2 = y + data[base + 3] * scale;
+        float u0 = data[base + 4];
+        float v0 = data[base + 5];
+        float u1 = data[base + 6];
+        float v1 = data[base + 7];
+
+        BufferUtils.writeUvRectToAddr(p, x1, y1, u0, v0, leftArgb);
+        BufferUtils.writeUvRectToAddr(p + STRIDE, x1, y2, u0, v1, leftArgb);
+        BufferUtils.writeUvRectToAddr(p + STRIDE * 2L, x2, y2, u1, v1, rightArgb);
+        BufferUtils.writeUvRectToAddr(p + STRIDE * 3L, x2, y1, u1, v0, rightArgb);
+    }
+
+    private float baseWidth(String text, TtfFontLoader fontLoader) {
+        LayoutKey key = new LayoutKey(fontLoader, text);
+        Float cached = widthCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        float maxLine = 0.0f;
+        float currentLine = 0.0f;
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (ch == ' ') {
+                currentLine += SPACE_WIDTH;
+            } else if (ch == '\n') {
+                maxLine = Math.max(maxLine, currentLine);
+                currentLine = 0.0f;
+            } else {
+                currentLine += fontLoader.getAdvance(ch) * DEFAULT_SCALE + SPACING;
+            }
+        }
+
+        float width = Math.max(maxLine, currentLine);
+        widthCache.put(key, width);
+        return width;
+    }
+
+    private static float clamp01(float value) {
+        return Math.clamp(value, 0.0f, 1.0f);
     }
 
     @Override
@@ -217,6 +300,7 @@ public class TtfTextRenderer implements ITextRenderer {
             if (batch.offsetInAtlas == 0) continue;
             if (batch.buffer.isMapped()) {
                 batch.buffer.unmap();
+                batch.mappedAddress = 0L;
             }
 
             int vertexCount = (int) (batch.offsetInAtlas / STRIDE);
@@ -257,6 +341,7 @@ public class TtfTextRenderer implements ITextRenderer {
             if (batch.offsetInAtlas > 0) {
                 if (batch.buffer.isMapped()) {
                     batch.buffer.unmap();
+                    batch.mappedAddress = 0L;
                 }
                 batch.buffer.rotate();
             }
@@ -273,6 +358,8 @@ public class TtfTextRenderer implements ITextRenderer {
             batch.buffer.close();
         }
         batches.clear();
+        layoutCache.clear();
+        widthCache.clear();
     }
 
     @Override
@@ -282,25 +369,8 @@ public class TtfTextRenderer implements ITextRenderer {
 
     @Override
     public float getWidth(String text, float scale, TtfFontLoader fontLoader) {
-        fontLoader.checkAndLoadChars(text);
-        final var finalScale = scale * DEFAULT_SCALE;
-        float maxLine = 0.0f;
-        float currentLine = 0.0f;
-
-        for (char ch : text.toCharArray()) {
-            if (ch == ' ') {
-                currentLine += 3.0f * scale;
-            } else if (ch == '\n') {
-                maxLine = Math.max(maxLine, currentLine);
-                currentLine = 0.0f;
-            } else {
-                GlyphDescriptor glyph = fontLoader.getGlyph(ch);
-                if (glyph != null) {
-                    currentLine += glyph.advance() * finalScale + SPACING * scale;
-                }
-            }
-        }
-        return Math.max(maxLine, currentLine);
+        if (text.isEmpty()) return 0.0f;
+        return baseWidth(text, fontLoader) * scale;
     }
 
     @Override
@@ -321,9 +391,99 @@ public class TtfTextRenderer implements ITextRenderer {
     private static final class Batch {
         final LuminRingBuffer buffer;
         long offsetInAtlas = 0;
+        long mappedAddress = 0L;
 
         private Batch(LuminRingBuffer buffer) {
             this.buffer = buffer;
+        }
+
+        private long beginWrite(int glyphCount) {
+            long start = offsetInAtlas;
+            long requiredBytes = start + glyphCount * GLYPH_BYTES;
+            buffer.ensureCapacity(requiredBytes);
+
+            // 同一 atlas run 只映射一次，后续 glyph 直接顺序写入 mapped memory。
+            if (!buffer.isMapped()) {
+                buffer.tryMap();
+                mappedAddress = MemoryUtil.memAddress(buffer.getMappedBuffer());
+            } else if (mappedAddress == 0L) {
+                mappedAddress = MemoryUtil.memAddress(buffer.getMappedBuffer());
+            }
+
+            offsetInAtlas = requiredBytes;
+            return mappedAddress + start;
+        }
+    }
+
+    private record LayoutKey(TtfFontLoader fontLoader, String text) {
+    }
+
+    private static final class TextLayout {
+        final LayoutRun[] runs;
+        final int glyphCount;
+        final float width;
+        final boolean complete;
+        final long glyphRevision;
+        final long atlasRevision;
+
+        private TextLayout(LayoutRun[] runs, int glyphCount, float width, boolean complete, long glyphRevision, long atlasRevision) {
+            this.runs = runs;
+            this.glyphCount = glyphCount;
+            this.width = width;
+            this.complete = complete;
+            this.glyphRevision = glyphRevision;
+            this.atlasRevision = atlasRevision;
+        }
+    }
+
+    private static final class LayoutRun {
+        final TtfGlyphAtlas atlas;
+        final float[] data;
+        final int glyphCount;
+
+        private LayoutRun(TtfGlyphAtlas atlas, float[] data, int glyphCount) {
+            this.atlas = atlas;
+            this.data = data;
+            this.glyphCount = glyphCount;
+        }
+    }
+
+    private static final class LayoutRunBuilder {
+        private final TtfGlyphAtlas atlas;
+        private float[] data = new float[LAYOUT_FLOATS_PER_GLYPH * 16];
+        private int glyphCount;
+
+        private LayoutRunBuilder(TtfGlyphAtlas atlas) {
+            this.atlas = atlas;
+        }
+
+        private void add(float x1, float y1, float x2, float y2, TtfGlyphAtlas.GlyphUV uv, float gradientLeft, float gradientRight) {
+            ensureCapacity(glyphCount + 1);
+            int base = glyphCount * LAYOUT_FLOATS_PER_GLYPH;
+            data[base] = x1;
+            data[base + 1] = y1;
+            data[base + 2] = x2;
+            data[base + 3] = y2;
+            data[base + 4] = uv.u0();
+            data[base + 5] = uv.v0();
+            data[base + 6] = uv.u1();
+            data[base + 7] = uv.v1();
+            data[base + 8] = gradientLeft;
+            data[base + 9] = gradientRight;
+            glyphCount++;
+        }
+
+        private void ensureCapacity(int targetGlyphCount) {
+            int required = targetGlyphCount * LAYOUT_FLOATS_PER_GLYPH;
+            if (required <= data.length) {
+                return;
+            }
+            data = Arrays.copyOf(data, Math.max(required, data.length * 2));
+        }
+
+        private LayoutRun build() {
+            int used = glyphCount * LAYOUT_FLOATS_PER_GLYPH;
+            return new LayoutRun(atlas, used == data.length ? data : Arrays.copyOf(data, used), glyphCount);
         }
     }
 

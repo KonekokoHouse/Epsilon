@@ -111,6 +111,7 @@ public class ModuleHolder {
         addModule(Chams.INSTANCE);
         addModule(CrystalChams.INSTANCE);
         addModule(ESP.INSTANCE);
+        addModule(ESP2D.INSTANCE);
         addModule(Filter.INSTANCE);
         addModule(Fullbright.INSTANCE);
         addModule(GameAnimation.INSTANCE);
@@ -121,7 +122,9 @@ public class ModuleHolder {
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);
         addModule(Particles.INSTANCE);
+        addModule(PopChams.INSTANCE);
         addModule(Shaders.INSTANCE);
+        addModule(SneakTweak.INSTANCE);
         addModule(Xray.INSTANCE);
     }
 

@@ -36,6 +36,7 @@ public class LuminRenderSystem {
 
     @Nullable
     private static LuminRenderTarget activeTarget = null;
+    private static long renderFrameId;
 
     public static void setActiveTarget(@Nullable LuminRenderTarget target) {
         activeTarget = target;
@@ -60,6 +61,14 @@ public class LuminRenderSystem {
 
     public static void endDynamicUniformFrame() {
         ShaderUniforms.endFrame();
+    }
+
+    public static void beginRenderFrame() {
+        renderFrameId++;
+    }
+
+    public static long getRenderFrameId() {
+        return renderFrameId;
     }
 
     @Nullable

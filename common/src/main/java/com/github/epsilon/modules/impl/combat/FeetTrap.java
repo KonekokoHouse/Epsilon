@@ -5,6 +5,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -77,8 +78,8 @@ public class FeetTrap extends Module {
                             renderBox = AABB.ofSize(renderBox.getCenter(), renderBox.getXsize() * scale, renderBox.getYsize() * scale, renderBox.getZsize() * scale);
                         }
 
-                        Managers.RENDER.addFilledBox(renderBox, side);
-                        Managers.RENDER.addOutlineBox(renderBox, line);
+                        Render3DScheduler.INSTANCE.addFilledBox(renderBox, side);
+                        Render3DScheduler.INSTANCE.addOutlineBox(renderBox, line);
                     }
                 }
         ));

@@ -22,6 +22,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 
@@ -38,8 +39,8 @@ public final class WireframeEntityRenderer {
             mc.getModelManager(),
             WIREFRAME_BUFFER_SOURCE,
             mc.getAtlasManager(),
-            没鸡巴用的OutlineBufferSource.INSTANCE,
-            没鸡巴用的BufferSource.INSTANCE,
+            WireframeEntityOutlineBufferSource.INSTANCE,
+            WireframeEntityBufferSource.INSTANCE,
             mc.font,
             mc.gameRenderer.getGameRenderState()
     );
@@ -73,8 +74,40 @@ public final class WireframeEntityRenderer {
     private WireframeEntityRenderer() {
     }
 
-    @SuppressWarnings("unchecked")
+    public static void beginBatch(PoseStack renderStack) {
+        if (isBatching()) {
+            throw new IllegalStateException("Wireframe entity renderer is already batching");
+        }
+
+        beginDraw(renderStack);
+    }
+
+    public static void endBatch() {
+        if (!isBatching()) {
+            return;
+        }
+
+        endDraw();
+    }
+
     public static void render(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
+        boolean startedBatch = false;
+        if (!isBatching()) {
+            beginBatch(renderStack);
+            startedBatch = true;
+        }
+
+        try {
+            renderEntity(entity, scale, sideColor, lineColor, lineWidth);
+        } finally {
+            if (startedBatch) {
+                endBatch();
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void renderEntity(Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
         WireframeEntityRenderer.sideColor = sideColor;
         WireframeEntityRenderer.lineColor = lineColor;
         WireframeEntityRenderer.lineWidth = lineWidth;
@@ -93,8 +126,6 @@ public final class WireframeEntityRenderer {
         offsetY += renderOffset.y;
         offsetZ += renderOffset.z;
 
-        beginDraw(renderStack);
-
         modelPoseStack.pushPose();
 
         modelPoseStack.scale((float) scale, (float) scale, (float) scale);
@@ -108,6 +139,10 @@ public final class WireframeEntityRenderer {
 
         endDraw();
         WIREFRAME_BUFFER_SOURCE.reset();
+    }
+
+    private static boolean isBatching() {
+        return sidesBuilder != null && linesBuilder != null;
     }
 
     private static void beginDraw(PoseStack renderStack) {
@@ -187,9 +222,9 @@ public final class WireframeEntityRenderer {
         }
 
         @Override
-        public VertexConsumer getBuffer(RenderType renderType) {
+        public @NonNull VertexConsumer getBuffer(RenderType renderType) {
             if (renderType.outputTarget() == OutputTarget.ITEM_ENTITY_TARGET) {
-                return 没鸡巴用的VertexConsumer.INSTANCE;
+                return WireframeEntityVertexConsumer.INSTANCE;
             }
 
             return buffers.computeIfAbsent(renderType, ignored -> new WireframeVertexConsumer());
@@ -200,7 +235,7 @@ public final class WireframeEntityRenderer {
         }
 
         @Override
-        public void endBatch(RenderType renderType) {
+        public void endBatch(@NonNull RenderType renderType) {
         }
 
         private void reset() {
@@ -217,7 +252,7 @@ public final class WireframeEntityRenderer {
         private int index;
 
         @Override
-        public VertexConsumer addVertex(float x, float y, float z) {
+        public @NonNull VertexConsumer addVertex(float x, float y, float z) {
             xs[index] = x;
             ys[index] = y;
             zs[index] = z;
@@ -237,37 +272,37 @@ public final class WireframeEntityRenderer {
         }
 
         @Override
-        public VertexConsumer setColor(int red, int green, int blue, int alpha) {
+        public @NonNull VertexConsumer setColor(int red, int green, int blue, int alpha) {
             return this;
         }
 
         @Override
-        public VertexConsumer setColor(int color) {
+        public @NonNull VertexConsumer setColor(int color) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv(float u, float v) {
+        public @NonNull VertexConsumer setUv(float u, float v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv1(int u, int v) {
+        public @NonNull VertexConsumer setUv1(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv2(int u, int v) {
+        public @NonNull VertexConsumer setUv2(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setNormal(float x, float y, float z) {
+        public @NonNull VertexConsumer setNormal(float x, float y, float z) {
             return this;
         }
 
         @Override
-        public VertexConsumer setLineWidth(float width) {
+        public @NonNull VertexConsumer setLineWidth(float width) {
             return this;
         }
 
@@ -276,60 +311,60 @@ public final class WireframeEntityRenderer {
         }
     }
 
-    private static final class 没鸡巴用的VertexConsumer implements VertexConsumer {
-        private static final 没鸡巴用的VertexConsumer INSTANCE = new 没鸡巴用的VertexConsumer();
+    private static final class WireframeEntityVertexConsumer implements VertexConsumer {
+        private static final WireframeEntityVertexConsumer INSTANCE = new WireframeEntityVertexConsumer();
 
         @Override
-        public VertexConsumer addVertex(float x, float y, float z) {
+        public @NonNull VertexConsumer addVertex(float x, float y, float z) {
             return this;
         }
 
         @Override
-        public VertexConsumer setColor(int red, int green, int blue, int alpha) {
+        public @NonNull VertexConsumer setColor(int red, int green, int blue, int alpha) {
             return this;
         }
 
         @Override
-        public VertexConsumer setColor(int color) {
+        public @NonNull VertexConsumer setColor(int color) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv(float u, float v) {
+        public @NonNull VertexConsumer setUv(float u, float v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv1(int u, int v) {
+        public @NonNull VertexConsumer setUv1(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setUv2(int u, int v) {
+        public @NonNull VertexConsumer setUv2(int u, int v) {
             return this;
         }
 
         @Override
-        public VertexConsumer setNormal(float x, float y, float z) {
+        public @NonNull VertexConsumer setNormal(float x, float y, float z) {
             return this;
         }
 
         @Override
-        public VertexConsumer setLineWidth(float width) {
+        public @NonNull VertexConsumer setLineWidth(float width) {
             return this;
         }
     }
 
-    private static final class 没鸡巴用的BufferSource extends MultiBufferSource.BufferSource {
-        private static final 没鸡巴用的BufferSource INSTANCE = new 没鸡巴用的BufferSource();
+    private static final class WireframeEntityBufferSource extends MultiBufferSource.BufferSource {
+        private static final WireframeEntityBufferSource INSTANCE = new WireframeEntityBufferSource();
 
-        private 没鸡巴用的BufferSource() {
+        private WireframeEntityBufferSource() {
             super(null, null);
         }
 
         @Override
-        public VertexConsumer getBuffer(RenderType renderType) {
-            return 没鸡巴用的VertexConsumer.INSTANCE;
+        public @NonNull VertexConsumer getBuffer(RenderType renderType) {
+            return WireframeEntityVertexConsumer.INSTANCE;
         }
 
         @Override
@@ -337,16 +372,16 @@ public final class WireframeEntityRenderer {
         }
 
         @Override
-        public void endBatch(RenderType renderType) {
+        public void endBatch(@NonNull RenderType renderType) {
         }
     }
 
-    private static final class 没鸡巴用的OutlineBufferSource extends OutlineBufferSource {
-        private static final 没鸡巴用的OutlineBufferSource INSTANCE = new 没鸡巴用的OutlineBufferSource();
+    private static final class WireframeEntityOutlineBufferSource extends OutlineBufferSource {
+        private static final WireframeEntityOutlineBufferSource INSTANCE = new WireframeEntityOutlineBufferSource();
 
         @Override
-        public VertexConsumer getBuffer(RenderType renderType) {
-            return 没鸡巴用的VertexConsumer.INSTANCE;
+        public @NonNull VertexConsumer getBuffer(@NonNull RenderType renderType) {
+            return WireframeEntityVertexConsumer.INSTANCE;
         }
 
         @Override

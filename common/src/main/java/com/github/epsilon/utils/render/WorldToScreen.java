@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -36,10 +37,10 @@ public class WorldToScreen {
         return new Vector3f(out.x, out.y, out.z);
     }
 
-    public static Vector4d getEntityPositionsOn2D(LivingEntity target, float tickDelta) {
-        final Vec3 position = interpolate(target, tickDelta);
-        final float width = target.getBbWidth() / 2f;
-        final float height = target.getBbHeight() + (target.isCrouching() ? 0.1f : 0.2f);
+    public static Vector4d getEntityPositionsOn2D(Entity entity, float tickDelta) {
+        final Vec3 position = interpolate(entity, tickDelta);
+        final float width = entity.getBbWidth() / 2f;
+        final float height = entity.getBbHeight() + (entity.isCrouching() ? 0.1f : 0.2f);
 
         final AABB boundingBox = new AABB(
                 position.x - width, position.y, position.z - width,
@@ -108,10 +109,11 @@ public class WorldToScreen {
         return projectEntity(viewport, matrix, absoluteBoundingBox, cameraPos);
     }
 
-    public static Vec3 interpolate(LivingEntity entity, float tickDelta) {
+    public static Vec3 interpolate(Entity entity, float tickDelta) {
         double x = Mth.lerp(tickDelta, entity.xOld, entity.getX());
         double y = Mth.lerp(tickDelta, entity.yOld, entity.getY());
         double z = Mth.lerp(tickDelta, entity.zOld, entity.getZ());
         return new Vec3(x, y, z);
     }
+
 }

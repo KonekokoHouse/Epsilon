@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BlockListSetting;
@@ -113,9 +113,9 @@ public class ESP extends Module {
         }
 
         for (AABB aabb : Lists.newArrayList(boxes)) {
-            if (blur.getValue()) Managers.RENDER.addBlurredBox(aabb, blurStrength.getValue());
-            Managers.RENDER.addFilledBox(aabb, sideColor.getValue());
-            Managers.RENDER.addOutlineBox(aabb, lineColor.getValue());
+            if (blur.getValue()) Render3DScheduler.INSTANCE.addBlurredBox(aabb, blurStrength.getValue());
+            Render3DScheduler.INSTANCE.addFilledBox(aabb, sideColor.getValue());
+            Render3DScheduler.INSTANCE.addOutlineBox(aabb, lineColor.getValue());
         }
     }
 
