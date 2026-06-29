@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -173,7 +174,7 @@ public class Xray extends Module {
         }
 
         if (brutForce.getValue()) {
-            Managers.RENDER.addOutlineBox(area, new Color(149, 149, 149, 100));
+            Render3DScheduler.INSTANCE.addOutlineBox(area, new Color(149, 149, 149, 100));
         }
 
         if (toCheck.isEmpty() || !brutForce.getValue()) return;
@@ -211,8 +212,8 @@ public class Xray extends Module {
 
     private void draw(PoseStack stack, BlockPos pos, int r, int g, int b) {
         AABB box = new AABB(pos);
-        Managers.RENDER.addFilledBox(box, new Color(r, g, b, 100));
-        Managers.RENDER.addOutlineBox(box, new Color(r, g, b, 200));
+        Render3DScheduler.INSTANCE.addFilledBox(box, new Color(r, g, b, 100));
+        Render3DScheduler.INSTANCE.addOutlineBox(box, new Color(r, g, b, 200));
     }
 
     public boolean isCheckableOre(Block block) {

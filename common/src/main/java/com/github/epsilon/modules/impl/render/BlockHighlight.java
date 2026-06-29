@@ -2,7 +2,7 @@ package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -38,7 +38,7 @@ public class BlockHighlight extends Module {
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 255, 255, 255), () -> mode.is(Mode.Both) || mode.is(Mode.BothSide) || mode.is(Mode.Outline) || mode.is(Mode.OutlinedSide));
     private final DoubleSetting lineWidth = doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.5);
     private final BoolSetting blur = boolSetting("Blur", true);
-    private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 0.0, 16.0, 0.5);
+    private final DoubleSetting blurStrength = doubleSetting("Blur Strength", 5.0, 0.0, 16.0, 0.5, () -> blur.getValue() && (mode.is(Mode.Both) || mode.is(Mode.BothSide) || mode.is(Mode.Fill)));
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
@@ -56,31 +56,32 @@ public class BlockHighlight extends Module {
         switch (mode.getValue()) {
             case Both -> {
                 drawBlur(box);
-                Managers.RENDER.addFilledBox(box, fillColor);
-                Managers.RENDER.addOutlineBox(box, outlineColor, thickness);
+                Render3DScheduler.INSTANCE.addFilledBox(box, fillColor);
+                Render3DScheduler.INSTANCE.addOutlineBox(box, outlineColor, thickness);
             }
             case BothSide -> {
-                Managers.RENDER.addSideOutline(box, outlineColor, thickness, direction);
-                Managers.RENDER.addFilledSide(box, fillColor, direction);
+                drawBlur(box);
+                Render3DScheduler.INSTANCE.addSideOutline(box, outlineColor, thickness, direction);
+                Render3DScheduler.INSTANCE.addFilledSide(box, fillColor, direction);
             }
             case Fill -> {
                 drawBlur(box);
-                Managers.RENDER.addFilledBox(box, fillColor);
+                Render3DScheduler.INSTANCE.addFilledBox(box, fillColor);
             }
             case FilledSide -> {
-                Managers.RENDER.addFilledSide(box, fillColor, direction);
+                Render3DScheduler.INSTANCE.addFilledSide(box, fillColor, direction);
             }
             case Outline -> {
-                Managers.RENDER.addOutlineBox(box, outlineColor, thickness);
+                Render3DScheduler.INSTANCE.addOutlineBox(box, outlineColor, thickness);
             }
             case OutlinedSide -> {
-                Managers.RENDER.addSideOutline(box, outlineColor, thickness, direction);
+                Render3DScheduler.INSTANCE.addSideOutline(box, outlineColor, thickness, direction);
             }
         }
     }
 
     private void drawBlur(AABB aabb) {
-        if (blur.getValue()) Managers.RENDER.addBlurredBox(aabb, blurStrength.getValue());
+        if (blur.getValue()) Render3DScheduler.INSTANCE.addBlurredBox(aabb, blurStrength.getValue());
     }
 
 }

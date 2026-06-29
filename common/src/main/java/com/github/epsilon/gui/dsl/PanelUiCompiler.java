@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.dsl;
 
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -485,7 +486,7 @@ public class PanelUiCompiler {
     }
 
     private interface TextureSink {
-        void addRoundedTexture(com.github.epsilon.graphics.schedulers.Render2DTexture texture,
+        void addRoundedTexture(Render2DTexture texture,
                                float x, float y, float width, float height,
                                float topLeft, float topRight, float bottomRight, float bottomLeft,
                                float u0, float v0, float u1, float v1, Color color);
@@ -564,7 +565,7 @@ public class PanelUiCompiler {
 
     private record BatchTextureSink(PanelRenderBatch.TextureFacade renderer) implements TextureSink {
         @Override
-        public void addRoundedTexture(com.github.epsilon.graphics.schedulers.Render2DTexture texture,
+        public void addRoundedTexture(Render2DTexture texture,
                                       float x, float y, float width, float height,
                                       float topLeft, float topRight, float bottomRight, float bottomLeft,
                                       float u0, float v0, float u1, float v1, Color color) {
