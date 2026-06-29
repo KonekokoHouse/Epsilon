@@ -35,7 +35,6 @@ public class ESP2D extends Module {
 
     private final BoolSetting players = boolSetting("Players", true);
     private final BoolSetting friends = boolSetting("Friends", true);
-    private final BoolSetting crystals = boolSetting("Crystals", true);
     private final BoolSetting creatures = boolSetting("Creatures", false);
     private final BoolSetting monsters = boolSetting("Monsters", false);
     private final BoolSetting ambients = boolSetting("Ambients", false);
@@ -48,7 +47,6 @@ public class ESP2D extends Module {
 
     private final ColorSetting playersColor = colorSetting("Players Color", new Color(0xFF9200), false, () -> colorMode.is(ColorMode.Custom));
     private final ColorSetting friendsColor = colorSetting("Friends Color", new Color(0x30FF00), false, () -> colorMode.is(ColorMode.Custom));
-    private final ColorSetting crystalsColor = colorSetting("Crystals Color", new Color(0x00BBFF), false, () -> colorMode.is(ColorMode.Custom));
     private final ColorSetting creaturesColor = colorSetting("Creatures Color", new Color(0xA0A4A6), false, () -> colorMode.is(ColorMode.Custom));
     private final ColorSetting monstersColor = colorSetting("Monsters Color", new Color(0xFF0000), false, () -> colorMode.is(ColorMode.Custom));
     private final ColorSetting ambientsColor = colorSetting("Ambients Color", new Color(0x7B00FF), false, () -> colorMode.is(ColorMode.Custom));
@@ -68,9 +66,9 @@ public class ESP2D extends Module {
         float screenHeight = LuminRenderSystem.getScaledHeight();
 
         for (Entity entity : mc.level.entitiesForRendering()) {
-            if (!shouldRender(entity)) continue;
+            if (!(entity instanceof LivingEntity livingEntity) || !shouldRender(livingEntity)) continue;
 
-            Vector4d position = getEntityPositionOn2D(entity, partialTick);
+            Vector4d position = WorldToScreen.getEntityPositionsOn2D(livingEntity, partialTick);
             if (position == null) continue;
             if (position.z < 0.0 || position.w < 0.0 || position.x > screenWidth || position.y > screenHeight) continue;
 
@@ -89,14 +87,14 @@ public class ESP2D extends Module {
                 }
 
                 if (colorMode.is(ColorMode.Custom)) {
-                    Color color = getEntityColor(entity);
+                    Color color = getEntityColor(livingEntity);
                     drawSolidBox(rectRenderer, x, y, endX, endY, color);
                 } else {
                     drawSyncBox(rectRenderer, x, y, endX, endY);
                 }
             }
 
-            if (entity instanceof LivingEntity livingEntity && renderHealth.getValue()) {
+            if (renderHealth.getValue()) {
                 drawHealthBar(rectRenderer, livingEntity, x, y, endY);
             }
         }
@@ -105,17 +103,13 @@ public class ESP2D extends Module {
     }
 
     private boolean shouldRender(Entity entity) {
-        if (entity == null || mc.player == null) return false;
+        if (mc.player == null) return false;
         if (!entity.isAlive() || entity.isSpectator()) return false;
 
         if (entity instanceof Player player) {
             if (entity == mc.player) return false;
             if (Managers.FRIEND.isFriend(player)) return friends.getValue();
             return players.getValue();
-        }
-
-        if (entity instanceof EndCrystal) {
-            return crystals.getValue();
         }
 
         MobCategory category = entity.getType().getCategory();
@@ -127,14 +121,10 @@ public class ESP2D extends Module {
         };
     }
 
-    private Color getEntityColor(Entity entity) {
+    private Color getEntityColor(LivingEntity entity) {
         if (entity instanceof Player player) {
             if (Managers.FRIEND.isFriend(player)) return friendsColor.getValue();
             return playersColor.getValue();
-        }
-
-        if (entity instanceof EndCrystal) {
-            return crystalsColor.getValue();
         }
 
         MobCategory category = entity.getType().getCategory();
