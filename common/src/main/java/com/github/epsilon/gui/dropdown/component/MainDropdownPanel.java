@@ -38,6 +38,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         add(Category.PLAYER::getName, Category.PLAYER.icon, "category:player", togglePanel, panelVisibleResolver);
         add(Category.MOVEMENT::getName, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver);
         add(Category.RENDER::getName, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver);
+        add(Category.MISC::getName, Category.MISC.icon, "category:misc", togglePanel, panelVisibleResolver);
         add(EpsilonTranslations.Gui.TAB_FRIEND::getTranslatedName, IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver);
         add(EpsilonTranslations.Gui.TAB_CONFIG::getTranslatedName, IconChars.SETTINGS, "config", togglePanel, panelVisibleResolver);
         add(EpsilonTranslations.Gui.TAB_ADDON::getTranslatedName, IconChars.ADD, "addon", togglePanel, panelVisibleResolver);

@@ -3,6 +3,7 @@
   "epsilon.categories.player": "玩家",
   "epsilon.categories.movement": "移动",
   "epsilon.categories.render": "渲染",
+  "epsilon.categories.misc": "杂项",
   "epsilon.keybind.none": "无",
   "epsilon.keybind.toggle": "切换",
   "epsilon.keybind.hold": "长按",

@@ -3,6 +3,7 @@
   "epsilon.categories.player": "Player",
   "epsilon.categories.movement": "Movement",
   "epsilon.categories.render": "Render",
+  "epsilon.categories.misc": "Misc",
   "epsilon.keybind.none": "None",
   "epsilon.keybind.toggle": "Toggle",
   "epsilon.keybind.hold": "Hold",
