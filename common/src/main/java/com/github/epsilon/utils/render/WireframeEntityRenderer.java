@@ -8,22 +8,42 @@ import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
+import net.minecraft.client.renderer.OrderedSubmitNodeCollector;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.block.MovingBlockRenderState;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.jspecify.annotations.Nullable;
 
 import java.awt.*;
+import java.util.List;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -31,6 +51,7 @@ public final class WireframeEntityRenderer {
 
     private static final PoseStack modelPoseStack = new PoseStack();
     private static final SubmitNodeStorage submitNodeStorage = new SubmitNodeStorage();
+    private static final MainModelOnlySubmitNodeCollector MAIN_MODEL_ONLY_SUBMIT_NODE_COLLECTOR = new MainModelOnlySubmitNodeCollector(submitNodeStorage);
     private static final WireframeBufferSource WIREFRAME_BUFFER_SOURCE = new WireframeBufferSource();
 
     private static final FeatureRenderDispatcher featureRenderDispatcher = new FeatureRenderDispatcher(
@@ -75,6 +96,16 @@ public final class WireframeEntityRenderer {
 
     @SuppressWarnings("unchecked")
     public static void render(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
+        render(renderStack, entity, scale, sideColor, lineColor, lineWidth, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void renderMainModelOnly(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth) {
+        render(renderStack, entity, scale, sideColor, lineColor, lineWidth, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void render(PoseStack renderStack, Entity entity, double scale, Color sideColor, Color lineColor, float lineWidth, boolean mainModelOnly) {
         WireframeEntityRenderer.sideColor = sideColor;
         WireframeEntityRenderer.lineColor = lineColor;
         WireframeEntityRenderer.lineWidth = lineWidth;
@@ -98,7 +129,13 @@ public final class WireframeEntityRenderer {
         modelPoseStack.pushPose();
 
         modelPoseStack.scale((float) scale, (float) scale, (float) scale);
-        renderer.submit(state, modelPoseStack, submitNodeStorage, mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState);
+        SubmitNodeCollector submitNodeCollector = submitNodeStorage;
+        if (mainModelOnly) {
+            MAIN_MODEL_ONLY_SUBMIT_NODE_COLLECTOR.reset();
+            submitNodeCollector = MAIN_MODEL_ONLY_SUBMIT_NODE_COLLECTOR;
+        }
+
+        renderer.submit(state, modelPoseStack, submitNodeCollector, mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState);
 
         modelPoseStack.popPose();
 
@@ -207,6 +244,82 @@ public final class WireframeEntityRenderer {
             for (WireframeVertexConsumer buffer : buffers.values()) {
                 buffer.reset();
             }
+        }
+    }
+
+    private static final class MainModelOnlySubmitNodeCollector implements SubmitNodeCollector {
+        private final SubmitNodeStorage delegate;
+        private boolean submittedModel;
+
+        private MainModelOnlySubmitNodeCollector(SubmitNodeStorage delegate) {
+            this.delegate = delegate;
+        }
+
+        private void reset() {
+            submittedModel = false;
+        }
+
+        @Override
+        public OrderedSubmitNodeCollector order(int order) {
+            return this;
+        }
+
+        @Override
+        public void submitShadow(PoseStack poseStack, float radius, List<EntityRenderState.ShadowPiece> pieces) {
+        }
+
+        @Override
+        public void submitNameTag(PoseStack poseStack, @Nullable Vec3 nameTagAttachment, int offset, Component name, boolean seeThrough, int lightCoords, double distanceToCameraSq, CameraRenderState camera) {
+        }
+
+        @Override
+        public void submitText(PoseStack poseStack, float x, float y, FormattedCharSequence string, boolean dropShadow, net.minecraft.client.gui.Font.DisplayMode displayMode, int lightCoords, int color, int backgroundColor, int outlineColor) {
+        }
+
+        @Override
+        public void submitFlame(PoseStack poseStack, EntityRenderState renderState, Quaternionf rotation) {
+        }
+
+        @Override
+        public void submitLeash(PoseStack poseStack, EntityRenderState.LeashState leashState) {
+        }
+
+        @Override
+        public <S> void submitModel(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, @Nullable TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay) {
+            if (submittedModel) {
+                return;
+            }
+
+            submittedModel = true;
+            delegate.submitModel(model, state, poseStack, renderType, lightCoords, overlayCoords, tintedColor, sprite, outlineColor, crumblingOverlay);
+        }
+
+        @Override
+        public void submitModelPart(ModelPart modelPart, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, @Nullable TextureAtlasSprite sprite, boolean sheeted, boolean hasFoil, int tintedColor, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay, int outlineColor) {
+        }
+
+        @Override
+        public void submitMovingBlock(PoseStack poseStack, MovingBlockRenderState movingBlockRenderState) {
+        }
+
+        @Override
+        public void submitBlockModel(PoseStack poseStack, RenderType renderType, List<BlockStateModelPart> parts, int[] tintLayers, int lightCoords, int overlayCoords, int outlineColor) {
+        }
+
+        @Override
+        public void submitBreakingBlockModel(PoseStack poseStack, BlockStateModel model, long seed, int progress) {
+        }
+
+        @Override
+        public void submitItem(PoseStack poseStack, ItemDisplayContext displayContext, int lightCoords, int overlayCoords, int outlineColor, int[] tintLayers, List<BakedQuad> quads, ItemStackRenderState.FoilType foilType) {
+        }
+
+        @Override
+        public void submitCustomGeometry(PoseStack poseStack, RenderType renderType, CustomGeometryRenderer customGeometryRenderer) {
+        }
+
+        @Override
+        public void submitParticleGroup(ParticleGroupRenderer particleGroupRenderer) {
         }
     }
 
