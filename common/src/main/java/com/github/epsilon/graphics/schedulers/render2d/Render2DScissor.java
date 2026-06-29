@@ -1,4 +1,4 @@
-package com.github.epsilon.graphics.schedulers;
+package com.github.epsilon.graphics.schedulers.render2d;
 
 import java.util.Objects;
 

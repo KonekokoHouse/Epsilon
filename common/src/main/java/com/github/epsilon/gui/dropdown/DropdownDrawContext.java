@@ -2,7 +2,7 @@ package com.github.epsilon.gui.dropdown;
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.graphics.LuminTexture;
-import com.github.epsilon.graphics.schedulers.Render2DTexture;
+import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.PanelLayout;
 import net.minecraft.resources.Identifier;

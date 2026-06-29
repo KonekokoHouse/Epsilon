@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.scene;
 
-import com.github.epsilon.graphics.schedulers.Render2DScheduler;
+import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 

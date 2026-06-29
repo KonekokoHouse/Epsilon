@@ -1,4 +1,4 @@
-package com.github.epsilon.graphics.schedulers;
+package com.github.epsilon.graphics.schedulers.render2d;
 
 import com.github.epsilon.graphics.LuminTexture;
 import net.minecraft.resources.Identifier;
