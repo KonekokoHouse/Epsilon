@@ -44,7 +44,7 @@ public class TtfFontLoader implements IFontLoader {
     private static int glyphUploadsThisFrame;
 
     public TtfFontLoader(Identifier ttfFile) {
-        this.fontFile = new TtfFontFile(ttfFile, 64, 6);
+        this.fontFile = new TtfFontFile(ttfFile, 48, 4);
     }
 
     @Override

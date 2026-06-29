@@ -25,7 +25,7 @@ import java.util.OptionalInt;
 
 public class TtfTextRenderer implements ITextRenderer {
 
-    private static final float DEFAULT_SCALE = 0.27f;
+    private static final float DEFAULT_SCALE = 0.35f;
     private static final float SPACING = 0f;
     private static final int STRIDE = 24;
     private static final long GLYPH_BYTES = STRIDE * 4L;
