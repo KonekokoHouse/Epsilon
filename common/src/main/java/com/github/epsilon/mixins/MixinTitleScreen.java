@@ -20,6 +20,10 @@ public class MixinTitleScreen {
 
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
     private void onInit(CallbackInfo ci) {
+        if (MainMenuScreen.skipVanillaMenuReplace) {
+            MainMenuScreen.skipVanillaMenuReplace = false;
+            return;
+        }
         if (!epsilon$welcomeHandled) {
             epsilon$welcomeHandled = true;
             if (ClientSetting.INSTANCE.showWelcomeScreen.getValue()) {

@@ -122,6 +122,7 @@ public final class EpsilonTranslations {
         public static final TranslateComponent MAINMENU_MULTIPLAYER = create("gui", "mainmenu.multiplayer");
         public static final TranslateComponent MAINMENU_OPTIONS = create("gui", "mainmenu.options");
         public static final TranslateComponent MAINMENU_QUIT = create("gui", "mainmenu.quit");
+        public static final TranslateComponent MAINMENU_VANILLA = create("gui.mainmenu.vanilla", "VanillaMainMenu");
 
         public static final TranslateComponent TAB_GENERAL = create("gui", "tab.general");
         public static final TranslateComponent TAB_FRIEND = create("gui", "tab.friend");

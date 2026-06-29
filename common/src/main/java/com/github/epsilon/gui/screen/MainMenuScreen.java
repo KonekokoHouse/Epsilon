@@ -14,6 +14,7 @@ import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.multiplayer.SafetyScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
@@ -30,6 +31,12 @@ import java.util.List;
 public class MainMenuScreen extends Screen {
 
     public static final MainMenuScreen INSTANCE = new MainMenuScreen();
+
+    // 新增独立按钮字段
+    private final MenuEntry vanillaMenuBtn;//独立按钮字段
+
+    // 全局一次性标记，专门放行原版标题屏
+    public static boolean skipVanillaMenuReplace = false;
 
     private final GuiScene scene = new GuiScene();
 
@@ -54,6 +61,10 @@ public class MainMenuScreen extends Screen {
         })));
         entries.add(new MenuEntry("Options", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options, false))));
         entries.add(new MenuEntry("Quit", minecraft::stop));
+        vanillaMenuBtn = new MenuEntry("VanillaMainMenu", () -> {
+            skipVanillaMenuReplace = true;
+            this.minecraft.setScreen(new TitleScreen());
+        });
     }
 
     @Override
@@ -67,6 +78,9 @@ public class MainMenuScreen extends Screen {
                 entry.hoverProgress = 0.0f;
                 entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f);
             }
+            // 重置独立按钮hover
+            vanillaMenuBtn.hoverProgress = 0.0f;
+            vanillaMenuBtn.setBounds(0.0f, 0.0f, 0.0f, 0.0f);
         }
     }
 
@@ -137,6 +151,44 @@ public class MainMenuScreen extends Screen {
             for (int i = 0; i < entries.size(); i++) {
                 buildEntry(scope, entries.get(i), i, mouseX, mouseY, introProgress, layout);
             }
+            // 独立按钮：同步入场，永远不会消失
+            float appear = introProgress;
+            int screenW = LuminRenderSystem.getScaledWidthInt();
+            float btnX = (screenW - layout.buttonWidth) / 2f;
+            // 垂直间距 50 scale，拉开距离，彻底不重叠
+            float btnY = layout.buttonsY + layout.buttonHitHeight - 50 * layout.scale;
+
+            boolean hovered = vanillaMenuBtn.isHovered(mouseX, mouseY);
+            vanillaMenuBtn.hoverProgress = Mth.lerp(hovered ? 0.24f : 0.16f, vanillaMenuBtn.hoverProgress, hovered ? 1f : 0f);
+            float hover = vanillaMenuBtn.hoverProgress;
+            float hoverLift = hover * 2.5f * layout.scale;
+            float finalDrawY = btnY - hoverLift;
+
+            // 强制更新碰撞坐标
+            vanillaMenuBtn.setBounds(
+                    btnX - layout.buttonHitPaddingX,
+                    finalDrawY - layout.buttonHitPaddingTop,
+                    layout.buttonWidth + layout.buttonHitPaddingX * 2f,
+                    layout.buttonHitHeight
+            );
+
+            // 只要界面加载完成就渲染，不会隐藏
+            if (appear > 0.001f) {
+                Color lineBase = applyAlpha(new Color(147, 143, 153), 0.70f * appear);
+                Color lineHover = applyAlpha(new Color(208, 188, 255), 0.98f * appear);
+                Color labelColor = MD3Theme.lerp(
+                        applyAlpha(new Color(230, 224, 233), 0.94f * appear),
+                        applyAlpha(new Color(234, 221, 255), 0.98f * appear),
+                        hover * 0.68f
+                );
+                scope.layer(0, layer -> {
+                    layer.rect(btnX + layout.scale, finalDrawY + layout.scale, layout.buttonWidth + layout.scale * 0.5f,
+                            layout.buttonLineHeight + layout.scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear));
+                    layer.rect(btnX, finalDrawY, layout.buttonWidth, layout.buttonLineHeight, MD3Theme.lerp(lineBase, lineHover, hover));
+                });
+                float textY = finalDrawY + layout.buttonTextOffsetY;
+                scope.layer(10, layer -> layer.text(localizedTitle(vanillaMenuBtn.title), btnX, textY, layout.buttonTextScale, labelColor));
+            }
         });
 
         scene.submit(GuiLayer.CONTENT, tree);
@@ -193,6 +245,7 @@ public class MainMenuScreen extends Screen {
             case "Multiplayer" -> EpsilonTranslations.Gui.MAINMENU_MULTIPLAYER.getTranslatedName();
             case "Options" -> EpsilonTranslations.Gui.MAINMENU_OPTIONS.getTranslatedName();
             case "Quit" -> EpsilonTranslations.Gui.MAINMENU_QUIT.getTranslatedName();
+            case "VanillaMainMenu" -> EpsilonTranslations.Gui.MAINMENU_VANILLA.getTranslatedName();
             default -> title;
         };
     }
@@ -211,13 +264,17 @@ public class MainMenuScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == 0) {
+            MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
             for (MenuEntry entry : entries) {
-                MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
                 if (entry.isHovered(epsilonEvent.x(), epsilonEvent.y())) {
                     entry.action.run();
                     return true;
                 }
             }
+            if (vanillaMenuBtn.isHovered(epsilonEvent.x(), epsilonEvent.y())) {
+                    vanillaMenuBtn.action.run();
+                    return true;
+                }
         }
         return super.mouseClicked(LuminRenderSystem.toEpsilonMouseEvent(event), doubleClick);
     }
