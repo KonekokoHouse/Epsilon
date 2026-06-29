@@ -2,7 +2,7 @@ package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -93,7 +93,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
-    public void drawBackground(DropdownRenderer renderer) {
+    public void drawBackground(DropdownDrawContext renderer) {
         ensureFrameMetrics();
         float expand = cachedExpand;
         float contentHeight = cachedContentHeight;
@@ -127,7 +127,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
-    public void drawContent(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void drawContent(DropdownDrawContext renderer, int mouseX, int mouseY) {
         ensureFrameMetrics();
         if (cachedExpand < 0.01f) return;
 
@@ -266,7 +266,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     protected abstract float computeContentHeight();
 
-    protected abstract void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight);
+    protected abstract void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight);
 
     protected boolean mouseClickedContent(double mouseX, double mouseY, int button) {
         return false;
@@ -346,7 +346,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         }
     }
 
-    protected String trimToWidth(String value, float scale, float maxWidth, DropdownRenderer renderer) {
+    protected String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
         if (value == null || value.isEmpty()) return "";
         if (renderer.text().getWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";

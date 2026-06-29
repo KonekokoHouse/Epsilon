@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.screen;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.shaders.GlslSandBox;
 import com.github.epsilon.graphics.text.StaticFontLoader;
@@ -35,10 +34,6 @@ public class MainMenuScreen extends Screen {
     private final GuiScene scene = new GuiScene();
 
     private final List<MenuEntry> entries = new ArrayList<>();
-    private static final TranslateComponent singleplayerComponent = EpsilonTranslateComponent.create("gui", "mainmenu.singleplayer");
-    private static final TranslateComponent multiplayerComponent = EpsilonTranslateComponent.create("gui", "mainmenu.multiplayer");
-    private static final TranslateComponent optionsComponent = EpsilonTranslateComponent.create("gui", "mainmenu.options");
-    private static final TranslateComponent quitComponent = EpsilonTranslateComponent.create("gui", "mainmenu.quit");
 
     private LuminRenderSystem.LuminRenderTarget backgroundRenderTarget;
     private LuminRenderSystem.LuminRenderTarget uiRenderTarget;
@@ -194,10 +189,10 @@ public class MainMenuScreen extends Screen {
 
     private static String localizedTitle(String title) {
         return switch (title) {
-            case "Singleplayer" -> singleplayerComponent.getTranslatedName();
-            case "Multiplayer" -> multiplayerComponent.getTranslatedName();
-            case "Options" -> optionsComponent.getTranslatedName();
-            case "Quit" -> quitComponent.getTranslatedName();
+            case "Singleplayer" -> EpsilonTranslations.Gui.MAINMENU_SINGLEPLAYER.getTranslatedName();
+            case "Multiplayer" -> EpsilonTranslations.Gui.MAINMENU_MULTIPLAYER.getTranslatedName();
+            case "Options" -> EpsilonTranslations.Gui.MAINMENU_OPTIONS.getTranslatedName();
+            case "Quit" -> EpsilonTranslations.Gui.MAINMENU_QUIT.getTranslatedName();
             default -> title;
         };
     }

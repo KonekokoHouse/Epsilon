@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -57,7 +57,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
     }
 
     @Override
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         syncAlphaAvailability();
         openAnim.run(opened ? 1.0f : 0.0f);
         float t = openAnim.getValue();
@@ -120,19 +120,19 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         drawChannelRows(renderer, mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t);
     }
 
-    private void drawSaturationBrightnessPalette(DropdownRenderer renderer, float x, float y, float width, float height, Color hueColor) {
+    private void drawSaturationBrightnessPalette(DropdownDrawContext renderer, float x, float y, float width, float height, Color hueColor) {
         renderer.rect().addRect(x - 1.0f, y - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
         renderer.rect().addRectGradient(x, y, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
         renderer.rect().addRectGradient(x, y, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
     }
 
-    private void drawSliderPicker(DropdownRenderer renderer, float centerX, float y, float height) {
+    private void drawSliderPicker(DropdownDrawContext renderer, float centerX, float y, float height) {
         float pickerW = 3.0f;
         renderer.rect().addRect(centerX - pickerW * 0.5f - 1.0f, y - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
         renderer.rect().addRect(centerX - pickerW * 0.5f, y - 1.0f, pickerW, height + 2.0f, Color.WHITE);
     }
 
-    private void drawChannelRows(DropdownRenderer renderer, int mouseX, int mouseY, float startY, float alphaProgress) {
+    private void drawChannelRows(DropdownDrawContext renderer, int mouseX, int mouseY, float startY, float alphaProgress) {
         syncFieldsFromColor();
         Channel[] channels = getChannels();
         for (int i = 0; i < channels.length; i++) {
@@ -143,7 +143,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         }
     }
 
-    private void drawChannelRow(DropdownRenderer renderer, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
+    private void drawChannelRow(DropdownDrawContext renderer, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
         int value = getChannelValue(channel);
         float textY = rowY + (CHANNEL_ROW_HEIGHT - renderer.text().getHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
         Color textColor = MD3Theme.withAlpha(DropdownTheme.settingLabel(), (int) (DropdownTheme.settingLabel().getAlpha() * alphaProgress));
@@ -164,7 +164,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         field.drawCentered(renderer, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY, Integer.toString(value), CHANNEL_TEXT_SCALE);
     }
 
-    private void drawChannelTrack(DropdownRenderer renderer, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
+    private void drawChannelTrack(DropdownDrawContext renderer, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
         Color current = setting.getValue();
         Color start = switch (channel) {
             case RED -> new Color(0, current.getGreen(), current.getBlue());

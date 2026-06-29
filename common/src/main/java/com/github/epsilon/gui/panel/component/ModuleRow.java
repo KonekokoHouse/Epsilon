@@ -73,7 +73,8 @@ public class ModuleRow {
      * @param toggleHoverProgress 开关悬停进度
      */
     public void render(PanelRenderBatch renderBatch, TextRenderer textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
-        PanelUiTree tree = PanelUiTree.build(scope -> buildUi(scope, textRenderer, hoverProgress, selectedProgress, toggleProgress, toggleHoverProgress));
+        PanelUiTree tree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, rowScope ->
+                buildUi(rowScope, textRenderer, hoverProgress, selectedProgress, toggleProgress, toggleHoverProgress)));
         renderBatch.render(tree);
     }
 
@@ -96,27 +97,28 @@ public class ModuleRow {
         float keyHeight = textRenderer.getHeight(keyScale);
         float lineGap = 2.0f;
         float totalTextHeight = titleHeight + lineGap + subHeight;
-        float titleY = centerTextBlockY(bounds, totalTextHeight);
+        float titleY = (bounds.height() - totalTextHeight) / 2.0f;
         float subY = titleY + titleHeight + lineGap;
-        float keyY = centerTextY(bounds, keyHeight);
+        float keyY = (bounds.height() - keyHeight) / 2.0f;
         Color titleColor = MD3Theme.lerp(MD3Theme.TEXT_PRIMARY, MD3Theme.ON_PRIMARY_CONTAINER, selectedProgress);
         Color subColor = MD3Theme.lerp(MD3Theme.TEXT_SECONDARY, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180), selectedProgress);
         Color keyColor = MD3Theme.isLightTheme() ? MD3Theme.TEXT_SECONDARY : MD3Theme.TEXT_MUTED;
         String keybindText = formatKeybind(module.module().getKeyBind());
         float keyWidth = textRenderer.getWidth(keybindText, keyScale);
-        float clipRight = toggleBounds.x() - KEYBIND_TOGGLE_GAP;
+        PanelLayout.Rect localToggleBounds = toggleBounds.relativeTo(bounds);
+        float clipRight = localToggleBounds.x() - KEYBIND_TOGGLE_GAP;
         float clipWidth = Math.min(keyWidth, KEYBIND_CLIP_WIDTH);
         float clipX = clipRight - clipWidth;
         PanelLayout.Rect keybindClip = new PanelLayout.Rect(clipX, keyY, clipWidth, keyHeight);
 
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
+        scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
         if (selectedProgress > 0.01f) {
-            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, selectedProgress, 42));
+            scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.stateLayer(MD3Theme.PRIMARY, selectedProgress, 42));
         }
 
-        scope.text(module.displayName(), PanelElements.rowLabelX(bounds), titleY, titleScale, titleColor);
-        scope.text(module.module().getAddonId() != null ? module.module().getAddonId() : "unknown", PanelElements.rowLabelX(bounds), subY, subScale, subColor);
-        scope.toggle(toggleBounds, toggleProgress, toggleHoverProgress);
+        scope.text(module.displayName(), PanelElements.ROW_LABEL_INSET, titleY, titleScale, titleColor);
+        scope.text(module.module().getAddonId() != null ? module.module().getAddonId() : "unknown", PanelElements.ROW_LABEL_INSET, subY, subScale, subColor);
+        scope.toggle(localToggleBounds, toggleProgress, toggleHoverProgress);
 
         if (keyWidth <= KEYBIND_CLIP_WIDTH + 0.5f) {
             scope.text(keybindText, clipRight - keyWidth, keyY, keyScale, keyColor);

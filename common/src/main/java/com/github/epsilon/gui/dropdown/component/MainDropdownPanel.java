@@ -1,11 +1,10 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.modules.Category;
@@ -19,11 +18,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public class MainDropdownPanel extends AbstractDropdownPanel {
-
-    private static final TranslateComponent friendComponent = EpsilonTranslateComponent.create("gui", "tab.friend");
-    private static final TranslateComponent configComponent = EpsilonTranslateComponent.create("gui", "tab.config");
-    private static final TranslateComponent addonComponent = EpsilonTranslateComponent.create("gui", "tab.addon");
-    private static final TranslateComponent collapseComponent = EpsilonTranslateComponent.create("gui", "dropdown.collapse_all");
 
     private static final float ICON_SIZE = 30.0f;
     private static final float ICON_GAP = 7.0f;
@@ -44,10 +38,10 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         add(Category.PLAYER::getName, Category.PLAYER.icon, "category:player", togglePanel, panelVisibleResolver);
         add(Category.MOVEMENT::getName, Category.MOVEMENT.icon, "category:movement", togglePanel, panelVisibleResolver);
         add(Category.RENDER::getName, Category.RENDER.icon, "category:render", togglePanel, panelVisibleResolver);
-        add(friendComponent::getTranslatedName, IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver);
-        add(configComponent::getTranslatedName, IconChars.SETTINGS, "config", togglePanel, panelVisibleResolver);
-        add(addonComponent::getTranslatedName, IconChars.ADD, "addon", togglePanel, panelVisibleResolver);
-        entries.add(new Entry(collapseComponent::getTranslatedName, IconChars.CLOSE, "__collapse_all__", togglePanel, anySubPanelVisible));
+        add(EpsilonTranslations.Gui.TAB_FRIEND::getTranslatedName, IconChars.PEOPLE, "friend", togglePanel, panelVisibleResolver);
+        add(EpsilonTranslations.Gui.TAB_CONFIG::getTranslatedName, IconChars.SETTINGS, "config", togglePanel, panelVisibleResolver);
+        add(EpsilonTranslations.Gui.TAB_ADDON::getTranslatedName, IconChars.ADD, "addon", togglePanel, panelVisibleResolver);
+        entries.add(new Entry(EpsilonTranslations.Gui.DROPDOWN_COLLAPSE_ALL::getTranslatedName, IconChars.CLOSE, "__collapse_all__", togglePanel, anySubPanelVisible));
     }
 
     private void add(LabelSupplier labelSupplier, String icon, String panelId, Consumer<String> togglePanel, PanelVisibleResolver panelVisibleResolver) {
@@ -55,7 +49,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    public void drawBackground(DropdownRenderer renderer) {
+    public void drawBackground(DropdownDrawContext renderer) {
         super.drawBackground(renderer);
 
         float versionScale = 0.48f;
@@ -78,7 +72,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING;
         renderer.rect().addRect(x + CONTENT_PADDING, y + DropdownTheme.PANEL_HEADER_HEIGHT, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
 

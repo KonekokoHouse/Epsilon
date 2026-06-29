@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -27,9 +26,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
 public class FriendClientSettingTab implements ClientSettingTabView {
-
-    private static final TranslateComponent noFriendsComponent = EpsilonTranslateComponent.create("gui", "friend.empty");
-    private static final TranslateComponent addFriendPlaceholderComponent = EpsilonTranslateComponent.create("gui", "friend.input.placeholder");
     private static final float FRIEND_ROW_HEIGHT = 30.0f;
     private static final float FRIEND_INPUT_HEIGHT = 28.0f;
     private static final float FRIEND_INPUT_BOTTOM_MARGIN = 4.0f;
@@ -91,7 +87,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             inputField.buildUi(scope, inputBounds, mouseX, mouseY, textRenderer,
-                    addFriendPlaceholderComponent.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵");
+                    EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵");
             scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getFriendScroll(), maxScroll, contentHeight, content -> {
                 if (!rebuildContent) {
                     return;
@@ -108,16 +104,18 @@ public class FriendClientSettingTab implements ClientSettingTabView {
                     removeAnimation.run(removeBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
                     contentState.noteAnimation(!hoverAnimation.isFinished() || !removeAnimation.isFinished());
 
-                    buildFriendRow(content, friendName, rowBounds, removeBounds, hoverAnimation.getValue(), removeAnimation.getValue());
+                    content.pushAbsolute(rowBounds, rowScope ->
+                            buildFriendRow(rowScope, friendName, rowBounds, removeBounds,
+                                    hoverAnimation.getValue(), removeAnimation.getValue()));
                     rowY += FRIEND_ROW_HEIGHT + MD3Theme.ROW_GAP;
                 }
 
                 if (friends.isEmpty()) {
                     float hintScale = 0.58f;
-                    String hint = noFriendsComponent.getTranslatedName();
+                    String hint = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName();
                     float hintWidth = textRenderer.getWidth(hint, hintScale);
-                    float hintX = listViewport.x() + (listViewport.width() - hintWidth) / 2.0f;
-                    float hintY = listViewport.y() + listViewport.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
+                    float hintX = (listViewport.width() - hintWidth) / 2.0f;
+                    float hintY = state.getFriendScroll() + listViewport.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
                     content.text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED);
                 }
             });
@@ -278,8 +276,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         PanelElements.buildRowSurface(scope, bounds, hoverProgress);
 
         float avatarSize = 20.0f;
-        float avatarX = bounds.x() + MD3Theme.ROW_CONTENT_INSET + 2.0f;
-        float avatarY = bounds.y() + (bounds.height() - avatarSize) / 2.0f;
+        float avatarX = MD3Theme.ROW_CONTENT_INSET + 2.0f;
+        float avatarY = (bounds.height() - avatarSize) / 2.0f;
         scope.roundRect(avatarX, avatarY, avatarSize, avatarSize, avatarSize / 2.0f, MD3Theme.SECONDARY_CONTAINER);
         String initial = name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase();
         float initialScale = 0.54f;
@@ -293,10 +291,10 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         float nameScale = 0.66f;
         float nameX = avatarX + avatarSize + 8.0f;
-        float nameY = bounds.y() + (bounds.height() - textRenderer.getHeight(nameScale)) / 2.0f;
+        float nameY = (bounds.height() - textRenderer.getHeight(nameScale)) / 2.0f;
         scope.text(name, nameX, nameY, nameScale, MD3Theme.TEXT_PRIMARY);
 
-        PanelElements.buildIconButton(scope, textRenderer, removeBounds, "✕", 0.50f, MD3Theme.ERROR, removeHoverProgress);
+        PanelElements.buildIconButton(scope, textRenderer, removeBounds.relativeTo(bounds), "✕", 0.50f, MD3Theme.ERROR, removeHoverProgress);
     }
 
     private PanelLayout.Rect getListViewport(PanelLayout.Rect bounds) {

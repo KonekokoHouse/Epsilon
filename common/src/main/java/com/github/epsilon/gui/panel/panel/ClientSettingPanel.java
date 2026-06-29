@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.panel;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
@@ -22,17 +22,11 @@ import java.util.List;
 
 public class ClientSettingPanel {
 
-    private static final TranslateComponent titleComponent = EpsilonTranslateComponent.create("gui", "clientsettings");
-    private static final TranslateComponent generalTabComponent = EpsilonTranslateComponent.create("gui", "tab.general");
-    private static final TranslateComponent friendTabComponent = EpsilonTranslateComponent.create("gui", "tab.friend");
-    private static final TranslateComponent configTabComponent = EpsilonTranslateComponent.create("gui", "tab.config");
-    private static final TranslateComponent addonTabComponent = EpsilonTranslateComponent.create("gui", "tab.addon");
-
     private static final List<TabDefinition> TABS = List.of(
-            new TabDefinition(PanelState.ClientSettingTab.GENERAL, generalTabComponent),
-            new TabDefinition(PanelState.ClientSettingTab.FRIEND, friendTabComponent),
-            new TabDefinition(PanelState.ClientSettingTab.CONFIG, configTabComponent),
-            new TabDefinition(PanelState.ClientSettingTab.ADDON, addonTabComponent)
+            new TabDefinition(PanelState.ClientSettingTab.GENERAL, EpsilonTranslations.Gui.TAB_GENERAL),
+            new TabDefinition(PanelState.ClientSettingTab.FRIEND, EpsilonTranslations.Gui.TAB_FRIEND),
+            new TabDefinition(PanelState.ClientSettingTab.CONFIG, EpsilonTranslations.Gui.TAB_CONFIG),
+            new TabDefinition(PanelState.ClientSettingTab.ADDON, EpsilonTranslations.Gui.TAB_ADDON)
     );
 
     private static final float TAB_BAR_HEIGHT = 26.0f;
@@ -72,7 +66,8 @@ public class ClientSettingPanel {
         int effectiveMouseY = popupConsumesHover ? Integer.MIN_VALUE : mouseY;
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
-            scope.text(titleComponent.getTranslatedName(), bounds.x() + MD3Theme.PANEL_TITLE_INSET, bounds.y() + 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
+            scope.pushAbsolute(bounds, panel ->
+                    panel.text(EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY));
             buildTabs(scope, effectiveMouseX, effectiveMouseY);
         });
         renderBatch.render(tree);
@@ -144,33 +139,35 @@ public class ClientSettingPanel {
         int activeIndex = getTabIndex(state.getClientSettingTab());
         float indicatorProgress = scope.animate(tabIndicatorAnimation, activeIndex);
 
-        for (int index = 0; index < TABS.size(); index++) {
-            TabDefinition tab = TABS.get(index);
-            PanelLayout.Rect tabBounds = new PanelLayout.Rect(tabBar.x() + segmentWidth * index, tabBar.y(), segmentWidth, tabBar.height());
-            boolean active = tab.tab() == state.getClientSettingTab();
+        scope.pushAbsolute(tabBar, tabs -> {
+            for (int index = 0; index < TABS.size(); index++) {
+                TabDefinition tab = TABS.get(index);
+                PanelLayout.Rect tabBounds = new PanelLayout.Rect(segmentWidth * index, 0.0f, segmentWidth, tabBar.height());
+                PanelLayout.Rect absoluteTabBounds = new PanelLayout.Rect(tabBar.x() + tabBounds.x(), tabBar.y(), tabBounds.width(), tabBounds.height());
+                boolean active = tab.tab() == state.getClientSettingTab();
 
-            Animation hoverAnimation = tabHoverAnimations.get(tab.tab());
-            float hover = scope.animate(hoverAnimation, tabBounds.contains(mouseX, mouseY));
-            if (hover > 0.01f) {
-                scope.roundRect(tabBounds.x(), tabBounds.y(), tabBounds.width(), tabBounds.height(), 6.0f,
-                        MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hover, 8));
+                Animation hoverAnimation = tabHoverAnimations.get(tab.tab());
+                float hover = tabs.animate(hoverAnimation, absoluteTabBounds.contains(mouseX, mouseY));
+                if (hover > 0.01f) {
+                    tabs.roundRect(tabBounds.x(), tabBounds.y(), tabBounds.width(), tabBounds.height(), 6.0f,
+                            MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hover, 8));
+                }
+
+                String label = tab.component().getTranslatedName();
+                float textWidth = textRenderer.getWidth(label, labelScale);
+                float textX = tabBounds.x() + (tabBounds.width() - textWidth) / 2.0f;
+                float textY = (tabBounds.height() - TAB_INDICATOR_HEIGHT - textHeight) / 2.0f;
+                tabs.text(label, textX, textY, labelScale, active ? MD3Theme.PRIMARY : MD3Theme.TEXT_MUTED);
             }
 
-            String label = tab.component().getTranslatedName();
-            float textWidth = textRenderer.getWidth(label, labelScale);
-            float textX = tabBounds.x() + (tabBounds.width() - textWidth) / 2.0f;
-            float textY = tabBounds.y() + (tabBounds.height() - TAB_INDICATOR_HEIGHT - textHeight) / 2.0f;
-            scope.text(label, textX, textY, labelScale, active ? MD3Theme.PRIMARY : MD3Theme.TEXT_MUTED);
-        }
+            tabs.rect(0.0f, tabBar.height() - 1.0f, tabBar.width(), 1.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 40));
 
-        float dividerY = tabBar.bottom() - 1.0f;
-        scope.rect(tabBar.x(), dividerY, tabBar.width(), 1.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 40));
-
-        float indicatorWidth = Math.min(56.0f, segmentWidth - 24.0f);
-        float indicatorX = tabBar.x() + indicatorProgress * segmentWidth + (segmentWidth - indicatorWidth) / 2.0f;
-        float indicatorY = tabBar.bottom() - TAB_INDICATOR_HEIGHT;
-        scope.roundRect(indicatorX, indicatorY, indicatorWidth, TAB_INDICATOR_HEIGHT,
-                TAB_INDICATOR_HEIGHT / 2.0f, MD3Theme.PRIMARY);
+            float indicatorWidth = Math.min(56.0f, segmentWidth - 24.0f);
+            float indicatorX = indicatorProgress * segmentWidth + (segmentWidth - indicatorWidth) / 2.0f;
+            float indicatorY = tabBar.height() - TAB_INDICATOR_HEIGHT;
+            tabs.roundRect(indicatorX, indicatorY, indicatorWidth, TAB_INDICATOR_HEIGHT,
+                    TAB_INDICATOR_HEIGHT / 2.0f, MD3Theme.PRIMARY);
+        });
     }
 
     private void switchToTab(PanelState.ClientSettingTab targetTab) {

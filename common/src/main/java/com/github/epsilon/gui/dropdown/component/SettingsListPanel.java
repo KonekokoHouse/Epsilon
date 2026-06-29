@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.settings.Setting;
 
@@ -27,7 +27,7 @@ public class SettingsListPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
         settingsContent.draw(renderer, mouseX, mouseY, x, y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll, width);
     }
 

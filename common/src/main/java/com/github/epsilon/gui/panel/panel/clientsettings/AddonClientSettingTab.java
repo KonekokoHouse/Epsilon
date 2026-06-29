@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
 import com.github.epsilon.addon.EpsilonAddon;
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -33,13 +32,6 @@ import java.util.*;
 import java.util.List;
 
 public class AddonClientSettingTab implements ClientSettingTabView {
-
-    private static final TranslateComponent emptyComponent = EpsilonTranslateComponent.create("gui", "addon.empty");
-    private static final TranslateComponent noSettingsComponent = EpsilonTranslateComponent.create("gui", "addon.no_settings");
-    private static final TranslateComponent idComponent = EpsilonTranslateComponent.create("gui", "addon.info.id");
-    private static final TranslateComponent versionComponent = EpsilonTranslateComponent.create("gui", "addon.info.version");
-    private static final TranslateComponent authorsComponent = EpsilonTranslateComponent.create("gui", "addon.info.authors");
-    private static final TranslateComponent modulesComponent = EpsilonTranslateComponent.create("gui", "addon.info.modules");
     private static final float LIST_GAP = 10.0f;
     private static final float LIST_ROW_HEIGHT = 34.0f;
     private static final float DETAIL_GAP = 8.0f;
@@ -145,7 +137,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
 
             if (addons.isEmpty()) {
                 float hintScale = 0.60f;
-                String hint = emptyComponent.getTranslatedName();
+                String hint = EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName();
                 float hintWidth = textRenderer.getWidth(hint, hintScale);
                 float hintX = bounds.x() + (bounds.width() - hintWidth) / 2.0f;
                 float hintY = bounds.y() + bounds.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
@@ -168,7 +160,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                     selectionAnimation.run(selectedAddon != null && Objects.equals(selectedAddon.getAddonId(), addon.getAddonId()) ? 1.0f : 0.0f);
                     contentState.noteAnimation(!hoverAnimation.isFinished() || !selectionAnimation.isFinished());
 
-                    buildAddonListRow(content, addon, rowBounds, hoverAnimation.getValue(), selectionAnimation.getValue());
+                    content.pushAbsolute(rowBounds, rowScope ->
+                            buildAddonListRow(rowScope, addon, rowBounds, hoverAnimation.getValue(), selectionAnimation.getValue()));
                     rowY += LIST_ROW_HEIGHT + MD3Theme.ROW_GAP;
                 }
             });
@@ -177,7 +170,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                 buildAddonInfo(scope, selectedAddon, infoBounds);
                 if (selectedSettings.isEmpty()) {
                     float hintScale = 0.58f;
-                    String hint = noSettingsComponent.getTranslatedName();
+                    String hint = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
                     scope.text(hint, settingsViewport.x() + 2.0f, settingsViewport.y() + 2.0f, hintScale, MD3Theme.TEXT_MUTED);
                 } else {
                     scope.viewport(detailBuffer, settingsViewport, guiGraphics.guiHeight(), state.getAddonDetailScroll(), maxDetailScroll, settingsContentHeight, content -> {
@@ -195,7 +188,9 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                                         return animation;
                                     });
                                     hoverAnimation.run(rowBounds.contains(effectiveMouseX, effectiveMouseY) ? 1.0f : 0.0f);
-                                    row.buildUi(content, guiGraphics, textRenderer, rowBounds, hoverAnimation.getValue(), effectiveMouseX, effectiveMouseY, partialTick);
+                                    content.pushAbsolute(rowBounds, rowScope ->
+                                            row.buildUi(rowScope, guiGraphics, textRenderer, rowBounds,
+                                                    hoverAnimation.getValue(), effectiveMouseX, effectiveMouseY, partialTick));
                                     contentState.noteAnimation(!hoverAnimation.isFinished() || row.hasActiveAnimation());
                                 });
                         contentState.noteAnimation(settingListController.hasActiveAnimations());
@@ -429,8 +424,10 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     }
 
     private void buildAddonShell(PanelUiTree.Scope scope, PanelLayout.Rect listPanelBounds, PanelLayout.Rect detailPanelBounds) {
-        scope.roundRect(listPanelBounds.x(), listPanelBounds.y(), listPanelBounds.width(), listPanelBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER);
-        scope.roundRect(detailPanelBounds.x(), detailPanelBounds.y(), detailPanelBounds.width(), detailPanelBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER);
+        scope.pushAbsolute(listPanelBounds, listPanel ->
+                listPanel.roundRect(0.0f, 0.0f, listPanelBounds.width(), listPanelBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER));
+        scope.pushAbsolute(detailPanelBounds, detailPanel ->
+                detailPanel.roundRect(0.0f, 0.0f, detailPanelBounds.width(), detailPanelBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER));
     }
 
     private void buildAddonListRow(PanelUiTree.Scope scope, EpsilonAddon addon, PanelLayout.Rect rowBounds, float hoverProgress, float selectedProgress) {
@@ -438,37 +435,41 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         Color rowColor = selectedProgress > 0.01f
                 ? MD3Theme.lerp(baseColor, MD3Theme.PRIMARY_CONTAINER, selectedProgress * 0.45f)
                 : baseColor;
-        scope.roundRect(rowBounds.x(), rowBounds.y(), rowBounds.width(), rowBounds.height(), MD3Theme.CARD_RADIUS, rowColor);
+        scope.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CARD_RADIUS, rowColor);
 
         float titleScale = 0.64f;
         float subScale = 0.50f;
-        float textX = rowBounds.x() + MD3Theme.ROW_CONTENT_INSET;
-        float titleY = rowBounds.y() + 7.0f;
+        float textX = MD3Theme.ROW_CONTENT_INSET;
+        float titleY = 7.0f;
         scope.text(trimToWidth(addon.getDisplayName(), titleScale, rowBounds.width() - 14.0f), textX, titleY, titleScale, selectedProgress > 0.2f ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
         scope.text(trimToWidth(addon.getAddonId(), subScale, rowBounds.width() - 14.0f), textX, titleY + 12.0f, subScale, selectedProgress > 0.2f ? MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180) : MD3Theme.TEXT_MUTED);
     }
 
     private void buildAddonInfo(PanelUiTree.Scope scope, EpsilonAddon addon, PanelLayout.Rect infoBounds) {
-        scope.roundRect(infoBounds.x(), infoBounds.y(), infoBounds.width(), infoBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
+        scope.pushAbsolute(infoBounds, info -> buildAddonInfoContent(info, addon, infoBounds));
+    }
+
+    private void buildAddonInfoContent(PanelUiTree.Scope scope, EpsilonAddon addon, PanelLayout.Rect infoBounds) {
+        scope.roundRect(0.0f, 0.0f, infoBounds.width(), infoBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
 
         float titleScale = 0.72f;
         float labelScale = 0.52f;
         float descScale = 0.56f;
         float titleHeight = textRenderer.getHeight(titleScale);
         float labelHeight = textRenderer.getHeight(labelScale);
-        float textX = infoBounds.x() + MD3Theme.ROW_CONTENT_INSET;
-        float titleY = infoBounds.y() + 8.0f;
+        float textX = MD3Theme.ROW_CONTENT_INSET;
+        float titleY = 8.0f;
         scope.text(trimToWidth(addon.getDisplayName(), titleScale, infoBounds.width() - 96.0f), textX, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
 
         String version = addon.getVersion().isBlank() ? "-" : addon.getVersion();
-        String metaLine = idComponent.getTranslatedName() + ": " + addon.getAddonId()
-                + "  •  " + versionComponent.getTranslatedName() + ": " + version;
+        String metaLine = EpsilonTranslations.Gui.ADDON_INFO_ID.getTranslatedName() + ": " + addon.getAddonId()
+                + "  •  " + EpsilonTranslations.Gui.ADDON_INFO_VERSION.getTranslatedName() + ": " + version;
         float metaY = titleY + titleHeight + 3.0f;
         scope.text(trimToWidth(metaLine, labelScale, infoBounds.width() - 18.0f), textX, metaY, labelScale, MD3Theme.TEXT_SECONDARY);
 
         String authors = addon.getAuthors().isEmpty() ? "-" : String.join(", ", addon.getAuthors());
         float authorsY = metaY + labelHeight + 3.0f;
-        scope.text(trimToWidth(authorsComponent.getTranslatedName() + ": " + authors, labelScale, infoBounds.width() - 18.0f),
+        scope.text(trimToWidth(EpsilonTranslations.Gui.ADDON_INFO_AUTHORS.getTranslatedName() + ": " + authors, labelScale, infoBounds.width() - 18.0f),
                 textX, authorsY, labelScale, MD3Theme.TEXT_MUTED);
 
         if (!addon.getDescription().isBlank()) {
@@ -476,12 +477,12 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             scope.text(trimToWidth(addon.getDescription(), descScale, infoBounds.width() - 18.0f), textX, detailY, descScale, MD3Theme.TEXT_PRIMARY);
         }
 
-        String chipText = addon.getRegisteredModules().size() + " " + modulesComponent.getTranslatedName();
+        String chipText = addon.getRegisteredModules().size() + " " + EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName();
         float chipScale = 0.48f;
         float chipWidth = textRenderer.getWidth(chipText, chipScale) + 10.0f;
         float chipHeight = 14.0f;
-        float chipX = infoBounds.right() - MD3Theme.ROW_TRAILING_INSET - chipWidth;
-        float chipY = infoBounds.y() + 8.0f;
+        float chipX = infoBounds.width() - MD3Theme.ROW_TRAILING_INSET - chipWidth;
+        float chipY = 8.0f;
         scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY_CONTAINER);
         scope.text(chipText,
                 chipX + (chipWidth - textRenderer.getWidth(chipText, chipScale)) / 2.0f,

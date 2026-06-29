@@ -1,11 +1,11 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
 import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
@@ -18,8 +18,6 @@ import com.github.epsilon.utils.render.animation.Easing;
 import java.util.*;
 
 public class SettingsContent {
-
-    private static final TranslateComponent noSettingsComponent = EpsilonTranslateComponent.create("gui", "addon.no_settings");
 
     private final List<SettingSection> sections = new ArrayList<>();
     private final Map<String, Animation> sectionHoverAnimations = new HashMap<>();
@@ -75,9 +73,9 @@ public class SettingsContent {
         return height;
     }
 
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY, float panelX, float contentY, float panelWidth) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY, float panelX, float contentY, float panelWidth) {
         if (sections.isEmpty()) {
-            String label = noSettingsComponent.getTranslatedName();
+            String label = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
             float labelScale = 0.58f;
             float textW = renderer.text().getWidth(label, labelScale);
             renderer.text().addText(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED);
@@ -89,12 +87,15 @@ public class SettingsContent {
             if (section.hasHeader()) {
                 drawSection(renderer, mouseX, mouseY, section, panelX, currentY, panelWidth);
             } else {
-                float widgetY = currentY;
+                DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(
+                        panelX + DropdownTheme.SETTING_INDENT,
+                        currentY,
+                        panelWidth - DropdownTheme.SETTING_INDENT * 2.0f,
+                        getSectionHeight(section)
+                ));
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
-                    widget.setPosition(panelX + DropdownTheme.SETTING_INDENT, widgetY, panelWidth - DropdownTheme.SETTING_INDENT * 2.0f);
-                    widget.draw(renderer, mouseX, mouseY);
-                    widgetY += widget.getHeight() + DropdownTheme.SETTING_GAP;
+                    widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
                 }
             }
             currentY += getSectionHeight(section);
@@ -212,7 +213,7 @@ public class SettingsContent {
         return h;
     }
 
-    private void drawSection(DropdownRenderer renderer, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth) {
+    private void drawSection(DropdownDrawContext renderer, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth) {
         Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(section.isCollapsed() ? 0.0f : 1.0f));
         Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(0.0f));
         float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
@@ -246,11 +247,10 @@ public class SettingsContent {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = panelX + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = panelWidth - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
+            DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(childX, childY, childW, getSectionHeight(section)));
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
-                widget.setPosition(childX, childY, childW);
-                widget.draw(renderer, mouseX, mouseY);
-                childY += widget.getHeight() + DropdownTheme.SETTING_GAP;
+                widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
             }
         }
     }
@@ -265,7 +265,7 @@ public class SettingsContent {
         return mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
     }
 
-    private String trimToWidth(String value, float scale, float maxWidth, DropdownRenderer renderer) {
+    private String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
         if (value == null || value.isEmpty()) return "";
         if (renderer.text().getWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";

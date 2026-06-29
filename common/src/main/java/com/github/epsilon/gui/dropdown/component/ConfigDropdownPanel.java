@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslateComponent;
-import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -13,23 +12,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class ConfigDropdownPanel extends AbstractDropdownPanel {
-
-    private static final TranslateComponent titleComponent = EpsilonTranslateComponent.create("gui", "tab.config");
-    private static final TranslateComponent emptyComponent = EpsilonTranslateComponent.create("gui", "config.empty");
-    private static final TranslateComponent saveAsComponent = EpsilonTranslateComponent.create("gui", "config.action.saveas");
-    private static final TranslateComponent reloadComponent = EpsilonTranslateComponent.create("gui", "config.action.reload");
-    private static final TranslateComponent exportComponent = EpsilonTranslateComponent.create("gui", "config.action.export");
-    private static final TranslateComponent importComponent = EpsilonTranslateComponent.create("gui", "config.action.import");
-    private static final TranslateComponent newComponent = EpsilonTranslateComponent.create("gui", "config.action.new");
-    private static final TranslateComponent openFolderComponent = EpsilonTranslateComponent.create("gui", "config.action.open_folder");
-    private static final TranslateComponent savedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.saved");
-    private static final TranslateComponent reloadedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.reloaded");
-    private static final TranslateComponent exportedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.exported");
-    private static final TranslateComponent importedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.imported");
-    private static final TranslateComponent deletedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.deleted");
-    private static final TranslateComponent switchedComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.switched");
-    private static final TranslateComponent createdComponent = EpsilonTranslateComponent.create("gui", "dropdown.status.created");
-    private static final TranslateComponent errorComponent = EpsilonTranslateComponent.create("gui", "config.error.title");
 
     private static final float FIELD_HEIGHT = 18.0f;
     private static final float BUTTON_HEIGHT = 17.0f;
@@ -43,7 +25,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     private List<String> cachedConfigs = List.of();
 
     public ConfigDropdownPanel(int panelIndex) {
-        super("config", titleComponent, "", panelIndex);
+        super("config", EpsilonTranslations.Gui.TAB_CONFIG, "", panelIndex);
     }
 
     @Override
@@ -55,7 +37,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownRenderer renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
@@ -68,12 +50,12 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         currentY += FIELD_HEIGHT + GAP;
 
         String[] actions = {
-                saveAsComponent.getTranslatedName(),
-                reloadComponent.getTranslatedName(),
-                exportComponent.getTranslatedName(),
-                importComponent.getTranslatedName(),
-                newComponent.getTranslatedName(),
-                openFolderComponent.getTranslatedName()
+                EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.getTranslatedName(),
+                EpsilonTranslations.Gui.CONFIG_ACTION_RELOAD.getTranslatedName(),
+                EpsilonTranslations.Gui.CONFIG_ACTION_EXPORT.getTranslatedName(),
+                EpsilonTranslations.Gui.CONFIG_ACTION_IMPORT.getTranslatedName(),
+                EpsilonTranslations.Gui.CONFIG_ACTION_NEW.getTranslatedName(),
+                EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.getTranslatedName()
         };
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 2; col++) {
@@ -102,7 +84,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         List<String> configs = configsForFrame();
         if (configs.isEmpty()) {
             float emptyScale = 0.55f;
-            renderer.text().addText(emptyComponent.getTranslatedName(), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
+            renderer.text().addText(EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName(), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
             return;
         }
         for (String name : configs) {
@@ -154,7 +136,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
             if (isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f)) {
                 try {
                     ConfigHolder.INSTANCE.deleteConfig(name);
-                    status = deletedComponent.getTranslatedName() + " " + name;
+                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_DELETED.getTranslatedName() + " " + name;
                 } catch (Exception e) {
                     status = errorText(e);
                 }
@@ -165,7 +147,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                     ConfigHolder.INSTANCE.switchConfig(name);
                     inputField.setText(name);
                     inputField.setCursorToEnd();
-                    status = switchedComponent.getTranslatedName() + " " + name;
+                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SWITCHED.getTranslatedName() + " " + name;
                 } catch (Exception e) {
                     status = errorText(e);
                 }
@@ -185,22 +167,22 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                         String saved = ConfigHolder.INSTANCE.saveAsConfig(value);
                         inputField.setText(saved);
                         inputField.setCursorToEnd();
-                        status = savedComponent.getTranslatedName() + " " + saved;
+                        status = EpsilonTranslations.Gui.DROPDOWN_STATUS_SAVED.getTranslatedName() + " " + saved;
                     }
                 }
                 case 1 -> {
                     ConfigHolder.INSTANCE.reloadOrThrow();
-                    status = reloadedComponent.getTranslatedName();
+                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_RELOADED.getTranslatedName();
                 }
                 case 2 -> {
-                    status = exportedComponent.getTranslatedName() + " " + ConfigHolder.INSTANCE.exportActiveConfigToZip(value).getFileName();
+                    status = EpsilonTranslations.Gui.DROPDOWN_STATUS_EXPORTED.getTranslatedName() + " " + ConfigHolder.INSTANCE.exportActiveConfigToZip(value).getFileName();
                 }
                 case 3 -> {
                     if (!value.isEmpty()) {
                         String imported = ConfigHolder.INSTANCE.importConfigFromZip(value);
                         inputField.setText(imported);
                         inputField.setCursorToEnd();
-                        status = importedComponent.getTranslatedName() + " " + imported;
+                        status = EpsilonTranslations.Gui.DROPDOWN_STATUS_IMPORTED.getTranslatedName() + " " + imported;
                     }
                 }
                 case 4 -> {
@@ -208,11 +190,11 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                         String created = ConfigHolder.INSTANCE.newDefaultConfig(value);
                         inputField.setText(created);
                         inputField.setCursorToEnd();
-                        status = createdComponent.getTranslatedName() + " " + created;
+                        status = EpsilonTranslations.Gui.DROPDOWN_STATUS_CREATED.getTranslatedName() + " " + created;
                     }
                 }
                 case 5 ->
-                        status = openFolderComponent.getTranslatedName() + " " + ConfigFolderOpener.openConfigFolder();
+                        status = EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.getTranslatedName() + " " + ConfigFolderOpener.openConfigFolder();
                 default -> {
                 }
             }
@@ -243,10 +225,10 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
 
     private String errorText(Exception e) {
         String message = e.getMessage();
-        return errorComponent.getTranslatedName() + ": " + (message == null || message.isBlank() ? e.getClass().getSimpleName() : message);
+        return EpsilonTranslations.Gui.CONFIG_ERROR_TITLE.getTranslatedName() + ": " + (message == null || message.isBlank() ? e.getClass().getSimpleName() : message);
     }
 
-    private float getCenteredTextY(DropdownRenderer renderer, float boxY, float boxH, float scale) {
+    private float getCenteredTextY(DropdownDrawContext renderer, float boxY, float boxH, float scale) {
         return boxY + (boxH - renderer.text().getHeight(scale)) / 2.0f;
     }
 

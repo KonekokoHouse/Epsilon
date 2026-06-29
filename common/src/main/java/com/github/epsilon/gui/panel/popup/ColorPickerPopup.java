@@ -69,57 +69,64 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         PanelUiTree tree = PanelUiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
             float popupY = bounds.y() - (1.0f - progress) * 6.0f;
+            PanelLayout.Rect popupBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
+            scope.pushAbsolute(popupBounds, popup -> {
+                popup.popupCard(popupBounds.atOrigin(),
+                        MD3Theme.CARD_RADIUS,
+                        POPUP_SHADOW_RADIUS,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
+                        MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
+                popup.pushAbsolute(anchorBounds, anchor ->
+                        anchor.roundRect(0.0f, 0.0f, anchorBounds.width(), anchorBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 255)));
 
-            scope.popupCard(new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height()),
-                    MD3Theme.CARD_RADIUS,
-                    POPUP_SHADOW_RADIUS,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
-            scope.roundRect(anchorBounds.x(), anchorBounds.y(), anchorBounds.width(), anchorBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 255));
-
-            PanelLayout.Rect previewBounds = getPreviewBounds(popupY);
-            PanelLayout.Rect swatchBounds = getPreviewSwatchBounds(popupY);
-            Color previewSurface = MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER;
-            Color swatchSurface = MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGHEST;
-            scope.roundRect(previewBounds.x(), previewBounds.y(), previewBounds.width(), previewBounds.height(), 10.0f, MD3Theme.withAlpha(previewSurface, 255));
-            scope.roundRect(swatchBounds.x(), swatchBounds.y(), swatchBounds.width(), swatchBounds.height(), 8.0f, MD3Theme.withAlpha(swatchSurface, 255));
-            if (setting.isAllowAlpha()) {
-                buildCheckerboard(scope, swatchBounds, 255);
-            }
-            scope.roundRect(swatchBounds.x(), swatchBounds.y(), swatchBounds.width(), swatchBounds.height(), 8.0f, setting.getValue());
-            scope.roundRect(swatchBounds.x(), swatchBounds.y(), swatchBounds.width(), swatchBounds.height(), 8.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (int) (72 * progress)));
-            scope.text(formatHex(setting.getValue()), previewBounds.x() + 40.0f, previewBounds.y() + 8.0f, 0.64f, MD3Theme.TEXT_PRIMARY);
-            scope.text(setting.isAllowAlpha() ? "RGBA" : "RGB", previewBounds.x() + 40.0f, previewBounds.y() + 19.0f, 0.52f, MD3Theme.TEXT_SECONDARY);
-
-            Channel[] channels = getChannels();
-            for (int i = 0; i < channels.length; i++) {
-                Channel channel = channels[i];
-                PanelLayout.Rect rowBounds = getChannelRowBounds(popupY, i);
-                PanelLayout.Rect trackBounds = getTrackBounds(rowBounds);
-                PanelLayout.Rect valueBounds = getValueBounds(rowBounds);
-                boolean hovered = rowBounds.contains(mouseX, mouseY);
-                float channelProgress = getChannelValue(channel) / 255.0f;
-                float activeWidth = Math.max(3.0f, trackBounds.width() * channelProgress);
-                float handleX = trackBounds.x() + trackBounds.width() * channelProgress - 2.0f;
-                float indicatorProgress = scope.animate(indicatorAnimations[i], hovered || draggingChannel == channel);
-                Color rowSurface = hovered
-                        ? (MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER_HIGHEST : MD3Theme.SURFACE_CONTAINER_HIGH)
-                        : MD3Theme.SURFACE_CONTAINER;
-
-                scope.text(channel.shortLabel, rowBounds.x() + 8.0f, rowBounds.y() + 6.5f, 0.58f,
-                        MD3Theme.isLightTheme() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_SECONDARY);
-                scope.roundRect(rowBounds.x(), rowBounds.y(), rowBounds.width(), rowBounds.height(), 8.0f, MD3Theme.withAlpha(rowSurface, 255));
-                scope.slider(trackBounds, channelProgress, 2.5f,
-                        MD3Theme.withAlpha(MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_HIGHEST, 255),
-                        0.0f, 3.0f, MD3Theme.withAlpha(channel.accent, 255),
-                        4.0f, 12.0f, 2.0f, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 255));
-
-                String valueText = focusedChannel == channel ? getDisplayBuffer() : Integer.toString(getChannelValue(channel));
-                buildValueBox(scope, valueBounds, valueText, focusedChannel == channel, 255);
-                if (indicatorProgress > 0.01f) {
-                    buildValueIndicator(scope, handleX + 2.0f, rowBounds.y() - 4.0f, Integer.toString(getChannelValue(channel)), indicatorProgress);
+                PanelLayout.Rect previewBounds = getPreviewBounds(popupY);
+                PanelLayout.Rect swatchBounds = getPreviewSwatchBounds(popupY);
+                PanelLayout.Rect localPreviewBounds = previewBounds.relativeTo(popupBounds);
+                PanelLayout.Rect localSwatchBounds = swatchBounds.relativeTo(popupBounds);
+                Color previewSurface = MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER;
+                Color swatchSurface = MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGHEST;
+                popup.roundRect(localPreviewBounds.x(), localPreviewBounds.y(), localPreviewBounds.width(), localPreviewBounds.height(), 10.0f, MD3Theme.withAlpha(previewSurface, 255));
+                popup.roundRect(localSwatchBounds.x(), localSwatchBounds.y(), localSwatchBounds.width(), localSwatchBounds.height(), 8.0f, MD3Theme.withAlpha(swatchSurface, 255));
+                if (setting.isAllowAlpha()) {
+                    buildCheckerboard(popup, localSwatchBounds, 255);
                 }
-            }
+                popup.roundRect(localSwatchBounds.x(), localSwatchBounds.y(), localSwatchBounds.width(), localSwatchBounds.height(), 8.0f, setting.getValue());
+                popup.roundRect(localSwatchBounds.x(), localSwatchBounds.y(), localSwatchBounds.width(), localSwatchBounds.height(), 8.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (int) (72 * progress)));
+                popup.text(formatHex(setting.getValue()), localPreviewBounds.x() + 40.0f, localPreviewBounds.y() + 8.0f, 0.64f, MD3Theme.TEXT_PRIMARY);
+                popup.text(setting.isAllowAlpha() ? "RGBA" : "RGB", localPreviewBounds.x() + 40.0f, localPreviewBounds.y() + 19.0f, 0.52f, MD3Theme.TEXT_SECONDARY);
+
+                Channel[] channels = getChannels();
+                for (int i = 0; i < channels.length; i++) {
+                    Channel channel = channels[i];
+                    PanelLayout.Rect rowBounds = getChannelRowBounds(popupY, i);
+                    PanelLayout.Rect localRowBounds = rowBounds.relativeTo(popupBounds);
+                    PanelLayout.Rect trackBounds = getTrackBounds(rowBounds);
+                    PanelLayout.Rect localTrackBounds = trackBounds.relativeTo(popupBounds);
+                    PanelLayout.Rect valueBounds = getValueBounds(rowBounds);
+                    PanelLayout.Rect localValueBounds = valueBounds.relativeTo(popupBounds);
+                    boolean hovered = rowBounds.contains(mouseX, mouseY);
+                    float channelProgress = getChannelValue(channel) / 255.0f;
+                    float handleX = localTrackBounds.x() + localTrackBounds.width() * channelProgress - 2.0f;
+                    float indicatorProgress = scope.animate(indicatorAnimations[i], hovered || draggingChannel == channel);
+                    Color rowSurface = hovered
+                            ? (MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER_HIGHEST : MD3Theme.SURFACE_CONTAINER_HIGH)
+                            : MD3Theme.SURFACE_CONTAINER;
+
+                    popup.text(channel.shortLabel, localRowBounds.x() + 8.0f, localRowBounds.y() + 6.5f, 0.58f,
+                            MD3Theme.isLightTheme() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_SECONDARY);
+                    popup.roundRect(localRowBounds.x(), localRowBounds.y(), localRowBounds.width(), localRowBounds.height(), 8.0f, MD3Theme.withAlpha(rowSurface, 255));
+                    popup.slider(localTrackBounds, channelProgress, 2.5f,
+                            MD3Theme.withAlpha(MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_HIGHEST, 255),
+                            0.0f, 3.0f, MD3Theme.withAlpha(channel.accent, 255),
+                            4.0f, 12.0f, 2.0f, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 255));
+
+                    String valueText = focusedChannel == channel ? getDisplayBuffer() : Integer.toString(getChannelValue(channel));
+                    buildValueBox(popup, localValueBounds, valueText, focusedChannel == channel, 255);
+                    if (indicatorProgress > 0.01f) {
+                        buildValueIndicator(popup, handleX + 2.0f, localRowBounds.y() - 4.0f, Integer.toString(getChannelValue(channel)), indicatorProgress);
+                    }
+                }
+            });
         });
         renderBatch.render(tree);
     }
@@ -316,17 +323,19 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         Color boxHover = MD3Theme.SURFACE_CONTAINER_HIGHEST;
         Color boxColor = focused ? MD3Theme.INVERSE_SURFACE : MD3Theme.withAlpha(MD3Theme.lerp(boxBase, boxHover, 0.85f), alpha);
         Color textColor = focused ? MD3Theme.INVERSE_ON_SURFACE : MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, alpha);
-        scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), 6.0f, boxColor);
-        float textScale = 0.52f;
-        float textWidth = textRenderer.getWidth(valueText, textScale);
-        float textHeight = textRenderer.getHeight(textScale);
-        float textX = bounds.x() + (bounds.width() - textWidth) / 2.0f;
-        float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
-        scope.text(valueText, textX, textY, textScale, textColor);
-        if (focused) {
-            float caretX = textX + textRenderer.getWidth(valueText.substring(0, Math.min(cursorIndex, valueText.length())), textScale);
-            scope.rect(caretX, bounds.y() + 3.0f, 1.0f, bounds.height() - 6.0f, MD3Theme.INVERSE_ON_SURFACE);
-        }
+        scope.pushRelative(bounds, box -> {
+            box.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), 6.0f, boxColor);
+            float textScale = 0.52f;
+            float textWidth = textRenderer.getWidth(valueText, textScale);
+            float textHeight = textRenderer.getHeight(textScale);
+            float textX = (bounds.width() - textWidth) / 2.0f;
+            float textY = (bounds.height() - textHeight) / 2.0f;
+            box.text(valueText, textX, textY, textScale, textColor);
+            if (focused) {
+                float caretX = textX + textRenderer.getWidth(valueText.substring(0, Math.min(cursorIndex, valueText.length())), textScale);
+                box.rect(caretX, 3.0f, 1.0f, bounds.height() - 6.0f, MD3Theme.INVERSE_ON_SURFACE);
+            }
+        });
     }
 
     private void buildCheckerboard(PanelUiTree.Scope scope, PanelLayout.Rect bounds, int alpha) {

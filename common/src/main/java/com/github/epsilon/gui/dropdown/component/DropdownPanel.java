@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 
 public interface DropdownPanel {
 
@@ -13,9 +13,9 @@ public interface DropdownPanel {
 
     float getIntroValue();
 
-    void drawBackground(DropdownRenderer renderer);
+    void drawBackground(DropdownDrawContext renderer);
 
-    void drawContent(DropdownRenderer renderer, int mouseX, int mouseY);
+    void drawContent(DropdownDrawContext renderer, int mouseX, int mouseY);
 
     float getContentClipY();
 

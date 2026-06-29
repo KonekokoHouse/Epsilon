@@ -140,6 +140,18 @@ public class PanelUiCompiler {
             }
             return;
         }
+        if (node instanceof PanelUiTree.TextureNode(
+                var texture, float x, float y, float width, float height,
+                float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                float u0, float v0, float u1, float v1, Color color
+        )) {
+            if (target.textureRenderer() != null) {
+                target.textureRenderer().addRoundedTexture(texture, x, y, width, height,
+                        radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+                        u0, v0, u1, v1, color);
+            }
+            return;
+        }
         if (node instanceof PanelUiTree.ButtonNode(
                 float x, float y, float width, float height, float radius, Color background,
                 String label, float labelScale, Color labelColor
@@ -396,7 +408,7 @@ public class PanelUiCompiler {
 
     private record RenderTarget(ShadowSink shadowRenderer, RoundRectSink roundRectRenderer,
                                 RoundRectOutlineSink roundRectOutlineRenderer, RectSink rectRenderer,
-                                TriangleSink triangleRenderer, TextSink textRenderer,
+                                TriangleSink triangleRenderer, TextureSink textureRenderer, TextSink textRenderer,
                                 PanelContentBuffer buffer) {
         private static RenderTarget forBatchLayer(PanelRenderBatch.LayerRenderers renderers) {
             return new RenderTarget(
@@ -405,6 +417,7 @@ public class PanelUiCompiler {
                     new BatchRoundRectOutlineSink(renderers.roundRectOutlineRenderer()),
                     new BatchRectSink(renderers.rectRenderer()),
                     new BatchTriangleSink(renderers.triangleRenderer()),
+                    new BatchTextureSink(renderers.textureRenderer()),
                     new BatchTextSink(renderers.textRenderer()),
                     null
             );
@@ -417,6 +430,7 @@ public class PanelUiCompiler {
                     new BatchRoundRectOutlineSink(buffer.roundRectOutlineRenderer()),
                     new BatchRectSink(buffer.rectRenderer()),
                     new BatchTriangleSink(buffer.triangleRenderer()),
+                    null,
                     new BatchTextSink(buffer.textRenderer()),
                     buffer
             );
@@ -468,6 +482,13 @@ public class PanelUiCompiler {
 
     private interface TriangleSink {
         void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color);
+    }
+
+    private interface TextureSink {
+        void addRoundedTexture(com.github.epsilon.graphics.schedulers.Render2DTexture texture,
+                               float x, float y, float width, float height,
+                               float topLeft, float topRight, float bottomRight, float bottomLeft,
+                               float u0, float v0, float u1, float v1, Color color);
     }
 
     private interface TextSink {
@@ -538,6 +559,16 @@ public class PanelUiCompiler {
         @Override
         public void addChevronTriangle(float centerX, float centerY, float size, float progress, Color color) {
             renderer.addChevronTriangle(centerX, centerY, size, progress, color);
+        }
+    }
+
+    private record BatchTextureSink(PanelRenderBatch.TextureFacade renderer) implements TextureSink {
+        @Override
+        public void addRoundedTexture(com.github.epsilon.graphics.schedulers.Render2DTexture texture,
+                                      float x, float y, float width, float height,
+                                      float topLeft, float topRight, float bottomRight, float bottomLeft,
+                                      float u0, float v0, float u1, float v1, Color color) {
+            renderer.addRoundedTexture(texture, x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, u0, v0, u1, v1, color);
         }
     }
 

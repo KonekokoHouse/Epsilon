@@ -60,11 +60,12 @@ public class ExampleAddon extends EpsilonAddon {
 - `getDescription()`：用于显示 Addon 简介。
 - `getVersion()` / `getAuthors()`：用于显示基础信息。
 - `boolSetting(...)` / `intSetting(...)` / `enumSetting(...)` 等：用于声明 Addon 自身设置，这些设置会显示在 `Client Settings -> Addons` 中，并随配置一起保存。
-- 设置不再使用 `settingGroup(...).group(...)`。GUI 会根据声明顺序、设置名称和控件类型自动计算可折叠 section 与位置。
+- 设置可以继续使用 `settingGroup(...).group(...)` 手动声明分组。GUI 只根据显式 group 生成可折叠 section，不再根据名称或控件类型自动推断分组。
 
 Addon setting 的翻译 key 约定为：
 
 - `{addonId}.settings.{settingNameLowerCase}`
+- `{addonId}.settings.{groupNameLowerCase}` 用于 Addon SettingGroup 标题。
 
 Addon 模块翻译 key 为：
 

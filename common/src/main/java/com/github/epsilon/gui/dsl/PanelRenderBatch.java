@@ -364,6 +364,13 @@ public final class PanelRenderBatch implements AutoCloseable {
             layer.addRoundedTexture(new Render2DTexture.LuminRef(texture), x, y, width, height, radius, u0, v0, u1, v1, color);
         }
 
+        public void addRoundedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                      float topLeft, float topRight, float bottomRight, float bottomLeft,
+                                      float u0, float v0, float u1, float v1, Color color) {
+            touchLayer(layer);
+            layer.addRoundedTexture(texture, x, y, width, height, topLeft, topRight, bottomRight, bottomLeft, u0, v0, u1, v1, color);
+        }
+
         public void addPlayerHead(LuminTexture texture, float x, float y, float size, float radius, Color color) {
             addRoundedTexture(texture, x, y, size, size, radius, 8.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 16.0f / 64.0f, color);
             addRoundedTexture(texture, x, y, size, size, radius, 40.0f / 64.0f, 8.0f / 64.0f, 48.0f / 64.0f, 16.0f / 64.0f, color);

@@ -53,29 +53,32 @@ public class MessagePopup implements PanelPopupHost.Popup {
         updateLayout(popupY);
         buttonHoverAnimation.run(buttonBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
         PanelUiTree tree = PanelUiTree.build(scope -> {
-            scope.popupCard(new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height()),
-                    MD3Theme.CARD_RADIUS,
-                    POPUP_SHADOW_RADIUS,
-                    MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
-                    MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
+            PanelLayout.Rect popupBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
+            scope.pushAbsolute(popupBounds, popup -> {
+                popup.popupCard(popupBounds.atOrigin(),
+                        MD3Theme.CARD_RADIUS,
+                        POPUP_SHADOW_RADIUS,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
+                        MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
 
-            float titleScale = 0.66f;
-            float messageScale = 0.56f;
-            float detailScale = 0.52f;
-            float textX = bounds.x() + 12.0f;
-            String title = titleSupplier.get();
-            String message = messageSupplier.get();
-            String buttonLabel = buttonLabelSupplier.get();
-            scope.text(title, textX, popupY + 10.0f, titleScale, MD3Theme.TEXT_PRIMARY);
-            scope.text(message, textX, popupY + 25.0f, messageScale, MD3Theme.TEXT_SECONDARY);
-            if (detail != null && !detail.isBlank()) {
-                scope.text(detail, textX, popupY + 38.0f, detailScale, MD3Theme.TEXT_MUTED);
-            }
+                float titleScale = 0.66f;
+                float messageScale = 0.56f;
+                float detailScale = 0.52f;
+                String title = titleSupplier.get();
+                String message = messageSupplier.get();
+                String buttonLabel = buttonLabelSupplier.get();
+                popup.text(title, 12.0f, 10.0f, titleScale, MD3Theme.TEXT_PRIMARY);
+                popup.text(message, 12.0f, 25.0f, messageScale, MD3Theme.TEXT_SECONDARY);
+                if (detail != null && !detail.isBlank()) {
+                    popup.text(detail, 12.0f, 38.0f, detailScale, MD3Theme.TEXT_MUTED);
+                }
 
-            float hover = buttonHoverAnimation.getValue();
-            scope.button(buttonBounds, buttonBounds.height() / 2.0f,
-                    MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, hover * 0.35f),
-                    buttonLabel, 0.56f, MD3Theme.ON_PRIMARY_CONTAINER);
+                float hover = buttonHoverAnimation.getValue();
+                PanelLayout.Rect localButtonBounds = buttonBounds.relativeTo(popupBounds);
+                popup.button(localButtonBounds, localButtonBounds.height() / 2.0f,
+                        MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, hover * 0.35f),
+                        buttonLabel, 0.56f, MD3Theme.ON_PRIMARY_CONTAINER);
+            });
         });
         renderBatch.render(tree);
     }

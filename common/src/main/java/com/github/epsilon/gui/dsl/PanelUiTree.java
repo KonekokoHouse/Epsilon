@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.dsl;
 
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.github.epsilon.graphics.schedulers.Render2DTexture;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -38,6 +39,10 @@ public class PanelUiTree {
         return new PanelUiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
     }
 
+    public static PanelUiTree from(Scope scope) {
+        return scope.snapshot();
+    }
+
     /**
      * 构建带自动布局的 UI 树。
      * <p>
@@ -73,6 +78,7 @@ public class PanelUiTree {
 
         private List<UiNode> nodes = new ArrayList<>();
         private boolean hasActiveAnimations;
+        private final List<PanelLayout.Rect> boundStack = new ArrayList<>(List.of(new PanelLayout.Rect(0.0f, 0.0f, 0.0f, 0.0f)));
 
         /**
          * 向当前作用域追加单个节点，并在需要时绑定到相对 layer。
@@ -104,6 +110,112 @@ public class PanelUiTree {
         public void clear() {
             nodes.clear();
             hasActiveAnimations = false;
+            boundStack.clear();
+            boundStack.add(new PanelLayout.Rect(0.0f, 0.0f, 0.0f, 0.0f));
+        }
+
+        public PanelLayout.Rect bound() {
+            return currentBound();
+        }
+
+        public void push(PanelLayout.Rect bounds, Consumer<Scope> content) {
+            pushRelative(bounds, content);
+        }
+
+        public void push(float x, float y, Consumer<Scope> content) {
+            pushRelative(x, y, content);
+        }
+
+        public void pushRelative(PanelLayout.Rect bounds, Consumer<Scope> content) {
+            withBound(resolveRect(bounds), content);
+        }
+
+        public void pushRelative(float x, float y, Consumer<Scope> content) {
+            PanelLayout.Rect current = currentBound();
+            withBound(new PanelLayout.Rect(current.x() + x, current.y() + y, 0.0f, 0.0f), content);
+        }
+
+        public void pushAbsolute(PanelLayout.Rect bounds, Consumer<Scope> content) {
+            withBound(bounds, content);
+        }
+
+        public void pushAbsolute(float x, float y, Consumer<Scope> content) {
+            withBound(new PanelLayout.Rect(x, y, 0.0f, 0.0f), content);
+        }
+
+        public void stackPush(PanelLayout.Rect bounds) {
+            stackPushRelative(bounds);
+        }
+
+        public void stackPush(float x, float y) {
+            stackPushRelative(x, y);
+        }
+
+        public void stackPushRelative(PanelLayout.Rect bounds) {
+            boundStack.add(resolveRect(bounds));
+        }
+
+        public void stackPushRelative(float x, float y) {
+            PanelLayout.Rect current = currentBound();
+            boundStack.add(new PanelLayout.Rect(current.x() + x, current.y() + y, 0.0f, 0.0f));
+        }
+
+        public void stackPushAbsolute(PanelLayout.Rect bounds) {
+            boundStack.add(bounds);
+        }
+
+        public void stackPushAbsolute(float x, float y) {
+            boundStack.add(new PanelLayout.Rect(x, y, 0.0f, 0.0f));
+        }
+
+        public void stackPop() {
+            if (boundStack.size() <= 1) {
+                throw new IllegalStateException("Cannot pop the root PanelUiTree bound.");
+            }
+            boundStack.removeLast();
+        }
+
+        private void withBound(PanelLayout.Rect bounds, Consumer<Scope> content) {
+            boundStack.add(bounds);
+            try {
+                content.accept(this);
+            } finally {
+                boundStack.removeLast();
+            }
+        }
+
+        private PanelLayout.Rect currentBound() {
+            return boundStack.getLast();
+        }
+
+        private float resolveX(float x) {
+            return currentBound().x() + x;
+        }
+
+        private float resolveY(float y) {
+            return currentBound().y() + y;
+        }
+
+        private PanelLayout.Rect resolveRect(PanelLayout.Rect rect) {
+            return new PanelLayout.Rect(resolveX(rect.x()), resolveY(rect.y()), rect.width(), rect.height());
+        }
+
+        private ButtonElement resolveButton(ButtonElement element) {
+            return new ButtonElement(resolveRect(element.bounds()), element.radius(), element.background(),
+                    element.label(), element.labelScale(), element.labelColor());
+        }
+
+        private SwitchElement resolveSwitch(SwitchElement element) {
+            return new SwitchElement(resolveRect(element.bounds()), element.toggleProgress(), element.hoverProgress());
+        }
+
+        private InputElement resolveInput(InputElement element) {
+            return new InputElement(resolveRect(element.bounds()), element.focused(), element.hoverProgress(),
+                    element.focusRingProgress(), element.focusRingColor(), element.focusRingInset(),
+                    element.textInset(), element.text(), element.textScale(), element.textColor(),
+                    element.selection(), element.selectionColor(),
+                    element.caretIndex(), element.caretColor(),
+                    element.trailingHint(), element.trailingHintScale(), element.trailingHintColor());
         }
 
         /**
@@ -145,43 +257,43 @@ public class PanelUiTree {
         }
 
         public void shadow(float x, float y, float width, float height, float radius, float blurRadius, Color color) {
-            nodes.add(new ShadowNode(x, y, width, height, radius, radius, radius, radius, blurRadius, color));
+            nodes.add(new ShadowNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, blurRadius, color));
         }
 
         public void shadow(int layer, float x, float y, float width, float height, float radius, float blurRadius, Color color) {
-            addNode(layer, new ShadowNode(x, y, width, height, radius, radius, radius, radius, blurRadius, color));
+            addNode(layer, new ShadowNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, blurRadius, color));
         }
 
         public void shadow(float x, float y, float width, float height,
                            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                            float blurRadius, Color color) {
-            nodes.add(new ShadowNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color));
+            nodes.add(new ShadowNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color));
         }
 
         public void shadow(int layer, float x, float y, float width, float height,
                            float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                            float blurRadius, Color color) {
-            addNode(layer, new ShadowNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color));
+            addNode(layer, new ShadowNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, blurRadius, color));
         }
 
         public void roundRect(float x, float y, float width, float height, float radius, Color color) {
-            nodes.add(new RoundRectNode(x, y, width, height, radius, radius, radius, radius, color));
+            nodes.add(new RoundRectNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, color));
         }
 
         public void roundRect(int layer, float x, float y, float width, float height, float radius, Color color) {
-            addNode(layer, new RoundRectNode(x, y, width, height, radius, radius, radius, radius, color));
+            addNode(layer, new RoundRectNode(resolveX(x), resolveY(y), width, height, radius, radius, radius, radius, color));
         }
 
         public void roundRect(float x, float y, float width, float height,
                               float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                               Color color) {
-            nodes.add(new RoundRectNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color));
+            nodes.add(new RoundRectNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color));
         }
 
         public void roundRect(int layer, float x, float y, float width, float height,
                               float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                               Color color) {
-            addNode(layer, new RoundRectNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color));
+            addNode(layer, new RoundRectNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, color));
         }
 
         public void roundRectGradient(float x, float y, float width, float height, float radius,
@@ -192,14 +304,14 @@ public class PanelUiTree {
         public void roundRectGradient(float x, float y, float width, float height,
                                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                                       Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
-            nodes.add(new RoundRectGradientNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+            nodes.add(new RoundRectGradientNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                     topLeft, bottomLeft, bottomRight, topRight));
         }
 
         public void roundRectGradient(int layer, float x, float y, float width, float height,
                                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                                       Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
-            addNode(layer, new RoundRectGradientNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+            addNode(layer, new RoundRectGradientNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                     topLeft, bottomLeft, bottomRight, topRight));
         }
 
@@ -216,29 +328,29 @@ public class PanelUiTree {
         }
 
         public void rect(float x, float y, float width, float height, Color color) {
-            nodes.add(new RectNode(x, y, width, height, color));
+            nodes.add(new RectNode(resolveX(x), resolveY(y), width, height, color));
         }
 
         public void rect(int layer, float x, float y, float width, float height, Color color) {
-            addNode(layer, new RectNode(x, y, width, height, color));
+            addNode(layer, new RectNode(resolveX(x), resolveY(y), width, height, color));
         }
 
         public void rectOutline(float x, float y, float width, float height, float outlineWidth, Color color) {
-            nodes.add(new RectOutlineNode(x, y, width, height, outlineWidth, color));
+            nodes.add(new RectOutlineNode(resolveX(x), resolveY(y), width, height, outlineWidth, color));
         }
 
         public void rectOutline(int layer, float x, float y, float width, float height, float outlineWidth, Color color) {
-            addNode(layer, new RectOutlineNode(x, y, width, height, outlineWidth, color));
+            addNode(layer, new RectOutlineNode(resolveX(x), resolveY(y), width, height, outlineWidth, color));
         }
 
         public void rectGradient(float x, float y, float width, float height,
                                  Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
-            nodes.add(new RectGradientNode(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight));
+            nodes.add(new RectGradientNode(resolveX(x), resolveY(y), width, height, topLeft, bottomLeft, bottomRight, topRight));
         }
 
         public void rectGradient(int layer, float x, float y, float width, float height,
                                  Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) {
-            addNode(layer, new RectGradientNode(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight));
+            addNode(layer, new RectGradientNode(resolveX(x), resolveY(y), width, height, topLeft, bottomLeft, bottomRight, topRight));
         }
 
         public void rectVerticalGradient(float x, float y, float width, float height, Color top, Color bottom) {
@@ -256,31 +368,31 @@ public class PanelUiTree {
         public void outline(float x, float y, float width, float height,
                             float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                             float outlineWidth, Color color) {
-            nodes.add(new OutlineNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+            nodes.add(new OutlineNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                     outlineWidth, color));
         }
 
         public void outline(int layer, float x, float y, float width, float height,
                             float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                             float outlineWidth, Color color) {
-            addNode(layer, new OutlineNode(x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
+            addNode(layer, new OutlineNode(resolveX(x), resolveY(y), width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                     outlineWidth, color));
         }
 
         public void text(String text, float x, float y, float scale, Color color) {
-            nodes.add(new TextNode(text, x, y, scale, color, null));
+            nodes.add(new TextNode(text, resolveX(x), resolveY(y), scale, color, null));
         }
 
         public void text(int layer, String text, float x, float y, float scale, Color color) {
-            addNode(layer, new TextNode(text, x, y, scale, color, null));
+            addNode(layer, new TextNode(text, resolveX(x), resolveY(y), scale, color, null));
         }
 
         public void text(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
-            nodes.add(new TextNode(text, x, y, scale, color, fontLoader));
+            nodes.add(new TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader));
         }
 
         public void text(int layer, String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
-            addNode(layer, new TextNode(text, x, y, scale, color, fontLoader));
+            addNode(layer, new TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader));
         }
 
         /**
@@ -293,7 +405,23 @@ public class PanelUiTree {
         }
 
         public void marqueeText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, PanelLayout.Rect clip) {
-            nodes.add(new MarqueeTextNode(text, x, y, scale, color, fontLoader, clip));
+            nodes.add(new MarqueeTextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader, resolveRect(clip)));
+        }
+
+        public void texture(Render2DTexture texture, float x, float y, float width, float height,
+                            float u0, float v0, float u1, float v1, Color color) {
+            roundedTexture(texture, x, y, width, height, 0.0f, u0, v0, u1, v1, color);
+        }
+
+        public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height, float radius,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            roundedTexture(texture, x, y, width, height, radius, radius, radius, radius, u0, v0, u1, v1, color);
+        }
+
+        public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                   float topLeft, float topRight, float bottomRight, float bottomLeft,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            nodes.add(new TextureNode(texture, resolveX(x), resolveY(y), width, height, topLeft, topRight, bottomRight, bottomLeft, u0, v0, u1, v1, color));
         }
 
         public void button(float x, float y, float width, float height, float radius, Color background,
@@ -317,9 +445,10 @@ public class PanelUiTree {
         }
 
         public void button(ButtonElement element) {
-            PanelLayout.Rect bounds = element.bounds();
+            ButtonElement resolved = resolveButton(element);
+            PanelLayout.Rect bounds = resolved.bounds();
             nodes.add(new ButtonNode(bounds.x(), bounds.y(), bounds.width(), bounds.height(), element.radius(),
-                    element.background(), element.label(), element.labelScale(), element.labelColor()));
+                    resolved.background(), resolved.label(), resolved.labelScale(), resolved.labelColor()));
         }
 
         public void switchControl(PanelLayout.Rect bounds, float toggleProgress, float hoverProgress) {
@@ -338,7 +467,8 @@ public class PanelUiTree {
         }
 
         public void toggleSwitch(SwitchElement element) {
-            nodes.add(new SwitchNode(element.bounds(), element.toggleProgress(), element.hoverProgress()));
+            SwitchElement resolved = resolveSwitch(element);
+            nodes.add(new SwitchNode(resolved.bounds(), resolved.toggleProgress(), resolved.hoverProgress()));
         }
 
         public void toggle(SwitchElement element) {
@@ -362,7 +492,7 @@ public class PanelUiTree {
          * @param element 输入框描述
          */
         public void input(InputElement element) {
-            nodes.add(new InputNode(element));
+            nodes.add(new InputNode(resolveInput(element)));
         }
 
         /**
@@ -430,7 +560,7 @@ public class PanelUiTree {
 
         public void assistChip(PanelLayout.Rect bounds, String label, float textScale, Color background, Color foreground,
                                String trailingIcon, float trailingIconScale, TtfFontLoader trailingIconFont) {
-            nodes.add(new AssistChipNode(bounds, label, textScale, background, foreground, trailingIcon, trailingIconScale, trailingIconFont));
+            nodes.add(new AssistChipNode(resolveRect(bounds), label, textScale, background, foreground, trailingIcon, trailingIconScale, trailingIconFont));
         }
 
         public void chip(PanelLayout.Rect bounds, String label, float textScale, Color background, Color foreground,
@@ -440,7 +570,7 @@ public class PanelUiTree {
 
         public void segmentedControl(PanelLayout.Rect bounds, String leadingLabel, String trailingLabel,
                                      float progress, float hoverProgress) {
-            nodes.add(new SegmentedControlNode(bounds, leadingLabel, trailingLabel, progress, hoverProgress));
+            nodes.add(new SegmentedControlNode(resolveRect(bounds), leadingLabel, trailingLabel, progress, hoverProgress));
         }
 
         public void segmented(PanelLayout.Rect bounds, String leadingLabel, String trailingLabel,
@@ -449,7 +579,7 @@ public class PanelUiTree {
         }
 
         public void iconButton(PanelLayout.Rect bounds, String label, float scale, Color tone, float hoverProgress) {
-            nodes.add(new IconButtonNode(bounds, label, scale, tone, hoverProgress));
+            nodes.add(new IconButtonNode(resolveRect(bounds), label, scale, tone, hoverProgress));
         }
 
         /**
@@ -462,7 +592,7 @@ public class PanelUiTree {
          * @param surfaceColor 面颜色
          */
         public void popupCard(PanelLayout.Rect bounds, float radius, float blurRadius, Color shadowColor, Color surfaceColor) {
-            nodes.add(new PopupCardNode(bounds, radius, blurRadius, shadowColor, surfaceColor));
+            nodes.add(new PopupCardNode(resolveRect(bounds), radius, blurRadius, shadowColor, surfaceColor));
         }
 
         /**
@@ -485,7 +615,7 @@ public class PanelUiTree {
         public void slider(PanelLayout.Rect bounds, float progress, float trackRadius,
                            Color trackColor, float activeEndInset, float activeMinWidth, Color activeColor,
                            float handleWidth, float handleHeight, float handleRadius, Color handleColor) {
-            nodes.add(new SliderNode(bounds, progress, trackRadius, trackColor, activeEndInset, activeMinWidth, activeColor,
+            nodes.add(new SliderNode(resolveRect(bounds), progress, trackRadius, trackColor, activeEndInset, activeMinWidth, activeColor,
                     handleWidth, handleHeight, handleRadius, handleColor));
         }
 
@@ -499,11 +629,11 @@ public class PanelUiTree {
          * @param color    三角形颜色
          */
         public void triangle(float centerX, float centerY, float size, float progress, Color color) {
-            nodes.add(new TriangleNode(centerX, centerY, size, progress, color));
+            nodes.add(new TriangleNode(resolveX(centerX), resolveY(centerY), size, progress, color));
         }
 
         public void triangle(int layer, float centerX, float centerY, float size, float progress, Color color) {
-            addNode(layer, new TriangleNode(centerX, centerY, size, progress, color));
+            addNode(layer, new TriangleNode(resolveX(centerX), resolveY(centerY), size, progress, color));
         }
 
         /**
@@ -522,14 +652,19 @@ public class PanelUiTree {
         public void viewport(PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight,
                              float scroll, float maxScroll, float contentHeight,
                              Consumer<Scope> content) {
-            CaptureResult capture = capture(content);
+            PanelLayout.Rect resolvedViewport = resolveRect(viewport);
+            CaptureResult capture = capture(scope -> scope.pushAbsolute(
+                    new PanelLayout.Rect(resolvedViewport.x(), resolvedViewport.y() - scroll,
+                            resolvedViewport.width(), contentHeight),
+                    content));
             hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
-            nodes.add(new ViewportNode(buffer, viewport, guiHeight, scroll, maxScroll, contentHeight, capture.nodes()));
+            nodes.add(new ViewportNode(buffer, resolvedViewport, guiHeight, scroll, maxScroll, contentHeight, capture.nodes()));
         }
 
         private CaptureResult capture(Consumer<Scope> content) {
             List<UiNode> parent = nodes;
             boolean parentAnimations = hasActiveAnimations;
+            int parentBoundDepth = boundStack.size();
             // 子树构建期间临时切换收集列表，finally 中恢复父作用域，避免子节点泄露到父层。
             nodes = new ArrayList<>();
             hasActiveAnimations = false;
@@ -539,6 +674,9 @@ public class PanelUiTree {
             } finally {
                 nodes = parent;
                 hasActiveAnimations = parentAnimations;
+                while (boundStack.size() > parentBoundDepth) {
+                    boundStack.removeLast();
+                }
             }
         }
     }
@@ -682,7 +820,7 @@ public class PanelUiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到具体 renderer 或视口缓冲。
      */
-    sealed interface UiNode permits LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    sealed interface UiNode permits LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, TextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -768,6 +906,11 @@ public class PanelUiTree {
 
     record MarqueeTextNode(String text, float x, float y, float scale, Color color,
                            TtfFontLoader fontLoader, PanelLayout.Rect clip) implements UiNode {
+    }
+
+    record TextureNode(Render2DTexture texture, float x, float y, float width, float height,
+                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
+                       float u0, float v0, float u1, float v1, Color color) implements UiNode {
     }
 
     record ButtonNode(float x, float y, float width, float height, float radius, Color background,

@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownRenderer;
+import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.settings.Setting;
@@ -30,7 +30,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
     }
 
     @Override
-    public void draw(DropdownRenderer renderer, int mouseX, int mouseY) {
+    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         syncSessionState();
 
         float ratio = getRatio();
@@ -173,7 +173,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         inputField.blur();
     }
 
-    protected void drawValueLabels(DropdownRenderer renderer, float trackX, float trackY, float trackW) {
+    protected void drawValueLabels(DropdownDrawContext renderer, float trackX, float trackY, float trackW) {
         String minValue = formatValue(getMin());
         String currentValue = formatValue(setting.getValue());
         String maxValue = formatValue(getMax());
