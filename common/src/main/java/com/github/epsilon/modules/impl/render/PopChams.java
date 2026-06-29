@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,7 +28,10 @@ public class PopChams extends Module {
 
     public static final PopChams INSTANCE = new PopChams();
 
-    private final BoolSetting onlyOne = boolSetting("Only One", false);
+    private PopChams() {
+        super("Pop Chams", Category.RENDER);
+    }
+
     private final DoubleSetting renderTime = doubleSetting("Render Time", 1.0, 0.1, 6.0, 0.1);
     private final DoubleSetting yModifier = doubleSetting("Y Modifier", 0.75, -4.0, 4.0, 0.05);
     private final DoubleSetting scaleModifier = doubleSetting("Scale Modifier", -0.25, -4.0, 4.0, 0.05);
@@ -38,10 +40,6 @@ public class PopChams extends Module {
     private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 255, 255, 127), true);
 
     private final List<GhostPlayer> ghosts = new ArrayList<>();
-
-    private PopChams() {
-        super("Pop Chams", Category.RENDER);
-    }
 
     @Override
     protected void onDisable() {
@@ -59,10 +57,6 @@ public class PopChams extends Module {
         if (!(entity instanceof Player player)/* || entity == mc.player*/) return;
 
         synchronized (ghosts) {
-            if (onlyOne.getValue()) {
-                ghosts.removeIf(ghost -> ghost.uuid.equals(entity.getUUID()));
-            }
-
             ghosts.add(new GhostPlayer(player));
         }
     }
@@ -98,8 +92,6 @@ public class PopChams extends Module {
             yBodyRotO = yBodyRot;
             getAttributes().assignAllValues(player.getAttributes());
             setPose(player.getPose());
-            setHealth(player.getHealth());
-            setAbsorptionAmount(player.getAbsorptionAmount());
             swingingArm = player.swingingArm;
         }
 
