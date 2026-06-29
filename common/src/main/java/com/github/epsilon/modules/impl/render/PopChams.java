@@ -108,8 +108,7 @@ public class PopChams extends Module {
             tickCount = (int) (timer * 20.0);
 
             float progress = Mth.clamp((float) (timer / renderTime.getValue()), 0.0f, 1.0f);
-            float easedProgress = yEasing.getValue().getFunction().apply(progress);
-            setPos(getX(), startY + yModifier.getValue() * renderTime.getValue() * easedProgress, getZ());
+            setPos(getX(), startY + yModifier.getValue() * renderTime.getValue() * yEasing.getValue().getFunction().apply(progress), getZ());
             setOldPosAndRot();
             yHeadRotO = yHeadRot;
             yBodyRotO = yBodyRot;
