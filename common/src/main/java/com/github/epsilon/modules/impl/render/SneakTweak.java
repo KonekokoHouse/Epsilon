@@ -16,9 +16,9 @@ public class SneakTweak extends Module {
 
     private enum SneakingEyeHeight {
         Default,
+        Custom,
         Pre_1_14,
-        Pre_1_9,
-        Custom
+        Pre_1_9
     }
 
     private final EnumSetting<SneakingEyeHeight> sneakingEyeHeight = enumSetting("Sneaking Eye Height", SneakingEyeHeight.Default);
