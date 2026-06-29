@@ -1,6 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import net.minecraft.client.renderer.DynamicUniforms;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,6 +14,7 @@ public class MixinRenderSystem {
     @Inject(method = "reset", at = @At("RETURN"))
     private void onReset(CallbackInfo ci) {
         LuminRenderSystem.endDynamicUniformFrame();
+        TtfFontLoader.beginRenderFrame();
     }
 
 }

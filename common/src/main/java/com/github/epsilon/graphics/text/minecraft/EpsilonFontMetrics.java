@@ -1,7 +1,6 @@
 package com.github.epsilon.graphics.text.minecraft;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import com.github.epsilon.graphics.text.GlyphDescriptor;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
@@ -52,13 +51,7 @@ public final class EpsilonFontMetrics {
         }
 
         char ch = (char) codepoint;
-        font.checkAndLoadChar(ch);
-        GlyphDescriptor descriptor = font.getGlyph(ch);
-        if (descriptor == null) {
-            return 0.0f;
-        }
-
-        return descriptor.advance() * minecraftScale(font) + LETTER_SPACING + (style.isBold() ? 1.0f : 0.0f);
+        return font.getAdvance(ch) * minecraftScale(font) + LETTER_SPACING + (style.isBold() ? 1.0f : 0.0f);
     }
 
     public static @Nullable Float width(String text) {

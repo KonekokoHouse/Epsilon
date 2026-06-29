@@ -56,7 +56,7 @@ public final class EpsilonFontGlyph implements BakedGlyph {
         }
 
         char ch = (char) codepoint;
-        font.checkAndLoadChar(ch);
+        font.requestChars(String.valueOf(ch));
         GlyphDescriptor descriptor = font.getGlyph(ch);
         return descriptor != null ? new EpsilonFontGlyph(codepoint, font, descriptor) : null;
     }

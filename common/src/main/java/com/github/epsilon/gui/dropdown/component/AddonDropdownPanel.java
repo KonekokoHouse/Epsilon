@@ -28,6 +28,8 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
     private String selectedAddonId = "";
     private final List<SettingWidget<?>> widgets = new ArrayList<>();
     private EpsilonAddon lastAddon;
+    private int cachedWidgetsHeightFrameId = Integer.MIN_VALUE;
+    private float cachedWidgetsHeight;
 
     public AddonDropdownPanel(int panelIndex) {
         super("addon", EpsilonTranslations.Gui.TAB_ADDON, "", panelIndex);
@@ -44,9 +46,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         if (widgets.isEmpty()) {
             height += ADDON_ROW_HEIGHT;
         } else {
-            for (SettingWidget<?> widget : widgets) {
-                if (widget.isVisible()) height += widget.getHeight() + DropdownTheme.SETTING_GAP;
-            }
+            height += computeWidgetsHeight();
         }
         return height + PADDING;
     }
@@ -196,16 +196,24 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             if (widget != null) widgets.add(widget);
         }
         lastAddon = addon;
+        cachedWidgetsHeightFrameId = Integer.MIN_VALUE;
     }
 
     private float computeWidgetsHeight() {
+        int frameId = getRenderFrameId();
+        if (cachedWidgetsHeightFrameId == frameId) {
+            return cachedWidgetsHeight;
+        }
+
         float height = 0.0f;
         for (SettingWidget<?> widget : widgets) {
             if (widget.isVisible()) {
                 height += widget.getHeight() + DropdownTheme.SETTING_GAP;
             }
         }
-        return height;
+        cachedWidgetsHeightFrameId = frameId;
+        cachedWidgetsHeight = height;
+        return cachedWidgetsHeight;
     }
 
 }

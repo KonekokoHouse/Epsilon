@@ -23,12 +23,12 @@ public class SettingsListPanel extends AbstractDropdownPanel {
 
     @Override
     protected float computeContentHeight() {
-        return settingsContent.computeContentHeight();
+        return settingsContent.computeContentHeight(getRenderFrameId());
     }
 
     @Override
     protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
-        settingsContent.draw(renderer, mouseX, mouseY, x, y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll, width);
+        settingsContent.draw(renderer, mouseX, mouseY, x, y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll, width, getRenderFrameId());
     }
 
     @Override
