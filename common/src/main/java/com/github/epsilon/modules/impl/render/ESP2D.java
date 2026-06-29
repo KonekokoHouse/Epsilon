@@ -10,16 +10,13 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.WorldToScreen;
 import com.google.common.base.Suppliers;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
 import org.joml.Vector4d;
 
 import java.awt.*;
@@ -39,20 +36,18 @@ public class ESP2D extends Module {
     private final BoolSetting monsters = boolSetting("Monsters", false);
     private final BoolSetting ambients = boolSetting("Ambients", false);
     private final BoolSetting others = boolSetting("Others", false);
-    private final EnumSetting<ColorMode> colorMode = enumSetting("Color Mode", ColorMode.Sync);
     private final BoolSetting renderHealth = boolSetting("Render Health", true);
     private final DoubleSetting healthBarWidth = doubleSetting("Health Bar Width", 2.0, 0.5, 6.0, 0.5, renderHealth::getValue);
     private final BoolSetting renderBox = boolSetting("Render Box", true);
     private final BoolSetting outline = boolSetting("Outline", true, renderBox::getValue);
 
-    private final ColorSetting playersColor = colorSetting("Players Color", new Color(0xFF9200), false, () -> colorMode.is(ColorMode.Custom));
-    private final ColorSetting friendsColor = colorSetting("Friends Color", new Color(0x30FF00), false, () -> colorMode.is(ColorMode.Custom));
-    private final ColorSetting creaturesColor = colorSetting("Creatures Color", new Color(0xA0A4A6), false, () -> colorMode.is(ColorMode.Custom));
-    private final ColorSetting monstersColor = colorSetting("Monsters Color", new Color(0xFF0000), false, () -> colorMode.is(ColorMode.Custom));
-    private final ColorSetting ambientsColor = colorSetting("Ambients Color", new Color(0x7B00FF), false, () -> colorMode.is(ColorMode.Custom));
-    private final ColorSetting othersColor = colorSetting("Others Color", new Color(0xFF0062), false, () -> colorMode.is(ColorMode.Custom));
-    private final ColorSetting healthBottomColor = colorSetting("Health Bottom Color", new Color(0xFF1100), false, () -> colorMode.is(ColorMode.Custom) && renderHealth.getValue());
-    private final ColorSetting healthTopColor = colorSetting("Health Top Color", new Color(0x2FFF00), false, () -> colorMode.is(ColorMode.Custom) && renderHealth.getValue());
+    private final ColorSetting playersColor = colorSetting("Players Color", new Color(0xFF9200), false);
+    private final ColorSetting friendsColor = colorSetting("Friends Color", new Color(0x30FF00), false);
+    private final ColorSetting creaturesColor = colorSetting("Creatures Color", new Color(0xA0A4A6), false);
+    private final ColorSetting monstersColor = colorSetting("Monsters Color", new Color(0xFF0000), false);
+    private final ColorSetting ambientsColor = colorSetting("Ambients Color", new Color(0x7B00FF), false);
+    private final ColorSetting othersColor = colorSetting("Others Color", new Color(0xFF0062), false);
+    private final ColorSetting healthColor = colorSetting("Health Color", new Color(0x2FFF00), false, renderHealth::getValue);
 
     private final Supplier<RectRenderer> rectRendererSupplier = Suppliers.memoize(RectRenderer::create);
 
@@ -69,8 +64,8 @@ public class ESP2D extends Module {
             if (!(entity instanceof LivingEntity livingEntity) || !shouldRender(livingEntity)) continue;
 
             Vector4d position = WorldToScreen.getEntityPositionsOn2D(livingEntity, partialTick);
-            if (position == null) continue;
-            if (position.z < 0.0 || position.w < 0.0 || position.x > screenWidth || position.y > screenHeight) continue;
+            if (position == null || position.z < 0.0 || position.w < 0.0 || position.x > screenWidth || position.y > screenHeight)
+                continue;
 
             float x = (float) position.x;
             float y = (float) position.y;
@@ -86,12 +81,8 @@ public class ESP2D extends Module {
                     rectRenderer.addRect(x - 1.0f, endY - 1.0f, endX - x + 1.5f, 1.5f, black);
                 }
 
-                if (colorMode.is(ColorMode.Custom)) {
-                    Color color = getEntityColor(livingEntity);
-                    drawSolidBox(rectRenderer, x, y, endX, endY, color);
-                } else {
-                    drawSyncBox(rectRenderer, x, y, endX, endY);
-                }
+                Color color = getEntityColor(livingEntity);
+                drawSolidBox(rectRenderer, x, y, endX, endY, color);
             }
 
             if (renderHealth.getValue()) {
@@ -143,18 +134,6 @@ public class ESP2D extends Module {
         rectRenderer.addRect(endX - 0.5f, y, 0.5f, endY - y, color);
     }
 
-    private void drawSyncBox(RectRenderer rectRenderer, float x, float y, float endX, float endY) {
-        Color c0 = syncColor(0);
-        Color c90 = syncColor(90);
-        Color c180 = syncColor(180);
-        Color c270 = syncColor(270);
-
-        rectRenderer.addRectGradient(x - 0.5f, y, 0.5f, endY - y, c270, c0, c0, c270);
-        rectRenderer.addRectGradient(x, endY - 0.5f, endX - x, 0.5f, c0, c180, c180, c0);
-        rectRenderer.addRectGradient(x - 0.5f, y, endX - x + 0.5f, 0.5f, c180, c90, c90, c180);
-        rectRenderer.addRectGradient(endX - 0.5f, y, 0.5f, endY - y, c90, c270, c270, c90);
-    }
-
     private void drawHealthBar(RectRenderer rectRenderer, LivingEntity entity, float x, float y, float endY) {
         float height = endY - y;
         if (height <= 0.0f) return;
@@ -168,43 +147,7 @@ public class ESP2D extends Module {
         float barX = x - 3.0f - width;
 
         rectRenderer.addRect(barX, y, width, height, Color.BLACK);
-
-        if (colorMode.is(ColorMode.Custom)) {
-            rectRenderer.addRectGradient(barX, fillY, width, endY - fillY, healthBottomColor.getValue(), healthBottomColor.getValue(), healthTopColor.getValue(), healthTopColor.getValue());
-        } else {
-            Color top = syncColor(90);
-            Color bottom = syncColor(270);
-            rectRenderer.addRectGradient(barX, fillY, width, endY - fillY, top, top, bottom, bottom);
-        }
-    }
-
-    private Vector4d getEntityPositionOn2D(Entity entity, float partialTick) {
-        double x = Mth.lerp(partialTick, entity.xOld, entity.getX());
-        double y = Mth.lerp(partialTick, entity.yOld, entity.getY());
-        double z = Mth.lerp(partialTick, entity.zOld, entity.getZ());
-
-        AABB box = entity.getBoundingBox();
-        AABB renderBox = new AABB(
-                box.minX - entity.getX() + x - 0.05,
-                box.minY - entity.getY() + y,
-                box.minZ - entity.getZ() + z - 0.05,
-                box.maxX - entity.getX() + x + 0.05,
-                box.maxY - entity.getY() + y + 0.15,
-                box.maxZ - entity.getZ() + z + 0.05
-        );
-
-        return WorldToScreen.projectAbsoluteAABBOn2D(renderBox);
-    }
-
-    private Color syncColor(int offset) {
-        float hue = Mth.frac((System.currentTimeMillis() + offset * 12L) / 4500.0f);
-        Color color = Color.getHSBColor(hue, 0.65f, 1.0f);
-        return new Color(color.getRed(), color.getGreen(), color.getBlue(), 255);
-    }
-
-    private enum ColorMode {
-        Sync,
-        Custom
+        rectRenderer.addRect(barX, fillY, width, endY - fillY, healthColor.getValue());
     }
 
 }
