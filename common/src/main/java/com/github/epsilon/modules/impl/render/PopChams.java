@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.render;
 
+import com.github.epsilon.interfaces.WalkAnimationStateAccessor;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
@@ -69,27 +70,28 @@ public class PopChams extends Module {
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         synchronized (ghosts) {
-            Iterator<GhostPlayer> iterator = ghosts.iterator();
-            while (iterator.hasNext()) {
-                if (iterator.next().render(event)) {
-                    iterator.remove();
-                }
-            }
+            ghosts.removeIf(ghostPlayer -> ghostPlayer.render(event));
         }
     }
 
     private final class GhostPlayer extends net.minecraft.client.player.RemotePlayer {
         private final UUID uuid;
+        private final float capturedWalkPosition;
+        private final float capturedWalkSpeed;
+        private final float capturedAttackAnim;
         private double timer;
         private double scale = 1.0;
 
         private GhostPlayer(Player player) {
-            super(mc.level, new GameProfile(UUID.randomUUID(), "ghost"));
+            super(mc.level, new GameProfile(player.getGameProfile().id(), player.getGameProfile().name()));
             uuid = player.getUUID();
+            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            capturedWalkPosition = player.walkAnimation.position(tickDelta);
+            capturedWalkSpeed = player.walkAnimation.speed(tickDelta);
+            capturedAttackAnim = player.getAttackAnim(tickDelta);
 
             copyPosition(player);
-            yRotO = getYRot();
-            xRotO = getXRot();
+            setOldPosAndRot();
             yHeadRot = player.yHeadRot;
             yHeadRotO = yHeadRot;
             yBodyRot = player.yBodyRot;
@@ -98,17 +100,38 @@ public class PopChams extends Module {
             setPose(player.getPose());
             setHealth(player.getHealth());
             setAbsorptionAmount(player.getAbsorptionAmount());
-            setOldPosAndRot();
+            setDeltaMovement(player.getDeltaMovement());
+            copyAnimations(player);
+        }
+
+        private void copyAnimations(Player player) {
+            ((WalkAnimationStateAccessor) walkAnimation).epsilon$copyFrom((WalkAnimationStateAccessor) player.walkAnimation);
+
+            swinging = player.swinging;
+            swingingArm = player.swingingArm;
+            swingTime = player.swingTime;
+            attackAnim = player.attackAnim;
+            oAttackAnim = player.oAttackAnim;
         }
 
         private boolean render(Render3DEvent event) {
             float frameTime = mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0f;
             timer += frameTime;
             if (timer > renderTime.getValue()) return true;
+            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            tickCount = (int) (timer * 20.0);
 
-            yOld = getY();
             double targetY = getY() + yModifier.getValue() * frameTime;
             setPos(getX(), targetY, getZ());
+            xo = xOld = getX();
+            yo = yOld = targetY;
+            zo = zOld = getZ();
+            yRotO = getYRot();
+            xRotO = getXRot();
+            yHeadRotO = yHeadRot;
+            yBodyRotO = yBodyRot;
+            oAttackAnim = capturedAttackAnim;
+            attackAnim = capturedAttackAnim;
 
             scale += scaleModifier.getValue() * frameTime;
             if (scale <= 0.0) return true;
@@ -117,6 +140,7 @@ public class PopChams extends Module {
             int alphaLine = lineColor.getValue().getAlpha();
             float fadeFactor = fadeOut.getValue() ? (float) Math.max(0.0, 1.0 - timer / renderTime.getValue()) : 1.0f;
 
+            ((WalkAnimationStateAccessor) walkAnimation).epsilon$freeze(capturedWalkPosition, capturedWalkSpeed, tickDelta);
             Color side = withAlpha(sideColor.getValue(), Math.round(alphaSide * fadeFactor));
             Color line = withAlpha(lineColor.getValue(), Math.round(alphaLine * fadeFactor));
 
@@ -137,5 +161,6 @@ public class PopChams extends Module {
         public @Nullable Component belowNameDisplay() {
             return null;
         }
+
     }
 }

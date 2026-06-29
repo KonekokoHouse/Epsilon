@@ -54,6 +54,7 @@
     "MixinRenderSystem",
     "MixinScreenEffectRenderer",
     "MixinTitleScreen",
+    "MixinWalkAnimationState",
     "MixinWebBlock",
     "MixinWindow"
   ],
