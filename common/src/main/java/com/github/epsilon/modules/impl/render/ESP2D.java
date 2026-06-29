@@ -38,8 +38,10 @@ public class ESP2D extends Module {
     private final BoolSetting others = boolSetting("Others", false);
     private final BoolSetting renderHealth = boolSetting("Render Health", true);
     private final DoubleSetting healthBarWidth = doubleSetting("Health Bar Width", 2.0, 0.5, 6.0, 0.5, renderHealth::getValue);
+    private final BoolSetting healthBarOutline = boolSetting("Health Bar Outline", true, renderHealth::getValue);
+    private final DoubleSetting healthBarOutlineWidth = doubleSetting("Health Bar Outline Width", 1.0, 0.5, 3.0, 0.5, () -> renderHealth.getValue() && healthBarOutline.getValue());
     private final BoolSetting renderBox = boolSetting("Render Box", true);
-    private final BoolSetting outline = boolSetting("Outline", true, renderBox::getValue);
+    private final BoolSetting boxOutline = boolSetting("Box Outline", true, renderBox::getValue);
 
     private final ColorSetting playersColor = colorSetting("Players Color", new Color(0xFF9200), false);
     private final ColorSetting friendsColor = colorSetting("Friends Color", new Color(0x30FF00), false);
@@ -73,7 +75,7 @@ public class ESP2D extends Module {
             float endY = (float) position.w;
 
             if (renderBox.getValue()) {
-                if (outline.getValue()) {
+                if (boxOutline.getValue()) {
                     Color black = Color.BLACK;
                     rectRenderer.addRect(x - 1.0f, y, 1.5f, endY - y + 0.5f, black);
                     rectRenderer.addRect(x - 1.0f, y - 0.5f, endX - x + 1.5f, 1.0f, black);
@@ -143,11 +145,22 @@ public class ESP2D extends Module {
         float healthRatio = Mth.clamp(health / maxHealth, 0.0f, 1.0f);
         float fillY = endY - height * healthRatio;
 
-        float width = healthBarWidth.getValue().floatValue();
+        float distanceScale = getHealthBarDistanceScale(height);
+        float width = healthBarWidth.getValue().floatValue() * distanceScale;
         float barX = x - 3.0f - width;
 
-        rectRenderer.addRect(barX, y, width, height, Color.BLACK);
+        if (healthBarOutline.getValue()) {
+            float outlineWidth = healthBarOutlineWidth.getValue().floatValue() * distanceScale;
+            rectRenderer.addRect(barX - outlineWidth, y - outlineWidth, width + outlineWidth * 2.0f, height + outlineWidth * 2.0f, Color.BLACK);
+        } else {
+            rectRenderer.addRect(barX, y, width, height, Color.BLACK);
+        }
+
         rectRenderer.addRect(barX, fillY, width, endY - fillY, healthColor.getValue());
+    }
+
+    private float getHealthBarDistanceScale(float projectedHeight) {
+        return Mth.clamp(projectedHeight / 45.0f, 0.35f, 1.0f);
     }
 
 }
