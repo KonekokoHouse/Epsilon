@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.misc;
+package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
