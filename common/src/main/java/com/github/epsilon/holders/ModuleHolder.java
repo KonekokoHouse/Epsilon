@@ -82,6 +82,7 @@ public class ModuleHolder {
         addModule(SoundFX.INSTANCE);
         addModule(Stealer.INSTANCE);
         addModule(UseCooldown.INSTANCE);
+        addModule(AutoQueue.INSTANCE);
 
         // Movement
         addModule(ElytraFly.INSTANCE);
