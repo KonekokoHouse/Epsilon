@@ -20,7 +20,6 @@ import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -607,23 +606,7 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
-                i -> { var k = BuiltInRegistries.ITEM.getKey(i); return k != null ? k.getPath() : i.toString(); },
-                setting::add, setting::remove));
-    }
-
-    public void openColorListSettingPopup(ColorListSetting setting) {
-        // No registry for Color; popup not yet implemented
-    }
-
-    @SuppressWarnings("unchecked")
-    public void openEntityTypeListSettingPopup(EntityTypeListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        var adapted = (Setting<java.util.List<net.minecraft.world.entity.EntityType<?>>>) (Object) setting;
-        popupHost.open(new RegistryListSelectPopup<>(bounds, adapted, BuiltInRegistries.ENTITY_TYPE,
-                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null ? k.getPath() : e.toString(); },
+                i -> i.getDefaultInstance().getHoverName().getString(),
                 setting::add, setting::remove));
     }
 
@@ -633,8 +616,16 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
-                e -> { var k = BuiltInRegistries.MOB_EFFECT.getKey(e); return k != null ? k.getPath() : e.toString(); },
+                e -> e.getDisplayName().getString(),
                 setting::add, setting::remove));
+    }
+
+    public void openColorListSettingPopup(ColorListSetting setting) {
+        // No registry for Color; popup not yet implemented
+    }
+
+    public void openEntityTypeListSettingPopup(EntityTypeListSetting setting) {
+        // EntityTypeListSetting uses Set<EntityType<?>>, incompatible with RegistryListSelectPopup's List<T> generic
     }
 
     public void openParticleTypeListSettingPopup(ParticleTypeListSetting setting) {
