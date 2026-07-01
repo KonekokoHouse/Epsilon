@@ -87,7 +87,7 @@ public class MixinLivingEntity {
         if (Minecraft.getInstance().player != self) return;
         TravelEvent event = TravelEvent.get(movement);
         EventBus.INSTANCE.post(event);
-        if (event.isCancel) {
+        if (event.isCancelled()) {
             ci.cancel();
         }
     }
