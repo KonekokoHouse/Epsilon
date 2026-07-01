@@ -1,8 +1,6 @@
 name: Backport
 
 on:
-  issue_comment:
-    types: [created]
   pull_request_target:
     types: [labeled]
 
@@ -12,24 +10,16 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: backport-pr-${{ github.event.issue.number || github.event.pull_request.number }}
+  group: backport-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   backport:
-    # Backports can be triggered by trusted PR comments or by adding supported backport labels.
+    # Backports are triggered by adding supported backport labels.
     if: >
       (
-        github.event_name == 'issue_comment' &&
-        github.event.issue.pull_request != null &&
-        startsWith(github.event.comment.body, '/backport ') &&
-        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
-      ) || (
-        github.event_name == 'pull_request_target' &&
-        (
-          github.event.label.name == 'backport to 26.1.x' ||
-          github.event.label.name == 'backport to 26.2.x'
-        )
+        github.event.label.name == 'backport to 26.1.x' ||
+        github.event.label.name == 'backport to 26.2.x'
       )
     runs-on: ubuntu-24.04
 
@@ -43,40 +33,25 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
-          COMMENT_BODY: ${{ github.event.comment.body || '' }}
-          COMMENT_AUTHOR: ${{ github.event.comment.user.login || github.actor }}
-          LABEL_NAME: ${{ github.event.label.name || '' }}
-          TRIGGER_KIND: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMENT_AUTHOR: ${{ github.actor }}
+          LABEL_NAME: ${{ github.event.label.name }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
 
-          target_branch=""
-          if [[ "$TRIGGER_KIND" == "issue_comment" ]]; then
-            # Parse commands like "/backport 26.1.x" and treat the argument as the target branch.
-            target_branch="$(printf '%s' "$COMMENT_BODY" | sed -nE 's|^/backport[[:space:]]+([A-Za-z0-9][A-Za-z0-9._/-]*)[[:space:]]*$|\1|p')"
-            if [[ -z "$target_branch" ]]; then
-              echo "Comment does not match /backport <branch>."
+          case "$LABEL_NAME" in
+            "backport to 26.1.x")
+              target_branch="26.1.x"
+              ;;
+            "backport to 26.2.x")
+              target_branch="26.2.x"
+              ;;
+            *)
+              echo "Label '$LABEL_NAME' is not a supported backport label."
               exit 0
-            fi
-          elif [[ "$TRIGGER_KIND" == "pull_request_target" ]]; then
-            case "$LABEL_NAME" in
-              "backport to 26.1.x")
-                target_branch="26.1.x"
-                ;;
-              "backport to 26.2.x")
-                target_branch="26.2.x"
-                ;;
-              *)
-                echo "Label '$LABEL_NAME' is not a supported backport label."
-                exit 0
-                ;;
-            esac
-          else
-            echo "Unsupported trigger '$TRIGGER_KIND'."
-            exit 0
-          fi
+              ;;
+          esac
 
           if ! git check-ref-format --branch "$target_branch" >/dev/null; then
             gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" \
