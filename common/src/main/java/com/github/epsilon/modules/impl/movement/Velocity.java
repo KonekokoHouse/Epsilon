@@ -1,16 +1,26 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.impl.AttackEntityEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
+import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.timer.TimerUtils;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.WindChargeItem;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
 
@@ -35,28 +45,80 @@ public class Velocity extends Module {
     public final BoolSetting entityPush = boolSetting("No Entity Push", true, () -> mode.is(Mode.Cancel));
     public final BoolSetting blockPush = boolSetting("No Block Push", true, () -> mode.is(Mode.Cancel));
 
+    private final BoolSetting excludeWindBurst = boolSetting("Exclude Wind Burst", false, () -> mode.is(Mode.Cancel));
+    private final BoolSetting excludeSpearLunge = boolSetting("Exclude Spear Lunge", false, () -> mode.is(Mode.Cancel));
+    private final BoolSetting excludeWindCharge = boolSetting("Exclude Wind Charge", false, () -> mode.is(Mode.Cancel));
+
+    // Wind Burst: when the player hits an entity with a Wind Burst mace,
+    // pause Velocity entirely for a short window so all related packets pass through.
+    private final TimerUtils windBurstTimer = new TimerUtils();
+
+    // Wind Charge: tracks when the player threw a wind charge (projectile, needs timer).
+    private final TimerUtils windChargeTimer = new TimerUtils();
+
     private boolean jump;
 
     @Override
     protected void onEnable() {
         jump = false;
+        windBurstTimer.reset();
+        windChargeTimer.reset();
     }
 
     @Override
     protected void onDisable() {
         jump = false;
+        windBurstTimer.reset();
+        windChargeTimer.reset();
     }
+
+    // --- Track own actions ---
+
+    /**
+     * Wind Burst: player left-clicks an entity with a Wind Burst mace.
+     * Pause Velocity for 500ms so the resulting velocity/explosion packets
+     * are not affected.
+     */
+    @EventHandler
+    private void onAttackEntity(AttackEntityEvent event) {
+        if (event.getPlayer() != mc.player) return;
+        if (excludeWindBurst.getValue() && isHoldingWindBurstMace()) {
+            windBurstTimer.reset();
+        }
+    }
+
+    /**
+     * Wind Charge: player right-clicks to throw a wind charge.
+     */
+    @EventHandler
+    private void onPacketSend(PacketEvent.Send event) {
+        if (excludeWindCharge.getValue() && event.getPacket() instanceof ServerboundUseItemPacket packet) {
+            ItemStack stack = mc.player.getItemInHand(packet.getHand());
+            if (stack.getItem() instanceof WindChargeItem) {
+                windChargeTimer.reset();
+            }
+        }
+    }
+
+    // --- Packet receive handling ---
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (nullCheck()) return;
+
+        // Wind Burst: if timer is active, skip all Velocity processing for 500ms
+        if (excludeWindBurst.getValue() && !windBurstTimer.passedMillise(500)) {
+            return;
+        }
 
         switch (mode.getValue()) {
             case Cancel -> {
                 if (nullCheck()) return;
 
                 if (serverMotion.getValue() && event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.id() == mc.player.getId()) {
-                    event.setCancelled(true);
+                    if (!shouldExcludeMotion(packet)) {
+                        event.setCancelled(true);
+                    }
                     return;
                 }
 
@@ -64,6 +126,9 @@ public class Velocity extends Module {
                         explosion.getValue() && event.getPacket() instanceof ClientboundExplodePacket packet
                                 && (!explosionOnlyBlock.getValue() || PlayerUtils.isInBlock())
                 ) {
+                    if (shouldExcludeExplosion(packet)) {
+                        return;
+                    }
                     event.setPacket(new ClientboundExplodePacket(
                             packet.center(),
                             packet.radius(),
@@ -91,6 +156,77 @@ public class Velocity extends Module {
             }
             jump = false;
         }
+    }
+
+    // --- Exclusion decision logic ---
+
+    private boolean shouldExcludeMotion(ClientboundSetEntityMotionPacket packet) {
+        if (excludeSpearLunge.getValue() && isSpearLungeMotion(packet)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean shouldExcludeExplosion(ClientboundExplodePacket packet) {
+        if (excludeWindCharge.getValue() && isWindChargeExplosion(packet)) {
+            return true;
+        }
+        return false;
+    }
+
+    // --- Packet parsing methods ---
+
+    /**
+     * Parse ClientboundSetEntityMotionPacket to check if it's from our own Spear Lunge.
+     * - Significant horizontal velocity (> 0.15)
+     * - Velocity direction roughly matches player's look direction
+     * - Player holds a Spear with Lunge AND attack key is pressed
+     */
+    private boolean isSpearLungeMotion(ClientboundSetEntityMotionPacket packet) {
+        if (!isSpearWithLunge(mc.player.getMainHandItem())) return false;
+        if (!mc.options.keyAttack.isDown()) return false;
+
+        Vec3 vel = packet.movement();
+        double horiz = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+        if (horiz < 0.15) return false;
+
+        Vec3 look = mc.player.getLookAngle();
+        double dot = vel.x * look.x + vel.z * look.z;
+        return dot > 0;
+    }
+
+    /**
+     * Parse ClientboundExplodePacket to check if it's from our own wind charge.
+     * - Player threw a wind charge recently (< 3000ms)
+     * - Explosion near the player (< 12 blocks)
+     * - Small radius (≤ 3.0)
+     * - Has player knockback vector
+     */
+    private boolean isWindChargeExplosion(ClientboundExplodePacket packet) {
+        if (windChargeTimer.passedMillise(3000)) return false;
+
+        double dist = packet.center().distanceTo(mc.player.position());
+        if (dist > 12.0) return false;
+
+        if (packet.radius() > 3.0f) return false;
+
+        if (packet.playerKnockback().isEmpty()) return false;
+
+        return true;
+    }
+
+    // --- Item/equipment checks ---
+
+    private boolean isHoldingWindBurstMace() {
+        ItemStack mainHand = mc.player.getMainHandItem();
+        return mainHand.getItem() instanceof MaceItem
+                && EnchantmentUtils.getEnchantmentLevel(mainHand, Enchantments.WIND_BURST) > 0;
+    }
+
+    private boolean isSpearWithLunge(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        return stack.has(DataComponents.PIERCING_WEAPON)
+                && EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.LUNGE) > 0;
     }
 
 }
