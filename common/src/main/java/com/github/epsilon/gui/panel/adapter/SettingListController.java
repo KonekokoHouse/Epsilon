@@ -519,7 +519,7 @@ public class SettingListController {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); return k != null ? k.getPath() : s.toString(); },
+                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); String p = k != null ? k.getPath() : ""; int i = p.lastIndexOf('.'); return i >= 0 ? p.substring(i + 1) : p; },
                 setting::add, setting::remove);
     }
 
@@ -553,7 +553,7 @@ public class SettingListController {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath() : p.toString(); },
+                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); },
                 setting::add, setting::remove);
     }
 
@@ -561,7 +561,7 @@ public class SettingListController {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
-                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath() : m.toString(); },
+                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); },
                 setting::add, setting::remove);
     }
 
@@ -569,7 +569,7 @@ public class SettingListController {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath() : b.toString(); },
+                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); },
                 setting::add, setting::remove);
     }
 

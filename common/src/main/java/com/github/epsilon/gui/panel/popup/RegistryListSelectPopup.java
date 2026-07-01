@@ -225,8 +225,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             if (hovered) { if (addColumn) hoveredAdd = entry; else hoveredRemove = entry; }
 
             float bgHover = addColumn ? (hovered ? 1.0f : 0.0f) : (hovered ? 0.45f : 0.0f);
-            Identifier key = registry.getKey(entry);
-            String rawName = key != null ? key.getPath() : displayNameFn.apply(entry);
+            String rawName = displayNameFn.apply(entry);
             final String display = trim(rawName, 0.50f, rowBounds.width() - 22.0f);
             final float textY = centeredTextY(0.0f, rowBounds.height(), 0.50f);
 

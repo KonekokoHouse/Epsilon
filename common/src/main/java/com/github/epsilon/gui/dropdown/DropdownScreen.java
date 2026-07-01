@@ -597,7 +597,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                Object::toString, setting::add, setting::remove));
+                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); String p = k != null ? k.getPath() : ""; int i = p.lastIndexOf('.'); return i >= 0 ? p.substring(i + 1) : p; },
+                setting::add, setting::remove));
     }
 
     public void openItemListSettingPopup(ItemListSetting setting) {
@@ -634,7 +635,7 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath() : p.toString(); },
+                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); },
                 setting::add, setting::remove));
     }
 
@@ -644,7 +645,7 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
-                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath() : m.toString(); },
+                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); },
                 setting::add, setting::remove));
     }
 
@@ -654,7 +655,7 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath() : b.toString(); },
+                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); },
                 setting::add, setting::remove));
     }
 
