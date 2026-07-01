@@ -6,6 +6,7 @@ import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
@@ -45,9 +46,11 @@ public class Velocity extends Module {
     public final BoolSetting entityPush = boolSetting("No Entity Push", true, () -> mode.is(Mode.Cancel));
     public final BoolSetting blockPush = boolSetting("No Block Push", true, () -> mode.is(Mode.Cancel));
 
-    private final BoolSetting excludeWindBurst = boolSetting("Exclude Wind Burst", false, () -> mode.is(Mode.Cancel));
-    private final BoolSetting excludeSpearLunge = boolSetting("Exclude Spear Lunge", false, () -> mode.is(Mode.Cancel));
-    private final BoolSetting excludeWindCharge = boolSetting("Exclude Wind Charge", false, () -> mode.is(Mode.Cancel));
+    private final SettingGroup sgExclusions = settingGroup("Exclusions");
+
+    private final BoolSetting excludeWindBurst = boolSetting("Exclude Wind Burst", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
+    private final BoolSetting excludeSpearLunge = boolSetting("Exclude Spear Lunge", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
+    private final BoolSetting excludeWindCharge = boolSetting("Exclude Wind Charge", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
 
     private final TimerUtils windBurstTimer = new TimerUtils();
     private final TimerUtils windChargeTimer = new TimerUtils();
