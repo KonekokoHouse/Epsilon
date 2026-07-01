@@ -190,7 +190,6 @@ public class ModuleButton extends Component {
                     if (expand > 0.5f) {
                         drawSection(renderer, mouseX, mouseY, section, settingY);
                     }
-                    settingY += sectionH;
                 } else {
                     DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(
                             x + DropdownTheme.SETTING_INDENT,
@@ -206,6 +205,7 @@ public class ModuleButton extends Component {
                         }
                     }
                 }
+                settingY += sectionH;
             }
         }
     }
