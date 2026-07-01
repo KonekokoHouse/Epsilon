@@ -20,6 +20,7 @@ import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -606,15 +607,24 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
-                Object::toString, setting::add, setting::remove));
+                i -> { var k = BuiltInRegistries.ITEM.getKey(i); return k != null ? k.getPath() : i.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openColorListSettingPopup(ColorListSetting setting) {
-        // TODO: Create dedicated ColorListSelectPopup when available
+        // No registry for Color; popup not yet implemented
     }
 
+    @SuppressWarnings("unchecked")
     public void openEntityTypeListSettingPopup(EntityTypeListSetting setting) {
-        // TODO: Create dedicated EntityTypeListSelectPopup when available
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        var adapted = (Setting<java.util.List<net.minecraft.world.entity.EntityType<?>>>) (Object) setting;
+        popupHost.open(new RegistryListSelectPopup<>(bounds, adapted, BuiltInRegistries.ENTITY_TYPE,
+                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null ? k.getPath() : e.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openStatusEffectListSettingPopup(StatusEffectListSetting setting) {
@@ -623,7 +633,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
-                Object::toString, setting::add, setting::remove));
+                e -> { var k = BuiltInRegistries.MOB_EFFECT.getKey(e); return k != null ? k.getPath() : e.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openParticleTypeListSettingPopup(ParticleTypeListSetting setting) {
@@ -632,7 +643,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                Object::toString, setting::add, setting::remove));
+                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath() : p.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openScreenHandlerListSettingPopup(ScreenHandlerListSetting setting) {
@@ -641,7 +653,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
-                Object::toString, setting::add, setting::remove));
+                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath() : m.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openStorageBlockListSettingPopup(StorageBlockListSetting setting) {
@@ -650,19 +663,20 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                Object::toString, setting::add, setting::remove));
+                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath() : b.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openEnchantmentListSettingPopup(EnchantmentListSetting setting) {
-        // TODO: Create dedicated EnchantmentListSelectPopup when available
+        // Stores String IDs; popup not yet implemented
     }
 
     public void openPacketListSettingPopup(PacketListSetting setting) {
-        // TODO: Create dedicated PacketListSelectPopup when available
+        // No registry for packet classes; popup not yet implemented
     }
 
     public void openModuleListSettingPopup(ModuleListSetting setting) {
-        // TODO: Create dedicated ModuleListSelectPopup when available
+        // Needs ModuleHolder reference; popup not yet implemented
     }
 
 }
