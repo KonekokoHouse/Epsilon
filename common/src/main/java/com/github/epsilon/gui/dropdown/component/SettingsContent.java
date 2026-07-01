@@ -64,8 +64,25 @@ public class SettingsContent {
         if (setting instanceof KeybindSetting s) return new KeybindWidget(s);
         if (setting instanceof StringSetting s) return new StringWidget(s);
         if (setting instanceof ButtonSetting s) return new ButtonWidget(s);
-        if (setting instanceof StringListSetting s) return new StringListWidget(s);
-        if (setting instanceof SoundEventListSetting s) return new SoundEventListWidget(s);
+        // --- List settings (Row + Widget) ---
+        if (setting instanceof StringListSetting s) return new StringListSettingWidget(s);
+        if (setting instanceof SoundEventListSetting s) return new SoundEventListSettingWidget(s);
+        if (setting instanceof ItemListSetting s) return new ItemListSettingWidget(s);
+        if (setting instanceof ColorListSetting s) return new ColorListSettingWidget(s);
+        if (setting instanceof EntityTypeListSetting s) return new EntityTypeListSettingWidget(s);
+        if (setting instanceof StatusEffectListSetting s) return new StatusEffectListSettingWidget(s);
+        if (setting instanceof ParticleTypeListSetting s) return new ParticleTypeListSettingWidget(s);
+        if (setting instanceof ScreenHandlerListSetting s) return new ScreenHandlerListSettingWidget(s);
+        if (setting instanceof StorageBlockListSetting s) return new StorageBlockListSettingWidget(s);
+        if (setting instanceof EnchantmentListSetting s) return new EnchantmentListSettingWidget(s);
+        if (setting instanceof PacketListSetting s) return new PacketListSettingWidget(s);
+        if (setting instanceof ModuleListSetting s) return new ModuleListSettingWidget(s);
+        // --- Simple & Map settings (no Widget) ---
+        if (setting instanceof BlockSetting) return null;
+        if (setting instanceof ItemSetting) return null;
+        if (setting instanceof BlockPosSetting) return null;
+        if (setting instanceof Vector3dSetting) return null;
+        if (setting instanceof StatusEffectAmplifierMapSetting) return null;
         return null;
     }
 

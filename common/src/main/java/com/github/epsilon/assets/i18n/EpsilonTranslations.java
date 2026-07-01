@@ -78,6 +78,23 @@ public final class EpsilonTranslations {
             Gui.ADDON_INFO_MODULES,
             Gui.INSPECTOR,
             Gui.INSPECTOR_SELECT,
+            Gui.LIST_ENTRIES,
+            Gui.LIST_SOUNDS,
+            Gui.LIST_SELECTED,
+            Gui.LIST_TYPE_TO_ADD,
+            Gui.LIST_SEARCH,
+            Gui.LIST_AVAILABLE,
+            Gui.LIST_SELECTED_HEADER,
+            Gui.LIST_ITEMS,
+            Gui.LIST_PARTICLES,
+            Gui.LIST_EFFECTS,
+            Gui.LIST_ENTITIES,
+            Gui.LIST_SCREENS,
+            Gui.LIST_STORAGE,
+            Gui.LIST_COLORS,
+            Gui.LIST_ENCHANTMENTS,
+            Gui.LIST_PACKETS,
+            Gui.LIST_MODULES,
             Notifications.ENABLED,
             Notifications.DISABLED,
             ElytraFly.PITCH40_TAKEOFF_COMPLETE,
@@ -204,6 +221,16 @@ public final class EpsilonTranslations {
         public static final TranslateComponent LIST_SEARCH = create("gui", "list.search");
         public static final TranslateComponent LIST_AVAILABLE = create("gui", "list.available");
         public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
+        public static final TranslateComponent LIST_ITEMS = create("gui", "list.items");
+        public static final TranslateComponent LIST_PARTICLES = create("gui", "list.particles");
+        public static final TranslateComponent LIST_EFFECTS = create("gui", "list.effects");
+        public static final TranslateComponent LIST_ENTITIES = create("gui", "list.entities");
+        public static final TranslateComponent LIST_SCREENS = create("gui", "list.screens");
+        public static final TranslateComponent LIST_STORAGE = create("gui", "list.storage");
+        public static final TranslateComponent LIST_COLORS = create("gui", "list.colors");
+        public static final TranslateComponent LIST_ENCHANTMENTS = create("gui", "list.enchantments");
+        public static final TranslateComponent LIST_PACKETS = create("gui", "list.packets");
+        public static final TranslateComponent LIST_MODULES = create("gui", "list.modules");
 
         private Gui() {
         }

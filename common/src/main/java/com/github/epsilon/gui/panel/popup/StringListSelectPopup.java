@@ -57,10 +57,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         this.openAnimation.setStartValue(0.0f);
     }
 
-    @Override
-    public PanelLayout.Rect getBounds() {
-        return bounds;
-    }
+    @Override public PanelLayout.Rect getBounds() { return bounds; }
 
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
@@ -109,10 +106,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         renderBatch.render(tree);
     }
 
-    @Override
-    public void flush(PanelRenderBatch renderBatch) {
-        contentBuffer.flushAndClear();
-    }
+    @Override public void flush(PanelRenderBatch renderBatch) { contentBuffer.flushAndClear(); }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
@@ -122,28 +116,18 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             applyDraggedScroll(event.y(), viewport);
             return true;
         }
-        if (hoveredRemove != null) {
-            setting.remove(hoveredRemove);
-            return true;
-        }
+        if (hoveredRemove != null) { setting.remove(hoveredRemove); return true; }
         return true;
     }
 
-    @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
-        return scrollBarDrag.mouseReleased();
-    }
-
-    @Override
-    public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+    @Override public boolean mouseReleased(MouseButtonEvent event) { return scrollBarDrag.mouseReleased(); }
+    @Override public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
         if (!scrollBarDrag.isDragging()) return false;
-        PanelLayout.Rect viewport = lastViewport != null ? lastViewport : getViewport();
-        applyDraggedScroll(event.y(), viewport);
+        applyDraggedScroll(event.y(), lastViewport != null ? lastViewport : getViewport());
         return true;
     }
 
-    @Override
-    public boolean keyPressed(KeyEvent event) {
+    @Override public boolean keyPressed(KeyEvent event) {
         if (event.key() == GLFW.GLFW_KEY_ENTER && !input.isBlank()) {
             setting.add(input.trim());
             input = "";
@@ -151,24 +135,19 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             return true;
         }
         return switch (event.key()) {
-            case GLFW.GLFW_KEY_BACKSPACE -> {
-                if (!input.isEmpty()) input = input.substring(0, input.length() - 1);
-                yield true;
-            }
+            case GLFW.GLFW_KEY_BACKSPACE -> { if (!input.isEmpty()) input = input.substring(0, input.length() - 1); yield true; }
             case GLFW.GLFW_KEY_DELETE -> { input = ""; yield true; }
             default -> false;
         };
     }
 
-    @Override
-    public boolean charTyped(CharacterEvent event) {
+    @Override public boolean charTyped(CharacterEvent event) {
         if (!event.isAllowedChatCharacter() || input.length() >= MAX_QUERY_LENGTH) return false;
         input += event.codepointAsString();
         return true;
     }
 
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    @Override public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (!getViewport(bounds.y()).contains(mouseX, mouseY) || maxScroll <= 0.0f) return false;
         scrollVelocity -= (float) scrollY * SCROLL_STEP;
         return true;
@@ -197,8 +176,8 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             if (hovered) hoveredRemove = entry;
 
             float bgHover = hovered ? 0.45f : 0.0f;
+            final String display = trim(entry, 0.50f, rowBounds.width() - 22.0f);
             PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
-            String display = trim(entry, 0.50f, rowBounds.width() - 22.0f);
             scope.pushRelative(localRowBounds, row -> {
                 row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
                         MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover));
@@ -211,9 +190,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private PanelLayout.Rect getInputBounds(float popupY) {
         return new PanelLayout.Rect(bounds.x() + PADDING, popupY + TITLE_HEIGHT + 10.0f, bounds.width() - PADDING * 2.0f, INPUT_HEIGHT);
     }
-
     private PanelLayout.Rect getViewport() { return getViewport(bounds.y()); }
-
     private PanelLayout.Rect getViewport(float popupY) {
         float y = popupY + TITLE_HEIGHT + INPUT_HEIGHT + 20.0f;
         return new PanelLayout.Rect(bounds.x() + PADDING, y, bounds.width() - PADDING * 2.0f, bounds.bottom() - y - PADDING);
@@ -224,26 +201,20 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         if (Math.abs(scrollVelocity) <= 0.01f || partialTick <= 0.0f) return;
         float nextScroll = Mth.clamp(scroll + scrollVelocity * partialTick, 0.0f, maxScroll);
         if (Float.compare(nextScroll, scroll) == 0) { scrollVelocity = 0.0f; return; }
-        scroll = nextScroll;
-        scrollVelocity *= SCROLL_DECAY;
+        scroll = nextScroll; scrollVelocity *= SCROLL_DECAY;
         if (Math.abs(scrollVelocity) < MIN_SCROLL_VELOCITY) scrollVelocity = 0.0f;
     }
-
     private void resetScroll() { scroll = 0.0f; scrollVelocity = 0.0f; }
-
     private void applyDraggedScroll(double mouseY, PanelLayout.Rect viewport) {
         float newScroll = scrollBarDrag.mouseDragged(mouseY, viewport, maxScroll);
         if (newScroll >= 0.0f) { scroll = Mth.clamp(newScroll, 0.0f, maxScroll); scrollVelocity = 0.0f; }
     }
-
     private String trim(String value, float scale, float maxWidth) {
         if (value == null || value.isEmpty()) return "";
         int maxChars = Math.max(3, (int) (maxWidth / (5.0f * scale)));
         return value.length() <= maxChars ? value : value.substring(0, Math.max(0, maxChars - 3)) + "...";
     }
-
     private float centeredTextY(float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f;
     }
-
 }
