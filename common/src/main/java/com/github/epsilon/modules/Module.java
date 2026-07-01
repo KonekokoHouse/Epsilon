@@ -8,13 +8,27 @@ import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import org.joml.Vector3d;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class Module {
 
@@ -317,6 +331,221 @@ public class Module {
 
     protected ButtonSetting buttonSetting(String name, Runnable func) {
         return addSetting(new ButtonSetting(name, func, () -> true));
+    }
+
+    // --- BlockSetting ---
+
+    protected BlockSetting blockSetting(String name, Block defaultValue, Predicate<Block> filter, Setting.Dependency dependency) {
+        return addSetting(new BlockSetting(name, defaultValue, filter, dependency));
+    }
+
+    protected BlockSetting blockSetting(String name, Block defaultValue, Setting.Dependency dependency) {
+        return addSetting(new BlockSetting(name, defaultValue, null, dependency));
+    }
+
+    protected BlockSetting blockSetting(String name, Block defaultValue, Predicate<Block> filter) {
+        return addSetting(new BlockSetting(name, defaultValue, filter, () -> true));
+    }
+
+    protected BlockSetting blockSetting(String name, Block defaultValue) {
+        return addSetting(new BlockSetting(name, defaultValue, null, () -> true));
+    }
+
+    // --- ItemSetting ---
+
+    protected ItemSetting itemSetting(String name, Item defaultValue, Predicate<Item> filter, Setting.Dependency dependency) {
+        return addSetting(new ItemSetting(name, defaultValue, filter, dependency));
+    }
+
+    protected ItemSetting itemSetting(String name, Item defaultValue, Setting.Dependency dependency) {
+        return addSetting(new ItemSetting(name, defaultValue, null, dependency));
+    }
+
+    protected ItemSetting itemSetting(String name, Item defaultValue, Predicate<Item> filter) {
+        return addSetting(new ItemSetting(name, defaultValue, filter, () -> true));
+    }
+
+    protected ItemSetting itemSetting(String name, Item defaultValue) {
+        return addSetting(new ItemSetting(name, defaultValue, null, () -> true));
+    }
+
+    // --- ItemListSetting ---
+
+    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue, Predicate<Item> filter, Setting.Dependency dependency) {
+        return addSetting(new ItemListSetting(name, defaultValue, filter, dependency));
+    }
+
+    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new ItemListSetting(name, defaultValue, null, dependency));
+    }
+
+    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue, Predicate<Item> filter) {
+        return addSetting(new ItemListSetting(name, defaultValue, filter, () -> true));
+    }
+
+    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue) {
+        return addSetting(new ItemListSetting(name, defaultValue, null, () -> true));
+    }
+
+    // --- EntityTypeListSetting ---
+
+    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue, Predicate<EntityType<?>> filter, Setting.Dependency dependency) {
+        return addSetting(new EntityTypeListSetting(name, defaultValue, filter, dependency));
+    }
+
+    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new EntityTypeListSetting(name, defaultValue, null, dependency));
+    }
+
+    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue, Predicate<EntityType<?>> filter) {
+        return addSetting(new EntityTypeListSetting(name, defaultValue, filter, () -> true));
+    }
+
+    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue) {
+        return addSetting(new EntityTypeListSetting(name, defaultValue, null, () -> true));
+    }
+
+    // --- StringListSetting ---
+
+    protected StringListSetting stringListSetting(String name, Collection<String> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new StringListSetting(name, defaultValue, dependency));
+    }
+
+    protected StringListSetting stringListSetting(String name, Collection<String> defaultValue) {
+        return addSetting(new StringListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- BlockPosSetting ---
+
+    protected BlockPosSetting blockPosSetting(String name, BlockPos defaultValue, Setting.Dependency dependency) {
+        return addSetting(new BlockPosSetting(name, defaultValue, dependency));
+    }
+
+    protected BlockPosSetting blockPosSetting(String name, BlockPos defaultValue) {
+        return addSetting(new BlockPosSetting(name, defaultValue, () -> true));
+    }
+
+    // --- Vector3dSetting ---
+
+    protected Vector3dSetting vector3dSetting(String name, Vector3d defaultValue, double min, double max, Setting.Dependency dependency) {
+        return addSetting(new Vector3dSetting(name, defaultValue, min, max, dependency));
+    }
+
+    protected Vector3dSetting vector3dSetting(String name, Vector3d defaultValue, double min, double max) {
+        return addSetting(new Vector3dSetting(name, defaultValue, min, max, () -> true));
+    }
+
+    protected Vector3dSetting vector3dSetting(String name, Vector3d defaultValue, Setting.Dependency dependency) {
+        return addSetting(new Vector3dSetting(name, defaultValue, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, dependency));
+    }
+
+    protected Vector3dSetting vector3dSetting(String name, Vector3d defaultValue) {
+        return addSetting(new Vector3dSetting(name, defaultValue, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, () -> true));
+    }
+
+    // --- ColorListSetting ---
+
+    protected ColorListSetting colorListSetting(String name, Collection<Color> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new ColorListSetting(name, defaultValue, dependency));
+    }
+
+    protected ColorListSetting colorListSetting(String name, Collection<Color> defaultValue) {
+        return addSetting(new ColorListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- SoundEventListSetting ---
+
+    protected SoundEventListSetting soundEventListSetting(String name, Collection<SoundEvent> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new SoundEventListSetting(name, defaultValue, dependency));
+    }
+
+    protected SoundEventListSetting soundEventListSetting(String name, Collection<SoundEvent> defaultValue) {
+        return addSetting(new SoundEventListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- ScreenHandlerListSetting ---
+
+    protected ScreenHandlerListSetting screenHandlerListSetting(String name, Collection<MenuType<?>> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new ScreenHandlerListSetting(name, defaultValue, dependency));
+    }
+
+    protected ScreenHandlerListSetting screenHandlerListSetting(String name, Collection<MenuType<?>> defaultValue) {
+        return addSetting(new ScreenHandlerListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- StatusEffectListSetting ---
+
+    protected StatusEffectListSetting statusEffectListSetting(String name, Collection<MobEffect> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new StatusEffectListSetting(name, defaultValue, dependency));
+    }
+
+    protected StatusEffectListSetting statusEffectListSetting(String name, Collection<MobEffect> defaultValue) {
+        return addSetting(new StatusEffectListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- StorageBlockListSetting ---
+
+    protected StorageBlockListSetting storageBlockListSetting(String name, Collection<BlockEntityType<?>> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new StorageBlockListSetting(name, defaultValue, dependency));
+    }
+
+    protected StorageBlockListSetting storageBlockListSetting(String name, Collection<BlockEntityType<?>> defaultValue) {
+        return addSetting(new StorageBlockListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- EnchantmentListSetting ---
+
+    protected EnchantmentListSetting enchantmentListSetting(String name, Set<String> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new EnchantmentListSetting(name, defaultValue, dependency));
+    }
+
+    protected EnchantmentListSetting enchantmentListSetting(String name, Set<String> defaultValue) {
+        return addSetting(new EnchantmentListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- StatusEffectAmplifierMapSetting ---
+
+    protected StatusEffectAmplifierMapSetting statusEffectAmplifierMapSetting(String name, Map<MobEffect, Integer> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new StatusEffectAmplifierMapSetting(name, defaultValue, dependency));
+    }
+
+    protected StatusEffectAmplifierMapSetting statusEffectAmplifierMapSetting(String name, Map<MobEffect, Integer> defaultValue) {
+        return addSetting(new StatusEffectAmplifierMapSetting(name, defaultValue, () -> true));
+    }
+
+    // --- ParticleTypeListSetting ---
+
+    protected ParticleTypeListSetting particleTypeListSetting(String name, Collection<ParticleType<?>> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new ParticleTypeListSetting(name, defaultValue, dependency));
+    }
+
+    protected ParticleTypeListSetting particleTypeListSetting(String name, Collection<ParticleType<?>> defaultValue) {
+        return addSetting(new ParticleTypeListSetting(name, defaultValue, () -> true));
+    }
+
+    // --- PacketListSetting ---
+
+    protected PacketListSetting packetListSetting(String name, Set<Class<? extends Packet<?>>> defaultValue,
+                                                   Predicate<Class<? extends Packet<?>>> filter, Setting.Dependency dependency) {
+        return addSetting(new PacketListSetting(name, defaultValue, filter, dependency));
+    }
+
+    protected PacketListSetting packetListSetting(String name, Set<Class<? extends Packet<?>>> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new PacketListSetting(name, defaultValue, null, dependency));
+    }
+
+    protected PacketListSetting packetListSetting(String name, Set<Class<? extends Packet<?>>> defaultValue) {
+        return addSetting(new PacketListSetting(name, defaultValue, null, () -> true));
+    }
+
+    // --- ModuleListSetting ---
+
+    protected ModuleListSetting moduleListSetting(String name, List<Module> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new ModuleListSetting(name, defaultValue, dependency));
+    }
+
+    protected ModuleListSetting moduleListSetting(String name, List<Module> defaultValue) {
+        return addSetting(new ModuleListSetting(name, defaultValue, () -> true));
     }
 
     protected void resetCustomState() {

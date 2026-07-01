@@ -18,7 +18,9 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -517,9 +519,7 @@ public class ConfigHolder {
         if (setting instanceof StringSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof BlockListSetting s) {
             JsonArray array = new JsonArray();
-            for (String id : s.getIds()) {
-                array.add(id);
-            }
+            for (String id : s.getIds()) array.add(id);
             return array;
         }
         if (setting instanceof EnumSetting s) return new JsonPrimitive(s.getValue().toString());
@@ -527,22 +527,149 @@ public class ConfigHolder {
             Color c = s.getValue();
             return c == null ? null : new JsonPrimitive(c.getRGB());
         }
+        // --- new setting types ---
+        if (setting instanceof BlockSetting s) return new JsonPrimitive(s.getId());
+        if (setting instanceof ItemSetting s) return new JsonPrimitive(s.getId());
+        if (setting instanceof ItemListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof EntityTypeListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof StringListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String str : s.getValue()) array.add(str);
+            return array;
+        }
+        if (setting instanceof BlockPosSetting s) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("x", s.getX());
+            obj.addProperty("y", s.getY());
+            obj.addProperty("z", s.getZ());
+            return obj;
+        }
+        if (setting instanceof Vector3dSetting s) {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("x", s.getValue().x);
+            obj.addProperty("y", s.getValue().y);
+            obj.addProperty("z", s.getValue().z);
+            return obj;
+        }
+        if (setting instanceof ColorListSetting s) {
+            JsonArray array = new JsonArray();
+            for (Color c : s.getValue()) array.add(c.getRGB());
+            return array;
+        }
+        if (setting instanceof SoundEventListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof ScreenHandlerListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof StatusEffectListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof StorageBlockListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof EnchantmentListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof StatusEffectAmplifierMapSetting s) {
+            JsonObject obj = new JsonObject();
+            for (Map.Entry<String, Integer> entry : s.getSerializableMap().entrySet()) {
+                obj.addProperty(entry.getKey(), entry.getValue());
+            }
+            return obj;
+        }
+        if (setting instanceof ParticleTypeListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
+            return array;
+        }
+        if (setting instanceof PacketListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String name : s.getClassNames()) array.add(name);
+            return array;
+        }
+        if (setting instanceof ModuleListSetting s) {
+            JsonArray array = new JsonArray();
+            for (String name : s.getModuleNames()) array.add(name);
+            return array;
+        }
         return null;
     }
 
     private static void applySetting(Setting<?> setting, JsonElement value) {
         if (value == null) return;
         try {
-            if (setting instanceof BlockListSetting s && value.isJsonArray()) {
+            // --- array-based types ---
+            if (value.isJsonArray()) {
                 List<String> ids = new java.util.ArrayList<>();
                 for (JsonElement element : value.getAsJsonArray()) {
-                    if (element != null && element.isJsonPrimitive()) {
-                        ids.add(element.getAsString());
-                    }
+                    if (element != null && element.isJsonPrimitive()) ids.add(element.getAsString());
                 }
-                s.setIds(ids);
+                if (setting instanceof BlockListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof ItemListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof EntityTypeListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof StringListSetting s) { s.setValue(ids); return; }
+                if (setting instanceof SoundEventListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof ScreenHandlerListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof StatusEffectListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof StorageBlockListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof EnchantmentListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof ParticleTypeListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof PacketListSetting s) { s.setClassNames(ids); return; }
+                if (setting instanceof ModuleListSetting s) {
+                    s.setModuleNames(ids, ModuleHolder.INSTANCE.getModules());
+                    return;
+                }
+                if (setting instanceof ColorListSetting s) {
+                    List<Color> colors = new java.util.ArrayList<>();
+                    for (JsonElement el : value.getAsJsonArray()) {
+                        if (el.isJsonPrimitive()) colors.add(new Color(el.getAsInt(), true));
+                    }
+                    s.setValue(colors);
+                    return;
+                }
                 return;
             }
+            // --- object-based types ---
+            if (value.isJsonObject()) {
+                JsonObject obj = value.getAsJsonObject();
+                if (setting instanceof BlockPosSetting s) {
+                    s.set(obj.get("x").getAsInt(), obj.get("y").getAsInt(), obj.get("z").getAsInt());
+                    return;
+                }
+                if (setting instanceof Vector3dSetting s) {
+                    s.set(obj.get("x").getAsDouble(), obj.get("y").getAsDouble(), obj.get("z").getAsDouble());
+                    return;
+                }
+                if (setting instanceof StatusEffectAmplifierMapSetting s) {
+                    Map<String, Integer> map = new HashMap<>();
+                    for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                        if (entry.getValue().isJsonPrimitive()) map.put(entry.getKey(), entry.getValue().getAsInt());
+                    }
+                    s.setFromSerializableMap(map);
+                    return;
+                }
+                return;
+            }
+            // --- primitive types ---
             if (!value.isJsonPrimitive()) return;
             if (setting instanceof BoolSetting s) s.setValue(value.getAsBoolean());
             else if (setting instanceof KeybindSetting s) s.setValue(value.getAsInt());
@@ -558,6 +685,8 @@ public class ConfigHolder {
                 if (!s.isAllowAlpha()) c = new Color(c.getRed(), c.getGreen(), c.getBlue());
                 s.setValue(c);
             }
+            else if (setting instanceof BlockSetting s) s.setId(value.getAsString());
+            else if (setting instanceof ItemSetting s) s.setId(value.getAsString());
         } catch (Exception ignored) {
         }
     }
