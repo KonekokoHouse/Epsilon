@@ -69,6 +69,9 @@ public class ESP2D extends Module {
             if (position == null || position.z < 0.0 || position.w < 0.0 || position.x > screenWidth || position.y > screenHeight)
                 continue;
 
+            final var projectedPosition = WorldToScreen.getWorldPositionToScreen(livingEntity.position());
+            if (projectedPosition.z > 1.0f || projectedPosition.z < 0.5f) continue;
+
             float x = (float) position.x;
             float y = (float) position.y;
             float endX = (float) position.z;
