@@ -74,6 +74,8 @@ public class ModuleButton extends Component {
         if (setting instanceof KeybindSetting s) return new KeybindWidget(s);
         if (setting instanceof StringSetting s) return new StringWidget(s);
         if (setting instanceof ButtonSetting s) return new ButtonWidget(s);
+        if (setting instanceof StringListSetting s) return new StringListWidget(s);
+        if (setting instanceof SoundEventListSetting s) return new SoundEventListWidget(s);
         return null;
     }
 

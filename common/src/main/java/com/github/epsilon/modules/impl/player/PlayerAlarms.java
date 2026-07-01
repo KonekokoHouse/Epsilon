@@ -328,7 +328,7 @@ public class PlayerAlarms extends Module {
                 if (mode != null) return translateGamemode(mode);
             }
         }
-        return "Unknown";
+        return EpsilonTranslations.PlayerAlarms.UNKNOWN_GAMEMODE.getTranslatedName();
     }
 
     private static String translateGamemode(GameType gameType) {

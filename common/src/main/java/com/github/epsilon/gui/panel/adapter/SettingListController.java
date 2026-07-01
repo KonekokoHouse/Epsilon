@@ -10,6 +10,8 @@ import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.ColorPickerPopup;
 import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
+import com.github.epsilon.gui.panel.popup.SoundEventListSelectPopup;
+import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
@@ -213,6 +215,16 @@ public class SettingListController {
             }
             if (entry.row instanceof BlockListSettingRow blockListRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
                 popupHost.open(createBlockListPopup(blockListRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof StringListSettingRow stringListRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createStringListPopup(stringListRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof SoundEventListSettingRow soundListRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createSoundListPopup(soundListRow, popupBounds));
                 draggingSliderEntry = null;
                 return true;
             }
@@ -436,6 +448,16 @@ public class SettingListController {
     private BlockListSelectPopup createBlockListPopup(BlockListSettingRow blockListRow, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         return new BlockListSelectPopup(bounds, blockListRow.getSetting());
+    }
+
+    private StringListSelectPopup createStringListPopup(StringListSettingRow stringListRow, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(300.0f, popupBounds.width() - 24.0f), Math.min(220.0f, popupBounds.height() - 24.0f));
+        return new StringListSelectPopup(bounds, stringListRow.getSetting());
+    }
+
+    private SoundEventListSelectPopup createSoundListPopup(SoundEventListSettingRow soundListRow, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        return new SoundEventListSelectPopup(bounds, soundListRow.getSetting());
     }
 
     @FunctionalInterface

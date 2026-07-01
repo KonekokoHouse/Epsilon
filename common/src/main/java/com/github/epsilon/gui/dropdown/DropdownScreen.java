@@ -12,6 +12,8 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
+import com.github.epsilon.gui.panel.popup.SoundEventListSelectPopup;
+import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.scene.GuiLayer;
 import com.github.epsilon.gui.scene.GuiScene;
@@ -19,6 +21,8 @@ import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.SoundEventListSetting;
+import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -576,6 +580,22 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new BlockListSelectPopup(bounds, setting));
+    }
+
+    public void openStringListPopup(StringListSetting setting) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new StringListSelectPopup(bounds, setting));
+    }
+
+    public void openSoundListPopup(SoundEventListSetting setting) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new SoundEventListSelectPopup(bounds, setting));
     }
 
 }

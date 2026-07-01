@@ -91,7 +91,15 @@ public final class EpsilonTranslations {
             PlayerAlarms.GAMEMODE_SURVIVAL,
             PlayerAlarms.GAMEMODE_CREATIVE,
             PlayerAlarms.GAMEMODE_ADVENTURE,
-            PlayerAlarms.GAMEMODE_SPECTATOR
+            PlayerAlarms.GAMEMODE_SPECTATOR,
+            PlayerAlarms.UNKNOWN_GAMEMODE,
+            Gui.LIST_ENTRIES,
+            Gui.LIST_SOUNDS,
+            Gui.LIST_SELECTED,
+            Gui.LIST_TYPE_TO_ADD,
+            Gui.LIST_SEARCH,
+            Gui.LIST_AVAILABLE,
+            Gui.LIST_SELECTED_HEADER
     );
 
     private EpsilonTranslations() {
@@ -189,6 +197,14 @@ public final class EpsilonTranslations {
         public static final TranslateComponent INSPECTOR = create("gui", "inspector");
         public static final TranslateComponent INSPECTOR_SELECT = create("gui", "inspector.select");
 
+        public static final TranslateComponent LIST_ENTRIES = create("gui", "list.entries");
+        public static final TranslateComponent LIST_SOUNDS = create("gui", "list.sounds");
+        public static final TranslateComponent LIST_SELECTED = create("gui", "list.selected");
+        public static final TranslateComponent LIST_TYPE_TO_ADD = create("gui", "list.type_to_add");
+        public static final TranslateComponent LIST_SEARCH = create("gui", "list.search");
+        public static final TranslateComponent LIST_AVAILABLE = create("gui", "list.available");
+        public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
+
         private Gui() {
         }
     }
@@ -220,6 +236,7 @@ public final class EpsilonTranslations {
         public static final TranslateComponent GAMEMODE_CREATIVE = create("modules.player alarms", "gamemode.creative");
         public static final TranslateComponent GAMEMODE_ADVENTURE = create("modules.player alarms", "gamemode.adventure");
         public static final TranslateComponent GAMEMODE_SPECTATOR = create("modules.player alarms", "gamemode.spectator");
+        public static final TranslateComponent UNKNOWN_GAMEMODE = create("modules.player alarms", "unknown_gamemode");
 
         private PlayerAlarms() {
         }
