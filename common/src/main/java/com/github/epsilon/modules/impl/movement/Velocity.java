@@ -49,11 +49,7 @@ public class Velocity extends Module {
     private final BoolSetting excludeSpearLunge = boolSetting("Exclude Spear Lunge", false, () -> mode.is(Mode.Cancel));
     private final BoolSetting excludeWindCharge = boolSetting("Exclude Wind Charge", false, () -> mode.is(Mode.Cancel));
 
-    // Wind Burst: when the player hits an entity with a Wind Burst mace,
-    // pause Velocity entirely for a short window so all related packets pass through.
     private final TimerUtils windBurstTimer = new TimerUtils();
-
-    // Wind Charge: tracks when the player threw a wind charge (projectile, needs timer).
     private final TimerUtils windChargeTimer = new TimerUtils();
 
     private boolean jump;
@@ -72,13 +68,6 @@ public class Velocity extends Module {
         windChargeTimer.reset();
     }
 
-    // --- Track own actions ---
-
-    /**
-     * Wind Burst: player left-clicks an entity with a Wind Burst mace.
-     * Pause Velocity for 500ms so the resulting velocity/explosion packets
-     * are not affected.
-     */
     @EventHandler
     private void onAttackEntity(AttackEntityEvent event) {
         if (event.getPlayer() != mc.player) return;
@@ -87,9 +76,6 @@ public class Velocity extends Module {
         }
     }
 
-    /**
-     * Wind Charge: player right-clicks to throw a wind charge.
-     */
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
         if (excludeWindCharge.getValue() && event.getPacket() instanceof ServerboundUseItemPacket packet) {
@@ -99,8 +85,6 @@ public class Velocity extends Module {
             }
         }
     }
-
-    // --- Packet receive handling ---
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
@@ -158,8 +142,6 @@ public class Velocity extends Module {
         }
     }
 
-    // --- Exclusion decision logic ---
-
     private boolean shouldExcludeMotion(ClientboundSetEntityMotionPacket packet) {
         if (excludeSpearLunge.getValue() && isSpearLungeMotion(packet)) {
             return true;
@@ -174,14 +156,6 @@ public class Velocity extends Module {
         return false;
     }
 
-    // --- Packet parsing methods ---
-
-    /**
-     * Parse ClientboundSetEntityMotionPacket to check if it's from our own Spear Lunge.
-     * - Significant horizontal velocity (> 0.15)
-     * - Velocity direction roughly matches player's look direction
-     * - Player holds a Spear with Lunge AND attack key is pressed
-     */
     private boolean isSpearLungeMotion(ClientboundSetEntityMotionPacket packet) {
         if (!isSpearWithLunge(mc.player.getMainHandItem())) return false;
         if (!mc.options.keyAttack.isDown()) return false;
@@ -195,13 +169,6 @@ public class Velocity extends Module {
         return dot > 0;
     }
 
-    /**
-     * Parse ClientboundExplodePacket to check if it's from our own wind charge.
-     * - Player threw a wind charge recently (< 3000ms)
-     * - Explosion near the player (< 12 blocks)
-     * - Small radius (≤ 3.0)
-     * - Has player knockback vector
-     */
     private boolean isWindChargeExplosion(ClientboundExplodePacket packet) {
         if (windChargeTimer.passedMillise(3000)) return false;
 
@@ -214,8 +181,6 @@ public class Velocity extends Module {
 
         return true;
     }
-
-    // --- Item/equipment checks ---
 
     private boolean isHoldingWindBurstMace() {
         ItemStack mainHand = mc.player.getMainHandItem();
