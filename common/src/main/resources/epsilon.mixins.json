@@ -15,6 +15,7 @@
     "MixinClientBrandRetriever",
     "MixinClientPacketListener",
     "MixinConnection",
+    "MixinCrystalChamsEntityRenderer",
     "MixinDataComponentInitializerEntry",
     "MixinEntity",
     "MixinEntityRenderDispatcher",
