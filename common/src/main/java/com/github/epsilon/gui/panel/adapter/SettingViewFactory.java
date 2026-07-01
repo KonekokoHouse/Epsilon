@@ -21,6 +21,25 @@ public class SettingViewFactory {
             case BlockListSetting blockListSetting -> new BlockListSettingRow(blockListSetting);
             case StringSetting stringSetting -> new StringSettingRow(stringSetting);
             case ButtonSetting buttonSetting -> new ButtonSettingRow(buttonSetting);
+            // --- List settings (Row + Widget) ---
+            case StringListSetting stringListSetting -> new StringListSettingRow(stringListSetting);
+            case SoundEventListSetting soundEventListSetting -> new SoundEventListSettingRow(soundEventListSetting);
+            case ItemListSetting itemListSetting -> new ItemListSettingRow(itemListSetting);
+            case ColorListSetting colorListSetting -> new ColorListSettingRow(colorListSetting);
+            case EntityTypeListSetting entityTypeListSetting -> new EntityTypeListSettingRow(entityTypeListSetting);
+            case StatusEffectListSetting statusEffectListSetting -> new StatusEffectListSettingRow(statusEffectListSetting);
+            case ParticleTypeListSetting particleTypeListSetting -> new ParticleTypeListSettingRow(particleTypeListSetting);
+            case ScreenHandlerListSetting screenHandlerListSetting -> new ScreenHandlerListSettingRow(screenHandlerListSetting);
+            case StorageBlockListSetting storageBlockListSetting -> new StorageBlockListSettingRow(storageBlockListSetting);
+            case EnchantmentListSetting enchantmentListSetting -> new EnchantmentListSettingRow(enchantmentListSetting);
+            case PacketListSetting packetListSetting -> new PacketListSettingRow(packetListSetting);
+            case ModuleListSetting moduleListSetting -> new ModuleListSettingRow(moduleListSetting);
+            // --- Simple settings (Row only) ---
+            case BlockSetting blockSetting -> new BlockSettingRow(blockSetting);
+            case ItemSetting itemSetting -> new ItemSettingRow(itemSetting);
+            case BlockPosSetting blockPosSetting -> new BlockPosSettingRow(blockPosSetting);
+            case Vector3dSetting vector3dSetting -> new Vector3dSettingRow(vector3dSetting);
+            case StatusEffectAmplifierMapSetting statusEffectAmplifierMapSetting -> new StatusEffectAmplifierMapSettingRow(statusEffectAmplifierMapSetting);
             case null, default -> null;
         };
     }

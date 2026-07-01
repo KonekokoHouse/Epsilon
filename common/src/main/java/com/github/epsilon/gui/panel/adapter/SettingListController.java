@@ -10,6 +10,9 @@ import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.ColorPickerPopup;
 import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
+import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
+import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
@@ -213,6 +216,73 @@ public class SettingListController {
             }
             if (entry.row instanceof BlockListSettingRow blockListRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
                 popupHost.open(createBlockListPopup(blockListRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            // --- List setting popup handlers ---
+            if (entry.row instanceof StringListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                PanelPopupHost.Popup popup = createStringListSettingPopup(listRow, popupBounds);
+                if (popup != null) popupHost.open(popup);
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof SoundEventListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createSoundEventListSettingPopup(listRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof ItemListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createItemListSettingPopup(listRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof ColorListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                PanelPopupHost.Popup popup = createColorListSettingPopup(listRow, popupBounds);
+                if (popup != null) popupHost.open(popup);
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof EntityTypeListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                PanelPopupHost.Popup popup = createEntityTypeListSettingPopup(listRow, popupBounds);
+                if (popup != null) popupHost.open(popup);
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof StatusEffectListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createStatusEffectListSettingPopup(listRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof ParticleTypeListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createParticleTypeListSettingPopup(listRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof ScreenHandlerListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createScreenHandlerListSettingPopup(listRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof StorageBlockListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createStorageBlockListSettingPopup(listRow, popupBounds));
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof EnchantmentListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                PanelPopupHost.Popup popup = createEnchantmentListSettingPopup(listRow, popupBounds);
+                if (popup != null) popupHost.open(popup);
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof PacketListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                PanelPopupHost.Popup popup = createPacketListSettingPopup(listRow, popupBounds);
+                if (popup != null) popupHost.open(popup);
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof ModuleListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                PanelPopupHost.Popup popup = createModuleListSettingPopup(listRow, popupBounds);
+                if (popup != null) popupHost.open(popup);
                 draggingSliderEntry = null;
                 return true;
             }
@@ -436,6 +506,80 @@ public class SettingListController {
     private BlockListSelectPopup createBlockListPopup(BlockListSettingRow blockListRow, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         return new BlockListSelectPopup(bounds, blockListRow.getSetting());
+    }
+
+    // --- List setting popup factories ---
+
+    private PanelPopupHost.Popup createStringListSettingPopup(StringListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(300.0f, popupBounds.width() - 24.0f), Math.min(220.0f, popupBounds.height() - 24.0f));
+        return new StringListSelectPopup(bounds, row.getSetting());
+    }
+
+    private PanelPopupHost.Popup createSoundEventListSettingPopup(SoundEventListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
+                Object::toString, setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createItemListSettingPopup(ItemListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
+                Object::toString, setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createColorListSettingPopup(ColorListSettingRow row, PanelLayout.Rect popupBounds) {
+        // TODO: Create dedicated ColorListSelectPopup when available
+        return null;
+    }
+
+    private PanelPopupHost.Popup createEntityTypeListSettingPopup(EntityTypeListSettingRow row, PanelLayout.Rect popupBounds) {
+        // TODO: Create dedicated EntityTypeListSelectPopup (or use RegistryListSelectPopup after adapting Set<EntityType<?>> to List<EntityType<?>>) when available
+        return null;
+    }
+
+    private PanelPopupHost.Popup createStatusEffectListSettingPopup(StatusEffectListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
+                Object::toString, setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createParticleTypeListSettingPopup(ParticleTypeListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
+                Object::toString, setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createScreenHandlerListSettingPopup(ScreenHandlerListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
+                Object::toString, setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createStorageBlockListSettingPopup(StorageBlockListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                Object::toString, setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createEnchantmentListSettingPopup(EnchantmentListSettingRow row, PanelLayout.Rect popupBounds) {
+        // TODO: Create dedicated EnchantmentListSelectPopup when available
+        return null;
+    }
+
+    private PanelPopupHost.Popup createPacketListSettingPopup(PacketListSettingRow row, PanelLayout.Rect popupBounds) {
+        // TODO: Create dedicated PacketListSelectPopup when available
+        return null;
+    }
+
+    private PanelPopupHost.Popup createModuleListSettingPopup(ModuleListSettingRow row, PanelLayout.Rect popupBounds) {
+        // TODO: Create dedicated ModuleListSelectPopup when available
+        return null;
     }
 
     @FunctionalInterface
