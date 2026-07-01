@@ -28,8 +28,7 @@ public class DoubleSliderWidget extends AbstractSliderWidget<DoubleSetting, Doub
 
     @Override
     protected String formatValue(Double value) {
-        String formatted = FORMAT.format(value);
-        return setting.isPercentageMode() ? formatted + "%" : formatted;
+        return FORMAT.format(value);
     }
 
     @Override
