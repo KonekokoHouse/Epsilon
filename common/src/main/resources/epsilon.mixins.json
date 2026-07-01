@@ -59,6 +59,7 @@
     "MixinSubmitNodeCollection",
     "MixinSubmitNodeStorage",
     "MixinTitleScreen",
+    "MixinWalkAnimationState",
     "MixinWebBlock",
     "MixinWindow"
   ],

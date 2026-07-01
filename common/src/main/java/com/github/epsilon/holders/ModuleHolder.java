@@ -121,6 +121,7 @@ public class ModuleHolder {
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);
         addModule(Particles.INSTANCE);
+        addModule(PopChams.INSTANCE);
         addModule(Shaders.INSTANCE);
         addModule(Xray.INSTANCE);
     }
