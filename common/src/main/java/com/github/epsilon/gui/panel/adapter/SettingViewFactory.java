@@ -20,8 +20,6 @@ public class SettingViewFactory {
             case ColorSetting colorSetting -> new ColorSettingRow(colorSetting);
             case BlockListSetting blockListSetting -> new BlockListSettingRow(blockListSetting);
             case StringSetting stringSetting -> new StringSettingRow(stringSetting);
-            case StringListSetting stringListSetting -> new StringListSettingRow(stringListSetting);
-            case SoundEventListSetting soundEventListSetting -> new SoundEventListSettingRow(soundEventListSetting);
             case ButtonSetting buttonSetting -> new ButtonSettingRow(buttonSetting);
             // --- List settings (Row + Widget) ---
             case StringListSetting stringListSetting -> new StringListSettingRow(stringListSetting);
