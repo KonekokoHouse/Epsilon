@@ -42,6 +42,7 @@ public class LuminRenderSystem {
 
     @Nullable
     private static LuminRenderTarget activeTarget = null;
+    private static long renderFrameId;
 
     public static final LuminVulkanContext vulkanContext = new LuminVulkanContext();
 
@@ -74,6 +75,14 @@ public class LuminRenderSystem {
 
     public static void endDynamicUniformFrame() {
         ShaderUniforms.endFrame();
+    }
+
+    public static void beginRenderFrame() {
+        renderFrameId++;
+    }
+
+    public static long getRenderFrameId() {
+        return renderFrameId;
     }
 
     @Nullable
