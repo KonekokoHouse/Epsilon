@@ -78,6 +78,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
             return false;
         }
         focused = true;
+        IMEFocusHelper.activate();
         inputBuffer = normalize(setting.getValue());
         cursorIndex = getCursorIndex(event.x(), fieldBounds);
         clearSelection();
@@ -165,6 +166,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         if (focused && inputBuffer == null) {
             inputBuffer = normalize(setting.getValue());
             cursorIndex = inputBuffer.length();
+            IMEFocusHelper.activate();
         }
         if (!focused) {
             clearSelection();

@@ -187,6 +187,7 @@ public class ModuleListPanel {
         if (searchBounds.contains(event.x(), event.y())) {
             searchFocused = true;
             searchCursorIndex = state.getSearchQuery().length();
+            IMEFocusHelper.activate();
             markDirty();
             return true;
         }

@@ -68,6 +68,7 @@ public class ClientSettingTextField {
         }
         focused = true;
         cursor = text.length();
+        IMEFocusHelper.activate();
         return true;
     }
 

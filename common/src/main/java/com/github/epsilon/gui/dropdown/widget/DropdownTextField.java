@@ -79,6 +79,7 @@ public class DropdownTextField {
         }
         focused = true;
         cursor = resolveCursor(mouseX);
+        IMEFocusHelper.activate();
         return true;
     }
 
@@ -88,12 +89,14 @@ public class DropdownTextField {
         }
         focused = true;
         cursor = resolveCursor(mouseX);
+        IMEFocusHelper.activate();
         return true;
     }
 
     public void focus() {
         focused = true;
         cursor = text.length();
+        IMEFocusHelper.activate();
     }
 
     public void blur() {

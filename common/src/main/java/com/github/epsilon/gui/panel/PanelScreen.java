@@ -62,12 +62,6 @@ public class PanelScreen extends Screen {
     }
 
     @Override
-    protected void init() {
-        super.init();
-        IMEFocusHelper.activate();
-    }
-
-    @Override
     public boolean isPauseScreen() {
         return false;
     }

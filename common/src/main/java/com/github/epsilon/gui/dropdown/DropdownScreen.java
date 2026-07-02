@@ -71,7 +71,6 @@ public class DropdownScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        IMEFocusHelper.activate();
         sessionId++;
         scrimAnim.setStartValue(0.0f);
         scrimAnim.run(0.0f);
