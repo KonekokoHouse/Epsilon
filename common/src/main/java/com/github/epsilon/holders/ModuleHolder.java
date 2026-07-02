@@ -15,6 +15,7 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.combat.*;
 import com.github.epsilon.modules.impl.movement.*;
 import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
+import com.github.epsilon.modules.impl.movement.follower.Follower;
 import com.github.epsilon.modules.impl.player.*;
 import com.github.epsilon.modules.impl.render.*;
 import com.github.epsilon.utils.client.KeybindUtils;
@@ -86,6 +87,7 @@ public class ModuleHolder {
 
         // Movement
         addModule(ElytraFly.INSTANCE);
+        addModule(Follower.INSTANCE);
         addModule(AutoSprint.INSTANCE);
         addModule(Blink.INSTANCE);
         addModule(Eagle.INSTANCE);

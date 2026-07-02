@@ -6,7 +6,6 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import net.minecraft.world.entity.Pose;
 
 public class SneakTweak extends Module {
 

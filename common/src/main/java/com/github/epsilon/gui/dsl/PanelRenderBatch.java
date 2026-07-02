@@ -2,11 +2,7 @@ package com.github.epsilon.gui.dsl;
 
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 面板 UI 的 2D 调度批次。

@@ -45,6 +45,7 @@ public final class Render3DScheduler {
     private final List<FilledSideCommand> filledSides = new ArrayList<>();
     private final List<OutlineBoxCommand> outlineBoxes = new ArrayList<>();
     private final List<SideOutlineCommand> sideOutlines = new ArrayList<>();
+    private final List<LineCommand> lines = new ArrayList<>();
 
     private Render3DScheduler() {
         EventBus.INSTANCE.subscribe(this);
@@ -58,7 +59,8 @@ public final class Render3DScheduler {
                 && filledBoxes.isEmpty()
                 && filledSides.isEmpty()
                 && outlineBoxes.isEmpty()
-                && sideOutlines.isEmpty();
+                && sideOutlines.isEmpty()
+                && lines.isEmpty();
     }
 
     public void clear() {
@@ -67,6 +69,7 @@ public final class Render3DScheduler {
         filledSides.clear();
         outlineBoxes.clear();
         sideOutlines.clear();
+        lines.clear();
     }
 
     public void addBlurredBox(AABB box, double blurStrength) {
@@ -121,6 +124,15 @@ public final class Render3DScheduler {
         sideOutlines.add(new SideOutlineCommand(box, color, thickness, direction));
     }
 
+    public void addLine(Vec3 from, Vec3 to, Color color, float thickness) {
+        addLine(from, to, color.getRGB(), thickness);
+    }
+
+    public void addLine(Vec3 from, Vec3 to, int color, float thickness) {
+        if (from.distanceToSqr(to) < 1.0E-6) return;
+        lines.add(new LineCommand(from, to, color, thickness));
+    }
+
     public void flush(PoseStack stack) {
         if (isEmpty()) {
             return;
@@ -171,7 +183,7 @@ public final class Render3DScheduler {
     }
 
     private void flushLines(PoseStack stack) {
-        if (outlineBoxes.isEmpty() && sideOutlines.isEmpty()) {
+        if (outlineBoxes.isEmpty() && sideOutlines.isEmpty() && lines.isEmpty()) {
             return;
         }
 
@@ -186,6 +198,10 @@ public final class Render3DScheduler {
 
         for (SideOutlineCommand command : sideOutlines) {
             emitSideOutline(builder, matrix, pose, camPos, command);
+        }
+
+        for (LineCommand command : lines) {
+            emitLine(builder, matrix, pose, camPos, command);
         }
 
         builder.end();
@@ -354,6 +370,15 @@ public final class Render3DScheduler {
         }
     }
 
+    private void emitLine(LuminImmediateRenderer.Lines builder, Matrix4f matrix, PoseStack.Pose pose, Vec3 camPos, LineCommand command) {
+        Vec3 from = command.from().subtract(camPos);
+        Vec3 to = command.to().subtract(camPos);
+        vertexLine(builder, matrix, pose,
+                (float) from.x, (float) from.y, (float) from.z,
+                (float) to.x, (float) to.y, (float) to.z,
+                command.color(), command.thickness());
+    }
+
     private void quad(
             LuminImmediateRenderer.PosColorQuads builder, Matrix4f matrix,
             float x1, float y1, float z1, int c1,
@@ -394,6 +419,9 @@ public final class Render3DScheduler {
     }
 
     private record SideOutlineCommand(AABB box, int color, float thickness, Direction direction) {
+    }
+
+    private record LineCommand(Vec3 from, Vec3 to, int color, float thickness) {
     }
 
 }

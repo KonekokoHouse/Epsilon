@@ -1,11 +1,9 @@
 package com.github.epsilon.utils.render;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;

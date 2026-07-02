@@ -35,7 +35,7 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 - 纹理渲染
 - 自定义顶点格式
 
-详见 [渲染系统文档](src/main/java/com/github/epsilon/graphics/README_zh.md)
+详见 [渲染系统文档](common/src/main/java/com/github/epsilon/graphics/README_zh.md)
 
 ## ⚙️ 构建与运行
 
@@ -46,6 +46,14 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 # 运行客户端
 ./gradlew runClient
 ```
+
+## 🙏 鸣谢
+
+感谢以下项目。第三方代码归属信息详见 [NOTICE](NOTICE.md)。
+- [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
+- [Orbit](https://github.com/MeteorDevelopment/orbit)
+- [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
+- [TrollHack](https://github.com/Luna5ama/TrollHack)
 
 ## 📝 许可证
 
