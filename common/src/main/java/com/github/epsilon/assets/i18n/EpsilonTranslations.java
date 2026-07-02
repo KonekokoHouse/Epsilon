@@ -103,11 +103,11 @@ public final class EpsilonTranslations {
             ElytraFly.PITCH40_TAKEOFF_COMPLETE,
             ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS,
             ElytraFly.PITCH40_NO_USABLE_ELYTRA,
-            PlayerAlarms.JOIN_CHAT_TEXT,
-            PlayerAlarms.LEAVE_CHAT_TEXT,
-            PlayerAlarms.ENTER_RD_CHAT_TEXT,
-            PlayerAlarms.LEAVE_RD_CHAT_TEXT,
-            PlayerAlarms.GAMEMODE_CHAT_TEXT,
+            PlayerAlarms.JOIN_ALERT_TEXT,
+            PlayerAlarms.LEAVE_ALERT_TEXT,
+            PlayerAlarms.ENTER_RD_ALERT_TEXT,
+            PlayerAlarms.LEAVE_RD_ALERT_TEXT,
+            PlayerAlarms.GAMEMODE_ALERT_TEXT,
             PlayerAlarms.GAMEMODE_SURVIVAL,
             PlayerAlarms.GAMEMODE_CREATIVE,
             PlayerAlarms.GAMEMODE_ADVENTURE,
@@ -260,11 +260,11 @@ public final class EpsilonTranslations {
     }
 
     public static final class PlayerAlarms {
-        public static final TranslateComponent JOIN_CHAT_TEXT = create("modules.player alarms", "join_chat_text");
-        public static final TranslateComponent LEAVE_CHAT_TEXT = create("modules.player alarms", "leave_chat_text");
-        public static final TranslateComponent ENTER_RD_CHAT_TEXT = create("modules.player alarms", "enter_rd_chat_text");
-        public static final TranslateComponent LEAVE_RD_CHAT_TEXT = create("modules.player alarms", "leave_rd_chat_text");
-        public static final TranslateComponent GAMEMODE_CHAT_TEXT = create("modules.player alarms", "gamemode_chat_text");
+        public static final TranslateComponent JOIN_ALERT_TEXT = create("modules.player alarms", "join_alert_text");
+        public static final TranslateComponent LEAVE_ALERT_TEXT = create("modules.player alarms", "leave_alert_text");
+        public static final TranslateComponent ENTER_RD_ALERT_TEXT = create("modules.player alarms", "enter_rd_alert_text");
+        public static final TranslateComponent LEAVE_RD_ALERT_TEXT = create("modules.player alarms", "leave_rd_alert_text");
+        public static final TranslateComponent GAMEMODE_ALERT_TEXT = create("modules.player alarms", "gamemode_alert_text");
         public static final TranslateComponent GAMEMODE_SURVIVAL = create("modules.player alarms", "gamemode.survival");
         public static final TranslateComponent GAMEMODE_CREATIVE = create("modules.player alarms", "gamemode.creative");
         public static final TranslateComponent GAMEMODE_ADVENTURE = create("modules.player alarms", "gamemode.adventure");

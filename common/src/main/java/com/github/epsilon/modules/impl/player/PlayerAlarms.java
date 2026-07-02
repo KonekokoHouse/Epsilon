@@ -2,9 +2,11 @@ package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
+import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
@@ -40,7 +42,14 @@ public class PlayerAlarms extends Module {
     private final SettingGroup sgLeaveRD = settingGroup("Leave Render Distance");
     private final SettingGroup sgGamemode = settingGroup("Gamemode Change");
 
+    private enum AlertMode {
+        Chat,
+        Notification,
+        Both
+    }
+
     // ==================== General ====================
+    private final EnumSetting<AlertMode> alertMode = enumSetting("Alert Mode", AlertMode.Chat).group(sgGeneral);
     private final BoolSetting showGamemodeInChat = boolSetting("show-gamemode-in-chat", false).group(sgGeneral);
 
     private final StringListSetting names = stringListSetting("names",
@@ -95,7 +104,8 @@ public class PlayerAlarms extends Module {
     private final Set<UUID> playersInRender = new HashSet<>();
     private final Map<UUID, GameType> gamemodeCache = new HashMap<>();
     private final Set<UUID> alarmedJoinPlayers = new HashSet<>();
-    private boolean initialJoinCheckDone = false;
+    private Object lastConnection = null; // Track connection changes for world/server switches
+    private Object lastLevel = null;      // Track level changes for multi-world servers
 
     // Ring state
     private static class RingState {
@@ -115,7 +125,8 @@ public class PlayerAlarms extends Module {
         playersInRender.clear();
         gamemodeCache.clear();
         alarmedJoinPlayers.clear();
-        initialJoinCheckDone = false;
+        lastConnection = null;
+        lastLevel = null;
         resetRingState(joinRing);
         resetRingState(leaveRing);
         resetRingState(enterRDRing);
@@ -140,18 +151,27 @@ public class PlayerAlarms extends Module {
         handleRing(leaveRDRing, () -> playSound(leaveRDVolume.getValue(), leaveRDPitch.getValue(), leaveRDSound.getValue()));
         handleRing(gamemodeRing, () -> playSound(gamemodeVolume.getValue(), gamemodePitch.getValue(), gamemodeSound.getValue()));
 
-        // Initial active check: check already-online target players on module enable
-        if (!initialJoinCheckDone && mc.getConnection() != null) {
+        // Detect world/server changes and re-scan online target players
+        Object currentConnection = mc.getConnection();
+        Object currentLevel = mc.level;
+        boolean reconnected = currentConnection != null && currentConnection != lastConnection;
+        boolean worldChanged = currentLevel != null && currentLevel != lastLevel;
+        if (currentConnection == null) {
+            lastConnection = null;
+            lastLevel = null;
+        } else if (reconnected || worldChanged) {
+            if (reconnected) lastConnection = currentConnection;
+            if (worldChanged) lastLevel = currentLevel;
+            alarmedJoinPlayers.clear();
             for (var entry : mc.getConnection().getListedOnlinePlayers()) {
                 UUID id = entry.getProfile().id();
                 String playerName = entry.getProfile().name();
-                if (!alarmedJoinPlayers.contains(id) && shouldAlarm(playerName)) {
+                if (shouldAlarm(playerName)) {
                     startRing(joinRing, joinRings.getValue(), joinRingDelay.getValue());
-                    sendChat(joinChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.JOIN_CHAT_TEXT, playerName, id, ChatFormatting.RED);
+                    sendAlert(joinChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT, playerName, id, ChatFormatting.RED);
                     alarmedJoinPlayers.add(id);
                 }
             }
-            initialJoinCheckDone = true;
         }
 
         // Render distance detection
@@ -168,7 +188,7 @@ public class PlayerAlarms extends Module {
                 String playerName = getPlayerName(id);
                 if (playerName != null && shouldAlarm(playerName)) {
                     startRing(enterRDRing, enterRDRings.getValue(), enterRDRingDelay.getValue());
-                    sendChat(enterRDChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.ENTER_RD_CHAT_TEXT, playerName, id, ChatFormatting.DARK_RED);
+                    sendAlert(enterRDChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.ENTER_RD_ALERT_TEXT, playerName, id, ChatFormatting.DARK_RED);
                 }
             }
         }
@@ -179,7 +199,7 @@ public class PlayerAlarms extends Module {
                 String playerName = getPlayerName(id);
                 if (playerName != null && shouldAlarm(playerName)) {
                     startRing(leaveRDRing, leaveRDRings.getValue(), leaveRDRingDelay.getValue());
-                    sendChat(leaveRDChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.LEAVE_RD_CHAT_TEXT, playerName, id, ChatFormatting.DARK_GREEN);
+                    sendAlert(leaveRDChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.LEAVE_RD_ALERT_TEXT, playerName, id, ChatFormatting.DARK_GREEN);
                 }
             }
         }
@@ -200,7 +220,7 @@ public class PlayerAlarms extends Module {
                     gamemodeCache.put(entry.profileId(), entry.gameMode());
                     if (!alarmedJoinPlayers.contains(entry.profileId()) && shouldAlarm(playerName)) {
                         startRing(joinRing, joinRings.getValue(), joinRingDelay.getValue());
-                        sendChat(joinChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.JOIN_CHAT_TEXT, playerName, entry.profileId(), ChatFormatting.RED);
+                        sendAlert(joinChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT, playerName, entry.profileId(), ChatFormatting.RED);
                         alarmedJoinPlayers.add(entry.profileId());
                     }
                 }
@@ -221,11 +241,18 @@ public class PlayerAlarms extends Module {
                         if (playerName != null && shouldAlarm(playerName)) {
                             startRing(gamemodeRing, gamemodeRings.getValue(), gamemodeRingDelay.getValue());
                             if (gamemodeChatMessage.getValue()) {
-                                String msg = EpsilonTranslations.PlayerAlarms.GAMEMODE_CHAT_TEXT.getTranslatedName()
+                                String msg = EpsilonTranslations.PlayerAlarms.GAMEMODE_ALERT_TEXT.getTranslatedName()
                                     .replace("{name}", playerName)
                                     .replace("{old_gamemode}", translateGamemode(oldMode))
                                     .replace("{new_gamemode}", translateGamemode(newMode));
-                                ChatUtils.addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW));
+                                AlertMode mode = alertMode.getValue();
+                                if (mode == AlertMode.Chat || mode == AlertMode.Both) {
+                                    ChatUtils.addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW));
+                                }
+                                if (mode == AlertMode.Notification || mode == AlertMode.Both) {
+                                    int hash = java.util.Objects.hash(playerName, "gamemode");
+                                    Managers.NOTIFICATION.notifyHud(msg, "", NotificationMode.Info, hash);
+                                }
                             }
                         }
                     }
@@ -240,7 +267,7 @@ public class PlayerAlarms extends Module {
                 if (playerName == null) playerName = id.toString();
                 if (shouldAlarm(playerName)) {
                     startRing(leaveRing, leaveRings.getValue(), leaveRingDelay.getValue());
-                    sendChat(leaveChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.LEAVE_CHAT_TEXT, playerName, id, ChatFormatting.GREEN);
+                    sendAlert(leaveChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.LEAVE_ALERT_TEXT, playerName, id, ChatFormatting.GREEN);
                 }
                 gamemodeCache.remove(id);
                 playersInRender.remove(id);
@@ -288,15 +315,28 @@ public class PlayerAlarms extends Module {
         return 20;
     }
 
-    private void sendChat(boolean enabled, TranslateComponent template, String playerName, UUID playerId, ChatFormatting color) {
+    private void sendAlert(boolean enabled, TranslateComponent template, String playerName, UUID playerId, ChatFormatting color) {
         if (!enabled) return;
+        AlertMode mode = alertMode.getValue();
+        // Build full message
         String msg = template.getTranslatedName().replace("{name}", playerName);
         if (showGamemodeInChat.getValue() && playerId != null) {
             msg = msg.replace("{gamemode}", getGamemodeName(playerId));
         } else {
             msg = msg.replace("{gamemode}", "");
         }
-        ChatUtils.addChatMessage(Component.literal(msg).withStyle(color));
+        msg = msg.replace("{old_gamemode}", "").replace("{new_gamemode}", "").trim();
+        // Chat
+        if (mode == AlertMode.Chat || mode == AlertMode.Both) {
+            ChatUtils.addChatMessage(Component.literal(msg).withStyle(color));
+        }
+        // HUD Notification (no chat side-effect)
+        if ((mode == AlertMode.Notification || mode == AlertMode.Both) && playerId != null) {
+            int hash = java.util.Objects.hash(playerName, template.getTranslatedName());
+            NotificationMode notifMode = color == ChatFormatting.RED || color == ChatFormatting.DARK_RED
+                    ? NotificationMode.Error : NotificationMode.Success;
+            Managers.NOTIFICATION.notifyHud(msg, "", notifMode, hash);
+        }
     }
 
     private void playSound(double vol, double pitch, List<SoundEvent> sounds) {
