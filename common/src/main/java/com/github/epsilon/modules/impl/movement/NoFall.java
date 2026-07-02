@@ -1,12 +1,14 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.ClientTickEvent;
+import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.SendPositionEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 
 public class NoFall extends Module {
 
@@ -18,41 +20,49 @@ public class NoFall extends Module {
 
     private enum Mode {
         GroundSpoof,
-        GrimSimulation
+        Grim2B2T
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.GroundSpoof);
-    private final DoubleSetting fallDistance = doubleSetting("Fall Distance", 3, 3, 16, 1);
+    private final DoubleSetting fallDistance = doubleSetting("Fall Distance", 3, 3, 16, 1, () -> mode.is(Mode.GroundSpoof));
 
-    private boolean flag;
-    private boolean jump;
+    private boolean shouldCancel = false;
+
+    @Override
+    protected void onEnable() {
+        shouldCancel = false;
+    }
 
     @EventHandler
-    private void onMotion(SendPositionEvent event) {
-        if (nullCheck()) return;
-
-        if (mc.player.fallDistance > fallDistance.getValue()) {
-            flag = true;
-        }
-
-        if (flag && mc.player.onGround()) {
-            switch (mode.getValue()) {
-                case GroundSpoof -> event.setOnGround(false);
-                case GrimSimulation -> {
-                    event.setY(event.getY() + 0.1);
-                    jump = true;
-                }
-            }
-            flag = false;
+    private void onClientTick(ClientTickEvent.Pre event) {
+        if (!nullCheck() && mode.is(Mode.Grim2B2T) && isFalling()) {
+            mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 0.000000001, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), false, mc.player.horizontalCollision));
+            mc.player.resetFallDistance();
         }
     }
 
     @EventHandler
-    private void onKeyboardInput(KeyboardInputEvent event) {
-        if (jump) {
-            event.setJump(true);
-            jump = false;
+    private void onSendPosition(SendPositionEvent event) {
+        if (isFalling() && mode.is(Mode.GroundSpoof)) {
+            shouldCancel = true;
         }
+    }
+
+    @EventHandler
+    private void onPacketSend(PacketEvent.Send event) {
+        if (event.getPacket() instanceof ServerboundMovePlayerPacket packet) {
+            if (shouldCancel) packet.onGround = false;
+        }
+    }
+
+    private boolean isFalling() {
+        if (mc.player.isFallFlying()) {
+            return false;
+        }
+        if (mode.is(Mode.Grim2B2T)) {
+            return mc.player.fallDistance > 3f;
+        }
+        return mc.player.fallDistance > fallDistance.getValue();
     }
 
 }
