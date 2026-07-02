@@ -542,10 +542,6 @@ public class SettingListController {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
                 e -> e.getDisplayName().getString(),
                 null,
-                e -> {
-                    net.minecraft.resources.Identifier key = BuiltInRegistries.MOB_EFFECT.getKey(e);
-                    return net.minecraft.resources.Identifier.fromNamespaceAndPath(key.getNamespace(), "mob_effect/" + key.getPath());
-                },
                 java.util.List.of(
                         new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_POSITIVE.getTranslatedName(), e -> e.isBeneficial()),
                         new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_NEGATIVE.getTranslatedName(), e -> !e.isBeneficial())

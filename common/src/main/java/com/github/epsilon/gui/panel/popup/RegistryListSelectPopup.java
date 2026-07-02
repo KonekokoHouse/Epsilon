@@ -58,7 +58,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final Registry<T> registry;
     private final Function<T, String> displayNameFn;
     private final Function<T, ItemStack> iconProvider;
-    private final Function<T, Identifier> effectSpriteFn;
     private final Consumer<T> addFn;
     private final Consumer<T> removeFn;
     private final List<T> allEntries;
@@ -68,7 +67,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
     private final List<ItemPreview> itemPreviews = new ArrayList<>();
-    private final List<EffectSpritePreview> effectSprites = new ArrayList<>();
 
     private String query = "";
     private int selectedCategory = -1; // -1 = all
@@ -81,25 +79,17 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Consumer<T> addFn, Consumer<T> removeFn) {
-        this(bounds, setting, registry, displayNameFn, null, null, List.of(), addFn, removeFn);
+        this(bounds, setting, registry, displayNameFn, null, List.of(), addFn, removeFn);
     }
 
     public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
                                    Consumer<T> addFn, Consumer<T> removeFn) {
-        this(bounds, setting, registry, displayNameFn, iconProvider, null, List.of(), addFn, removeFn);
+        this(bounds, setting, registry, displayNameFn, iconProvider, List.of(), addFn, removeFn);
     }
 
     public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
-                                   List<Category<T>> categories,
-                                   Consumer<T> addFn, Consumer<T> removeFn) {
-        this(bounds, setting, registry, displayNameFn, iconProvider, null, categories, addFn, removeFn);
-    }
-
-    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
-                                   Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
-                                   Function<T, Identifier> effectSpriteFn,
                                    List<Category<T>> categories,
                                    Consumer<T> addFn, Consumer<T> removeFn) {
         this.bounds = bounds;
@@ -107,7 +97,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         this.registry = registry;
         this.displayNameFn = displayNameFn;
         this.iconProvider = iconProvider;
-        this.effectSpriteFn = effectSpriteFn;
         this.categories = categories;
         this.addFn = addFn;
         this.removeFn = removeFn;
@@ -131,7 +120,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         contentBuffer.clear();
         itemPreviews.clear();
-        effectSprites.clear();
         List<T> available = filteredAvailable();
         List<T> selected = filteredSelected();
         float columnContentHeight = Math.max(available.size(), selected.size()) * (ROW_HEIGHT + ROW_GAP);
@@ -187,7 +175,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                                 0.44f, catSelected ? MD3Theme.ON_PRIMARY : MD3Theme.TEXT_SECONDARY);
                         catTabX += catTextW + CATEGORY_TAB_GAP;
                     }
-                    viewportY = catY + CATEGORY_TAB_HEIGHT + 6.0f;
+                    viewportY = catY + CATEGORY_TAB_HEIGHT + HEADER_HEIGHT + 4.0f;
                 }
                 final float effectiveViewportY = viewportY;
 
@@ -214,9 +202,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-        boolean hasItems = iconProvider != null && !itemPreviews.isEmpty();
-        boolean hasSprites = effectSpriteFn != null && !effectSprites.isEmpty();
-        if (!hasItems && !hasSprites) return;
+        if (iconProvider == null || itemPreviews.isEmpty()) return;
         guiGraphics.nextStratum();
         if (lastViewport != null) {
             guiGraphics.enableScissor(
@@ -229,24 +215,9 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         for (ItemPreview preview : itemPreviews) {
             drawItemPreview(guiGraphics, preview);
         }
-        for (EffectSpritePreview sprite : effectSprites) {
-            drawEffectSprite(guiGraphics, sprite);
-        }
         if (lastViewport != null) {
             guiGraphics.disableScissor();
         }
-    }
-
-    private void drawEffectSprite(GuiGraphicsExtractor guiGraphics, EffectSpritePreview sprite) {
-        float scale = sprite.size() / 16.0f;
-        float guiScale = (float) (scale * LuminRenderSystem.getGuiScale() / mc.getWindow().getGuiScale());
-        float guiX = toMinecraftGuiX(sprite.x());
-        float guiY = toMinecraftGuiY(sprite.y());
-        guiGraphics.pose().pushMatrix();
-        guiGraphics.pose().translate(guiX, guiY);
-        guiGraphics.pose().scale(guiScale, guiScale);
-        guiGraphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI, sprite.spriteId(), 0, 0, 16, 16);
-        guiGraphics.pose().popMatrix();
     }
 
     @Override
@@ -361,15 +332,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                     textMaxWidth = previewX - rowBounds.x() - 12.0f;
                 }
             }
-            if (effectSpriteFn != null) {
-                Identifier spriteId = effectSpriteFn.apply(entry);
-                if (spriteId != null) {
-                    float previewX = actionX - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE;
-                    float previewY = rowBounds.y() + (rowBounds.height() - ITEM_PREVIEW_SIZE) * 0.5f;
-                    effectSprites.add(new EffectSpritePreview(spriteId, previewX, previewY, ITEM_PREVIEW_SIZE));
-                    textMaxWidth = Math.min(textMaxWidth, previewX - rowBounds.x() - 12.0f);
-                }
-            }
             final String display = trim(rawName, 0.50f, textMaxWidth);
             final float textY = centeredTextY(0.0f, rowBounds.height(), 0.50f);
 
@@ -452,6 +414,5 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private record ItemPreview(ItemStack stack, float x, float y, float size) {}
-    private record EffectSpritePreview(Identifier spriteId, float x, float y, float size) {}
     public record Category<T>(String name, Predicate<T> predicate) {}
 }
