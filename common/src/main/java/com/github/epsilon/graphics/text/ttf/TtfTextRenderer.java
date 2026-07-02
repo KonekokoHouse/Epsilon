@@ -17,11 +17,7 @@ import net.minecraft.util.ARGB;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
+import java.util.*;
 
 public class TtfTextRenderer implements ITextRenderer {
 

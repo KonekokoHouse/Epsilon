@@ -20,7 +20,7 @@ public class BlockListSettingRow extends SettingRow<BlockListSetting> {
 
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer,
-        PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+                        PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         String summary = setting.size() + " blocks";

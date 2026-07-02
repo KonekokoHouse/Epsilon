@@ -145,7 +145,7 @@ public class ESP2D extends Module {
         float healthRatio = Mth.clamp(health / maxHealth, 0.0f, 1.0f);
         float fillY = endY - height * healthRatio;
 
-        float distanceScale = getHealthBarDistanceScale(height);
+        float distanceScale = height / 45.0f;
         float width = healthBarWidth.getValue().floatValue() * distanceScale;
         float gap = 3.0f * distanceScale;
         float outlineWidth = healthBarOutline.getValue() ? healthBarOutlineWidth.getValue().floatValue() * distanceScale : 0.0f;
@@ -158,10 +158,6 @@ public class ESP2D extends Module {
         }
 
         rectRenderer.addRect(barX, fillY, width, endY - fillY, healthColor.getValue());
-    }
-
-    private float getHealthBarDistanceScale(float projectedHeight) {
-        return Mth.clamp(projectedHeight / 45.0f, 0.35f, 1.0f);
     }
 
 }

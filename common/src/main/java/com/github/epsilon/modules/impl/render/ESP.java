@@ -106,7 +106,7 @@ public class ESP extends Module {
     private void onRender3D(Render3DEvent event) {
         if (boxes.isEmpty()) return;
 
-        if (mc.getFps() < 8 && mc.player.tickCount > 500) {
+        if (mc.getFps() < 8 && mc.player.tickCount > 150) {
             ChatUtils.addChatMessage("就你这 FPS 你还开 ESP 呢? 该换电脑了!");
             toggle();
             return;

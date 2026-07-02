@@ -10,7 +10,6 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.math.MathUtils;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.BlockItem;
@@ -51,7 +50,7 @@ public class Eagle extends Module {
         sneakDelay = 0;
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (sneakDelay > 0) {
             sneakDelay--;
@@ -62,7 +61,7 @@ public class Eagle extends Module {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
         if (mc.screen != null) return;
 
@@ -106,8 +105,8 @@ public class Eagle extends Module {
     }
 
     private double[] predictMovement() {
-        float strafe = KeyboardInput.calculateImpulse(mc.options.keyLeft.isDown(), mc.options.keyRight.isDown()) * 0.98F;
-        float forward = KeyboardInput.calculateImpulse(mc.options.keyUp.isDown(), mc.options.keyDown.isDown()) * 0.98F;
+        float strafe = (mc.options.keyLeft.isDown() == mc.options.keyRight.isDown() ? 0.0f : mc.options.keyLeft.isDown() ? 1.0f : -1.0f) * 0.98F;
+        float forward = (mc.options.keyUp.isDown() == mc.options.keyDown.isDown() ? 0.0f : mc.options.keyUp.isDown() ? 1.0f : -1.0f) * 0.98F;
         float inputMagnitude = strafe * strafe + forward * forward;
 
         if (inputMagnitude < 1.0E-4F) {
