@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.popup;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
@@ -103,11 +104,11 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
                 float titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f);
                 float summaryScale = 0.52f;
-                String summary = setting.size() + " selected";
+                String summary = setting.size() + EpsilonTranslations.Gui.LIST_SELECTED.getTranslatedName();
                 popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY);
                 popup.text(summary, animatedBounds.width() - PADDING - textRenderer.getWidth(summary, summaryScale),
                         centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED);
-                popup.input(searchBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f, query.isEmpty() ? "Search blocks" : query, 0.54f,
+                popup.input(searchBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f, query.isEmpty() ? EpsilonTranslations.Gui.LIST_SEARCH.getTranslatedName() : query, 0.54f,
                         query.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY, query.length(), MD3Theme.PRIMARY, null, 0.0f, null);
                 IMEFocusHelper.updateCursorPos(searchBounds.x() + 8.0f, searchBounds.y() + 4.0f);
 
@@ -117,8 +118,8 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
                 float rightX = leftX + columnWidth + COLUMN_GAP;
                 float headerY = animatedViewport.y() - HEADER_HEIGHT - 2.0f;
                 float headerTextY = centeredTextY(headerY, HEADER_HEIGHT, 0.50f);
-                popup.text("Available", leftX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
-                popup.text("Selected", rightX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
+                popup.text(EpsilonTranslations.Gui.LIST_AVAILABLE.getTranslatedName(), leftX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
+                popup.text(EpsilonTranslations.Gui.LIST_SELECTED_HEADER.getTranslatedName(), rightX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
 
                 hoveredAdd = null;
                 hoveredRemove = null;
