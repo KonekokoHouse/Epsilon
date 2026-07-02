@@ -84,6 +84,11 @@ public class StringWidget extends SettingWidget<StringSetting> {
         return inputField.isFocused();
     }
 
+    public void blurInput() {
+        syncSetting();
+        inputField.blur();
+    }
+
     private void syncSetting() {
         setting.setValue(inputField.getText());
     }
