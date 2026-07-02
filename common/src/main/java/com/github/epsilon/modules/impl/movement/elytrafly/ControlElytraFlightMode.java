@@ -3,6 +3,8 @@ package com.github.epsilon.modules.impl.movement.elytrafly;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.modules.impl.movement.follower.Follower;
+import com.github.epsilon.modules.impl.movement.follower.FollowerInput;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
@@ -92,6 +94,11 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private float calcYaw() {
+        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
+        if (followerInput != null) {
+            return followerInput.yaw();
+        }
+
         float yaw = mc.player.getYRot();
 
         boolean forward = mc.options.keyUp.isDown();
@@ -121,6 +128,11 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private float calcPitch() {
+        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
+        if (followerInput != null) {
+            return followerInput.pitch();
+        }
+
         float pitch = mc.player.getXRot();
 
         boolean jump = mc.options.keyJump.isDown();
@@ -140,6 +152,11 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private boolean hasMoveInput() {
+        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
+        if (followerInput != null) {
+            return followerInput.hasMoveInput();
+        }
+
         return mc.options.keyUp.isDown()
                 || mc.options.keyDown.isDown()
                 || mc.options.keyLeft.isDown()
