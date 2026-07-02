@@ -3,7 +3,6 @@ package com.github.epsilon.elements.impl;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -72,11 +71,7 @@ public class Potions extends HudModule {
         if (items.isEmpty()) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelRenderBatch batch = renderBatch();
-        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
-        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
-        PanelRenderBatch.TextureFacade textureRenderer = batch.textureRenderer();
-        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
+        var scope = renderScope();
 
         float scale = this.scale.getValue().floatValue();
         float rowHeight = ROW_HEIGHT * scale;
@@ -120,16 +115,16 @@ public class Potions extends HudModule {
             }
 
             if (drawShadow.getValue()) {
-                shadowRenderer.addShadow(rowX, currentY, rowWidth, rowHeight, radius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), alpha));
+                scope.shadow(rowX, currentY, rowWidth, rowHeight, radius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), alpha));
             }
 
-            roundRectRenderer.addRoundRect(rowX, currentY, rowWidth, rowHeight, radius, withAlpha(backgroundColor.getValue(), alpha));
+            scope.roundRect(rowX, currentY, rowWidth, rowHeight, radius, withAlpha(backgroundColor.getValue(), alpha));
 
             float cursorX = rowX + padX;
 
             if (showIcon.getValue() && info.iconTexture != null) {
                 float iconY = currentY + (rowHeight - iconSize) / 2.0f;
-                textureRenderer.addQuadTexture(info.iconTexture, cursorX, iconY, iconSize, iconSize, 0f, 0f, 1f, 1f, new Color(255, 255, 255, (int) (255 * alpha)));
+                scope.texture(info.iconTexture, cursorX, iconY, iconSize, iconSize, 0f, 0f, 1f, 1f, new Color(255, 255, 255, (int) (255 * alpha)));
                 cursorX += iconSize + iconTextGap;
             }
 
@@ -143,8 +138,8 @@ public class Potions extends HudModule {
             Color nameColor = tintNameWithEffect.getValue() ? withAlpha(brighten(info.effectColor, 1.15f), alpha) : new Color(255, 255, 255, (int) (235 * alpha));
             Color durationColor = new Color(180, 180, 180, (int) (220 * alpha));
 
-            batchText.addText(info.name, cursorX, nameY, nameRenderScale, nameColor);
-            batchText.addText(info.duration, cursorX, durationY, durationRenderScale, durationColor);
+            scope.text(info.name, cursorX, nameY, nameRenderScale, nameColor);
+            scope.text(info.duration, cursorX, durationY, durationRenderScale, durationColor);
 
             if (showPill.getValue()) {
                 float pillX = rowX + rowWidth - padX - pillWidth;
@@ -152,7 +147,7 @@ public class Potions extends HudModule {
                 float pillY = currentY + padY;
 
                 Color pillTrack = new Color(0, 0, 0, (int) (140 * alpha));
-                roundRectRenderer.addRoundRect(pillX, pillY, pillWidth, pillH, pillRadius, pillTrack);
+                scope.roundRect(pillX, pillY, pillWidth, pillH, pillRadius, pillTrack);
 
                 float fillH = pillH * info.progress;
                 if (fillH > 0.5f) {
@@ -161,7 +156,7 @@ public class Potions extends HudModule {
                     float topRadius = fullFill ? pillRadius : 0f;
                     Color top = withAlpha(brighten(info.effectColor, 1.3f), alpha);
                     Color bottom = withAlpha(info.effectColor, alpha);
-                    roundRectRenderer.addRoundRectGradient(pillX, fillY, pillWidth, fillH, topRadius, topRadius, pillRadius, pillRadius, top, bottom, bottom, top);
+                    scope.roundRectGradient(pillX, fillY, pillWidth, fillH, topRadius, topRadius, pillRadius, pillRadius, top, bottom, bottom, top);
                 }
             }
 

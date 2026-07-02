@@ -1,10 +1,10 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -89,11 +89,11 @@ public class ScaffoldBlock extends HudModule {
         }
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelRenderBatch batch = renderBatch();
+        PanelUiTree.Scope scope = renderScope();
 
         Layout layout = createLayout(textRenderer);
-        drawBackground(layout, animation, batch.roundRectRenderer(), batch.shadowRenderer());
-        drawText(textRenderer, batch.textRenderer(), layout, animation);
+        drawBackground(scope, layout, animation);
+        drawText(scope, textRenderer, layout, animation);
         setBounds(layout.totalWidth(), layout.height());
     }
 
@@ -132,7 +132,7 @@ public class ScaffoldBlock extends HudModule {
         return new Layout(height, radius, padX, scaled, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth, this.x);
     }
 
-    private void drawBackground(Layout layout, AnimationState animation, PanelRenderBatch.RoundRectFacade roundRectRenderer, PanelRenderBatch.ShadowFacade shadowRenderer) {
+    private void drawBackground(PanelUiTree.Scope scope, Layout layout, AnimationState animation) {
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
         float animatedRadius = Math.min(layout.radius(), animatedWidth / 2.0f);
@@ -141,33 +141,31 @@ public class ScaffoldBlock extends HudModule {
             BlurShader.INSTANCE.render(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, blurStrength.getValue());
         }
         if (drawShadow.getValue()) {
-            shadowRenderer.addShadow(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), animation.contentAlpha()));
+            scope.shadow(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), animation.contentAlpha()));
         }
 
-        roundRectRenderer.addRoundRect(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, withAlpha(backgroundColor.getValue(), animation.contentAlpha()));
+        scope.roundRect(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, withAlpha(backgroundColor.getValue(), animation.contentAlpha()));
     }
 
-    private void drawText(TextRenderer textRenderer, PanelRenderBatch.TextFacade batchText, Layout layout, AnimationState animation) {
+    private void drawText(PanelUiTree.Scope scope, TextRenderer textRenderer, Layout layout, AnimationState animation) {
         float numberColumnX = layout.renderX() + layout.padX();
         float numberY = this.y + (layout.height() - textRenderer.getHeight(layout.numberScale())) / 2.0f - scale.getValue().floatValue();
         float animatedNumberColumnX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.numberColumnWidth() / 2.0f, numberColumnX);
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
 
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(animatedX, this.y, animatedWidth, layout.height());
-        renderBatch().setLayerScissor(0, scissor.x(), scissor.y(), scissor.width(), scissor.height());
+        scope.scissor(new PanelLayout.Rect(animatedX, this.y, animatedWidth, layout.height()), clipped -> {
+            if (smoothNumber.getValue()) {
+                drawRollingNumber(clipped, textRenderer, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
+            } else {
+                clipped.text(targetCountText, animatedNumberColumnX, numberY, layout.numberScale(), withAlpha(textColor.getValue(), animation.contentAlpha()));
+            }
 
-        if (smoothNumber.getValue()) {
-            drawRollingNumber(textRenderer, batchText, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
-        } else {
-            batchText.addText(targetCountText, animatedNumberColumnX, numberY, layout.numberScale(), withAlpha(textColor.getValue(), animation.contentAlpha()));
-        }
-
-        float labelX = numberColumnX + layout.numberColumnWidth() + layout.labelGap();
-        float animatedLabelX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.labelWidth() / 2.0f, labelX);
-        float labelY = this.y + (layout.height() - textRenderer.getHeight(layout.labelScale())) / 2.0f - 0.5f * scale.getValue().floatValue();
-        batchText.addText(LABEL, animatedLabelX, labelY, layout.labelScale(), withAlpha(textSecondary.getValue(), animation.contentAlpha()));
-        renderBatch().clearLayerScissor(0);
+            float labelX = numberColumnX + layout.numberColumnWidth() + layout.labelGap();
+            float animatedLabelX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.labelWidth() / 2.0f, labelX);
+            float labelY = this.y + (layout.height() - textRenderer.getHeight(layout.labelScale())) / 2.0f - 0.5f * scale.getValue().floatValue();
+            clipped.text(LABEL, animatedLabelX, labelY, layout.labelScale(), withAlpha(textSecondary.getValue(), animation.contentAlpha()));
+        });
     }
 
     private void syncNumberAnimation(int blockCount, DeltaTracker deltaTracker) {
@@ -237,7 +235,7 @@ public class ScaffoldBlock extends HudModule {
         return width + 4.0f * scale.getValue().floatValue();
     }
 
-    private void drawRollingNumber(TextRenderer textRenderer, PanelRenderBatch.TextFacade batchText, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
+    private void drawRollingNumber(PanelUiTree.Scope scope, TextRenderer textRenderer, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
         String previous = previousCountText;
         String target = targetCountText;
         int maxLen = Math.max(previous.length(), target.length());
@@ -262,17 +260,17 @@ public class ScaffoldBlock extends HudModule {
 
             if (previousChar == targetChar) {
                 if (targetChar != '\0') {
-                    batchText.addText(String.valueOf(targetChar), charX, textY, numberScale, withAlpha(textColor.getValue(), alphaMul));
+                    scope.text(String.valueOf(targetChar), charX, textY, numberScale, withAlpha(textColor.getValue(), alphaMul));
                 }
             } else {
                 float oldAlpha = 1.0f - numberAnimProgress;
                 float newAlpha = numberAnimProgress;
 
                 if (previousChar != '\0' && oldAlpha > 0.01f) {
-                    batchText.addText(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha * alphaMul));
+                    scope.text(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha * alphaMul));
                 }
                 if (targetChar != '\0' && newAlpha > 0.01f) {
-                    batchText.addText(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha * alphaMul));
+                    scope.text(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha * alphaMul));
                 }
             }
 

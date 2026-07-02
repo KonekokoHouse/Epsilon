@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -32,14 +31,6 @@ public class ClientSettingTextField {
         this.maxLength = maxLength;
         hoverAnimation.setStartValue(0.0f);
         focusAnimation.setStartValue(0.0f);
-    }
-
-    public void render(PanelLayout.Rect bounds, int mouseX, int mouseY,
-                       PanelRenderBatch renderBatch, TextRenderer textRenderer,
-                       String placeholder, float textScale, String trailingHint) {
-        PanelUiTree tree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, fieldScope ->
-                buildUi(fieldScope, bounds, mouseX, mouseY, textRenderer, placeholder, textScale, trailingHint)));
-        renderBatch.render(tree);
     }
 
     public void buildUi(PanelUiTree.Scope scope, PanelLayout.Rect bounds, int mouseX, int mouseY,

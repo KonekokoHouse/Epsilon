@@ -1,21 +1,24 @@
 package com.github.epsilon.gui.dsl;
 
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
+import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.utils.render.animation.Animation;
+import net.minecraft.resources.Identifier;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
  * 面板 UI 的声明式节点树。
  * <p>
  * 调用方通过 {@link #build(Consumer)} 在一个 {@link Scope} 中描述本帧需要绘制的内容，
- * 然后再由 {@link PanelUiCompiler} 将树结构编译进具体 renderer 或视口缓冲。
+ * 然后再由 {@link PanelUiCompiler} 将树结构编译进调度器命令或视口缓冲。
  */
 public class PanelUiTree {
 
@@ -83,7 +86,7 @@ public class PanelUiTree {
         /**
          * 向当前作用域追加单个节点，并在需要时绑定到相对 layer。
          * <p>
-         * 高频渲染门面会大量调用单节点重载；这里直接包装 {@link LayeredNode}，
+         * 高频绘制上下文会大量调用单节点重载；这里直接包装 {@link LayeredNode}，
          * 避免为了一个图元额外创建临时 {@link Scope} 和子列表。
          */
         private void addNode(int layer, UiNode node) {
@@ -97,7 +100,7 @@ public class PanelUiTree {
         /**
          * 生成当前作用域内容的不可变树快照。
          * <p>
-         * 长生命周期渲染门面会复用同一个 {@link Scope} 收集整帧内容，
+         * 长生命周期绘制上下文会复用同一个 {@link Scope} 收集整帧内容，
          * 快照用于把当帧节点稳定地交给批次编译。
          */
         public PanelUiTree snapshot() {
@@ -116,6 +119,14 @@ public class PanelUiTree {
 
         public PanelLayout.Rect bound() {
             return currentBound();
+        }
+
+        public Stack stack(PanelLayout.Rect bounds) {
+            return new Stack(resolveRect(bounds));
+        }
+
+        public Stack stack(float x, float y, float width, float height) {
+            return stack(new PanelLayout.Rect(x, y, width, height));
         }
 
         public void push(PanelLayout.Rect bounds, Consumer<Scope> content) {
@@ -230,6 +241,17 @@ public class PanelUiTree {
             CaptureResult capture = capture(content);
             hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
             nodes.add(new LayerNode(layer, capture.nodes()));
+        }
+
+        public void scissor(PanelLayout.Rect clip, Consumer<Scope> content) {
+            PanelLayout.Rect resolvedClip = resolveRect(clip);
+            CaptureResult capture = capture(content);
+            hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
+            nodes.add(new ScissorNode(resolvedClip, capture.nodes()));
+        }
+
+        public void scissor(float x, float y, float width, float height, Consumer<Scope> content) {
+            scissor(new PanelLayout.Rect(x, y, width, height), content);
         }
 
         /**
@@ -413,15 +435,50 @@ public class PanelUiTree {
             roundedTexture(texture, x, y, width, height, 0.0f, u0, v0, u1, v1, color);
         }
 
+        public void texture(Identifier texture, float x, float y, float width, float height,
+                            float u0, float v0, float u1, float v1, Color color) {
+            texture(texture, x, y, width, height, u0, v0, u1, v1, color, false);
+        }
+
+        public void texture(Identifier texture, float x, float y, float width, float height,
+                            float u0, float v0, float u1, float v1, Color color, boolean linearFilter) {
+            texture(new Render2DTexture.IdentifierRef(texture, linearFilter), x, y, width, height, u0, v0, u1, v1, color);
+        }
+
+        public void texture(LuminTexture texture, float x, float y, float width, float height,
+                            float u0, float v0, float u1, float v1, Color color) {
+            texture(new Render2DTexture.LuminRef(texture), x, y, width, height, u0, v0, u1, v1, color);
+        }
+
         public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height, float radius,
                                    float u0, float v0, float u1, float v1, Color color) {
             roundedTexture(texture, x, y, width, height, radius, radius, radius, radius, u0, v0, u1, v1, color);
+        }
+
+        public void roundedTexture(Identifier texture, float x, float y, float width, float height, float radius,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            roundedTexture(texture, x, y, width, height, radius, u0, v0, u1, v1, color, false);
+        }
+
+        public void roundedTexture(Identifier texture, float x, float y, float width, float height, float radius,
+                                   float u0, float v0, float u1, float v1, Color color, boolean linearFilter) {
+            roundedTexture(new Render2DTexture.IdentifierRef(texture, linearFilter), x, y, width, height, radius, u0, v0, u1, v1, color);
+        }
+
+        public void roundedTexture(LuminTexture texture, float x, float y, float width, float height, float radius,
+                                   float u0, float v0, float u1, float v1, Color color) {
+            roundedTexture(new Render2DTexture.LuminRef(texture), x, y, width, height, radius, u0, v0, u1, v1, color);
         }
 
         public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height,
                                    float topLeft, float topRight, float bottomRight, float bottomLeft,
                                    float u0, float v0, float u1, float v1, Color color) {
             nodes.add(new TextureNode(texture, resolveX(x), resolveY(y), width, height, topLeft, topRight, bottomRight, bottomLeft, u0, v0, u1, v1, color));
+        }
+
+        public void playerHead(LuminTexture texture, float x, float y, float size, float radius, Color color) {
+            roundedTexture(texture, x, y, size, size, radius, 8.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 16.0f / 64.0f, color);
+            roundedTexture(texture, x, y, size, size, radius, 40.0f / 64.0f, 8.0f / 64.0f, 48.0f / 64.0f, 16.0f / 64.0f, color);
         }
 
         public void button(float x, float y, float width, float height, float radius, Color background,
@@ -679,6 +736,78 @@ public class PanelUiTree {
                 }
             }
         }
+
+        /**
+         * 当前作用域内的垂直自动布局栈。
+         * <p>
+         * Stack 会按 item 高度推进游标，并可直接在每个 item 的矩形内下传同一个 {@link Scope}。
+         */
+        public final class Stack {
+            private final PanelLayout.Rect bounds;
+            private float cursor;
+
+            private Stack(PanelLayout.Rect bounds) {
+                this.bounds = bounds;
+                this.cursor = bounds.y();
+            }
+
+            public PanelLayout.Rect bounds() {
+                return bounds;
+            }
+
+            public PanelLayout.Rect item(float height) {
+                PanelLayout.Rect rect = new PanelLayout.Rect(bounds.x(), cursor, bounds.width(), Math.max(0.0f, height));
+                cursor += Math.max(0.0f, height);
+                return rect;
+            }
+
+            public PanelLayout.Rect item(float height, float gapAfter) {
+                PanelLayout.Rect rect = item(height);
+                gap(gapAfter);
+                return rect;
+            }
+
+            public void item(float height, Consumer<Scope> content) {
+                PanelLayout.Rect rect = item(height);
+                pushAbsolute(rect, content);
+            }
+
+            public void item(float height, float gapAfter, Consumer<Scope> content) {
+                PanelLayout.Rect rect = item(height, gapAfter);
+                pushAbsolute(rect, content);
+            }
+
+            public void item(float height, BiConsumer<PanelLayout.Rect, Scope> content) {
+                PanelLayout.Rect rect = item(height);
+                pushAbsolute(rect, scope -> content.accept(rect, scope));
+            }
+
+            public void item(float height, float gapAfter, BiConsumer<PanelLayout.Rect, Scope> content) {
+                PanelLayout.Rect rect = item(height, gapAfter);
+                pushAbsolute(rect, scope -> content.accept(rect, scope));
+            }
+
+            public void gap(float gap) {
+                cursor += Math.max(0.0f, gap);
+            }
+
+            public PanelLayout.Rect offset(float xOffset, float yOffset, float widthOffset, float heightOffset) {
+                return new PanelLayout.Rect(
+                        bounds.x() + xOffset,
+                        cursor + yOffset,
+                        Math.max(0.0f, bounds.width() + widthOffset),
+                        Math.max(0.0f, heightOffset)
+                );
+            }
+
+            public void offset(float xOffset, float yOffset, float widthOffset, float heightOffset, Consumer<Scope> content) {
+                pushAbsolute(offset(xOffset, yOffset, widthOffset, heightOffset), content);
+            }
+
+            public float cursor() {
+                return cursor;
+            }
+        }
     }
 
     /**
@@ -818,9 +947,9 @@ public class PanelUiTree {
     /**
      * DSL 节点只描述本帧的绘制意图，不持有 renderer 状态。
      * <p>
-     * 编译阶段会按节点类型把它们分发到具体 renderer 或视口缓冲。
+     * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    sealed interface UiNode permits LayerNode, LayeredNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, TextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, TextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -866,6 +995,9 @@ public class PanelUiTree {
      * 单节点 layer 包装；供高频图元入口使用，减少小列表分配。
      */
     record LayeredNode(int layer, UiNode child) implements UiNode {
+    }
+
+    record ScissorNode(PanelLayout.Rect clip, List<UiNode> children) implements UiNode {
     }
 
     record ShadowNode(float x, float y, float width, float height,
