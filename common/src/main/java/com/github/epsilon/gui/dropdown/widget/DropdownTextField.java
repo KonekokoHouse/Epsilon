@@ -32,42 +32,42 @@ public class DropdownTextField {
     }
 
     public void draw(DropdownDrawContext renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
-        renderer.roundRect().addRoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
-        renderer.outline().addOutline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
+        renderer.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
+        renderer.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
-        float textY = y + (height - renderer.text().getHeight(textScale)) / 2.0f;
+        float textY = y + (height - renderer.textHeight(textScale)) / 2.0f;
         float textX = x + 4.0f;
         updateCursorLayout(renderer, textX, textScale);
-        renderer.text().addText(trimToWidth(display, textScale, width - 8.0f, renderer), textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
+        renderer.text(trimToWidth(display, textScale, width - 8.0f, renderer), textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
 
         if (focused) {
             int safeCursor = Math.min(cursor, text.length());
-            float caretX = textX + renderer.text().getWidth(text.substring(0, safeCursor), textScale);
+            float caretX = textX + renderer.textWidth(text.substring(0, safeCursor), textScale);
             drawCaret(renderer, caretX, textY, textScale);
             IMEFocusHelper.updateCursorPos(caretX, textY);
         }
     }
 
     public void drawCentered(DropdownDrawContext renderer, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
-        renderer.roundRect().addRoundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
-        renderer.outline().addOutline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
+        renderer.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
+        renderer.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
 
-        float textY = y + (height - renderer.text().getHeight(textScale)) / 2.0f;
+        float textY = y + (height - renderer.textHeight(textScale)) / 2.0f;
         String visibleText = trimToWidth(display, textScale, width - 8.0f, renderer);
-        float textX = x + (width - renderer.text().getWidth(visibleText, textScale)) * 0.5f;
-        float caretBaseX = x + (width - renderer.text().getWidth(text, textScale)) * 0.5f;
+        float textX = x + (width - renderer.textWidth(visibleText, textScale)) * 0.5f;
+        float caretBaseX = x + (width - renderer.textWidth(text, textScale)) * 0.5f;
         updateCursorLayout(renderer, caretBaseX, textScale);
-        renderer.text().addText(visibleText, textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
+        renderer.text(visibleText, textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
 
         if (focused) {
             int safeCursor = Math.min(cursor, text.length());
             String beforeCursor = text.substring(0, safeCursor);
-            float caretX = caretBaseX + renderer.text().getWidth(beforeCursor, textScale);
+            float caretX = caretBaseX + renderer.textWidth(beforeCursor, textScale);
             drawCaret(renderer, caretX, textY, textScale);
             IMEFocusHelper.updateCursorPos(caretX, textY);
         }
@@ -231,8 +231,8 @@ public class DropdownTextField {
             cursorMidpoints = new float[text.length()];
         }
         for (int i = 0; i < text.length(); i++) {
-            float left = renderer.text().getWidth(text.substring(0, i), textScale);
-            float right = renderer.text().getWidth(text.substring(0, i + 1), textScale);
+            float left = renderer.textWidth(text.substring(0, i), textScale);
+            float right = renderer.textWidth(text.substring(0, i + 1), textScale);
             cursorMidpoints[i] = textX + (left + right) * 0.5f;
         }
     }
@@ -248,19 +248,19 @@ public class DropdownTextField {
 
     private void drawCaret(DropdownDrawContext renderer, float x, float y, float textScale) {
         if (System.currentTimeMillis() % 1000 > 500) {
-            renderer.rect().addRect(x, y, 0.8f, renderer.text().getHeight(textScale), MD3Theme.TEXT_PRIMARY);
+            renderer.rect(x, y, 0.8f, renderer.textHeight(textScale), MD3Theme.TEXT_PRIMARY);
         }
     }
 
     private String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
         if (value == null || value.isEmpty()) return "";
-        if (renderer.text().getWidth(value, scale) <= maxWidth) return value;
+        if (renderer.textWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = renderer.text().getWidth(ellipsis, scale);
+        float ellipsisWidth = renderer.textWidth(ellipsis, scale);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         for (int len = value.length() - 1; len >= 0; len--) {
             String candidate = value.substring(0, len) + ellipsis;
-            if (renderer.text().getWidth(candidate, scale) <= maxWidth) return candidate;
+            if (renderer.textWidth(candidate, scale) <= maxWidth) return candidate;
         }
         return ellipsis;
     }

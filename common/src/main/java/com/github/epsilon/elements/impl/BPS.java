@@ -3,7 +3,7 @@ package com.github.epsilon.elements.impl;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -86,10 +86,7 @@ public class BPS extends HudModule {
         updateBps();
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelRenderBatch batch = renderBatch();
-        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
-        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
-        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
+        PanelUiTree.Scope scope = renderScope();
 
         float s = scale.getValue().floatValue();
         float radius = cornerRadius.getValue().floatValue() * s;
@@ -102,17 +99,17 @@ public class BPS extends HudModule {
         }
 
         if (drawShadow.getValue()) {
-            shadowRenderer.addShadow(this.x, this.y, panelW, panelH, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
+            scope.shadow(this.x, this.y, panelW, panelH, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
         }
 
-        roundRectRenderer.addRoundRect(this.x, this.y, panelW, panelH, radius, backgroundColor.getValue());
+        scope.roundRect(this.x, this.y, panelW, panelH, radius, backgroundColor.getValue());
 
         float dotSize = 5f * s;
         float dotRadius = dotSize / 2f;
-        roundRectRenderer.addRoundRect(this.x + 8f * s, this.y + 9f * s, dotSize, dotSize, dotRadius, accentColor.getValue());
+        scope.roundRect(this.x + 8f * s, this.y + 9f * s, dotSize, dotSize, dotRadius, accentColor.getValue());
 
         float titleScale = 0.62f * s;
-        batchText.addText("Movement", this.x + 18f * s, this.y + 7f * s, titleScale, textColor.getValue());
+        scope.text("Movement", this.x + 18f * s, this.y + 7f * s, titleScale, textColor.getValue());
 
         String bpsText = formatBps(animatedBps);
         float numberScale = 1.08f * s;
@@ -139,31 +136,31 @@ public class BPS extends HudModule {
                     previousBpsText = targetBpsText;
                 }
             }
-            drawRollingNumber(textRenderer, batchText, numberScale, s);
+            drawRollingNumber(scope, textRenderer, numberScale, s);
             float targetWidth = textRenderer.getWidth(targetBpsText, numberScale);
-            batchText.addText("bps", this.x + 9f * s + targetWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
+            scope.text("bps", this.x + 9f * s + targetWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
         } else {
-            batchText.addText(bpsText, this.x + 9f * s, this.y + 23f * s, numberScale, textColor.getValue());
+            scope.text(bpsText, this.x + 9f * s, this.y + 23f * s, numberScale, textColor.getValue());
             float numberWidth = textRenderer.getWidth(bpsText, numberScale);
-            batchText.addText("bps", this.x + 9f * s + numberWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
+            scope.text("bps", this.x + 9f * s + numberWidth + 3f * s, this.y + 28f * s, unitScale, textSecondary.getValue());
         }
 
         String peakText = "Maximum " + formatBps(highestBps);
-        batchText.addText(peakText, this.x + 9f * s, this.y + 44f * s, peakScale, textMuted.getValue());
+        scope.text(peakText, this.x + 9f * s, this.y + 44f * s, peakScale, textMuted.getValue());
 
         float graphX = this.x + 62f * s;
         float graphY = this.y + 15f * s;
         float graphW = 78f * s;
         float graphH = graphHeight.getValue().floatValue() * s;
-        drawGraph(roundRectRenderer, graphX, graphY, graphW, graphH, s);
+        drawGraph(scope, graphX, graphY, graphW, graphH, s);
 
         setBounds(panelW, panelH);
     }
 
-    private void drawGraph(PanelRenderBatch.RoundRectFacade rr, float x, float y, float w, float h, float s) {
+    private void drawGraph(PanelUiTree.Scope scope, float x, float y, float w, float h, float s) {
         float graphRadius = 4f * s;
 
-        rr.addRoundRect(x, y, w, h, graphRadius, graphBgColor.getValue());
+        scope.roundRect(x, y, w, h, graphRadius, graphBgColor.getValue());
 
         float paddingX = 5f * s;
         float paddingY = 3f * s;
@@ -179,7 +176,7 @@ public class BPS extends HudModule {
 
         float refLineY = baseline - usableH * 0.22f;
         float refThickness = Math.max(0.45f * s, 0.5f);
-        rr.addRoundRect(x + 4f * s, refLineY - refThickness / 2f, w - 8f * s, refThickness, refThickness / 2f, graphMidlineColor.getValue());
+        scope.roundRect(x + 4f * s, refLineY - refThickness / 2f, w - 8f * s, refThickness, refThickness / 2f, graphMidlineColor.getValue());
 
         float max = getGraphMax();
         if (max < 0.1f) max = 1f;
@@ -211,8 +208,8 @@ public class BPS extends HudModule {
             float glowAlpha = 0.10f + age * 0.24f;
             float mainAlpha = 0.30f + age * 0.62f;
 
-            rr.addRoundRect(glowX, baseline - barH, glowBarWidth, barH, glowBarRadius, withAlpha(glowColor, glowAlpha));
-            rr.addRoundRect(barX, baseline - barH, barWidth, barH, barRadius, withAlpha(lineColor, mainAlpha));
+            scope.roundRect(glowX, baseline - barH, glowBarWidth, barH, glowBarRadius, withAlpha(glowColor, glowAlpha));
+            scope.roundRect(barX, baseline - barH, barWidth, barH, barRadius, withAlpha(lineColor, mainAlpha));
         }
 
         float latestValue = graphValues[(graphIndex - 1 + GRAPH_SIZE) % GRAPH_SIZE];
@@ -222,8 +219,8 @@ public class BPS extends HudModule {
         float pulse = 0.6f + latestNormalized * 1.8f;
         float dotR = (2.0f + pulse) * s;
 
-        rr.addRoundRect(latestX - dotR, latestY - dotR, dotR * 2f, dotR * 2f, dotR, withAlpha(glowColor, 0.24f + latestNormalized * 0.22f));
-        rr.addRoundRect(latestX - 1.55f * s, latestY - 1.55f * s, 3.1f * s, 3.1f * s, 1.55f * s, lineColor);
+        scope.roundRect(latestX - dotR, latestY - dotR, dotR * 2f, dotR * 2f, dotR, withAlpha(glowColor, 0.24f + latestNormalized * 0.22f));
+        scope.roundRect(latestX - 1.55f * s, latestY - 1.55f * s, 3.1f * s, 3.1f * s, 1.55f * s, lineColor);
     }
 
     private void updateBps() {
@@ -300,7 +297,7 @@ public class BPS extends HudModule {
         return Math.max(max, 8f);
     }
 
-    private void drawRollingNumber(TextRenderer textRenderer, PanelRenderBatch.TextFacade batchText, float numberScale, float s) {
+    private void drawRollingNumber(PanelUiTree.Scope scope, TextRenderer textRenderer, float numberScale, float s) {
         float progress = numberAnimProgress;
         String prev = previousBpsText;
         String target = targetBpsText;
@@ -324,17 +321,17 @@ public class BPS extends HudModule {
 
             if (prevChar == targetChar) {
                 if (targetChar != '\0') {
-                    batchText.addText(String.valueOf(targetChar), charX, baseY, numberScale, textColor.getValue());
+                    scope.text(String.valueOf(targetChar), charX, baseY, numberScale, textColor.getValue());
                 }
             } else {
                 float oldAlpha = 1f - progress;
                 float newAlpha = progress;
 
                 if (prevChar != '\0' && oldAlpha > 0.01f) {
-                    batchText.addText(String.valueOf(prevChar), charX, baseY - progress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha));
+                    scope.text(String.valueOf(prevChar), charX, baseY - progress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha));
                 }
                 if (targetChar != '\0' && newAlpha > 0.01f) {
-                    batchText.addText(String.valueOf(targetChar), charX, baseY + (1f - progress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha));
+                    scope.text(String.valueOf(targetChar), charX, baseY + (1f - progress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha));
                 }
             }
 

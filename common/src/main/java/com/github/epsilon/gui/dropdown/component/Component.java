@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.gui.dropdown.DropdownDrawContext;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.PanelLayout;
 
 public abstract class Component {
@@ -15,8 +16,13 @@ public abstract class Component {
 
     public final void draw(DropdownDrawContext renderer, int mouseX, int mouseY, PanelLayout.Rect bounds) {
         // 组件只缓存本帧命中区域，位置由 PanelUiTree/stack 在调用侧统一计算。
+        renderer.scope().pushAbsolute(bounds, scope -> drawInScope(renderer, mouseX, mouseY, bounds, scope));
+    }
+
+    public final void drawInScope(DropdownDrawContext renderer, int mouseX, int mouseY,
+                                  PanelLayout.Rect bounds, PanelUiTree.Scope scope) {
         setPosition(bounds.x(), bounds.y(), bounds.width());
-        draw(renderer, mouseX, mouseY);
+        draw(renderer.withScope(scope), mouseX, mouseY);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -63,6 +69,14 @@ public abstract class Component {
 
     protected boolean isHovered(double mouseX, double mouseY) {
         return isHovered(mouseX, mouseY, x, y, width, getHeight());
+    }
+
+    protected float absoluteX(float localX) {
+        return x + localX;
+    }
+
+    protected float absoluteY(float localY) {
+        return y + localY;
     }
 
 }

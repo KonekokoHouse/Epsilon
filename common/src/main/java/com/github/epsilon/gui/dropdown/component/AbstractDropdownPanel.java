@@ -101,19 +101,19 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         updateScroll(contentHeight, visibleHeight, true);
         float panelHeight = cachedPanelHeight;
 
-        renderer.shadow().addShadow(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow());
-        renderer.roundRect().addRoundRect(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground());
+        renderer.shadow(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow());
+        renderer.roundRect(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground());
 
         float iconX = x + 7.5f;
         float textX = icon == null || icon.isBlank() ? x + 10.0f : iconX + 16.0f;
-        float textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.text().getHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
+        float textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
         if (icon != null && !icon.isBlank()) {
-            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.text().getHeight(DropdownTheme.HEADER_ICON_SCALE)) * 0.5f;
-            renderer.text().addText(icon, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, StaticFontLoader.ICONS);
+            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_ICON_SCALE)) * 0.5f;
+            renderer.text(icon, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, StaticFontLoader.ICONS);
         }
         String headerTitle = getTitle();
-        renderer.text().addText(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY);
-        renderer.triangle().addChevronTriangle(x + width - 10.0f, y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f, 3.0f, expand, DropdownTheme.groupChevron(0.0f));
+        renderer.text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY);
+        renderer.triangle(x + width - 10.0f, y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f, 3.0f, expand, DropdownTheme.groupChevron(0.0f));
 
         if (contentHeight > visibleHeight && opened && expand > 0.5f) {
             float scrollbarX = x + width - 2.5f;
@@ -122,7 +122,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
             float thumbRatio = visibleHeight / contentHeight;
             float thumbH = Math.max(10.0f, scrollbarTrackH * thumbRatio);
             float thumbY = scrollbarTrackY + (scrollbarTrackH - thumbH) * (maxScroll > 0 ? scroll / maxScroll : 0);
-            renderer.roundRect().addRoundRect(scrollbarX, thumbY, 2.0f, thumbH, 1.0f, DropdownTheme.scrollbar());
+            renderer.roundRect(scrollbarX, thumbY, 2.0f, thumbH, 1.0f, DropdownTheme.scrollbar());
         }
     }
 
@@ -348,13 +348,13 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     protected String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
         if (value == null || value.isEmpty()) return "";
-        if (renderer.text().getWidth(value, scale) <= maxWidth) return value;
+        if (renderer.textWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = renderer.text().getWidth(ellipsis, scale);
+        float ellipsisWidth = renderer.textWidth(ellipsis, scale);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         for (int len = value.length() - 1; len >= 0; len--) {
             String candidate = value.substring(0, len) + ellipsis;
-            if (renderer.text().getWidth(candidate, scale) <= maxWidth) return candidate;
+            if (renderer.textWidth(candidate, scale) <= maxWidth) return candidate;
         }
         return ellipsis;
     }

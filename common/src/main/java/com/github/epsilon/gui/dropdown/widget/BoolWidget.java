@@ -49,20 +49,22 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
 
         float sw = SWITCH_WIDTH;
         float sh = SWITCH_HEIGHT;
-        float sx = x + width - DropdownTheme.SETTING_PADDING_X - sw;
-        float sy = y + (getHeight() - sh) * 0.5f;
+        float sx = width - DropdownTheme.SETTING_PADDING_X - sw;
+        float sy = (getHeight() - sh) * 0.5f;
 
-        boolean hovered = isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4);
+        boolean hovered = isHovered(mouseX, mouseY, absoluteX(sx - 2), absoluteY(sy - 2), sw + 4, sh + 4);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
         float hoverProgress = hoverAnim.getValue();
 
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + (getHeight() - renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
+                (getHeight() - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+                DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        renderer.roundRect().addRoundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t));
+        renderer.roundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t));
 
         float outlineW = MD3Theme.switchTrackOutlineWidth(t);
         if (outlineW > 0.01f) {
-            renderer.outline().addOutline(sx, sy, sw, sh, SWITCH_RADIUS, outlineW, MD3Theme.switchTrackOutline(t, hoverProgress));
+            renderer.outline(sx, sy, sw, sh, SWITCH_RADIUS, outlineW, MD3Theme.switchTrackOutline(t, hoverProgress));
         }
 
         float knobSize = Mth.lerp(Mth.clamp(t, 0.0f, 1.0f), KNOB_SIZE_OFF, KNOB_SIZE_ON);
@@ -77,11 +79,11 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
         if (hoverProgress > 0.02f) {
             float haloX = knobCx - STATE_LAYER_SIZE * 0.5f;
             float haloY = knobCy - STATE_LAYER_SIZE * 0.5f;
-            renderer.roundRect().addRoundRect(haloX, haloY, STATE_LAYER_SIZE, STATE_LAYER_SIZE, STATE_LAYER_SIZE * 0.5f, MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18));
+            renderer.roundRect(haloX, haloY, STATE_LAYER_SIZE, STATE_LAYER_SIZE, STATE_LAYER_SIZE * 0.5f, MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18));
         }
 
         float knobRadius = knobSize * 0.5f;
-        renderer.roundRect().addRoundRect(knobCx - knobW * 0.5f, knobCy - knobSize * 0.5f, knobW, knobSize, knobRadius, MD3Theme.switchKnob(t));
+        renderer.roundRect(knobCx - knobW * 0.5f, knobCy - knobSize * 0.5f, knobW, knobSize, knobRadius, MD3Theme.switchKnob(t));
     }
 
     @Override
@@ -89,8 +91,8 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
         if (button == 0) {
             float sw = SWITCH_WIDTH;
             float sh = SWITCH_HEIGHT;
-            float sx = x + width - DropdownTheme.SETTING_PADDING_X - sw;
-            float sy = y + (getHeight() - sh) * 0.5f;
+            float sx = absoluteX(width - DropdownTheme.SETTING_PADDING_X - sw);
+            float sy = absoluteY((getHeight() - sh) * 0.5f);
             if (isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4)) {
                 boolean newValue = !setting.getValue();
                 setting.setValue(newValue);

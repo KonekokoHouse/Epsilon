@@ -19,10 +19,10 @@ public class StringWidget extends SettingWidget<StringSetting> {
 
     @Override
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        float fieldX = x + DropdownTheme.SETTING_PADDING_X;
-        float fieldY = y + DropdownTheme.SETTING_HEIGHT;
+        float fieldX = DropdownTheme.SETTING_PADDING_X;
+        float fieldY = DropdownTheme.SETTING_HEIGHT;
         float fieldW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
         float fieldH = DropdownTheme.INPUT_HEIGHT;
 
@@ -34,8 +34,8 @@ public class StringWidget extends SettingWidget<StringSetting> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        float fieldX = x + DropdownTheme.SETTING_PADDING_X;
-        float fieldY = y + DropdownTheme.SETTING_HEIGHT;
+        float fieldX = absoluteX(DropdownTheme.SETTING_PADDING_X);
+        float fieldY = absoluteY(DropdownTheme.SETTING_HEIGHT);
         float fieldW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
         float fieldH = DropdownTheme.INPUT_HEIGHT;
 
