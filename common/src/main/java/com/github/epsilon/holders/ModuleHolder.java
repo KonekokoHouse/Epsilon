@@ -83,7 +83,6 @@ public class ModuleHolder {
         addModule(Stealer.INSTANCE);
         addModule(UseCooldown.INSTANCE);
         addModule(AutoQueue.INSTANCE);
-        addModule(SettingsTest.INSTANCE);
 
         // Movement
         addModule(ElytraFly.INSTANCE);
