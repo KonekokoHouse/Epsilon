@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.AttackEntityEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
@@ -18,7 +17,6 @@ import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.WindChargeItem;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.Vec3;
@@ -48,11 +46,9 @@ public class Velocity extends Module {
 
     private final SettingGroup sgExclusions = settingGroup("Exclusions");
 
-    private final BoolSetting excludeWindBurst = boolSetting("Exclude Wind Burst", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
     private final BoolSetting excludeSpearLunge = boolSetting("Exclude Spear Lunge", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
     private final BoolSetting excludeWindCharge = boolSetting("Exclude Wind Charge", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
 
-    private final TimerUtils windBurstTimer = new TimerUtils();
     private final TimerUtils windChargeTimer = new TimerUtils();
 
     private boolean jump;
@@ -60,23 +56,13 @@ public class Velocity extends Module {
     @Override
     protected void onEnable() {
         jump = false;
-        windBurstTimer.reset();
         windChargeTimer.reset();
     }
 
     @Override
     protected void onDisable() {
         jump = false;
-        windBurstTimer.reset();
         windChargeTimer.reset();
-    }
-
-    @EventHandler
-    private void onAttackEntity(AttackEntityEvent event) {
-        if (event.getPlayer() != mc.player) return;
-        if (excludeWindBurst.getValue() && isHoldingWindBurstMace()) {
-            windBurstTimer.reset();
-        }
     }
 
     @EventHandler
@@ -92,11 +78,6 @@ public class Velocity extends Module {
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (nullCheck()) return;
-
-        // Wind Burst: if timer is active, skip all Velocity processing for 500ms
-        if (excludeWindBurst.getValue() && !windBurstTimer.passedMillise(500)) {
-            return;
-        }
 
         switch (mode.getValue()) {
             case Cancel -> {
@@ -146,17 +127,11 @@ public class Velocity extends Module {
     }
 
     private boolean shouldExcludeMotion(ClientboundSetEntityMotionPacket packet) {
-        if (excludeSpearLunge.getValue() && isSpearLungeMotion(packet)) {
-            return true;
-        }
-        return false;
+        return excludeSpearLunge.getValue() && isSpearLungeMotion(packet);
     }
 
     private boolean shouldExcludeExplosion(ClientboundExplodePacket packet) {
-        if (excludeWindCharge.getValue() && isWindChargeExplosion(packet)) {
-            return true;
-        }
-        return false;
+        return excludeWindCharge.getValue() && isWindChargeExplosion(packet);
     }
 
     private boolean isSpearLungeMotion(ClientboundSetEntityMotionPacket packet) {
@@ -180,15 +155,7 @@ public class Velocity extends Module {
 
         if (packet.radius() > 3.0f) return false;
 
-        if (packet.playerKnockback().isEmpty()) return false;
-
-        return true;
-    }
-
-    private boolean isHoldingWindBurstMace() {
-        ItemStack mainHand = mc.player.getMainHandItem();
-        return mainHand.getItem() instanceof MaceItem
-                && EnchantmentUtils.getEnchantmentLevel(mainHand, Enchantments.WIND_BURST) > 0;
+        return packet.playerKnockback().isPresent();
     }
 
     private boolean isSpearWithLunge(ItemStack stack) {
