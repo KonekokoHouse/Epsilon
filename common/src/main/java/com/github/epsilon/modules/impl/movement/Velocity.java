@@ -49,7 +49,6 @@ public class Velocity extends Module {
     private final BoolSetting excludeSpearLunge = boolSetting("Exclude Spear Lunge", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
     private final BoolSetting excludeWindCharge = boolSetting("Exclude Wind Charge", false, () -> mode.is(Mode.Cancel)).group(sgExclusions);
 
-    // Wind Charge: tracks when the player threw a wind charge (projectile, needs timer).
     private final TimerUtils windChargeTimer = new TimerUtils();
 
     private boolean jump;
@@ -66,8 +65,6 @@ public class Velocity extends Module {
         windChargeTimer.reset();
     }
 
-    // --- Track own actions ---
-
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
         if (excludeWindCharge.getValue() && event.getPacket() instanceof ServerboundUseItemPacket packet) {
@@ -77,8 +74,6 @@ public class Velocity extends Module {
             }
         }
     }
-
-    // --- Packet receive handling ---
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
@@ -131,23 +126,13 @@ public class Velocity extends Module {
         }
     }
 
-    // --- Exclusion decision logic ---
-
     private boolean shouldExcludeMotion(ClientboundSetEntityMotionPacket packet) {
-        if (excludeSpearLunge.getValue() && isSpearLungeMotion(packet)) {
-            return true;
-        }
-        return false;
+        return excludeSpearLunge.getValue() && isSpearLungeMotion(packet);
     }
 
     private boolean shouldExcludeExplosion(ClientboundExplodePacket packet) {
-        if (excludeWindCharge.getValue() && isWindChargeExplosion(packet)) {
-            return true;
-        }
-        return false;
+        return excludeWindCharge.getValue() && isWindChargeExplosion(packet);
     }
-
-    // --- Packet parsing methods ---
 
     private boolean isSpearLungeMotion(ClientboundSetEntityMotionPacket packet) {
         if (!isSpearWithLunge(mc.player.getMainHandItem())) return false;
@@ -170,12 +155,8 @@ public class Velocity extends Module {
 
         if (packet.radius() > 3.0f) return false;
 
-        if (packet.playerKnockback().isEmpty()) return false;
-
-        return true;
+        return packet.playerKnockback().isPresent();
     }
-
-    // --- Item/equipment checks ---
 
     private boolean isSpearWithLunge(ItemStack stack) {
         if (stack.isEmpty()) return false;

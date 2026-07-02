@@ -127,7 +127,6 @@ public class ModuleHolder {
         addModule(Shaders.INSTANCE);
         addModule(SneakTweak.INSTANCE);
         addModule(Xray.INSTANCE);
-
     }
 
     private void addModule(Module module) {
