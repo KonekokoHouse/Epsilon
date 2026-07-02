@@ -1,6 +1,5 @@
 package com.github.epsilon.events.impl;
 
-import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.world.entity.player.Input;
 
 public class KeyboardInputEvent {
@@ -11,11 +10,9 @@ public class KeyboardInputEvent {
     private boolean sneak;
     private boolean sprint;
 
-    public KeyboardInputEvent(boolean forward, boolean backward, boolean left, boolean right, boolean jump, boolean sneak, boolean sprint) {
-        float forwardImpulse = KeyboardInput.calculateImpulse(forward, backward);
-        float leftImpulse = KeyboardInput.calculateImpulse(left, right);
-        this.forward = forwardImpulse;
-        this.strafe = leftImpulse;
+    public KeyboardInputEvent(float forward, float strafe, boolean jump, boolean sneak, boolean sprint) {
+        this.forward = forward;
+        this.strafe = strafe;
         this.jump = jump;
         this.sneak = sneak;
         this.sprint = sprint;
@@ -23,10 +20,10 @@ public class KeyboardInputEvent {
 
     public Input toNewInput() {
         return new Input(
-                this.forward > 0,
-                this.forward < 0,
-                this.strafe > 0,
-                this.strafe < 0,
+                this.forward > 0.0f,
+                this.forward < 0.0f,
+                this.strafe > 0.0f,
+                this.strafe < 0.0f,
                 this.jump,
                 this.sneak,
                 this.sprint

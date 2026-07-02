@@ -128,7 +128,7 @@ public class ModuleDetailPanel {
                     if (!rebuildContent) {
                         return;
                     }
-                        settingListController.layoutRows(settingOwnerKey, settings, viewport, state.getDetailScroll(), rowWidth,
+                    settingListController.layoutRows(settingOwnerKey, settings, viewport, state.getDetailScroll(), rowWidth,
                             content, textRenderer, effectiveMouseX, effectiveMouseY, (setting, row, rowBounds) -> {
                                 if (row instanceof KeybindSettingRow keybindRow) {
                                     keybindRow.setListening(state.getListeningKeybindSetting() == keybindRow.getSetting());

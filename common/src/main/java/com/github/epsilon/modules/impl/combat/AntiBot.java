@@ -27,52 +27,8 @@ public class AntiBot extends Module {
         super("Anti Bot", Category.COMBAT);
     }
 
-    private static final Map<UUID, Long> uuids = new ConcurrentHashMap<>();
-    private static final Set<Integer> ids = new HashSet<>();
-
-
     public boolean isBot(Entity entity) {
-        return isEnabled() && (ids.contains(entity.getId()) || !mc.getConnection().getOnlinePlayerIds().contains(entity.getUUID()));
-    }
-
-    @EventHandler
-    private void onRespawn(RespawnEvent event) {
-        if (mc.player.tickCount <= 1) {
-            ids.clear();
-            uuids.clear();
-        }
-    }
-
-    @EventHandler
-    private void onSendPosition(SendPositionEvent event) {
-        for (Map.Entry<UUID, Long> entry : uuids.entrySet()) {
-            if (System.currentTimeMillis() - entry.getValue() > 500L) {
-                uuids.remove(entry.getKey());
-            }
-        }
-    }
-
-    @EventHandler
-    private void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof ClientboundPlayerInfoUpdatePacket packet) {
-            if (packet.actions().contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
-                for (ClientboundPlayerInfoUpdatePacket.Entry entry : packet.entries()) {
-                    if (entry.displayName() != null && entry.profile() != null && entry.displayName().getSiblings().isEmpty() && entry.gameMode() == GameType.SURVIVAL) {
-                        UUID uuid = entry.profile().id();
-                        uuids.put(uuid, System.currentTimeMillis());
-                    }
-                }
-            }
-        } else if (event.getPacket() instanceof ClientboundAddEntityPacket packet && packet.getType() == EntityType.PLAYER) {
-            if (uuids.containsKey(packet.getUUID())) {
-                uuids.remove(packet.getUUID());
-                ids.add(packet.getId());
-            }
-        } else if (event.getPacket() instanceof ClientboundRemoveEntitiesPacket packet) {
-            for (Integer entityId : packet.getEntityIds()) {
-                ids.remove(entityId);
-            }
-        }
+        return isEnabled() && !mc.getConnection().getOnlinePlayerIds().contains(entity.getUUID());
     }
 
 }

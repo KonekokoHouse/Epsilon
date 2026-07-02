@@ -35,7 +35,7 @@ The Lumin rendering system provides custom render pipelines for:
 - Texture rendering
 - Custom vertex formats
 
-See [Lumin Graphics README](src/main/java/com/github/epsilon/graphics/README.md) for details.
+See [Lumin Graphics README](common/src/main/java/com/github/epsilon/graphics/README.md) for details.
 
 ## ⚙️ Build & Run
 
@@ -46,6 +46,14 @@ See [Lumin Graphics README](src/main/java/com/github/epsilon/graphics/README.md)
 # Run client
 ./gradlew runClient
 ```
+
+## 🙏 Credits
+
+Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-party code attributions.
+- [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
+- [Orbit](https://github.com/MeteorDevelopment/orbit)
+- [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
+- [TrollHack](https://github.com/Luna5ama/TrollHack)
 
 ## 📝 License
 

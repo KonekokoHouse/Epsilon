@@ -83,38 +83,38 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                 hoveredIndex = -1;
                 PanelLayout.Rect localViewportBounds = viewportBounds.relativeTo(popupBounds);
                 popup.viewport(contentBuffer, localViewportBounds, guiGraphics.guiHeight(), scroll, maxScroll, fullContentHeight, content -> {
-                Enum<?>[] modes = setting.getModes();
-                float itemStartY = popupY + CONTENT_PADDING - scroll;
-                for (int i = 0; i < modes.length; i++) {
-                    float itemY = itemStartY + i * ITEM_HEIGHT;
-                    PanelLayout.Rect itemBounds = new PanelLayout.Rect(bounds.x() + CONTENT_PADDING, itemY, itemAreaWidth, ITEM_INNER_HEIGHT);
-                    boolean visible = itemY + ITEM_INNER_HEIGHT > viewportBounds.y() && itemY < viewportBounds.bottom();
-                    boolean hovered = visible && itemBounds.contains(mouseX, mouseY)
-                            && mouseY >= viewportBounds.y() && mouseY <= viewportBounds.bottom();
-                    if (hovered) {
-                        hoveredIndex = i;
+                    Enum<?>[] modes = setting.getModes();
+                    float itemStartY = popupY + CONTENT_PADDING - scroll;
+                    for (int i = 0; i < modes.length; i++) {
+                        float itemY = itemStartY + i * ITEM_HEIGHT;
+                        PanelLayout.Rect itemBounds = new PanelLayout.Rect(bounds.x() + CONTENT_PADDING, itemY, itemAreaWidth, ITEM_INNER_HEIGHT);
+                        boolean visible = itemY + ITEM_INNER_HEIGHT > viewportBounds.y() && itemY < viewportBounds.bottom();
+                        boolean hovered = visible && itemBounds.contains(mouseX, mouseY)
+                                && mouseY >= viewportBounds.y() && mouseY <= viewportBounds.bottom();
+                        if (hovered) {
+                            hoveredIndex = i;
+                        }
+                        boolean selected = i == setting.getModeIndex();
+                        Color baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0);
+                        Color hoverBackground = MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f);
+                        Color selectedBackground = MD3Theme.SECONDARY_CONTAINER;
+                        Color background = selected ? selectedBackground : (hovered ? hoverBackground : baseBackground);
+                        Color textColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : (hovered ? MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255) : MD3Theme.TEXT_SECONDARY);
+                        PanelLayout.Rect localItemBounds = new PanelLayout.Rect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT);
+                        content.roundRect(localItemBounds.x(), localItemBounds.y(), localItemBounds.width(), localItemBounds.height(), 8.0f, background);
+                        float textScale = 0.62f;
+                        float textHeight = contentBuffer.textMetrics().getHeight(textScale);
+                        float textY = localItemBounds.y() + (localItemBounds.height() - textHeight) / 2.0f;
+                        if (selected) {
+                            float iconScale = 0.72f;
+                            float iconHeight = contentBuffer.textMetrics().getHeight(iconScale, StaticFontLoader.ICONS);
+                            float iconY = localItemBounds.y() + (localItemBounds.height() - iconHeight) / 2.0f;
+                            // TODO: 换个更合适的 icon
+                            content.text(IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x() + 8.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+                        }
+                        content.text(setting.getTranslatedValueByIndex(i), localItemBounds.x() + (selected ? 22.0f : 10.0f), textY, textScale, textColor);
                     }
-                    boolean selected = i == setting.getModeIndex();
-                    Color baseBackground = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGHEST, 0);
-                    Color hoverBackground = MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.SURFACE_CONTAINER_HIGHEST, 0.55f);
-                    Color selectedBackground = MD3Theme.SECONDARY_CONTAINER;
-                    Color background = selected ? selectedBackground : (hovered ? hoverBackground : baseBackground);
-                    Color textColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : (hovered ? MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 255) : MD3Theme.TEXT_SECONDARY);
-                    PanelLayout.Rect localItemBounds = new PanelLayout.Rect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT);
-                    content.roundRect(localItemBounds.x(), localItemBounds.y(), localItemBounds.width(), localItemBounds.height(), 8.0f, background);
-                    float textScale = 0.62f;
-                    float textHeight = contentBuffer.textMetrics().getHeight(textScale);
-                    float textY = localItemBounds.y() + (localItemBounds.height() - textHeight) / 2.0f;
-                    if (selected) {
-                        float iconScale = 0.72f;
-                        float iconHeight = contentBuffer.textMetrics().getHeight(iconScale, StaticFontLoader.ICONS);
-                        float iconY = localItemBounds.y() + (localItemBounds.height() - iconHeight) / 2.0f;
-                        // TODO: 换个更合适的 icon
-                        content.text(IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x() + 8.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
-                    }
-                    content.text(setting.getTranslatedValueByIndex(i), localItemBounds.x() + (selected ? 22.0f : 10.0f), textY, textScale, textColor);
-                }
-            });
+                });
             });
         });
         renderBatch.render(popupTree);

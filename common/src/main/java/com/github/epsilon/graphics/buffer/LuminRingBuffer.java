@@ -35,7 +35,7 @@ public class LuminRingBuffer {
     /**
      * 创建一个新的环形缓冲区。
      *
-     * @param size 初始字节容量
+     * @param size  初始字节容量
      * @param usage 额外的 GPU 使用标记
      */
     public LuminRingBuffer(long size, @GpuBuffer.Usage int usage) {
@@ -148,8 +148,8 @@ public class LuminRingBuffer {
      * 将源数据写入当前槽位的指定偏移。
      *
      * @param commandEncoder 命令编码器
-     * @param offset 写入偏移，单位字节
-     * @param source 待写入数据
+     * @param offset         写入偏移，单位字节
+     * @param source         待写入数据
      */
     public void write(CommandEncoder commandEncoder, long offset, ByteBuffer source) {
         ensureCapacity(offset + source.remaining());

@@ -5,18 +5,10 @@ import com.github.epsilon.graphics.text.IFontLoader;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.stb.STBTruetype;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TtfFontLoader implements IFontLoader {

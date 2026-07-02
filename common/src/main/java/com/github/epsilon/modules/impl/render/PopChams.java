@@ -74,11 +74,8 @@ public class PopChams extends Module {
             }
 
             WireframeEntityRenderer.beginBatch(event.getPoseStack());
-            try {
-                ghosts.removeIf(ghostPlayer -> ghostPlayer.render(event));
-            } finally {
-                WireframeEntityRenderer.endBatch();
-            }
+            ghosts.removeIf(ghostPlayer -> ghostPlayer.render(event));
+            WireframeEntityRenderer.endBatch();
         }
     }
 
@@ -153,6 +150,6 @@ public class PopChams extends Module {
         public @Nullable Component belowNameDisplay() {
             return null;
         }
-
     }
+
 }

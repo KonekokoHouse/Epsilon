@@ -2,8 +2,8 @@ package com.github.epsilon.gui.dsl;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.schedulers.render2d.Render2DScissor;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
+import com.github.epsilon.graphics.schedulers.render2d.Render2DScissor;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -25,7 +25,7 @@ public class PanelUiCompiler {
     }
 
     private static void renderNodesIntoLayeredBatch(List<PanelUiTree.UiNode> nodes, PanelRenderBatch batch,
-                                                   int layer, Render2DScissor activeScissor) {
+                                                    int layer, Render2DScissor activeScissor) {
         Render2DScheduler.LayerHandle handle = batch.absoluteLayer(layer);
         Render2DScissor previousScissor = applyScissor(handle, activeScissor);
         RenderTarget target = RenderTarget.forLayer(handle, batch.scheduler().textMetrics(), null);
@@ -112,7 +112,9 @@ public class PanelUiCompiler {
             layer.addRectGradient(x, y, width, height, topLeft, bottomLeft, bottomRight, topRight);
             return;
         }
-        if (node instanceof PanelUiTree.RectOutlineNode(float x, float y, float width, float height, float outlineWidth, Color color)) {
+        if (node instanceof PanelUiTree.RectOutlineNode(
+                float x, float y, float width, float height, float outlineWidth, Color color
+        )) {
             layer.addRectOutline(x, y, width, height, outlineWidth, color);
             return;
         }
@@ -124,7 +126,9 @@ public class PanelUiCompiler {
                     outlineWidth, color);
             return;
         }
-        if (node instanceof PanelUiTree.TextNode(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader)) {
+        if (node instanceof PanelUiTree.TextNode(
+                String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader
+        )) {
             layer.addText(text, x, y, scale, color, fontLoader);
             return;
         }
@@ -154,11 +158,15 @@ public class PanelUiCompiler {
             renderButton(target, x, y, width, height, radius, background, label, labelScale, labelColor);
             return;
         }
-        if (node instanceof PanelUiTree.SwitchNode(PanelLayout.Rect bounds, float toggleProgress, float hoverProgress)) {
+        if (node instanceof PanelUiTree.SwitchNode(
+                PanelLayout.Rect bounds, float toggleProgress, float hoverProgress
+        )) {
             renderSwitch(target, bounds, toggleProgress, hoverProgress);
             return;
         }
-        if (node instanceof PanelUiTree.FilledFieldNode(PanelLayout.Rect bounds, boolean focused, float hoverProgress)) {
+        if (node instanceof PanelUiTree.FilledFieldNode(
+                PanelLayout.Rect bounds, boolean focused, float hoverProgress
+        )) {
             renderFilledField(target, bounds, focused, hoverProgress);
             return;
         }
@@ -216,7 +224,9 @@ public class PanelUiCompiler {
                     handleWidth, handleHeight, handleRadius, handleColor);
             return;
         }
-        if (node instanceof PanelUiTree.TriangleNode(float centerX, float centerY, float size, float progress, Color color)) {
+        if (node instanceof PanelUiTree.TriangleNode(
+                float centerX, float centerY, float size, float progress, Color color
+        )) {
             layer.addChevronTriangle(centerX, centerY, size, progress, color);
             return;
         }
