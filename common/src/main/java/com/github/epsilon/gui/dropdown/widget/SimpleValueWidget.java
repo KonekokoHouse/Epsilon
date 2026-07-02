@@ -26,14 +26,15 @@ public class SimpleValueWidget extends SettingWidget<Setting<?>> {
 
     @Override
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
-        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f,
+        float labelY = (getHeight() - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f;
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, labelY,
                 DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         String valueText = valueFormatter.apply(setting);
         float valueScale = 0.50f;
         float valueW = renderer.textWidth(valueText, valueScale);
         float valueX = x + width - DropdownTheme.SETTING_PADDING_X - valueW;
-        float valueY = y + 1.0f;
+        float valueY = labelY;
         renderer.text(valueText, valueX, valueY, valueScale, MD3Theme.TEXT_SECONDARY);
     }
 
