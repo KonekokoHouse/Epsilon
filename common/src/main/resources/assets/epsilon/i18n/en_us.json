@@ -73,7 +73,7 @@
   "epsilon.gui.list.entries": " entries",
   "epsilon.gui.list.sounds": " sounds",
   "epsilon.gui.list.selected": " selected",
-  "epsilon.gui.list.type_to_add": "Type to add...",
+  "epsilon.gui.list.type_to_add": "press Enter to add...",
   "epsilon.gui.list.search": "Search...",
   "epsilon.gui.list.available": "Available",
   "epsilon.gui.list.selected_header": "Selected",

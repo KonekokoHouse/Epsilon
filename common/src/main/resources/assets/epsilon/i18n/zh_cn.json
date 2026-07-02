@@ -73,7 +73,7 @@
   "epsilon.gui.list.entries": " 个条目",
   "epsilon.gui.list.sounds": " 个音效",
   "epsilon.gui.list.selected": " 已选",
-  "epsilon.gui.list.type_to_add": "输入以添加...",
+  "epsilon.gui.list.type_to_add": "按enter键以添加...",
   "epsilon.gui.list.search": "搜索...",
   "epsilon.gui.list.available": "可用",
   "epsilon.gui.list.selected_header": "已选",
