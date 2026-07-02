@@ -108,7 +108,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         float textX = icon == null || icon.isBlank() ? x + 10.0f : iconX + 16.0f;
         float textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
         if (icon != null && !icon.isBlank()) {
-            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_ICON_SCALE)) * 0.5f;
+            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f - 2.0f;
             renderer.text(icon, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, StaticFontLoader.ICONS);
         }
         String headerTitle = getTitle();
