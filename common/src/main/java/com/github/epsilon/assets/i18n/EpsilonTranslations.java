@@ -83,8 +83,11 @@ public final class EpsilonTranslations {
             Gui.LIST_SELECTED,
             Gui.LIST_TYPE_TO_ADD,
             Gui.LIST_SEARCH,
+            Gui.LIST_ALL,
             Gui.LIST_AVAILABLE,
             Gui.LIST_SELECTED_HEADER,
+            Gui.LIST_EFFECT_POSITIVE,
+            Gui.LIST_EFFECT_NEGATIVE,
             Gui.LIST_ITEMS,
             Gui.LIST_PARTICLES,
             Gui.LIST_EFFECTS,
@@ -202,8 +205,11 @@ public final class EpsilonTranslations {
         public static final TranslateComponent LIST_SELECTED = create("gui", "list.selected");
         public static final TranslateComponent LIST_TYPE_TO_ADD = create("gui", "list.type_to_add");
         public static final TranslateComponent LIST_SEARCH = create("gui", "list.search");
+        public static final TranslateComponent LIST_ALL = create("gui", "list.all");
         public static final TranslateComponent LIST_AVAILABLE = create("gui", "list.available");
         public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
+        public static final TranslateComponent LIST_EFFECT_POSITIVE = create("gui", "list.effect_positive");
+        public static final TranslateComponent LIST_EFFECT_NEGATIVE = create("gui", "list.effect_negative");
         public static final TranslateComponent LIST_ITEMS = create("gui", "list.items");
         public static final TranslateComponent LIST_PARTICLES = create("gui", "list.particles");
         public static final TranslateComponent LIST_EFFECTS = create("gui", "list.effects");
