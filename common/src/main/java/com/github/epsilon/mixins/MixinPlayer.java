@@ -5,6 +5,7 @@ import com.github.epsilon.events.impl.AttackSlowDownEvent;
 import com.github.epsilon.events.impl.AttackYawEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.modules.impl.movement.KeepSprint;
+import com.github.epsilon.modules.impl.movement.SafeWalk;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -59,6 +61,11 @@ public class MixinPlayer {
                 mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(customFactor, 1.0, customFactor));
             }
         }
+    }
+
+    @Inject(method = "isStayingOnGroundSurface", at = @At("HEAD"), cancellable = true)
+    private void hookIsStayingOnGroundSurface(CallbackInfoReturnable<Boolean> ci) {
+        if ((Player) (Object) this == mc.player) ci.setReturnValue(SafeWalk.INSTANCE.shouldSafeWalk());
     }
 
 }

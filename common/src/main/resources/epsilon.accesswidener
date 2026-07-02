@@ -13,8 +13,6 @@ accessible class net/minecraft/client/ResourceLoadStateTracker$ReloadState
 
 accessible field net/minecraft/client/player/LocalPlayer positionReminder I
 
-accessible method net/minecraft/client/player/KeyboardInput calculateImpulse (ZZ)F
-
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen hoveredSlot Lnet/minecraft/world/inventory/Slot;
 
 accessible method net/minecraft/client/multiplayer/ClientLevel getBlockStatePredictionHandler ()Lnet/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler;
