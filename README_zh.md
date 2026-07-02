@@ -47,6 +47,14 @@ Lumin 渲染系统提供自定义渲染管线，支持：
 ./gradlew runClient
 ```
 
+## 🙏 鸣谢
+
+感谢以下项目。第三方代码归属信息详见 [NOTICE](NOTICE.md)。
+- [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
+- [Orbit](https://github.com/MeteorDevelopment/orbit)
+- [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
+- [TrollHack](https://github.com/Luna5ama/TrollHack)
+
 ## 📝 许可证
 
 本项目，包括 Lumin Graphics，统一遵循 [GNU General Public License v3.0](LICENSE) 许可证。

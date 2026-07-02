@@ -47,6 +47,14 @@ See [Lumin Graphics README](src/main/java/com/github/epsilon/graphics/README.md)
 ./gradlew runClient
 ```
 
+## 🙏 Credits
+
+Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-party code attributions.
+- [Meteor Client](https://github.com/MeteorDevelopment/meteor-client)
+- [Orbit](https://github.com/MeteorDevelopment/orbit)
+- [LeavesHack](https://github.com/MrBZBZ/LeavesHack)
+- [TrollHack](https://github.com/Luna5ama/TrollHack)
+
 ## 📝 License
 
 This project, including Lumin Graphics, is licensed under the [GNU General Public License v3.0](LICENSE).
