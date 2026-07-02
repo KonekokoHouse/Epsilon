@@ -2,7 +2,6 @@ package com.github.epsilon.gui.panel;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.input.PanelInputRouter;
 import com.github.epsilon.gui.panel.panel.CategoryRailPanel;
@@ -203,7 +202,6 @@ public class PanelScreen extends Screen {
             moduleListPanel.flushContent();
             moduleDetailPanel.flushContent();
         }
-        categoryRailPanel.flushClippedText();
     }
 
     private void renderPopup(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {

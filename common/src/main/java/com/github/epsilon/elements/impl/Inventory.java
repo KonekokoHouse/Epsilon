@@ -2,7 +2,6 @@ package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -41,9 +40,7 @@ public class Inventory extends HudModule {
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         if (nullCheck()) return;
 
-        PanelRenderBatch batch = renderBatch();
-        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
-        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
+        var scope = renderScope();
 
         float scale = this.scale.getValue().floatValue();
         float slotSize = SLOT_SIZE * scale;
@@ -60,15 +57,15 @@ public class Inventory extends HudModule {
         }
 
         if (drawShadow.getValue()) {
-            shadowRenderer.addShadow(this.x, this.y, totalWidth, totalHeight, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
+            scope.shadow(this.x, this.y, totalWidth, totalHeight, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
         }
-        roundRectRenderer.addRoundRect(this.x, this.y, totalWidth, totalHeight, radius, backgroundColor.getValue());
+        scope.roundRect(this.x, this.y, totalWidth, totalHeight, radius, backgroundColor.getValue());
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 float slotX = this.x + padding + col * (slotSize + gap);
                 float slotY = this.y + padding + row * (slotSize + gap);
-                roundRectRenderer.addRoundRect(slotX, slotY, slotSize, slotSize, slotRadius, slotColor.getValue());
+                scope.roundRect(slotX, slotY, slotSize, slotSize, slotRadius, slotColor.getValue());
             }
         }
 

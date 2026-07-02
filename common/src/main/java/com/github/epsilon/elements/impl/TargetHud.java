@@ -2,9 +2,9 @@ package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminTexture;
-import com.github.epsilon.graphics.renderers.*;
+import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.combat.KillAura;
@@ -74,11 +74,7 @@ public class TargetHud extends HudModule {
     private float visibilityProgress = 0.0f;
     private long lastVisibilityUpdateMs = 0L;
 
-    private final Supplier<RoundRectRenderer> roundRectRendererSupplier = Suppliers.memoize(RoundRectRenderer::create);
-    private final Supplier<RoundRectOutlineRenderer> roundRectOutlineRendererSupplier = Suppliers.memoize(RoundRectOutlineRenderer::create);
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-    private final Supplier<TextureRenderer> textureRendererSupplier = Suppliers.memoize(TextureRenderer::create);
-    private final Supplier<ShadowRenderer> shadowRendererSupplier = Suppliers.memoize(ShadowRenderer::create);
 
     @Override
     public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
@@ -93,12 +89,7 @@ public class TargetHud extends HudModule {
         if (target == null || animationScale <= 0.01f) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelRenderBatch batch = renderBatch();
-        PanelRenderBatch.RoundRectFacade roundRectRenderer = batch.roundRectRenderer();
-        PanelRenderBatch.RoundRectOutlineFacade roundRectOutlineRenderer = batch.roundRectOutlineRenderer();
-        PanelRenderBatch.TextureFacade textureRenderer = batch.textureRenderer();
-        PanelRenderBatch.ShadowFacade shadowRenderer = batch.shadowRenderer();
-        PanelRenderBatch.TextFacade batchText = batch.textRenderer();
+        PanelUiTree.Scope scope = renderScope();
 
         LivingEntity liveTarget = resolveTarget();
         float maxHealth = lastKnownMaxHealth;
@@ -186,21 +177,21 @@ public class TargetHud extends HudModule {
         BlurShader.INSTANCE.render(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, blurStrength.getValue().floatValue());
 
         if (drawShadow.getValue()) {
-            shadowRenderer.addShadow(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, shadowBlur.getValue().floatValue() * animationScale, withAlpha(shadowColor.getValue(), animationScale));
+            scope.shadow(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, shadowBlur.getValue().floatValue() * animationScale, withAlpha(shadowColor.getValue(), animationScale));
         }
 
-        roundRectRenderer.addRoundRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, withAlpha(backgroundColor.getValue(), animationScale));
-        roundRectRenderer.addRoundRect(scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barBackgroundColor.getValue(), animationScale));
+        scope.roundRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, withAlpha(backgroundColor.getValue(), animationScale));
+        scope.roundRect(scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barBackgroundColor.getValue(), animationScale));
         if (delayBar.getValue() && delayedHealth > displayedHealth) {
-            roundRectRenderer.addRoundRect(scaledPadX, scaledBarY, scaledDelayedBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(delayBarColor.getValue(), animationScale));
+            scope.roundRect(scaledPadX, scaledBarY, scaledDelayedBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(delayBarColor.getValue(), animationScale));
         }
-        roundRectRenderer.addRoundRect(scaledPadX, scaledBarY, scaledFilledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barFillColor.getValue(), animationScale));
+        scope.roundRect(scaledPadX, scaledBarY, scaledFilledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barFillColor.getValue(), animationScale));
         if (!(target instanceof AbstractClientPlayer)) {
-            roundRectRenderer.addRoundRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize, finalHeadRadius, withAlpha(tintColor(new Color(80, 80, 80, 200), damageProgress), animationScale));
+            scope.roundRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize, finalHeadRadius, withAlpha(tintColor(new Color(80, 80, 80, 200), damageProgress), animationScale));
         }
 
         if (barOutline.getValue() && scaledBarOutlineWidth > 0.0f) {
-            roundRectOutlineRenderer.addOutline(
+            scope.outline(
                     scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius,
                     scaledBarOutlineWidth, withAlpha(barOutlineColor.getValue(), animationScale)
             );
@@ -208,14 +199,14 @@ public class TargetHud extends HudModule {
 
         if (target instanceof AbstractClientPlayer player) {
             AbstractTexture abstractTexture = mc.getTextureManager().getTexture(player.getSkin().body().texturePath());
-            textureRenderer.addPlayerHead(
+            scope.playerHead(
                     new LuminTexture(abstractTexture.getTexture(), abstractTexture.getTextureView(), abstractTexture.getSampler()),
                     finalHeadX, finalHeadY, finalHeadSize, finalHeadRadius, headTintColor
             );
         }
 
-        batchText.addText(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
-        batchText.addText(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
+        scope.text(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
+        scope.text(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
     }
 
     @Override
