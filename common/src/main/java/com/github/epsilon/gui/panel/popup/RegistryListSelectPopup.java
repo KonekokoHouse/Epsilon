@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
@@ -20,6 +21,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static com.github.epsilon.Constants.mc;
 
 public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
@@ -43,11 +47,14 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private static final float SCROLL_DECAY = 0.86f;
     private static final float MIN_SCROLL_VELOCITY = 0.3f;
     private static final int MAX_QUERY_LENGTH = 64;
+    private static final float ITEM_PREVIEW_SIZE = 14.0f;
+    private static final float ITEM_PREVIEW_GAP = 4.0f;
 
     private final PanelLayout.Rect bounds;
     private final Setting<List<T>> setting;
     private final Registry<T> registry;
     private final Function<T, String> displayNameFn;
+    private final Function<T, ItemStack> iconProvider;
     private final Consumer<T> addFn;
     private final Consumer<T> removeFn;
     private final List<T> allEntries;
@@ -55,6 +62,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
+    private final List<ItemPreview> itemPreviews = new ArrayList<>();
 
     private String query = "";
     private float scroll;
@@ -66,10 +74,17 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Consumer<T> addFn, Consumer<T> removeFn) {
+        this(bounds, setting, registry, displayNameFn, null, addFn, removeFn);
+    }
+
+    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
+                                   Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
+                                   Consumer<T> addFn, Consumer<T> removeFn) {
         this.bounds = bounds;
         this.setting = setting;
         this.registry = registry;
         this.displayNameFn = displayNameFn;
+        this.iconProvider = iconProvider;
         this.addFn = addFn;
         this.removeFn = removeFn;
         this.openAnimation.setStartValue(0.0f);
@@ -91,6 +106,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         contentBuffer.clear();
+        itemPreviews.clear();
         List<T> available = filteredAvailable();
         List<T> selected = filteredSelected();
         float columnContentHeight = Math.max(available.size(), selected.size()) * (ROW_HEIGHT + ROW_GAP);
@@ -145,6 +161,26 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @Override public void flush(PanelRenderBatch renderBatch) { contentBuffer.flushAndClear(); }
+
+    @Override
+    public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (iconProvider == null || itemPreviews.isEmpty()) return;
+        guiGraphics.nextStratum();
+        if (lastViewport != null) {
+            guiGraphics.enableScissor(
+                    toMinecraftGuiXInt(lastViewport.x()),
+                    toMinecraftGuiYInt(lastViewport.y()),
+                    toMinecraftGuiXInt(lastViewport.right()),
+                    toMinecraftGuiYInt(lastViewport.bottom())
+            );
+        }
+        for (ItemPreview preview : itemPreviews) {
+            drawItemPreview(guiGraphics, preview);
+        }
+        if (lastViewport != null) {
+            guiGraphics.disableScissor();
+        }
+    }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
@@ -215,6 +251,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private void buildColumn(PanelUiTree.Scope scope, List<T> entries, float columnX, float startY,
                               float columnWidth, int mouseX, int mouseY, boolean addColumn, PanelLayout.Rect viewport) {
         PanelLayout.Rect origin = scope.bound();
+        final boolean hasIcons = iconProvider != null;
         for (int i = 0; i < entries.size(); i++) {
             T entry = entries.get(i);
             float rowY = startY + i * (ROW_HEIGHT + ROW_GAP);
@@ -226,7 +263,17 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
             float bgHover = addColumn ? (hovered ? 1.0f : 0.0f) : (hovered ? 0.45f : 0.0f);
             String rawName = displayNameFn.apply(entry);
-            final String display = trim(rawName, 0.50f, rowBounds.width() - 22.0f);
+            float iconTextLeft = 6.0f;
+            if (hasIcons) {
+                ItemStack previewStack = iconProvider.apply(entry);
+                if (previewStack != null && !previewStack.isEmpty()) {
+                    float previewY = rowBounds.y() + (rowBounds.height() - ITEM_PREVIEW_SIZE) * 0.5f;
+                    itemPreviews.add(new ItemPreview(previewStack, columnX + 4.0f, previewY, ITEM_PREVIEW_SIZE));
+                    iconTextLeft = 4.0f + ITEM_PREVIEW_SIZE + ITEM_PREVIEW_GAP;
+                }
+            }
+            final float textLeft = iconTextLeft;
+            final String display = trim(rawName, 0.50f, rowBounds.width() - textLeft - 14.0f);
             final float textY = centeredTextY(0.0f, rowBounds.height(), 0.50f);
 
             PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
@@ -234,12 +281,12 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 if (addColumn) {
                     row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
                             MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, bgHover));
-                    row.text(display, 6.0f, textY, 0.50f, hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY);
+                    row.text(display, textLeft, textY, 0.50f, hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY);
                     row.text("+", rowBounds.width() - 12.0f, textY, 0.54f, hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY);
                 } else {
                     row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
                             MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover));
-                    row.text(display, 6.0f, textY, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER);
+                    row.text(display, textLeft, textY, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER);
                     row.text("-", rowBounds.width() - 12.0f, textY, 0.54f, MD3Theme.ON_SECONDARY_CONTAINER);
                 }
             });
@@ -277,4 +324,35 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private float centeredTextY(float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f;
     }
+
+    private void drawItemPreview(GuiGraphicsExtractor guiGraphics, ItemPreview preview) {
+        if (preview.stack().isEmpty()) return;
+        float scale = preview.size() / 16.0f;
+        float guiScale = (float) (scale * LuminRenderSystem.getGuiScale() / mc.getWindow().getGuiScale());
+        float guiX = toMinecraftGuiX(preview.x());
+        float guiY = toMinecraftGuiY(preview.y());
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate(guiX + guiScale, guiY + guiScale);
+        guiGraphics.pose().scale(guiScale, guiScale);
+        guiGraphics.item(preview.stack(), 0, 0);
+        guiGraphics.pose().popMatrix();
+    }
+
+    private float toMinecraftGuiX(float epsilonX) {
+        return (float) LuminRenderSystem.toMinecraftGuiX(epsilonX);
+    }
+
+    private float toMinecraftGuiY(float epsilonY) {
+        return (float) LuminRenderSystem.toMinecraftGuiY(epsilonY);
+    }
+
+    private int toMinecraftGuiXInt(float epsilonX) {
+        return (int) Math.round(toMinecraftGuiX(epsilonX));
+    }
+
+    private int toMinecraftGuiYInt(float epsilonY) {
+        return (int) Math.round(toMinecraftGuiY(epsilonY));
+    }
+
+    private record ItemPreview(ItemStack stack, float x, float y, float size) {}
 }

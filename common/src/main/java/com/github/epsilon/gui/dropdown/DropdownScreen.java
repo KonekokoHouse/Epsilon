@@ -610,6 +610,7 @@ public class DropdownScreen extends Screen {
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
                 i -> i.getDefaultInstance().getHoverName().getString(),
+                i -> i.getDefaultInstance(),
                 setting::add, setting::remove));
     }
 

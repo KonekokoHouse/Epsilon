@@ -531,6 +531,7 @@ public class SettingListController {
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
                 i -> i.getDefaultInstance().getHoverName().getString(),
+                i -> i.getDefaultInstance(),
                 setting::add, setting::remove);
     }
 
