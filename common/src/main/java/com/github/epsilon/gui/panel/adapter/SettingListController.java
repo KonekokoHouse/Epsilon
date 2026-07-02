@@ -540,6 +540,11 @@ public class SettingListController {
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
                 e -> e.getDisplayName().getString(),
+                e -> net.minecraft.world.item.Items.POTION.getDefaultInstance(),
+                java.util.List.of(
+                        new RegistryListSelectPopup.Category<>("+", e -> e.isBeneficial()),
+                        new RegistryListSelectPopup.Category<>("-", e -> !e.isBeneficial())
+                ),
                 setting::add, setting::remove);
     }
 

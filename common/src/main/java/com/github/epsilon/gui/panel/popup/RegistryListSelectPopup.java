@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -49,6 +50,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private static final int MAX_QUERY_LENGTH = 64;
     private static final float ITEM_PREVIEW_SIZE = 14.0f;
     private static final float ITEM_PREVIEW_GAP = 4.0f;
+    private static final float CATEGORY_TAB_HEIGHT = 16.0f;
+    private static final float CATEGORY_TAB_GAP = 4.0f;
 
     private final PanelLayout.Rect bounds;
     private final Setting<List<T>> setting;
@@ -58,6 +61,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final Consumer<T> addFn;
     private final Consumer<T> removeFn;
     private final List<T> allEntries;
+    private final List<Category<T>> categories;
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
@@ -65,6 +69,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final List<ItemPreview> itemPreviews = new ArrayList<>();
 
     private String query = "";
+    private int selectedCategory = -1; // -1 = all
     private float scroll;
     private float scrollVelocity;
     private float maxScroll;
@@ -74,17 +79,25 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Consumer<T> addFn, Consumer<T> removeFn) {
-        this(bounds, setting, registry, displayNameFn, null, addFn, removeFn);
+        this(bounds, setting, registry, displayNameFn, null, List.of(), addFn, removeFn);
     }
 
     public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
+                                   Consumer<T> addFn, Consumer<T> removeFn) {
+        this(bounds, setting, registry, displayNameFn, iconProvider, List.of(), addFn, removeFn);
+    }
+
+    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
+                                   Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
+                                   List<Category<T>> categories,
                                    Consumer<T> addFn, Consumer<T> removeFn) {
         this.bounds = bounds;
         this.setting = setting;
         this.registry = registry;
         this.displayNameFn = displayNameFn;
         this.iconProvider = iconProvider;
+        this.categories = categories;
         this.addFn = addFn;
         this.removeFn = removeFn;
         this.openAnimation.setStartValue(0.0f);
@@ -139,11 +152,32 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                         query.length(), MD3Theme.PRIMARY, null, 0.0f, null);
                 IMEFocusHelper.updateCursorPos(searchBounds.x() + 8.0f, searchBounds.y() + 4.0f);
 
+                // Category tabs
                 float contentWidth = animatedViewport.width() - SCROLLBAR_GUTTER;
                 float columnWidth = (contentWidth - COLUMN_GAP) / 2.0f;
                 float leftX = animatedViewport.x();
                 float rightX = leftX + columnWidth + COLUMN_GAP;
-                float headerY = animatedViewport.y() - HEADER_HEIGHT - 2.0f;
+                float catY = searchBounds.bottom() + 4.0f;
+                if (!categories.isEmpty()) {
+                    float catTabX = leftX;
+                    for (int ci = -1; ci < categories.size(); ci++) {
+                        String catName = ci < 0 ? "All" : categories.get(ci).name();
+                        float catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f;
+                        boolean catSelected = selectedCategory == ci;
+                        PanelLayout.Rect catBounds = new PanelLayout.Rect(catTabX, catY, catTextW, CATEGORY_TAB_HEIGHT);
+                        popup.roundRect(catBounds.x() - animatedBounds.x(), catBounds.y() - animatedBounds.y(),
+                                catBounds.width(), catBounds.height(), CATEGORY_TAB_HEIGHT / 2.0f,
+                                catSelected ? MD3Theme.PRIMARY : MD3Theme.SURFACE_CONTAINER_HIGH);
+                        popup.text(catName,
+                                catBounds.x() - animatedBounds.x() + 5.0f,
+                                catBounds.y() - animatedBounds.y() + (catBounds.height() - textRenderer.getHeight(0.44f)) * 0.5f,
+                                0.44f, catSelected ? MD3Theme.ON_PRIMARY : MD3Theme.TEXT_SECONDARY);
+                        catTabX += catTextW + CATEGORY_TAB_GAP;
+                    }
+                    catY += CATEGORY_TAB_HEIGHT + 4.0f;
+                }
+
+                float headerY = Math.max(animatedViewport.y(), catY) - HEADER_HEIGHT + 2.0f;
                 float headerTextY = centeredTextY(headerY, HEADER_HEIGHT, 0.50f);
                 popup.text(EpsilonTranslations.Gui.LIST_AVAILABLE.getTranslatedName(), leftX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
                 popup.text(EpsilonTranslations.Gui.LIST_SELECTED_HEADER.getTranslatedName(), rightX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
@@ -185,6 +219,23 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (event.button() != 0 || !bounds.contains(event.x(), event.y())) return false;
+        // Check category tab clicks
+        if (!categories.isEmpty()) {
+            PanelLayout.Rect searchBounds = getSearchBounds(bounds.y());
+            float catY = searchBounds.bottom() + 4.0f;
+            float catTabX = bounds.x() + PADDING;
+            for (int ci = -1; ci < categories.size(); ci++) {
+                String catName = ci < 0 ? "All" : categories.get(ci).name();
+                float catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f;
+                if (event.x() >= catTabX && event.x() <= catTabX + catTextW
+                        && event.y() >= catY && event.y() <= catY + CATEGORY_TAB_HEIGHT) {
+                    selectedCategory = ci;
+                    resetScroll();
+                    return true;
+                }
+                catTabX += catTextW + CATEGORY_TAB_GAP;
+            }
+        }
         PanelLayout.Rect viewport = lastViewport != null ? lastViewport : getViewport();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, scroll, maxScroll)) {
             applyDraggedScroll(event.y(), viewport);
@@ -232,6 +283,9 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         List<T> result = new ArrayList<>();
         for (T entry : allEntries) {
             if (setting.getValue().contains(entry)) continue;
+            if (selectedCategory >= 0 && selectedCategory < categories.size()) {
+                if (!categories.get(selectedCategory).predicate().test(entry)) continue;
+            }
             String text = displayNameFn.apply(entry).toLowerCase(Locale.ROOT);
             if (needle.isEmpty() || text.contains(needle)) result.add(entry);
         }
@@ -263,17 +317,18 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
             float bgHover = addColumn ? (hovered ? 1.0f : 0.0f) : (hovered ? 0.45f : 0.0f);
             String rawName = displayNameFn.apply(entry);
-            float iconTextLeft = 6.0f;
+            float actionX = rowBounds.right() - 12.0f;
+            float textMaxWidth = rowBounds.width() - 22.0f;
             if (hasIcons) {
                 ItemStack previewStack = iconProvider.apply(entry);
                 if (previewStack != null && !previewStack.isEmpty()) {
+                    float previewX = actionX - ITEM_PREVIEW_GAP - ITEM_PREVIEW_SIZE;
                     float previewY = rowBounds.y() + (rowBounds.height() - ITEM_PREVIEW_SIZE) * 0.5f;
-                    itemPreviews.add(new ItemPreview(previewStack, columnX + 4.0f, previewY, ITEM_PREVIEW_SIZE));
-                    iconTextLeft = 4.0f + ITEM_PREVIEW_SIZE + ITEM_PREVIEW_GAP;
+                    itemPreviews.add(new ItemPreview(previewStack, previewX, previewY, ITEM_PREVIEW_SIZE));
+                    textMaxWidth = previewX - rowBounds.x() - 12.0f;
                 }
             }
-            final float textLeft = iconTextLeft;
-            final String display = trim(rawName, 0.50f, rowBounds.width() - textLeft - 14.0f);
+            final String display = trim(rawName, 0.50f, textMaxWidth);
             final float textY = centeredTextY(0.0f, rowBounds.height(), 0.50f);
 
             PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
@@ -281,12 +336,12 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 if (addColumn) {
                     row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
                             MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, bgHover));
-                    row.text(display, textLeft, textY, 0.50f, hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY);
+                    row.text(display, 6.0f, textY, 0.50f, hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY);
                     row.text("+", rowBounds.width() - 12.0f, textY, 0.54f, hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY);
                 } else {
                     row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
                             MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover));
-                    row.text(display, textLeft, textY, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER);
+                    row.text(display, 6.0f, textY, 0.50f, MD3Theme.ON_SECONDARY_CONTAINER);
                     row.text("-", rowBounds.width() - 12.0f, textY, 0.54f, MD3Theme.ON_SECONDARY_CONTAINER);
                 }
             });
@@ -355,4 +410,5 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private record ItemPreview(ItemStack stack, float x, float y, float size) {}
+    public record Category<T>(String name, Predicate<T> predicate) {}
 }
