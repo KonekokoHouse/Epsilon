@@ -80,12 +80,34 @@ public class SettingsContent {
         if (setting instanceof EnchantmentListSetting s) return new EnchantmentListSettingWidget(s);
         if (setting instanceof PacketListSetting s) return new PacketListSettingWidget(s);
         if (setting instanceof ModuleListSetting s) return new ModuleListSettingWidget(s);
-        // --- Simple & Map settings (no Widget) ---
-        if (setting instanceof BlockSetting) return null;
-        if (setting instanceof ItemSetting) return null;
-        if (setting instanceof BlockPosSetting) return null;
-        if (setting instanceof Vector3dSetting) return null;
-        if (setting instanceof StatusEffectAmplifierMapSetting) return null;
+        // --- Simple & Map settings ---
+        if (setting instanceof BlockSetting s) {
+            return new SimpleValueWidget(s, st -> {
+                var id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(((BlockSetting) st).getValue());
+                return id != null ? id.toString() : "Air";
+            });
+        }
+        if (setting instanceof ItemSetting s) {
+            return new SimpleValueWidget(s, st -> {
+                var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(((ItemSetting) st).getValue());
+                return id != null ? id.toString() : "Air";
+            });
+        }
+        if (setting instanceof BlockPosSetting s) {
+            return new SimpleValueWidget(s, st -> {
+                var pos = ((BlockPosSetting) st).getValue();
+                return pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
+            });
+        }
+        if (setting instanceof Vector3dSetting s) {
+            return new SimpleValueWidget(s, st -> {
+                var vec = ((Vector3dSetting) st).getValue();
+                return String.format("%.1f, %.1f, %.1f", vec.x, vec.y, vec.z);
+            });
+        }
+        if (setting instanceof StatusEffectAmplifierMapSetting s) {
+            return new SimpleValueWidget(s, st -> String.valueOf(((StatusEffectAmplifierMapSetting) st).getValue().size()));
+        }
         return null;
     }
 
