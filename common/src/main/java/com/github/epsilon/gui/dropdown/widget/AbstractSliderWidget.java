@@ -36,16 +36,16 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         float ratio = getRatio();
         float sliderRatio = Mth.clamp(ratio, 0.0f, 1.0f);
 
-        renderer.text(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        float trackX = getTrackX();
-        float trackY = getTrackY();
+        float trackX = getLocalTrackX();
+        float trackY = getLocalTrackY();
         float trackW = getTrackWidth();
         float trackH = DropdownTheme.SLIDER_HEIGHT;
 
         boolean editing = inputField.isFocused();
         if (editing) {
-            inputField.draw(renderer, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight(), mouseX, mouseY, formatPlainValue(), DropdownTheme.SETTING_TEXT_SCALE);
+            inputField.draw(renderer, getLocalEditorX(), getLocalEditorY(), getEditorWidth(), getEditorHeight(), mouseX, mouseY, formatPlainValue(), DropdownTheme.SETTING_TEXT_SCALE);
         } else {
             renderer.roundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack());
 
@@ -60,7 +60,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             renderer.roundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());
 
             if (dragging && mouseX >= 0) {
-                float rawRatio = Mth.clamp((float) (mouseX - trackX) / trackW, 0.0f, 1.0f);
+                float rawRatio = Mth.clamp((float) (mouseX - getTrackX()) / trackW, 0.0f, 1.0f);
                 updateValueFromRatio(rawRatio);
             }
         }
@@ -193,11 +193,19 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
     protected abstract T getMax();
 
     protected float getTrackX() {
-        return x + DropdownTheme.SETTING_PADDING_X;
+        return absoluteX(DropdownTheme.SETTING_PADDING_X);
     }
 
     protected float getTrackY() {
-        return y + DropdownTheme.SETTING_HEIGHT;
+        return absoluteY(DropdownTheme.SETTING_HEIGHT);
+    }
+
+    protected float getLocalTrackX() {
+        return DropdownTheme.SETTING_PADDING_X;
+    }
+
+    protected float getLocalTrackY() {
+        return DropdownTheme.SETTING_HEIGHT;
     }
 
     protected float getTrackWidth() {
@@ -210,6 +218,14 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
 
     protected float getEditorY() {
         return getTrackY() - EDITOR_Y_OFFSET;
+    }
+
+    protected float getLocalEditorX() {
+        return getLocalTrackX();
+    }
+
+    protected float getLocalEditorY() {
+        return getLocalTrackY() - EDITOR_Y_OFFSET;
     }
 
     protected float getEditorWidth() {

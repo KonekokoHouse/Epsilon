@@ -44,14 +44,14 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         float expand = updateExpandProgress();
         float hover = updateHoverProgress(isFieldHovered(mouseX, mouseY));
-        float fieldX = getFieldX();
-        float fieldY = getFieldY();
+        float fieldX = getLocalFieldX();
+        float fieldY = getLocalFieldY();
         float fieldW = getFieldWidth();
 
         renderer.text(
                 setting.getDisplayName(),
-                x + DropdownTheme.SETTING_PADDING_X,
-                y + 1.0f,
+                DropdownTheme.SETTING_PADDING_X,
+                1.0f,
                 DropdownTheme.SETTING_TEXT_SCALE,
                 DropdownTheme.settingLabel()
         );
@@ -106,7 +106,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
 
     private void drawExpandedOptions(DropdownDrawContext renderer, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
         float listX = fieldX;
-        float listY = getListY();
+        float listY = getLocalListY();
         float listH = getListHeight();
         float clipH = listH * expand;
         float visibleBottom = listY + clipH;
@@ -168,7 +168,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     private void drawOption(DropdownDrawContext renderer, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
-        float optionY = getOptionY(optionIndex);
+        float optionY = getLocalOptionY(optionIndex);
         if (optionY >= visibleBottom) {
             return;
         }
@@ -254,11 +254,19 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     private float getFieldX() {
-        return x + DropdownTheme.SETTING_PADDING_X;
+        return absoluteX(DropdownTheme.SETTING_PADDING_X);
     }
 
     private float getFieldY() {
-        return y + DropdownTheme.SETTING_HEIGHT - 1.0f;
+        return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f);
+    }
+
+    private float getLocalFieldX() {
+        return DropdownTheme.SETTING_PADDING_X;
+    }
+
+    private float getLocalFieldY() {
+        return DropdownTheme.SETTING_HEIGHT - 1.0f;
     }
 
     private float getFieldWidth() {
@@ -269,8 +277,16 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return getFieldY() + FIELD_HEIGHT + LIST_GAP_Y;
     }
 
+    private float getLocalListY() {
+        return getLocalFieldY() + FIELD_HEIGHT + LIST_GAP_Y;
+    }
+
     private float getOptionY(int optionIndex) {
         return getListY() + LIST_PADDING_Y + optionIndex * (OPTION_HEIGHT + OPTION_GAP);
+    }
+
+    private float getLocalOptionY(int optionIndex) {
+        return getLocalListY() + LIST_PADDING_Y + optionIndex * (OPTION_HEIGHT + OPTION_GAP);
     }
 
 }

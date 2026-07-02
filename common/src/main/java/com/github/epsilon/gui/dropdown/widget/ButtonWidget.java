@@ -21,12 +21,12 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
 
     @Override
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
-        float btnX = x + DropdownTheme.SETTING_PADDING_X;
-        float btnY = y + 1.0f;
+        float btnX = DropdownTheme.SETTING_PADDING_X;
+        float btnY = 1.0f;
         float btnW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
         float btnH = DropdownTheme.BUTTON_HEIGHT;
 
-        boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH);
+        boolean hovered = isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), btnW, btnH);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
         renderer.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.BUTTON_RADIUS, DropdownTheme.buttonSurface(hoverAnim.getValue()));
@@ -41,8 +41,8 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return false;
 
-        float btnX = x + DropdownTheme.SETTING_PADDING_X;
-        float btnY = y + 1.0f;
+        float btnX = absoluteX(DropdownTheme.SETTING_PADDING_X);
+        float btnY = absoluteY(1.0f);
         float btnW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
         float btnH = DropdownTheme.BUTTON_HEIGHT;
 

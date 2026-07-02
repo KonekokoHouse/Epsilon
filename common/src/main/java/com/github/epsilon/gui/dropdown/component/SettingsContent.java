@@ -130,7 +130,7 @@ public class SettingsContent {
             if (section.hasHeader()) {
                 drawSection(renderer, mouseX, mouseY, section, panelX, currentY, panelWidth, sectionHeight);
             } else {
-                DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(
+                var stack = renderer.scope().stack(new PanelLayout.Rect(
                         panelX + DropdownTheme.SETTING_INDENT,
                         currentY,
                         panelWidth - DropdownTheme.SETTING_INDENT * 2.0f,
@@ -138,7 +138,8 @@ public class SettingsContent {
                 ));
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
-                    widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
+                    stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                            (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
                 }
             }
             currentY += sectionHeight;
@@ -290,10 +291,11 @@ public class SettingsContent {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = panelX + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = panelWidth - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(childX, childY, childW, sectionHeight));
+            var stack = renderer.scope().stack(new PanelLayout.Rect(childX, childY, childW, sectionHeight));
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
-                widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
+                stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                        (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
             }
         }
     }

@@ -49,14 +49,16 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
 
         float sw = SWITCH_WIDTH;
         float sh = SWITCH_HEIGHT;
-        float sx = x + width - DropdownTheme.SETTING_PADDING_X - sw;
-        float sy = y + (getHeight() - sh) * 0.5f;
+        float sx = width - DropdownTheme.SETTING_PADDING_X - sw;
+        float sy = (getHeight() - sh) * 0.5f;
 
-        boolean hovered = isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4);
+        boolean hovered = isHovered(mouseX, mouseY, absoluteX(sx - 2), absoluteY(sy - 2), sw + 4, sh + 4);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
         float hoverProgress = hoverAnim.getValue();
 
-        renderer.text(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + (getHeight() - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
+                (getHeight() - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+                DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         renderer.roundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t));
 
@@ -89,8 +91,8 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
         if (button == 0) {
             float sw = SWITCH_WIDTH;
             float sh = SWITCH_HEIGHT;
-            float sx = x + width - DropdownTheme.SETTING_PADDING_X - sw;
-            float sy = y + (getHeight() - sh) * 0.5f;
+            float sx = absoluteX(width - DropdownTheme.SETTING_PADDING_X - sw);
+            float sy = absoluteY((getHeight() - sh) * 0.5f);
             if (isHovered(mouseX, mouseY, sx - 2, sy - 2, sw + 4, sh + 4)) {
                 boolean newValue = !setting.getValue();
                 setting.setValue(newValue);

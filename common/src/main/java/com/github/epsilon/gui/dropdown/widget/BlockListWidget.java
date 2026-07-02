@@ -31,10 +31,10 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
         boolean hovered = isFieldHovered(mouseX, mouseY);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
-        renderer.text(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        float fieldX = getFieldX();
-        float fieldY = getFieldY();
+        float fieldX = DropdownTheme.SETTING_PADDING_X;
+        float fieldY = DropdownTheme.SETTING_HEIGHT - 1.0f;
         float fieldW = getFieldWidth();
         float hover = hoverAnim.getValue();
         Color background = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, hover * 0.6f);
@@ -66,11 +66,11 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
     }
 
     private float getFieldX() {
-        return x + DropdownTheme.SETTING_PADDING_X;
+        return absoluteX(DropdownTheme.SETTING_PADDING_X);
     }
 
     private float getFieldY() {
-        return y + DropdownTheme.SETTING_HEIGHT - 1.0f;
+        return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f);
     }
 
     private float getFieldWidth() {

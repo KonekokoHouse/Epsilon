@@ -11,6 +11,7 @@ import net.minecraft.resources.Identifier;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -118,6 +119,14 @@ public class PanelUiTree {
 
         public PanelLayout.Rect bound() {
             return currentBound();
+        }
+
+        public Stack stack(PanelLayout.Rect bounds) {
+            return new Stack(resolveRect(bounds));
+        }
+
+        public Stack stack(float x, float y, float width, float height) {
+            return stack(new PanelLayout.Rect(x, y, width, height));
         }
 
         public void push(PanelLayout.Rect bounds, Consumer<Scope> content) {
@@ -725,6 +734,78 @@ public class PanelUiTree {
                 while (boundStack.size() > parentBoundDepth) {
                     boundStack.removeLast();
                 }
+            }
+        }
+
+        /**
+         * 当前作用域内的垂直自动布局栈。
+         * <p>
+         * Stack 会按 item 高度推进游标，并可直接在每个 item 的矩形内下传同一个 {@link Scope}。
+         */
+        public final class Stack {
+            private final PanelLayout.Rect bounds;
+            private float cursor;
+
+            private Stack(PanelLayout.Rect bounds) {
+                this.bounds = bounds;
+                this.cursor = bounds.y();
+            }
+
+            public PanelLayout.Rect bounds() {
+                return bounds;
+            }
+
+            public PanelLayout.Rect item(float height) {
+                PanelLayout.Rect rect = new PanelLayout.Rect(bounds.x(), cursor, bounds.width(), Math.max(0.0f, height));
+                cursor += Math.max(0.0f, height);
+                return rect;
+            }
+
+            public PanelLayout.Rect item(float height, float gapAfter) {
+                PanelLayout.Rect rect = item(height);
+                gap(gapAfter);
+                return rect;
+            }
+
+            public void item(float height, Consumer<Scope> content) {
+                PanelLayout.Rect rect = item(height);
+                pushAbsolute(rect, content);
+            }
+
+            public void item(float height, float gapAfter, Consumer<Scope> content) {
+                PanelLayout.Rect rect = item(height, gapAfter);
+                pushAbsolute(rect, content);
+            }
+
+            public void item(float height, BiConsumer<PanelLayout.Rect, Scope> content) {
+                PanelLayout.Rect rect = item(height);
+                pushAbsolute(rect, scope -> content.accept(rect, scope));
+            }
+
+            public void item(float height, float gapAfter, BiConsumer<PanelLayout.Rect, Scope> content) {
+                PanelLayout.Rect rect = item(height, gapAfter);
+                pushAbsolute(rect, scope -> content.accept(rect, scope));
+            }
+
+            public void gap(float gap) {
+                cursor += Math.max(0.0f, gap);
+            }
+
+            public PanelLayout.Rect offset(float xOffset, float yOffset, float widthOffset, float heightOffset) {
+                return new PanelLayout.Rect(
+                        bounds.x() + xOffset,
+                        cursor + yOffset,
+                        Math.max(0.0f, bounds.width() + widthOffset),
+                        Math.max(0.0f, heightOffset)
+                );
+            }
+
+            public void offset(float xOffset, float yOffset, float widthOffset, float heightOffset, Consumer<Scope> content) {
+                pushAbsolute(offset(xOffset, yOffset, widthOffset, heightOffset), content);
+            }
+
+            public float cursor() {
+                return cursor;
             }
         }
     }

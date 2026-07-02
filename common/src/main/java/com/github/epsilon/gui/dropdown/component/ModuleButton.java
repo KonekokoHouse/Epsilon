@@ -159,12 +159,12 @@ public class ModuleButton extends Component {
         float toggle = toggleAnim.getValue();
 
         Color bg = MD3Theme.lerp(DropdownTheme.moduleDisabled(hover), DropdownTheme.moduleEnabled(hover), toggle);
-        renderer.rect(x + 2.0f, y, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg);
-        renderer.rect(x + 3.0f, y + DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider());
+        renderer.rect(2.0f, 0.0f, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg);
+        renderer.rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider());
 
         Color textColor = MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle);
-        float textY = y + (DropdownTheme.MODULE_HEIGHT - renderer.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f;
-        float leftX = x + DropdownTheme.MODULE_PADDING_X;
+        float textY = (DropdownTheme.MODULE_HEIGHT - renderer.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f;
+        float leftX = DropdownTheme.MODULE_PADDING_X;
         renderer.text(module.getTranslatedName(), leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor);
 
         drawKeybindButton(renderer, mouseX, mouseY, toggle);
@@ -179,7 +179,7 @@ public class ModuleButton extends Component {
         }
 
         if (expand > 0.01f) {
-            float settingY = y + DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
+            float settingY = DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
             if (expand > 0.5f) {
                 drawAddonInfo(renderer, settingY);
             }
@@ -191,17 +191,19 @@ public class ModuleButton extends Component {
                         drawSection(renderer, mouseX, mouseY, section, settingY);
                     }
                 } else {
-                    DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(
-                            x + DropdownTheme.SETTING_INDENT,
+                    var stack = renderer.scope().stack(new PanelLayout.Rect(
+                            DropdownTheme.SETTING_INDENT,
                             settingY,
                             width - DropdownTheme.SETTING_INDENT * 2.0f,
                             sectionH
                     ));
                     for (SettingWidget<?> widget : section.widgets()) {
                         if (!widget.isVisible()) continue;
-                        PanelLayout.Rect bounds = stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP);
                         if (expand > 0.5f) {
-                            widget.draw(renderer, mouseX, mouseY, bounds);
+                            stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                                    (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
+                        } else {
+                            stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP);
                         }
                     }
                 }
@@ -216,8 +218,7 @@ public class ModuleButton extends Component {
     }
 
     private void drawAddonInfo(DropdownDrawContext renderer, float infoY) {
-        float infoX = x + DropdownTheme.SETTING_INDENT;
-        float infoW = width - DropdownTheme.SETTING_INDENT * 2.0f;
+        float infoX = DropdownTheme.SETTING_INDENT;
         float infoH = DropdownTheme.MODULE_ADDON_INFO_HEIGHT;
 
         float scale = DropdownTheme.MODULE_ADDON_INFO_TEXT_SCALE;
@@ -228,11 +229,11 @@ public class ModuleButton extends Component {
 
     private void drawSection(DropdownDrawContext renderer, int mouseX, int mouseY, SettingSection section, float sectionY) {
         float headerW = width - DropdownTheme.SETTING_INDENT * 2.0f;
-        float headerX = x + DropdownTheme.SETTING_INDENT;
+        float headerX = DropdownTheme.SETTING_INDENT;
         float headerH = DropdownTheme.GROUP_HEADER_HEIGHT;
 
         Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), k -> createGroupAnimation(120L, 0.0f));
-        hoverAnim.run(isHovered(mouseX, mouseY, headerX, sectionY, headerW, headerH) ? 1.0f : 0.0f);
+        hoverAnim.run(isHovered(mouseX, mouseY, absoluteX(headerX), absoluteY(sectionY), headerW, headerH) ? 1.0f : 0.0f);
         float hoverProgress = hoverAnim.getValue();
 
         Animation expandAnimG = sectionExpandAnimations.get(section.key());
@@ -262,12 +263,13 @@ public class ModuleButton extends Component {
 
         if (!section.isCollapsed()) {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
-            float childX = x + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
+            float childX = DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = width - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(childX, childY, childW, getSectionHeight(section)));
+            var stack = renderer.scope().stack(new PanelLayout.Rect(childX, childY, childW, getSectionHeight(section)));
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
-                widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
+                stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                        (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
             }
         }
     }
@@ -286,10 +288,10 @@ public class ModuleButton extends Component {
     private void drawKeybindButton(DropdownDrawContext renderer, int mouseX, int mouseY, float toggle) {
         float btnW = DropdownTheme.KEYBIND_WIDTH;
         float btnH = DropdownTheme.KEYBIND_HEIGHT;
-        float btnX = x + width - DropdownTheme.MODULE_PADDING_X - btnW;
-        float btnY = y + (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
+        float btnX = width - DropdownTheme.MODULE_PADDING_X - btnW;
+        float btnY = (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
         float radius = DropdownTheme.KEYBIND_RADIUS;
-        boolean btnHovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH);
+        boolean btnHovered = isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), btnW, btnH);
         keybindHoverAnim.run(btnHovered ? 1.0f : 0.0f);
         float kbHover = keybindHoverAnim.getValue();
 
@@ -346,17 +348,17 @@ public class ModuleButton extends Component {
     }
 
     private boolean isKeybindButtonHovered(double mouseX, double mouseY) {
-        float btnX = x + width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH;
-        float btnY = y + (DropdownTheme.MODULE_HEIGHT - DropdownTheme.KEYBIND_HEIGHT) * 0.5f;
-        return isHovered(mouseX, mouseY, btnX, btnY, DropdownTheme.KEYBIND_WIDTH, DropdownTheme.KEYBIND_HEIGHT);
+        float btnX = width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH;
+        float btnY = (DropdownTheme.MODULE_HEIGHT - DropdownTheme.KEYBIND_HEIGHT) * 0.5f;
+        return isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), DropdownTheme.KEYBIND_WIDTH, DropdownTheme.KEYBIND_HEIGHT);
     }
 
     private void drawHiddenButton(DropdownDrawContext renderer, int mouseX, int mouseY) {
         float btnW = 18.0f;
         float btnH = DropdownTheme.KEYBIND_HEIGHT;
-        float btnX = x + width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW;
-        float btnY = y + (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
-        boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH);
+        float btnX = width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW;
+        float btnY = (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
+        boolean hovered = isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), btnW, btnH);
         if (!module.isHidden()) {
             renderer.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
             String icon = IconChars.VISIBILITY;
@@ -369,17 +371,17 @@ public class ModuleButton extends Component {
             String hint = module.isHidden() ? EpsilonTranslations.Module.HIDDEN.getTranslatedName() : EpsilonTranslations.Module.VISIBLE.getTranslatedName();
             float hintScale = 0.42f;
             float hintW = renderer.textWidth(hint, hintScale);
-            float hintX = Mth.clamp(btnX + (btnW - hintW) * 0.5f, x + 2.0f, x + width - hintW - 2.0f);
-            renderer.text(hint, hintX, y + DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED);
+            float hintX = Mth.clamp(btnX + (btnW - hintW) * 0.5f, 2.0f, width - hintW - 2.0f);
+            renderer.text(hint, hintX, DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED);
         }
     }
 
     private boolean isHiddenButtonHovered(double mouseX, double mouseY) {
         float btnW = 18.0f;
         float btnH = DropdownTheme.KEYBIND_HEIGHT;
-        float btnX = x + width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW;
-        float btnY = y + (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
-        return isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH);
+        float btnX = width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW;
+        float btnY = (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
+        return isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), btnW, btnH);
     }
 
     private boolean isGroupHeaderHovered(double mouseX, double mouseY, float headerX, float headerY) {
@@ -422,11 +424,11 @@ public class ModuleButton extends Component {
         }
 
         if (expanded && expandAnim.getValue() > 0.5f) {
-            float settingY = y + DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
+            float settingY = absoluteY(DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP);
             settingY += DropdownTheme.MODULE_ADDON_INFO_HEIGHT + DropdownTheme.SETTING_GAP;
             for (SettingSection section : sections) {
                 if (section.hasHeader()) {
-                    float headerX = x + DropdownTheme.SETTING_INDENT;
+                    float headerX = absoluteX(DropdownTheme.SETTING_INDENT);
                     if (isGroupHeaderHovered(mouseX, mouseY, headerX, settingY)) {
                         section.toggleCollapsed();
                         Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);

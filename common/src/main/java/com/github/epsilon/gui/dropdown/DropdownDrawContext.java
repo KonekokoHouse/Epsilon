@@ -4,7 +4,6 @@ import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.PanelLayout;
 import net.minecraft.resources.Identifier;
 
 import java.awt.*;
@@ -28,47 +27,8 @@ public final class DropdownDrawContext {
         return scope;
     }
 
-    public Stack stack(PanelLayout.Rect bounds) {
-        return new Stack(bounds);
-    }
-
-    public final class Stack {
-        private final PanelLayout.Rect bounds;
-        private float cursor;
-
-        private Stack(PanelLayout.Rect bounds) {
-            this.bounds = bounds;
-            this.cursor = bounds.y();
-        }
-
-        public PanelLayout.Rect item(float height) {
-            PanelLayout.Rect rect = new PanelLayout.Rect(bounds.x(), cursor, bounds.width(), Math.max(0.0f, height));
-            cursor += Math.max(0.0f, height);
-            return rect;
-        }
-
-        public PanelLayout.Rect item(float height, float gapAfter) {
-            PanelLayout.Rect rect = item(height);
-            gap(gapAfter);
-            return rect;
-        }
-
-        public void gap(float gap) {
-            cursor += Math.max(0.0f, gap);
-        }
-
-        public PanelLayout.Rect offset(float xOffset, float yOffset, float widthOffset, float heightOffset) {
-            return new PanelLayout.Rect(
-                    bounds.x() + xOffset,
-                    cursor + yOffset,
-                    Math.max(0.0f, bounds.width() + widthOffset),
-                    Math.max(0.0f, heightOffset)
-            );
-        }
-
-        public float cursor() {
-            return cursor;
-        }
+    public DropdownDrawContext withScope(PanelUiTree.Scope scope) {
+        return new DropdownDrawContext(scope, textMetrics);
     }
 
     public void shadow(float x, float y, float width, float height, float radius, float blurRadius, Color color) {

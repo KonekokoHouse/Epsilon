@@ -91,10 +91,11 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             renderer.text(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
-        DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(contentX, currentY, contentW, computeWidgetsHeight()));
+        var stack = renderer.scope().stack(new PanelLayout.Rect(contentX, currentY, contentW, computeWidgetsHeight()));
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
-            widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
+            stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                    (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
         }
     }
 
