@@ -1,8 +1,12 @@
 package com.github.epsilon.modules.impl.movement.elytrafly;
 
 import com.github.epsilon.events.impl.KeyboardInputEvent;
+import com.github.epsilon.events.impl.FallFlyingEvent;
+import com.github.epsilon.events.impl.FireworkUpdateEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.modules.impl.movement.follower.Follower;
+import com.github.epsilon.modules.impl.movement.follower.FollowerInput;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
@@ -42,7 +46,13 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
 
     @Override
     public void onTravel(TravelEvent event) {
-        if (!hasMoveInput() && (!elytraFly.useFireworks.getValue() || hasFirstFirework)) {
+        boolean avoidCeilingLift = shouldAvoidCeilingLift();
+
+        if (avoidCeilingLift && mc.player.getDeltaMovement().y > 0.0) {
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(1.0, 0.0, 1.0));
+        }
+
+        if (!avoidCeilingLift && !hasMoveInput() && (!elytraFly.useFireworks.getValue() || hasFirstFirework)) {
             mc.player.setDeltaMovement(0, 0.02, 0);
         }
     }
@@ -54,6 +64,18 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
             event.setJump(true);
             shouldJump = false;
         }
+    }
+
+    @Override
+    public void onFallFlying(FallFlyingEvent event) {
+        event.setYaw(calcYaw());
+        event.setPitch(calcPitch());
+    }
+
+    @Override
+    public void onFireworkUpdate(FireworkUpdateEvent event) {
+        event.setYaw(calcYaw());
+        event.setPitch(calcPitch());
     }
 
     private void updateControl() {
@@ -92,6 +114,11 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private float calcYaw() {
+        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
+        if (followerInput != null) {
+            return followerInput.yaw();
+        }
+
         float yaw = mc.player.getYRot();
 
         boolean forward = mc.options.keyUp.isDown();
@@ -121,6 +148,11 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private float calcPitch() {
+        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
+        if (followerInput != null) {
+            return applyCeilingPitchGuard(followerInput.pitch());
+        }
+
         float pitch = mc.player.getXRot();
 
         boolean jump = mc.options.keyJump.isDown();
@@ -136,10 +168,28 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
         } else if (moving) {
             pitch = -1.9f;
         }
+        return applyCeilingPitchGuard(pitch);
+    }
+
+    private float applyCeilingPitchGuard(float pitch) {
+        if (shouldAvoidCeilingLift() && pitch < 0.0f) {
+            return 0.0f;
+        }
         return Mth.clamp(pitch, -90f, 90f);
     }
 
+    private boolean shouldAvoidCeilingLift() {
+        return elytraFly.armored.getValue()
+                && mc.player.isFallFlying()
+                && !mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(0.0, 0.08, 0.0));
+    }
+
     private boolean hasMoveInput() {
+        FollowerInput followerInput = Follower.INSTANCE.getControlInput();
+        if (followerInput != null) {
+            return followerInput.hasMoveInput();
+        }
+
         return mc.options.keyUp.isDown()
                 || mc.options.keyDown.isDown()
                 || mc.options.keyLeft.isDown()
