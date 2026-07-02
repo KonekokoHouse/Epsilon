@@ -188,6 +188,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 hoveredRemove = null;
                 PanelLayout.Rect effectiveViewport = new PanelLayout.Rect(animatedViewport.x(), effectiveViewportY, animatedViewport.width(), animatedViewport.bottom() - effectiveViewportY);
                 lastViewport = effectiveViewport;
+                maxScroll = Math.max(0.0f, columnContentHeight - effectiveViewport.height());
+                scroll = Mth.clamp(scroll, 0.0f, maxScroll);
                 PanelLayout.Rect localViewport = effectiveViewport.relativeTo(animatedBounds);
                 popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
                     buildColumn(content, available, leftX, effectiveViewportY - scroll, columnWidth, mouseX, mouseY, true, effectiveViewport);
