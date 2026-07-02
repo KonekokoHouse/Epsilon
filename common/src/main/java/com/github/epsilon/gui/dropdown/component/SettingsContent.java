@@ -170,7 +170,6 @@ public class SettingsContent {
 
     public boolean mouseClicked(double mouseX, double mouseY, int button, float panelX, float contentY, float panelWidth) {
         float currentY = contentY + DropdownTheme.SETTING_GAP;
-        blurAllInputs();
         for (SettingSection section : sections) {
             if (section.hasHeader()) {
                 float headerX = panelX + DropdownTheme.SETTING_INDENT;
@@ -201,6 +200,7 @@ public class SettingsContent {
             }
             currentY += getSectionHeight(section);
         }
+        blurAllInputs();
         return false;
     }
 
