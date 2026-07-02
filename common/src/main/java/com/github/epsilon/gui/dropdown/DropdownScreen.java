@@ -424,7 +424,7 @@ public class DropdownScreen extends Screen {
 
     @Override
     public void onClose() {
-        IMEFocusHelper.deactivate();
+        IMEFocusHelper.forceDeactivate();
         popupHost.close();
         DropdownLayoutState.save(panels);
         super.onClose();

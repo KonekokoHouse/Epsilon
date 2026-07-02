@@ -75,6 +75,7 @@ public class ClientSettingTextField {
     public void blur() {
         if (focused) {
             focused = false;
+            IMEFocusHelper.deactivate();
         }
     }
 

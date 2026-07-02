@@ -102,6 +102,7 @@ public class DropdownTextField {
     public void blur() {
         if (focused) {
             focused = false;
+            IMEFocusHelper.deactivate();
         }
     }
 

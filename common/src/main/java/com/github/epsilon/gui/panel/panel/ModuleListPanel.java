@@ -253,6 +253,7 @@ public class ModuleListPanel {
             case 257, 335 -> true;
             case 256 -> {
                 searchFocused = false;
+                IMEFocusHelper.deactivate();
                 yield true;
             }
             case 259 -> {
@@ -310,6 +311,7 @@ public class ModuleListPanel {
         }
         if (!getSearchBounds().contains(mouseX, mouseY)) {
             searchFocused = false;
+            IMEFocusHelper.deactivate();
             markDirty();
         }
     }
