@@ -36,31 +36,31 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         float ratio = getRatio();
         float sliderRatio = Mth.clamp(ratio, 0.0f, 1.0f);
 
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        float trackX = getTrackX();
-        float trackY = getTrackY();
+        float trackX = getLocalTrackX();
+        float trackY = getLocalTrackY();
         float trackW = getTrackWidth();
         float trackH = DropdownTheme.SLIDER_HEIGHT;
 
         boolean editing = inputField.isFocused();
         if (editing) {
-            inputField.draw(renderer, getEditorX(), getEditorY(), getEditorWidth(), getEditorHeight(), mouseX, mouseY, formatPlainValue(), DropdownTheme.SETTING_TEXT_SCALE);
+            inputField.draw(renderer, getLocalEditorX(), getLocalEditorY(), getEditorWidth(), getEditorHeight(), mouseX, mouseY, formatPlainValue(), DropdownTheme.SETTING_TEXT_SCALE);
         } else {
-            renderer.roundRect().addRoundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack());
+            renderer.roundRect(trackX, trackY, trackW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderTrack());
 
             float activeW = trackW * sliderRatio;
             if (activeW > 0.5f) {
-                renderer.roundRect().addRoundRect(trackX, trackY, activeW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderActive());
+                renderer.roundRect(trackX, trackY, activeW, trackH, DropdownTheme.SLIDER_RADIUS, DropdownTheme.sliderActive());
             }
 
             float knobX = trackX + trackW * sliderRatio;
             float knobY = trackY + trackH * 0.5f;
             float kr = DropdownTheme.SLIDER_KNOB_RADIUS;
-            renderer.roundRect().addRoundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());
+            renderer.roundRect(knobX - kr, knobY - kr, kr * 2.0f, kr * 2.0f, kr, DropdownTheme.sliderKnob());
 
             if (dragging && mouseX >= 0) {
-                float rawRatio = Mth.clamp((float) (mouseX - trackX) / trackW, 0.0f, 1.0f);
+                float rawRatio = Mth.clamp((float) (mouseX - getTrackX()) / trackW, 0.0f, 1.0f);
                 updateValueFromRatio(rawRatio);
             }
         }
@@ -179,13 +179,13 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         String maxValue = formatValue(getMax());
         float textY = trackY + DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET;
 
-        renderer.text().addText(minValue, trackX, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted());
+        renderer.text(minValue, trackX, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted());
 
-        float currentWidth = renderer.text().getWidth(currentValue, VALUE_TEXT_SCALE);
-        renderer.text().addText(currentValue, trackX + (trackW - currentWidth) * 0.5f, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabel());
+        float currentWidth = renderer.textWidth(currentValue, VALUE_TEXT_SCALE);
+        renderer.text(currentValue, trackX + (trackW - currentWidth) * 0.5f, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        float maxWidth = renderer.text().getWidth(maxValue, VALUE_TEXT_SCALE);
-        renderer.text().addText(maxValue, trackX + trackW - maxWidth, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted());
+        float maxWidth = renderer.textWidth(maxValue, VALUE_TEXT_SCALE);
+        renderer.text(maxValue, trackX + trackW - maxWidth, textY, VALUE_TEXT_SCALE, DropdownTheme.settingLabelMuted());
     }
 
     protected abstract T getMin();
@@ -193,11 +193,19 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
     protected abstract T getMax();
 
     protected float getTrackX() {
-        return x + DropdownTheme.SETTING_PADDING_X;
+        return absoluteX(DropdownTheme.SETTING_PADDING_X);
     }
 
     protected float getTrackY() {
-        return y + DropdownTheme.SETTING_HEIGHT;
+        return absoluteY(DropdownTheme.SETTING_HEIGHT);
+    }
+
+    protected float getLocalTrackX() {
+        return DropdownTheme.SETTING_PADDING_X;
+    }
+
+    protected float getLocalTrackY() {
+        return DropdownTheme.SETTING_HEIGHT;
     }
 
     protected float getTrackWidth() {
@@ -210,6 +218,14 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
 
     protected float getEditorY() {
         return getTrackY() - EDITOR_Y_OFFSET;
+    }
+
+    protected float getLocalEditorX() {
+        return getLocalTrackX();
+    }
+
+    protected float getLocalEditorY() {
+        return getLocalTrackY() - EDITOR_Y_OFFSET;
     }
 
     protected float getEditorWidth() {
