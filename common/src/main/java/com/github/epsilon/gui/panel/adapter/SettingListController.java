@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.adapter;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -540,10 +541,10 @@ public class SettingListController {
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
                 e -> e.getDisplayName().getString(),
-                e -> net.minecraft.world.item.Items.POTION.getDefaultInstance(),
+                null,
                 java.util.List.of(
-                        new RegistryListSelectPopup.Category<>("+", e -> e.isBeneficial()),
-                        new RegistryListSelectPopup.Category<>("-", e -> !e.isBeneficial())
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_POSITIVE.getTranslatedName(), e -> e.isBeneficial()),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_NEGATIVE.getTranslatedName(), e -> !e.isBeneficial())
                 ),
                 setting::add, setting::remove);
     }

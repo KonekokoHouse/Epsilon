@@ -621,10 +621,10 @@ public class DropdownScreen extends Screen {
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
                 e -> e.getDisplayName().getString(),
-                e -> net.minecraft.world.item.Items.POTION.getDefaultInstance(),
+                null,
                 java.util.List.of(
-                        new RegistryListSelectPopup.Category<>("+", e -> e.isBeneficial()),
-                        new RegistryListSelectPopup.Category<>("-", e -> !e.isBeneficial())
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_POSITIVE.getTranslatedName(), e -> e.isBeneficial()),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_NEGATIVE.getTranslatedName(), e -> !e.isBeneficial())
                 ),
                 setting::add, setting::remove));
     }

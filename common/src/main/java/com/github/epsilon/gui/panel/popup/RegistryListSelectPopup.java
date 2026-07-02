@@ -123,10 +123,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         List<T> available = filteredAvailable();
         List<T> selected = filteredSelected();
         float columnContentHeight = Math.max(available.size(), selected.size()) * (ROW_HEIGHT + ROW_GAP);
-        PanelLayout.Rect viewport = getViewport();
-        maxScroll = Math.max(0.0f, columnContentHeight - viewport.height());
-        scroll = Mth.clamp(scroll, 0.0f, maxScroll);
-        updateSmoothScroll(partialTick);
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
@@ -157,11 +153,12 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 float columnWidth = (contentWidth - COLUMN_GAP) / 2.0f;
                 float leftX = animatedViewport.x();
                 float rightX = leftX + columnWidth + COLUMN_GAP;
-                float catY = searchBounds.bottom() + 4.0f;
+                float viewportY = animatedViewport.y();
                 if (!categories.isEmpty()) {
+                    float catY = searchBounds.bottom() + 4.0f;
                     float catTabX = leftX;
                     for (int ci = -1; ci < categories.size(); ci++) {
-                        String catName = ci < 0 ? "All" : categories.get(ci).name();
+                        String catName = ci < 0 ? EpsilonTranslations.Gui.LIST_ALL.getTranslatedName() : categories.get(ci).name();
                         float catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f;
                         boolean catSelected = selectedCategory == ci;
                         PanelLayout.Rect catBounds = new PanelLayout.Rect(catTabX, catY, catTextW, CATEGORY_TAB_HEIGHT);
@@ -174,20 +171,26 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                                 0.44f, catSelected ? MD3Theme.ON_PRIMARY : MD3Theme.TEXT_SECONDARY);
                         catTabX += catTextW + CATEGORY_TAB_GAP;
                     }
-                    catY += CATEGORY_TAB_HEIGHT + 4.0f;
+                    viewportY = catY + CATEGORY_TAB_HEIGHT + HEADER_HEIGHT + 4.0f;
                 }
+                final float effectiveViewportY = viewportY;
 
-                float headerY = Math.max(animatedViewport.y(), catY) - HEADER_HEIGHT + 2.0f;
+                float headerY = effectiveViewportY - HEADER_HEIGHT;
                 float headerTextY = centeredTextY(headerY, HEADER_HEIGHT, 0.50f);
                 popup.text(EpsilonTranslations.Gui.LIST_AVAILABLE.getTranslatedName(), leftX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
                 popup.text(EpsilonTranslations.Gui.LIST_SELECTED_HEADER.getTranslatedName(), rightX - animatedBounds.x() + 4.0f, headerTextY - animatedBounds.y(), 0.50f, MD3Theme.TEXT_SECONDARY);
 
                 hoveredAdd = null;
                 hoveredRemove = null;
-                PanelLayout.Rect localViewport = animatedViewport.relativeTo(animatedBounds);
+                PanelLayout.Rect effectiveViewport = new PanelLayout.Rect(animatedViewport.x(), effectiveViewportY, animatedViewport.width(), animatedViewport.bottom() - effectiveViewportY);
+                lastViewport = effectiveViewport;
+                maxScroll = Math.max(0.0f, columnContentHeight - effectiveViewport.height());
+                scroll = Mth.clamp(scroll, 0.0f, maxScroll);
+                updateSmoothScroll(partialTick);
+                PanelLayout.Rect localViewport = effectiveViewport.relativeTo(animatedBounds);
                 popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
-                    buildColumn(content, available, leftX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, true, animatedViewport);
-                    buildColumn(content, selected, rightX, animatedViewport.y() - scroll, columnWidth, mouseX, mouseY, false, animatedViewport);
+                    buildColumn(content, available, leftX, effectiveViewportY - scroll, columnWidth, mouseX, mouseY, true, effectiveViewport);
+                    buildColumn(content, selected, rightX, effectiveViewportY - scroll, columnWidth, mouseX, mouseY, false, effectiveViewport);
                 });
             });
         });
@@ -225,7 +228,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             float catY = searchBounds.bottom() + 4.0f;
             float catTabX = bounds.x() + PADDING;
             for (int ci = -1; ci < categories.size(); ci++) {
-                String catName = ci < 0 ? "All" : categories.get(ci).name();
+                String catName = ci < 0 ? EpsilonTranslations.Gui.LIST_ALL.getTranslatedName() : categories.get(ci).name();
                 float catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f;
                 if (event.x() >= catTabX && event.x() <= catTabX + catTextW
                         && event.y() >= catY && event.y() <= catY + CATEGORY_TAB_HEIGHT) {
