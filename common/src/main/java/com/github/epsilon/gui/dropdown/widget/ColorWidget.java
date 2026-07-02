@@ -62,11 +62,11 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         openAnim.run(opened ? 1.0f : 0.0f);
         float t = openAnim.getValue();
 
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + (DropdownTheme.SETTING_HEIGHT - renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + (DropdownTheme.SETTING_HEIGHT - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         float previewX = x + width - DropdownTheme.SETTING_PADDING_X - DropdownTheme.COLOR_PREVIEW_SIZE;
         float previewY = y + (DropdownTheme.SETTING_HEIGHT - DropdownTheme.COLOR_PREVIEW_SIZE) * 0.5f;
-        renderer.roundRect().addRoundRect(previewX, previewY, DropdownTheme.COLOR_PREVIEW_SIZE, DropdownTheme.COLOR_PREVIEW_SIZE, 2.0f, setting.getValue());
+        renderer.roundRect(previewX, previewY, DropdownTheme.COLOR_PREVIEW_SIZE, DropdownTheme.COLOR_PREVIEW_SIZE, 2.0f, setting.getValue());
 
         if (t < 0.01f) return;
 
@@ -86,7 +86,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float hueH = HUE_HEIGHT * t;
         for (int i = 0; i < (int) gradW; i++) {
             Color c = Color.getHSBColor(i / gradW, 1.0f, 1.0f);
-            renderer.rect().addRect(gradX + i, hueY, 1.0f, hueH, c);
+            renderer.rect(gradX + i, hueY, 1.0f, hueH, c);
         }
         drawSliderPicker(renderer, gradX + gradW * hsb[0], hueY, hueH);
 
@@ -114,22 +114,22 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
         float pickerCx = gradX + gradW * hsb[1];
         float pickerCy = gradY + gradH * (1.0f - hsb[2]);
-        renderer.rect().addRect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, new Color(0, 0, 0, 135));
-        renderer.rect().addRect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE);
+        renderer.rect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, new Color(0, 0, 0, 135));
+        renderer.rect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE);
 
         drawChannelRows(renderer, mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t);
     }
 
     private void drawSaturationBrightnessPalette(DropdownDrawContext renderer, float x, float y, float width, float height, Color hueColor) {
-        renderer.rect().addRect(x - 1.0f, y - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
-        renderer.rect().addRectGradient(x, y, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
-        renderer.rect().addRectGradient(x, y, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
+        renderer.rect(x - 1.0f, y - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
+        renderer.rectGradient(x, y, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
+        renderer.rectGradient(x, y, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
     }
 
     private void drawSliderPicker(DropdownDrawContext renderer, float centerX, float y, float height) {
         float pickerW = 3.0f;
-        renderer.rect().addRect(centerX - pickerW * 0.5f - 1.0f, y - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
-        renderer.rect().addRect(centerX - pickerW * 0.5f, y - 1.0f, pickerW, height + 2.0f, Color.WHITE);
+        renderer.rect(centerX - pickerW * 0.5f - 1.0f, y - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
+        renderer.rect(centerX - pickerW * 0.5f, y - 1.0f, pickerW, height + 2.0f, Color.WHITE);
     }
 
     private void drawChannelRows(DropdownDrawContext renderer, int mouseX, int mouseY, float startY, float alphaProgress) {
@@ -145,9 +145,9 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
     private void drawChannelRow(DropdownDrawContext renderer, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
         int value = getChannelValue(channel);
-        float textY = rowY + (CHANNEL_ROW_HEIGHT - renderer.text().getHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
+        float textY = rowY + (CHANNEL_ROW_HEIGHT - renderer.textHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
         Color textColor = MD3Theme.withAlpha(DropdownTheme.settingLabel(), (int) (DropdownTheme.settingLabel().getAlpha() * alphaProgress));
-        renderer.text().addText(channel.label, x + DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor);
+        renderer.text(channel.label, x + DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor);
 
         float boxX = x + width - DropdownTheme.SETTING_PADDING_X - CHANNEL_BOX_WIDTH;
         float boxY = rowY + (CHANNEL_ROW_HEIGHT - CHANNEL_BOX_HEIGHT) * 0.5f;
@@ -158,7 +158,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
         float knobX = trackX + trackW * (value / 255.0f);
         float knobR = 2.75f;
-        renderer.roundRect().addRoundRect(knobX - knobR, trackY + CHANNEL_TRACK_HEIGHT * 0.5f - knobR, knobR * 2.0f, knobR * 2.0f, knobR, DropdownTheme.sliderKnob());
+        renderer.roundRect(knobX - knobR, trackY + CHANNEL_TRACK_HEIGHT * 0.5f - knobR, knobR * 2.0f, knobR * 2.0f, knobR, DropdownTheme.sliderKnob());
 
         DropdownTextField field = getField(channel);
         field.drawCentered(renderer, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY, Integer.toString(value), CHANNEL_TEXT_SCALE);
@@ -178,7 +178,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             case BLUE -> new Color(current.getRed(), current.getGreen(), 255);
             case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), 255);
         };
-        renderer.roundRect().addHorizontalGradient(trackX, trackY, trackW, trackH, trackH * 0.5f, MD3Theme.withAlpha(start, (int) (start.getAlpha() * alphaProgress)), MD3Theme.withAlpha(end, (int) (end.getAlpha() * alphaProgress)));
+        renderer.roundRectHorizontalGradient(trackX, trackY, trackW, trackH, trackH * 0.5f, MD3Theme.withAlpha(start, (int) (start.getAlpha() * alphaProgress)), MD3Theme.withAlpha(end, (int) (end.getAlpha() * alphaProgress)));
     }
 
     @Override

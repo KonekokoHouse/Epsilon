@@ -29,12 +29,12 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
         boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
-        renderer.roundRect().addRoundRect(btnX, btnY, btnW, btnH, DropdownTheme.BUTTON_RADIUS, DropdownTheme.buttonSurface(hoverAnim.getValue()));
+        renderer.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.BUTTON_RADIUS, DropdownTheme.buttonSurface(hoverAnim.getValue()));
 
         String label = setting.getDisplayName();
-        float textW = renderer.text().getWidth(label, DropdownTheme.SETTING_TEXT_SCALE);
-        float textY = btnY + (btnH - renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f;
-        renderer.text().addText(label, btnX + (btnW - textW) * 0.5f, textY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.buttonText());
+        float textW = renderer.textWidth(label, DropdownTheme.SETTING_TEXT_SCALE);
+        float textY = btnY + (btnH - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f;
+        renderer.text(label, btnX + (btnW - textW) * 0.5f, textY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.buttonText());
     }
 
     @Override

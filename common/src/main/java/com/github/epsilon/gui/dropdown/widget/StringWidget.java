@@ -19,7 +19,7 @@ public class StringWidget extends SettingWidget<StringSetting> {
 
     @Override
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         float fieldX = x + DropdownTheme.SETTING_PADDING_X;
         float fieldY = y + DropdownTheme.SETTING_HEIGHT;

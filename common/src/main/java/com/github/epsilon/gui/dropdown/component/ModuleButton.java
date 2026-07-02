@@ -159,13 +159,13 @@ public class ModuleButton extends Component {
         float toggle = toggleAnim.getValue();
 
         Color bg = MD3Theme.lerp(DropdownTheme.moduleDisabled(hover), DropdownTheme.moduleEnabled(hover), toggle);
-        renderer.rect().addRect(x + 2.0f, y, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg);
-        renderer.rect().addRect(x + 3.0f, y + DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider());
+        renderer.rect(x + 2.0f, y, width - 4.0f, DropdownTheme.MODULE_HEIGHT, bg);
+        renderer.rect(x + 3.0f, y + DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider());
 
         Color textColor = MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle);
-        float textY = y + (DropdownTheme.MODULE_HEIGHT - renderer.text().getHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f;
+        float textY = y + (DropdownTheme.MODULE_HEIGHT - renderer.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f;
         float leftX = x + DropdownTheme.MODULE_PADDING_X;
-        renderer.text().addText(module.getTranslatedName(), leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor);
+        renderer.text(module.getTranslatedName(), leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor);
 
         drawKeybindButton(renderer, mouseX, mouseY, toggle);
         drawHiddenButton(renderer, mouseX, mouseY);
@@ -222,8 +222,8 @@ public class ModuleButton extends Component {
 
         float scale = DropdownTheme.MODULE_ADDON_INFO_TEXT_SCALE;
         String addonLabel = EpsilonTranslations.Module.FROM.getTranslatedName() + " " + getAddonLabel();
-        float textY = infoY + (infoH - renderer.text().getHeight(scale)) * 0.5f - 0.5f;
-        renderer.text().addText(addonLabel, infoX + DropdownTheme.SETTING_PADDING_X, textY, scale, DropdownTheme.moduleAddonInfoText());
+        float textY = infoY + (infoH - renderer.textHeight(scale)) * 0.5f - 0.5f;
+        renderer.text(addonLabel, infoX + DropdownTheme.SETTING_PADDING_X, textY, scale, DropdownTheme.moduleAddonInfoText());
     }
 
     private void drawSection(DropdownDrawContext renderer, int mouseX, int mouseY, SettingSection section, float sectionY) {
@@ -240,25 +240,25 @@ public class ModuleButton extends Component {
 
         Color headerBg = MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress);
         float headerRadius = DropdownTheme.BUTTON_RADIUS;
-        renderer.roundRect().addRoundRect(headerX, sectionY, headerW, headerH, headerRadius, headerBg);
+        renderer.roundRect(headerX, sectionY, headerW, headerH, headerRadius, headerBg);
 
         String label = section.title();
-        float labelY = sectionY + (headerH - renderer.text().getHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
-        renderer.text().addText(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
+        float labelY = sectionY + (headerH - renderer.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
+        renderer.text(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
 
         String countLabel = Integer.toString(section.widgets().size());
-        float countWidth = renderer.text().getWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
+        float countWidth = renderer.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
         float countX = headerX + headerW - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f;
         float chipH = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT;
         float countY = sectionY + (headerH - chipH) * 0.5f;
-        renderer.roundRect().addRoundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
-        float countTextY = countY + (chipH - renderer.text().getHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
-        renderer.text().addText(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
+        renderer.roundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
+        float countTextY = countY + (chipH - renderer.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
+        renderer.text(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
 
         float chevronSize = 2.5f;
         float chevronCenterX = headerX + headerW - DropdownTheme.SETTING_PADDING_X - chevronSize;
         float chevronCenterY = sectionY + headerH * 0.5f;
-        renderer.triangle().addChevronTriangle(chevronCenterX, chevronCenterY, chevronSize, expandProgress, DropdownTheme.groupChevron(hoverProgress));
+        renderer.triangle(chevronCenterX, chevronCenterY, chevronSize, expandProgress, DropdownTheme.groupChevron(hoverProgress));
 
         if (!section.isCollapsed()) {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
@@ -295,8 +295,8 @@ public class ModuleButton extends Component {
 
         String keyText = listeningKeybind ? "..." : formatCompactKeybind(module.getKeyBind());
         float textScale = keyText.length() >= 3 ? 0.46f : 0.52f;
-        float textW = renderer.text().getWidth(keyText, textScale);
-        float textH = renderer.text().getHeight(textScale);
+        float textW = renderer.textWidth(keyText, textScale);
+        float textH = renderer.textHeight(textScale);
 
         Color surface;
         Color outline;
@@ -313,14 +313,14 @@ public class ModuleButton extends Component {
             outline = MD3Theme.lerp(outline, MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 245), kbHover * 0.5f);
         }
 
-        renderer.roundRect().addRoundRect(btnX, btnY, btnW, btnH, radius, surface);
-        renderer.outline().addOutline(btnX, btnY, btnW, btnH, radius, 0.8f, outline);
+        renderer.roundRect(btnX, btnY, btnW, btnH, radius, surface);
+        renderer.outline(btnX, btnY, btnW, btnH, radius, 0.8f, outline);
 
         float textX = btnX + (btnW - textW) * 0.5f;
         float textY = btnY + (btnH - textH) * 0.5f - 0.5f;
-        renderer.text().addText(keyText, textX, textY, textScale, text);
+        renderer.text(keyText, textX, textY, textScale, text);
         if (module.getBindMode() == Module.BindMode.Hold && !listeningKeybind) {
-            renderer.rect().addRect(textX, textY + textH + 0.5f, textW, 0.75f, text);
+            renderer.rect(textX, textY + textH + 0.5f, textW, 0.75f, text);
         }
     }
 
@@ -358,19 +358,19 @@ public class ModuleButton extends Component {
         float btnY = y + (DropdownTheme.MODULE_HEIGHT - btnH) * 0.5f;
         boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, btnH);
         if (!module.isHidden()) {
-            renderer.roundRect().addRoundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
+            renderer.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
             String icon = IconChars.VISIBILITY;
             float scale = 0.58f;
-            float iconW = renderer.text().getWidth(icon, scale, StaticFontLoader.ICONS);
-            float iconH = renderer.text().getHeight(scale, StaticFontLoader.ICONS);
-            renderer.text().addText(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+            float iconW = renderer.textWidth(icon, scale, StaticFontLoader.ICONS);
+            float iconH = renderer.textHeight(scale, StaticFontLoader.ICONS);
+            renderer.text(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
         }
         if (hovered) {
             String hint = module.isHidden() ? EpsilonTranslations.Module.HIDDEN.getTranslatedName() : EpsilonTranslations.Module.VISIBLE.getTranslatedName();
             float hintScale = 0.42f;
-            float hintW = renderer.text().getWidth(hint, hintScale);
+            float hintW = renderer.textWidth(hint, hintScale);
             float hintX = Mth.clamp(btnX + (btnW - hintW) * 0.5f, x + 2.0f, x + width - hintW - 2.0f);
-            renderer.text().addText(hint, hintX, y + DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED);
+            renderer.text(hint, hintX, y + DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED);
         }
     }
 

@@ -30,12 +30,12 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
 
     @Override
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
-        float lineHeight = renderer.text().getHeight(DropdownTheme.SETTING_TEXT_SCALE);
+        float lineHeight = renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE);
         float labelTextY = y + (getHeight() - lineHeight) * 0.5f;
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         String keyText = listening ? "..." : KeybindUtils.format(setting.getValue());
-        float textW = renderer.text().getWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE);
+        float textW = renderer.textWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE);
         buttonW = Math.max(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f);
         buttonH = DropdownTheme.KEYBIND_HEIGHT;
         buttonX = x + width - DropdownTheme.SETTING_PADDING_X - buttonW;
@@ -48,9 +48,9 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
                 ? MD3Theme.withAlpha(MD3Theme.PRIMARY, 200)
                 : MD3Theme.lerp(MD3Theme.withAlpha(MD3Theme.OUTLINE, 96), MD3Theme.withAlpha(MD3Theme.TEXT_PRIMARY, 136), hoverAnim.getValue() * 0.55f);
 
-        renderer.roundRect().addRoundRect(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, DropdownTheme.keybindSurface(listening));
-        renderer.outline().addOutline(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, 0.7f, outline);
-        renderer.text().addText(keyText, buttonX + (buttonW - textW) * 0.5f, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.keybindText(listening));
+        renderer.roundRect(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, DropdownTheme.keybindSurface(listening));
+        renderer.outline(buttonX, buttonY, buttonW, buttonH, DropdownTheme.KEYBIND_RADIUS, 0.7f, outline);
+        renderer.text(keyText, buttonX + (buttonW - textW) * 0.5f, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.keybindText(listening));
     }
 
     @Override

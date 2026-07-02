@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.utils;
 
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 
@@ -19,7 +19,7 @@ public class ScrollBarUtils {
     private ScrollBarUtils() {
     }
 
-    public static void draw(PanelRenderBatch.RoundRectFacade renderer, PanelLayout.Rect viewport, float scroll, float maxScroll, float contentHeight) {
+    public static void draw(PanelUiTree.Scope scope, PanelLayout.Rect viewport, float scroll, float maxScroll, float contentHeight) {
         if (maxScroll <= 0 || contentHeight <= viewport.height()) {
             return;
         }
@@ -29,7 +29,7 @@ public class ScrollBarUtils {
         float scrollRatio = maxScroll > 0 ? scroll / maxScroll : 0;
         float thumbY = viewport.y() + PADDING + scrollRatio * thumbTravel;
         float thumbX = viewport.right() - WIDTH - PADDING;
-        renderer.addRoundRect(thumbX, thumbY, WIDTH, thumbHeight, WIDTH / 2.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 80));
+        scope.roundRect(thumbX, thumbY, WIDTH, thumbHeight, WIDTH / 2.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 80));
     }
 
     /**

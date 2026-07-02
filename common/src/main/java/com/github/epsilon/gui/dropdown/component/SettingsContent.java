@@ -112,8 +112,8 @@ public class SettingsContent {
         if (sections.isEmpty()) {
             String label = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
             float labelScale = 0.58f;
-            float textW = renderer.text().getWidth(label, labelScale);
-            renderer.text().addText(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED);
+            float textW = renderer.textWidth(label, labelScale);
+            renderer.text(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED);
             return;
         }
 
@@ -267,23 +267,23 @@ public class SettingsContent {
 
         float hoverProgress = hoverAnim.getValue();
         float expandProgress = expandAnimG.getValue();
-        renderer.roundRect().addRoundRect(headerX, sectionY, headerW, headerH, DropdownTheme.BUTTON_RADIUS,
+        renderer.roundRect(headerX, sectionY, headerW, headerH, DropdownTheme.BUTTON_RADIUS,
                 MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress));
 
         String label = trimToWidth(section.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE, headerW - 74.0f, renderer);
-        float labelY = sectionY + (headerH - renderer.text().getHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
-        renderer.text().addText(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
+        float labelY = sectionY + (headerH - renderer.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
+        renderer.text(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
 
         String countLabel = Integer.toString(section.widgets().size());
-        float countWidth = renderer.text().getWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
+        float countWidth = renderer.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
         float countX = headerX + headerW - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f;
         float chipH = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT;
         float countY = sectionY + (headerH - chipH) * 0.5f;
-        renderer.roundRect().addRoundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
-        float countTextY = countY + (chipH - renderer.text().getHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
-        renderer.text().addText(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
+        renderer.roundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
+        float countTextY = countY + (chipH - renderer.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
+        renderer.text(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
 
-        renderer.triangle().addChevronTriangle(headerX + headerW - DropdownTheme.SETTING_PADDING_X - 2.5f,
+        renderer.triangle(headerX + headerW - DropdownTheme.SETTING_PADDING_X - 2.5f,
                 sectionY + headerH * 0.5f, 2.5f, expandProgress, DropdownTheme.groupChevron(hoverProgress));
 
         if (!section.isCollapsed()) {
@@ -310,13 +310,13 @@ public class SettingsContent {
 
     private String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
         if (value == null || value.isEmpty()) return "";
-        if (renderer.text().getWidth(value, scale) <= maxWidth) return value;
+        if (renderer.textWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = renderer.text().getWidth(ellipsis, scale);
+        float ellipsisWidth = renderer.textWidth(ellipsis, scale);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         for (int len = value.length() - 1; len >= 0; len--) {
             String candidate = value.substring(0, len) + ellipsis;
-            if (renderer.text().getWidth(candidate, scale) <= maxWidth) return candidate;
+            if (renderer.textWidth(candidate, scale) <= maxWidth) return candidate;
         }
         return ellipsis;
     }
