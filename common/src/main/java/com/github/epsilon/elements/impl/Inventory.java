@@ -1,10 +1,6 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-<<<<<<< HEAD
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-=======
->>>>>>> 7cc5d554 (继续优化 GUI 结构 (#356))
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
