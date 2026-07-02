@@ -59,42 +59,43 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         EpsilonAddon selected = resolveSelectedAddon();
         if (addons.isEmpty()) {
-            renderer.text().addText(EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            renderer.text(EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
 
         for (EpsilonAddon addon : addons) {
             boolean active = selected != null && Objects.equals(addon.getAddonId(), selected.getAddonId());
             boolean hovered = isHovered(mouseX, mouseY, contentX, currentY, contentW, ADDON_ROW_HEIGHT);
-            renderer.roundRect().addRoundRect(contentX, currentY, contentW, ADDON_ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+            renderer.roundRect(contentX, currentY, contentW, ADDON_ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     active ? MD3Theme.PRIMARY_CONTAINER : (hovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_LOW));
-            renderer.text().addText(trimToWidth(addon.getDisplayName(), 0.56f, contentW - 10.0f, renderer),
+            renderer.text(trimToWidth(addon.getDisplayName(), 0.56f, contentW - 10.0f, renderer),
                     contentX + 6.0f, currentY + 5.0f, 0.56f, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
-            renderer.text().addText(trimToWidth(addon.getAddonId(), 0.44f, contentW - 10.0f, renderer),
+            renderer.text(trimToWidth(addon.getAddonId(), 0.44f, contentW - 10.0f, renderer),
                     contentX + 6.0f, currentY + 16.0f, 0.44f, active ? MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180) : MD3Theme.TEXT_MUTED);
             currentY += ADDON_ROW_HEIGHT + GAP;
         }
 
         if (selected == null) return;
         ensureWidgets(selected);
-        renderer.roundRect().addRoundRect(contentX, currentY, contentW, INFO_HEIGHT, DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
-        renderer.text().addText(trimToWidth(selected.getDisplayName(), 0.58f, contentW - 10.0f, renderer),
+        renderer.roundRect(contentX, currentY, contentW, INFO_HEIGHT, DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
+        renderer.text(trimToWidth(selected.getDisplayName(), 0.58f, contentW - 10.0f, renderer),
                 contentX + 6.0f, currentY + 5.0f, 0.58f, MD3Theme.TEXT_PRIMARY);
         String meta = EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName() + " " + selected.getRegisteredModules().size();
         if (!selected.getVersion().isBlank())
             meta += "  " + EpsilonTranslations.Gui.ADDON_INFO_VERSION.getTranslatedName() + " " + selected.getVersion();
-        renderer.text().addText(trimToWidth(meta, 0.45f, contentW - 10.0f, renderer),
+        renderer.text(trimToWidth(meta, 0.45f, contentW - 10.0f, renderer),
                 contentX + 6.0f, currentY + 18.0f, 0.45f, MD3Theme.TEXT_MUTED);
         currentY += INFO_HEIGHT + GAP;
 
         if (widgets.isEmpty()) {
-            renderer.text().addText(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            renderer.text(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
-        DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(contentX, currentY, contentW, computeWidgetsHeight()));
+        var stack = renderer.scope().stack(new PanelLayout.Rect(contentX, currentY, contentW, computeWidgetsHeight()));
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
-            widget.draw(renderer, mouseX, mouseY, stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP));
+            stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                    (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
         }
     }
 

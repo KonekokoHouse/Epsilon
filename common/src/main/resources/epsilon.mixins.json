@@ -3,6 +3,7 @@
   "package": "com.github.epsilon.mixins",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "MixinAvatar",
     "MixinAvatarRenderer",
     "MixinBaseEntityRenderer",
     "MixinBlock",
@@ -15,6 +16,7 @@
     "MixinClientBrandRetriever",
     "MixinClientPacketListener",
     "MixinConnection",
+    "MixinCrystalChamsEntityRenderer",
     "MixinDataComponentInitializerEntry",
     "MixinEntity",
     "MixinEntityRenderDispatcher",
@@ -32,8 +34,8 @@
     "MixinGuiRenderer",
     "MixinHumanoidMobRenderer",
     "MixinItem",
-    "MixinItemInHandRenderer",
     "MixinItemInHandLayer",
+    "MixinItemInHandRenderer",
     "MixinItemStackLayerRenderState",
     "MixinKeyboardHandler",
     "MixinKeyboardInput",
@@ -58,6 +60,7 @@
     "MixinSubmitNodeCollection",
     "MixinSubmitNodeStorage",
     "MixinTitleScreen",
+    "MixinWalkAnimationState",
     "MixinWebBlock",
     "MixinWindow"
   ],

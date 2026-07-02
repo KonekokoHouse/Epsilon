@@ -1,8 +1,11 @@
 package com.github.epsilon.gui.panel.utils;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
+import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.PanelLayout;
 
 import java.awt.*;
@@ -24,30 +27,13 @@ public class PanelContentBuffer {
 
     private boolean pending;
     private PanelLayout.Rect pendingViewport;
-    private int pendingGuiHeight;
 
-    public PanelRenderBatch.RoundRectFacade roundRectRenderer() {
-        return batch.roundRectRenderer();
+    public Render2DScheduler.LayerHandle contentLayer() {
+        return batch.layerHandle(0);
     }
 
-    public PanelRenderBatch.RectFacade rectRenderer() {
-        return batch.rectRenderer();
-    }
-
-    public PanelRenderBatch.RoundRectOutlineFacade roundRectOutlineRenderer() {
-        return batch.roundRectOutlineRenderer();
-    }
-
-    public PanelRenderBatch.ShadowFacade shadowRenderer() {
-        return batch.shadowRenderer();
-    }
-
-    public PanelRenderBatch.TriangleFacade triangleRenderer() {
-        return batch.triangleRenderer();
-    }
-
-    public PanelRenderBatch.TextFacade textRenderer() {
-        return batch.textRenderer();
+    public TextRenderer textMetrics() {
+        return batch.scheduler().textMetrics();
     }
 
     public void clear() {
@@ -55,7 +41,6 @@ public class PanelContentBuffer {
         marqueeDraws.clear();
         pending = false;
         pendingViewport = null;
-        pendingGuiHeight = 0;
     }
 
     public void addMarqueeText(MarqueeTextDraw draw) {
@@ -71,7 +56,7 @@ public class PanelContentBuffer {
      */
     public void beginViewport(PanelLayout.Rect viewport) {
         LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(viewport.x(), viewport.y(), viewport.width(), viewport.height());
-        batch.setLayerScissor(0, scissor.x(), scissor.y(), scissor.width(), scissor.height());
+        batch.layerHandle(0).setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
     }
 
     /**
@@ -80,9 +65,8 @@ public class PanelContentBuffer {
     public void queueViewport(PanelLayout.Rect viewport, int guiHeight, float scroll, float maxScroll, float contentHeight) {
         beginViewport(viewport);
         scrollBarBatch.clear();
-        ScrollBarUtils.draw(scrollBarBatch.roundRectRenderer(), viewport, scroll, maxScroll, contentHeight);
+        scrollBarBatch.render(PanelUiTree.build(scope -> ScrollBarUtils.draw(scope, viewport, scroll, maxScroll, contentHeight)));
         pendingViewport = viewport;
-        pendingGuiHeight = guiHeight;
         pending = true;
     }
 
@@ -113,12 +97,14 @@ public class PanelContentBuffer {
             if (scissor.width() <= 0 || scissor.height() <= 0) {
                 continue;
             }
-            marqueeBatch.setLayerScissor(0, scissor.x(), scissor.y(), scissor.width(), scissor.height());
-            if (draw.font() != null) {
-                marqueeBatch.textRenderer().addText(draw.text(), draw.x(), draw.y(), draw.scale(), draw.color(), draw.font());
-            } else {
-                marqueeBatch.textRenderer().addText(draw.text(), draw.x(), draw.y(), draw.scale(), draw.color());
-            }
+            marqueeBatch.layerHandle(0).setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+            marqueeBatch.render(PanelUiTree.build(scope -> {
+                if (draw.font() != null) {
+                    scope.text(draw.text(), draw.x(), draw.y(), draw.scale(), draw.color(), draw.font());
+                } else {
+                    scope.text(draw.text(), draw.x(), draw.y(), draw.scale(), draw.color());
+                }
+            }));
         }
         marqueeDraws.clear();
     }

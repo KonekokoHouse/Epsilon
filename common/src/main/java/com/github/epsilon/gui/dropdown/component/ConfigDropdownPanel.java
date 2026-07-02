@@ -65,18 +65,18 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                 float btnX = contentX + col * (btnW + GAP);
                 float btnY = currentY + row * (BUTTON_HEIGHT + GAP);
                 boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, BUTTON_HEIGHT);
-                renderer.roundRect().addRoundRect(btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+                renderer.roundRect(btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                         hovered ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH);
                 float labelScale = 0.48f;
-                float labelW = renderer.text().getWidth(actions[index], labelScale);
-                renderer.text().addText(actions[index], btnX + (btnW - labelW) * 0.5f, getCenteredTextY(renderer, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY);
+                float labelW = renderer.textWidth(actions[index], labelScale);
+                renderer.text(actions[index], btnX + (btnW - labelW) * 0.5f, getCenteredTextY(renderer, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY);
             }
         }
         currentY += BUTTON_HEIGHT * 3.0f + GAP * 3.0f;
 
         if (!status.isEmpty()) {
             float statusScale = 0.50f;
-            renderer.text().addText(trimToWidth(status, statusScale, contentW, renderer), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, statusScale), statusScale, MD3Theme.TEXT_MUTED);
+            renderer.text(trimToWidth(status, statusScale, contentW, renderer), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, statusScale), statusScale, MD3Theme.TEXT_MUTED);
             currentY += ROW_HEIGHT;
         }
 
@@ -84,20 +84,20 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         List<String> configs = configsForFrame();
         if (configs.isEmpty()) {
             float emptyScale = 0.55f;
-            renderer.text().addText(EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName(), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
+            renderer.text(EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName(), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
             return;
         }
         for (String name : configs) {
             boolean activeRow = Objects.equals(name, active);
             boolean hovered = isHovered(mouseX, mouseY, contentX, currentY, contentW, ROW_HEIGHT);
-            renderer.roundRect().addRoundRect(contentX, currentY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+            renderer.roundRect(contentX, currentY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     activeRow ? MD3Theme.PRIMARY_CONTAINER : (hovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_LOW));
             float nameScale = 0.56f;
-            renderer.text().addText(trimToWidth(name, nameScale, contentW - 28.0f, renderer), contentX + 6.0f, getCenteredTextY(renderer, currentY, ROW_HEIGHT, nameScale), nameScale,
+            renderer.text(trimToWidth(name, nameScale, contentW - 28.0f, renderer), contentX + 6.0f, getCenteredTextY(renderer, currentY, ROW_HEIGHT, nameScale), nameScale,
                     activeRow ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
             float deleteX = contentX + contentW - 18.0f;
             float deleteScale = 0.52f;
-            renderer.text().addText("x", deleteX + 5.0f, getCenteredTextY(renderer, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
+            renderer.text("x", deleteX + 5.0f, getCenteredTextY(renderer, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
                     isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f) ? MD3Theme.ERROR : MD3Theme.TEXT_MUTED);
             currentY += ROW_HEIGHT + GAP;
         }
@@ -229,7 +229,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     }
 
     private float getCenteredTextY(DropdownDrawContext renderer, float boxY, float boxH, float scale) {
-        return boxY + (boxH - renderer.text().getHeight(scale)) / 2.0f;
+        return boxY + (boxH - renderer.textHeight(scale)) / 2.0f;
     }
 
     private List<String> configsForFrame() {

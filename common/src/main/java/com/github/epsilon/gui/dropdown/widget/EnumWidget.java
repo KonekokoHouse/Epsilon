@@ -44,14 +44,14 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
         float expand = updateExpandProgress();
         float hover = updateHoverProgress(isFieldHovered(mouseX, mouseY));
-        float fieldX = getFieldX();
-        float fieldY = getFieldY();
+        float fieldX = getLocalFieldX();
+        float fieldY = getLocalFieldY();
         float fieldW = getFieldWidth();
 
-        renderer.text().addText(
+        renderer.text(
                 setting.getDisplayName(),
-                x + DropdownTheme.SETTING_PADDING_X,
-                y + 1.0f,
+                DropdownTheme.SETTING_PADDING_X,
+                1.0f,
                 DropdownTheme.SETTING_TEXT_SCALE,
                 DropdownTheme.settingLabel()
         );
@@ -88,25 +88,25 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     private void drawCurrentValueField(DropdownDrawContext renderer, float fieldX, float fieldY, float fieldW, float hover, float expand) {
         Color background = MD3Theme.filledFieldSurface(expanded, hover);
         Color outline = MD3Theme.filledFieldIndicator(expanded, hover);
-        float textY = fieldY + (FIELD_HEIGHT - renderer.text().getHeight(FIELD_TEXT_SCALE)) * 0.5f;
+        float textY = fieldY + (FIELD_HEIGHT - renderer.textHeight(FIELD_TEXT_SCALE)) * 0.5f;
         float arrowCenterX = fieldX + fieldW - 10.0f;
         float arrowCenterY = fieldY + FIELD_HEIGHT * 0.5f;
 
-        renderer.roundRect().addRoundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, background);
-        renderer.outline().addOutline(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, 0.7f, outline);
-        renderer.text().addText(
+        renderer.roundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, background);
+        renderer.outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, 0.7f, outline);
+        renderer.text(
                 setting.getTranslatedValue(),
                 fieldX + FIELD_TEXT_PADDING_X,
                 textY,
                 FIELD_TEXT_SCALE,
                 MD3Theme.filledFieldContent(expanded)
         );
-        renderer.triangle().addChevronTriangle(arrowCenterX, arrowCenterY, FIELD_ARROW_SIZE, expand, DropdownTheme.expandArrow(expand));
+        renderer.triangle(arrowCenterX, arrowCenterY, FIELD_ARROW_SIZE, expand, DropdownTheme.expandArrow(expand));
     }
 
     private void drawExpandedOptions(DropdownDrawContext renderer, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
         float listX = fieldX;
-        float listY = getListY();
+        float listY = getLocalListY();
         float listH = getListHeight();
         float clipH = listH * expand;
         float visibleBottom = listY + clipH;
@@ -163,12 +163,12 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     private void drawExpandedBackground(DropdownDrawContext renderer, float listX, float listY, float fieldW, float clipH) {
-        renderer.roundRect().addRoundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface());
-        renderer.outline().addOutline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96));
+        renderer.roundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface());
+        renderer.outline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96));
     }
 
     private void drawOption(DropdownDrawContext renderer, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
-        float optionY = getOptionY(optionIndex);
+        float optionY = getLocalOptionY(optionIndex);
         if (optionY >= visibleBottom) {
             return;
         }
@@ -180,7 +180,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
 
         boolean hovered = isOptionHovered(mouseX, mouseY, optionIndex);
         if (hovered) {
-            renderer.roundRect().addRoundRect(
+            renderer.roundRect(
                     listX + 1.5f,
                     optionY,
                     fieldW - 3.0f,
@@ -190,7 +190,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
             );
         }
 
-        float lineHeight = renderer.text().getHeight(OPTION_TEXT_SCALE);
+        float lineHeight = renderer.textHeight(OPTION_TEXT_SCALE);
         float textY = optionY + (OPTION_HEIGHT - lineHeight) * 0.5f;
         if (textY + lineHeight > visibleBottom) {
             return;
@@ -199,7 +199,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         float alpha = Mth.clamp((visibleBottom - optionY) / OPTION_HEIGHT, 0.0f, 1.0f);
         Color textColor = hovered ? MD3Theme.TEXT_PRIMARY : DropdownTheme.settingLabelMuted();
         textColor = MD3Theme.withAlpha(textColor, Mth.clamp((int) (textColor.getAlpha() * alpha), 0, 255));
-        renderer.text().addText(
+        renderer.text(
                 setting.getTranslatedValueUnchecked(mode),
                 listX + FIELD_TEXT_PADDING_X,
                 textY,
@@ -254,11 +254,19 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     private float getFieldX() {
-        return x + DropdownTheme.SETTING_PADDING_X;
+        return absoluteX(DropdownTheme.SETTING_PADDING_X);
     }
 
     private float getFieldY() {
-        return y + DropdownTheme.SETTING_HEIGHT - 1.0f;
+        return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f);
+    }
+
+    private float getLocalFieldX() {
+        return DropdownTheme.SETTING_PADDING_X;
+    }
+
+    private float getLocalFieldY() {
+        return DropdownTheme.SETTING_HEIGHT - 1.0f;
     }
 
     private float getFieldWidth() {
@@ -269,8 +277,16 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return getFieldY() + FIELD_HEIGHT + LIST_GAP_Y;
     }
 
+    private float getLocalListY() {
+        return getLocalFieldY() + FIELD_HEIGHT + LIST_GAP_Y;
+    }
+
     private float getOptionY(int optionIndex) {
         return getListY() + LIST_PADDING_Y + optionIndex * (OPTION_HEIGHT + OPTION_GAP);
+    }
+
+    private float getLocalOptionY(int optionIndex) {
+        return getLocalListY() + LIST_PADDING_Y + optionIndex * (OPTION_HEIGHT + OPTION_GAP);
     }
 
 }

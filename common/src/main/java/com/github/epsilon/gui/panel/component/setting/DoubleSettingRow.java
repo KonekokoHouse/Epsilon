@@ -231,11 +231,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     }
 
     private String formatValue() {
-        String label = Math.abs(setting.getValue() - Math.round(setting.getValue())) < 0.0001 ? Integer.toString((int) Math.round(setting.getValue())) : String.format("%.2f", setting.getValue());
-        if (setting.isPercentageMode()) {
-            label += "%";
-        }
-        return label;
+        return Math.abs(setting.getValue() - Math.round(setting.getValue())) < 0.0001 ? Integer.toString((int) Math.round(setting.getValue())) : String.format("%.2f", setting.getValue());
     }
 
     private String formatPlainValue() {

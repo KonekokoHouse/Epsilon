@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.panel.clientsettings;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -34,14 +33,6 @@ public class ClientSettingTextField {
         focusAnimation.setStartValue(0.0f);
     }
 
-    public void render(PanelLayout.Rect bounds, int mouseX, int mouseY,
-                       PanelRenderBatch renderBatch, TextRenderer textRenderer,
-                       String placeholder, float textScale, String trailingHint) {
-        PanelUiTree tree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, fieldScope ->
-                buildUi(fieldScope, bounds, mouseX, mouseY, textRenderer, placeholder, textScale, trailingHint)));
-        renderBatch.render(tree);
-    }
-
     public void buildUi(PanelUiTree.Scope scope, PanelLayout.Rect bounds, int mouseX, int mouseY,
                         TextRenderer textRenderer, String placeholder, float textScale, String trailingHint) {
         boolean hovered = bounds.contains(mouseX, mouseY);
@@ -51,12 +42,11 @@ public class ClientSettingTextField {
         float textHeight = textRenderer.getHeight(textScale);
         float textX = bounds.x() + textInset;
         float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
-        PanelLayout.Rect localBounds = bounds.atOrigin();
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
         Color textColor = showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY;
-        scope.input(localBounds, focused, hovered ? 0.6f : 0.0f,
+        scope.input(bounds, focused, hovered ? 0.6f : 0.0f,
                 focusProgress, MD3Theme.PRIMARY, 1.0f,
                 textInset, display, textScale, textColor,
                 null, null,

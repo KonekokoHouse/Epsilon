@@ -111,6 +111,10 @@ public abstract class EpsilonAddon {
         return settingHost.addSettingGroup(name);
     }
 
+    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step) {
+        return settingHost.addIntSetting(name, defaultValue, min, max, step);
+    }
+
     protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency) {
         return settingHost.addIntSetting(name, defaultValue, min, max, step, dependency);
     }
@@ -119,20 +123,16 @@ public abstract class EpsilonAddon {
         return settingHost.addIntSetting(name, defaultValue, min, max, step, dependency, onChanged);
     }
 
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step) {
-        return settingHost.addIntSetting(name, defaultValue, min, max, step);
+    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step) {
+        return settingHost.addDoubleSetting(name, defaultValue, min, max, step);
     }
 
     protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency) {
         return settingHost.addDoubleSetting(name, defaultValue, min, max, step, dependency);
     }
 
-    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency, boolean percentageMode) {
-        return settingHost.addDoubleSetting(name, defaultValue, min, max, step, dependency, percentageMode);
-    }
-
-    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step) {
-        return settingHost.addDoubleSetting(name, defaultValue, min, max, step);
+    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency, Consumer<Double> onChanged) {
+        return settingHost.addDoubleSetting(name, defaultValue, min, max, step, dependency, onChanged);
     }
 
     protected StringSetting stringSetting(String name, String defaultValue, Setting.Dependency dependency) {
@@ -203,6 +203,10 @@ public abstract class EpsilonAddon {
             return super.settingGroup(name);
         }
 
+        private IntSetting addIntSetting(String name, int defaultValue, int min, int max, int step) {
+            return super.intSetting(name, defaultValue, min, max, step);
+        }
+
         private IntSetting addIntSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency) {
             return super.intSetting(name, defaultValue, min, max, step, dependency);
         }
@@ -211,28 +215,24 @@ public abstract class EpsilonAddon {
             return super.intSetting(name, defaultValue, min, max, step, dependency, onChanged);
         }
 
-        private IntSetting addIntSetting(String name, int defaultValue, int min, int max, int step) {
-            return super.intSetting(name, defaultValue, min, max, step);
+        private DoubleSetting addDoubleSetting(String name, double defaultValue, double min, double max, double step) {
+            return super.doubleSetting(name, defaultValue, min, max, step);
         }
 
         private DoubleSetting addDoubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency) {
             return super.doubleSetting(name, defaultValue, min, max, step, dependency);
         }
 
-        private DoubleSetting addDoubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency, boolean percentageMode) {
-            return super.doubleSetting(name, defaultValue, min, max, step, dependency, percentageMode);
-        }
-
-        private DoubleSetting addDoubleSetting(String name, double defaultValue, double min, double max, double step) {
-            return super.doubleSetting(name, defaultValue, min, max, step);
-        }
-
-        private StringSetting addStringSetting(String name, String defaultValue, Setting.Dependency dependency) {
-            return super.stringSetting(name, defaultValue, dependency);
+        private DoubleSetting addDoubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency, Consumer<Double> onChanged) {
+            return super.doubleSetting(name, defaultValue, min, max, step, dependency, onChanged);
         }
 
         private StringSetting addStringSetting(String name, String defaultValue) {
             return super.stringSetting(name, defaultValue);
+        }
+
+        private StringSetting addStringSetting(String name, String defaultValue, Setting.Dependency dependency) {
+            return super.stringSetting(name, defaultValue, dependency);
         }
 
         private <E extends Enum<E>> EnumSetting<E> addEnumSetting(String name, E defaultValue, Setting.Dependency dependency) {
