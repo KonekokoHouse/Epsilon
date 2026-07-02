@@ -8,7 +8,7 @@ import com.github.epsilon.gui.dsl.PanelUiTree;
  * 单帧 GUI 渲染场景。
  * <p>
  * 一个 scene 拥有一个 {@link Render2DScheduler}。Panel、Dropdown、popup 只向 scene
- * 提交 UI 树或 renderer facade，最后由 scene 统一 flush，从而减少 renderer/buffer 的创建和帧内 draw 次数。
+ * 提交 UI 树，最后由 scene 统一 flush，从而减少 scheduler/buffer 的创建和帧内 draw 次数。
  */
 public final class GuiScene implements AutoCloseable {
 
@@ -25,7 +25,7 @@ public final class GuiScene implements AutoCloseable {
     }
 
     public PanelRenderBatch batch(GuiLayer layer, int relativeLayer) {
-        // 返回的是同一个 scheduler 的局部视图，调用方只能改变自己的 base layer。
+        // 返回同一个 scheduler 的局部视图，调用方只通过 UI 树写入自己的 base layer。
         return new PanelRenderBatch(scheduler, layers.resolve(layer, relativeLayer));
     }
 

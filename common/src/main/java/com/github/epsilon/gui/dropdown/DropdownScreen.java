@@ -124,7 +124,7 @@ public class DropdownScreen extends Screen {
         beginDropdownLayer();
         Color scrim = DropdownTheme.scrim();
         float scrimAlpha = scrimAnim.getValue();
-        drawContext.rect().addRect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
+        drawContext.rect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
         flushDropdownLayer();
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
@@ -132,7 +132,7 @@ public class DropdownScreen extends Screen {
         int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
         int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
-        // 找出鼠标位置处最上层的可�?panel，被遮挡�?panel 不应响应悬浮
+        // 找出鼠标位置处最上层的可见 panel，被遮挡的 panel 不响应悬浮。
         DropdownPanel topmostHovered = null;
         if (!popupHovered) {
             for (int i = panels.size() - 1; i >= 0; i--) {
@@ -160,13 +160,13 @@ public class DropdownScreen extends Screen {
             float revealedH = panelH * intro;
 
             beginDropdownLayer();
-            setDropdownScissor(
-                    panel.getX() - shadowPad, panel.getY() - shadowPad,
-                    panel.getWidth() + shadowPad * 2, revealedH + shadowPad * 2,
-                    LuminRenderSystem.getScaledHeightInt());
-            panel.drawBackground(drawContext);
+            withDropdownScissor(
+                    panel.getX() - shadowPad,
+                    panel.getY() - shadowPad,
+                    panel.getWidth() + shadowPad * 2,
+                    revealedH + shadowPad * 2,
+                    () -> panel.drawBackground(drawContext));
             flushDropdownLayer();
-            clearDropdownScissor();
 
             float clipY = panel.getContentClipY();
             float clipH = panel.getContentClipHeight();
@@ -174,12 +174,11 @@ public class DropdownScreen extends Screen {
             float actualClipH = Math.min(clipH, revealedBottom - clipY);
             if (actualClipH > 0.5f) {
                 beginDropdownLayer();
-                setDropdownScissor(panel.getX(), clipY, panel.getWidth(), actualClipH, LuminRenderSystem.getScaledHeightInt());
                 int hoverMouseX = panel == topmostHovered ? backgroundMouseX : -1;
                 int hoverMouseY = panel == topmostHovered ? backgroundMouseY : -1;
-                panel.drawContent(drawContext, hoverMouseX, hoverMouseY);
+                withDropdownScissor(panel.getX(), clipY, panel.getWidth(), actualClipH,
+                        () -> panel.drawContent(drawContext, hoverMouseX, hoverMouseY));
                 flushDropdownLayer();
-                clearDropdownScissor();
             }
 
             panel.setPosition(panel.getX(), origY);
@@ -204,7 +203,7 @@ public class DropdownScreen extends Screen {
         if (ClientSetting.INSTANCE.dropdownHints.getValue()) {
             float scale = 0.62f;
             float lineGap = 5.0f;
-            float lineHeight = drawContext.text().getHeight(scale);
+            float lineHeight = drawContext.textHeight(scale);
             String[] hints = {
                     EpsilonTranslations.Gui.DROPDOWN_HINT_SEARCH.getTranslatedName(),
                     EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
@@ -218,8 +217,8 @@ public class DropdownScreen extends Screen {
             }
             Color color = MD3Theme.withAlpha(Color.WHITE, alpha);
             for (String hint : hints) {
-                float x = xRight - drawContext.text().getWidth(hint, scale);
-                drawContext.text().addText(hint, x, y, scale, color);
+                float x = xRight - drawContext.textWidth(hint, scale);
+                drawContext.text(hint, x, y, scale, color);
                 y += lineHeight + lineGap;
             }
         }
@@ -236,13 +235,16 @@ public class DropdownScreen extends Screen {
         dropdownBatch.render(PanelUiTree.from(dropdownScope), dropdownLayer);
     }
 
-    private void setDropdownScissor(float guiX, float guiY, float guiW, float guiH, int guiHeight) {
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(guiX, guiY, guiW, guiH);
-        dropdownBatch.setLayerScissor(dropdownLayer, scissor.x(), scissor.y(), scissor.width(), scissor.height());
-    }
-
-    private void clearDropdownScissor() {
-        dropdownBatch.clearLayerScissor(dropdownLayer);
+    private void withDropdownScissor(float guiX, float guiY, float guiW, float guiH, Runnable content) {
+        DropdownDrawContext previous = drawContext;
+        dropdownScope.scissor(new PanelLayout.Rect(guiX, guiY, guiW, guiH), scope -> {
+            drawContext = new DropdownDrawContext(scope, new DropdownTextMetrics());
+            try {
+                content.run();
+            } finally {
+                drawContext = previous;
+            }
+        });
     }
 
     private final class DropdownTextMetrics implements DropdownDrawContext.TextMetrics {
@@ -345,7 +347,7 @@ public class DropdownScreen extends Screen {
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             return true;
         }
-        // 从顶层向底层遍历，确保最上层 panel 优先处理滚轮事件
+        // 浠庨《灞傚悜搴曞眰閬嶅巻锛岀‘淇濇渶涓婂眰 panel 浼樺厛澶勭悊婊氳疆浜嬩欢
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
@@ -597,7 +599,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                Object::toString, setting::add, setting::remove));
+                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); String p = k != null ? k.getPath() : ""; int i = p.lastIndexOf('.'); return i >= 0 ? p.substring(i + 1) : p; },
+                setting::add, setting::remove));
     }
 
     public void openItemListSettingPopup(ItemListSetting setting) {
@@ -606,15 +609,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
-                Object::toString, setting::add, setting::remove));
-    }
-
-    public void openColorListSettingPopup(ColorListSetting setting) {
-        // TODO: Create dedicated ColorListSelectPopup when available
-    }
-
-    public void openEntityTypeListSettingPopup(EntityTypeListSetting setting) {
-        // TODO: Create dedicated EntityTypeListSelectPopup when available
+                i -> i.getDefaultInstance().getHoverName().getString(),
+                setting::add, setting::remove));
     }
 
     public void openStatusEffectListSettingPopup(StatusEffectListSetting setting) {
@@ -623,7 +619,16 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
-                Object::toString, setting::add, setting::remove));
+                e -> e.getDisplayName().getString(),
+                setting::add, setting::remove));
+    }
+
+    public void openColorListSettingPopup(ColorListSetting setting) {
+        // No registry for Color; popup not yet implemented
+    }
+
+    public void openEntityTypeListSettingPopup(EntityTypeListSetting setting) {
+        // EntityTypeListSetting uses Set<EntityType<?>>, incompatible with RegistryListSelectPopup's List<T> generic
     }
 
     public void openParticleTypeListSettingPopup(ParticleTypeListSetting setting) {
@@ -632,7 +637,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                Object::toString, setting::add, setting::remove));
+                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openScreenHandlerListSettingPopup(ScreenHandlerListSetting setting) {
@@ -641,7 +647,8 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
-                Object::toString, setting::add, setting::remove));
+                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openStorageBlockListSettingPopup(StorageBlockListSetting setting) {
@@ -650,19 +657,20 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                Object::toString, setting::add, setting::remove));
+                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); },
+                setting::add, setting::remove));
     }
 
     public void openEnchantmentListSettingPopup(EnchantmentListSetting setting) {
-        // TODO: Create dedicated EnchantmentListSelectPopup when available
+        // Stores String IDs; popup not yet implemented
     }
 
     public void openPacketListSettingPopup(PacketListSetting setting) {
-        // TODO: Create dedicated PacketListSelectPopup when available
+        // No registry for packet classes; popup not yet implemented
     }
 
     public void openModuleListSettingPopup(ModuleListSetting setting) {
-        // TODO: Create dedicated ModuleListSelectPopup when available
+        // Needs ModuleHolder reference; popup not yet implemented
     }
 
 }

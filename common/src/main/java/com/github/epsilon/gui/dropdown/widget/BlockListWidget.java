@@ -31,10 +31,10 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
         boolean hovered = isFieldHovered(mouseX, mouseY);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
-        renderer.text().addText(setting.getDisplayName(), x + DropdownTheme.SETTING_PADDING_X, y + 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        float fieldX = getFieldX();
-        float fieldY = getFieldY();
+        float fieldX = DropdownTheme.SETTING_PADDING_X;
+        float fieldY = DropdownTheme.SETTING_HEIGHT - 1.0f;
         float fieldW = getFieldWidth();
         float hover = hoverAnim.getValue();
         Color background = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, hover * 0.6f);
@@ -45,10 +45,10 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
         float labelY = centeredTextY(renderer, fieldY, FIELD_HEIGHT, labelScale);
         float iconY = centeredTextY(renderer, fieldY, FIELD_HEIGHT, iconScale);
 
-        renderer.roundRect().addRoundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, background);
-        renderer.outline().addOutline(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, 0.7f, outline);
-        renderer.text().addText(label, fieldX + 6.0f, labelY, labelScale, MD3Theme.ON_SECONDARY_CONTAINER);
-        renderer.text().addText("+", fieldX + fieldW - 12.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER);
+        renderer.roundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, background);
+        renderer.outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, 0.7f, outline);
+        renderer.text(label, fieldX + 6.0f, labelY, labelScale, MD3Theme.ON_SECONDARY_CONTAINER);
+        renderer.text("+", fieldX + fieldW - 12.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER);
     }
 
     @Override
@@ -66,11 +66,11 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
     }
 
     private float getFieldX() {
-        return x + DropdownTheme.SETTING_PADDING_X;
+        return absoluteX(DropdownTheme.SETTING_PADDING_X);
     }
 
     private float getFieldY() {
-        return y + DropdownTheme.SETTING_HEIGHT - 1.0f;
+        return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f);
     }
 
     private float getFieldWidth() {
@@ -78,7 +78,7 @@ public class BlockListWidget extends SettingWidget<BlockListSetting> {
     }
 
     private float centeredTextY(DropdownDrawContext renderer, float boxY, float boxHeight, float scale) {
-        return boxY + (boxHeight - renderer.text().getHeight(scale)) * 0.5f;
+        return boxY + (boxHeight - renderer.textHeight(scale)) * 0.5f;
     }
 
 }

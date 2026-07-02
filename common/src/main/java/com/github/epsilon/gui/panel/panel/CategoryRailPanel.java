@@ -2,7 +2,6 @@ package com.github.epsilon.gui.panel.panel;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
@@ -44,7 +43,6 @@ public class CategoryRailPanel {
     private final Animation hoverAlphaAnimation = new Animation(Easing.EASE_OUT_CUBIC, 100L);
     private final Animation settingsHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private PanelLayout.Rect bounds;
-    private boolean clippedTextPending;
 
     public CategoryRailPanel(PanelState state, TextRenderer textRenderer) {
         this.state = state;
@@ -69,8 +67,7 @@ public class CategoryRailPanel {
 
     public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
-        applyRailScissor(renderBatch, bounds);
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        PanelUiTree tree = PanelUiTree.build(root -> root.scissor(bounds, scope -> {
             float contentProgress = scope.animate(contentAnimation, state.isSidebarExpanded());
             float titleProgress = scope.animate(headerTitleAnimation, contentProgress);
             float subtitleProgress = scope.animate(headerSubtitleAnimation, contentProgress > 0.08f);
@@ -177,12 +174,8 @@ public class CategoryRailPanel {
             boolean settingsSelected = state.isClientSettingMode();
             float settingsHover = scope.animate(settingsHoverAnimation, settingsHovered);
             buildSettingsItem(scope, menuButton, settingsRect, settingsHovered, settingsSelected, contentProgress, settingsHover, itemIconScale, itemLabelScale);
-        });
+        }));
         renderBatch.render(tree);
-    }
-
-    public void flushClippedText() {
-        clippedTextPending = false;
     }
 
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
@@ -318,11 +311,6 @@ public class CategoryRailPanel {
 
     private int getCategoryCount(Category category) {
         return (int) ModuleHolder.INSTANCE.getModules().stream().filter(module -> module.getCategory() == category).count();
-    }
-
-    private void applyRailScissor(PanelRenderBatch renderBatch, PanelLayout.Rect rect) {
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(rect.x(), rect.y(), rect.width(), rect.height());
-        renderBatch.setLayerScissor(0, scissor.x(), scissor.y(), scissor.width(), scissor.height());
     }
 
 }

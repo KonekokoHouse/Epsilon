@@ -519,14 +519,24 @@ public class SettingListController {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                Object::toString, setting::add, setting::remove);
+                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); String p = k != null ? k.getPath() : ""; int i = p.lastIndexOf('.'); return i >= 0 ? p.substring(i + 1) : p; },
+                setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createItemListSettingPopup(ItemListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
-                Object::toString, setting::add, setting::remove);
+                i -> i.getDefaultInstance().getHoverName().getString(),
+                setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createStatusEffectListSettingPopup(StatusEffectListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
+                e -> e.getDisplayName().getString(),
+                setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createColorListSettingPopup(ColorListSettingRow row, PanelLayout.Rect popupBounds) {
@@ -535,36 +545,32 @@ public class SettingListController {
     }
 
     private PanelPopupHost.Popup createEntityTypeListSettingPopup(EntityTypeListSettingRow row, PanelLayout.Rect popupBounds) {
-        // TODO: Create dedicated EntityTypeListSelectPopup (or use RegistryListSelectPopup after adapting Set<EntityType<?>> to List<EntityType<?>>) when available
+        // EntityTypeListSetting uses Set<EntityType<?>>, incompatible with RegistryListSelectPopup's List<T> generic
         return null;
-    }
-
-    private PanelPopupHost.Popup createStatusEffectListSettingPopup(StatusEffectListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
-                Object::toString, setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createParticleTypeListSettingPopup(ParticleTypeListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                Object::toString, setting::add, setting::remove);
+                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); },
+                setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createScreenHandlerListSettingPopup(ScreenHandlerListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
-                Object::toString, setting::add, setting::remove);
+                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); },
+                setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createStorageBlockListSettingPopup(StorageBlockListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                Object::toString, setting::add, setting::remove);
+                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); },
+                setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createEnchantmentListSettingPopup(EnchantmentListSettingRow row, PanelLayout.Rect popupBounds) {

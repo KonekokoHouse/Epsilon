@@ -53,15 +53,15 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
         super.drawBackground(renderer);
 
         float versionScale = 0.48f;
-        float versionX = x + renderer.text().getWidth(getTitle(), DropdownTheme.HEADER_TEXT_SCALE) + 12.0f;
+        float versionX = x + renderer.textWidth(getTitle(), DropdownTheme.HEADER_TEXT_SCALE) + 12.0f;
         float versionMaxWidth = x + width - 17.0f - versionX;
         if (versionMaxWidth <= 2.0f) return;
 
         String version = trimToWidth(Constants.VERSION, versionScale, versionMaxWidth, renderer);
         if (!version.isEmpty()) {
-            float nameY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.text().getHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
-            float versionY = nameY + renderer.text().getHeight(DropdownTheme.HEADER_TEXT_SCALE) - renderer.text().getHeight(versionScale);
-            renderer.text().addText(version, versionX, versionY, versionScale, MD3Theme.TEXT_MUTED);
+            float nameY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
+            float versionY = nameY + renderer.textHeight(DropdownTheme.HEADER_TEXT_SCALE) - renderer.textHeight(versionScale);
+            renderer.text(version, versionX, versionY, versionScale, MD3Theme.TEXT_MUTED);
         }
     }
 
@@ -74,7 +74,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     @Override
     protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING;
-        renderer.rect().addRect(x + CONTENT_PADDING, y + DropdownTheme.PANEL_HEADER_HEIGHT, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
+        renderer.rect(x + CONTENT_PADDING, y + DropdownTheme.PANEL_HEADER_HEIGHT, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
 
         for (int index = 0; index < entries.size(); index++) {
             Entry entry = entries.get(index);
@@ -85,22 +85,22 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
             boolean active = entry.isActive();
             entry.hoverAnim.run(hovered ? 1.0f : 0.0f);
             float hover = entry.hoverAnim.getValue();
-            renderer.roundRect().addRoundRect(iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS, MD3Theme.lerp(active ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.PRIMARY_CONTAINER, hover * 0.5f));
+            renderer.roundRect(iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS, MD3Theme.lerp(active ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.PRIMARY_CONTAINER, hover * 0.5f));
             float iconScale = ICON_SCALE;
-            float iconW = renderer.text().getWidth(entry.icon, iconScale, StaticFontLoader.ICONS);
-            float iconH = renderer.text().getHeight(iconScale, StaticFontLoader.ICONS);
-            renderer.text().addText(entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) * 0.5f - 1.0f, iconScale, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS);
+            float iconW = renderer.textWidth(entry.icon, iconScale, StaticFontLoader.ICONS);
+            float iconH = renderer.textHeight(iconScale, StaticFontLoader.ICONS);
+            renderer.text(entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) * 0.5f - 1.0f, iconScale, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS);
             if (hovered) {
                 String label = entry.labelSupplier.get();
                 float labelScale = 0.42f;
-                float labelW = renderer.text().getWidth(label, labelScale);
+                float labelW = renderer.textWidth(label, labelScale);
                 float labelX = Math.max(x + 2.0f, Math.min(iconX + (ICON_SIZE - labelW) * 0.5f, x + width - labelW - 2.0f));
-                renderer.text().addText(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED);
+                renderer.text(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED);
             }
         }
         int rows = getIconRows();
         currentY += rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 4.0f + CONTENT_PADDING;
-        renderer.rect().addRect(x + CONTENT_PADDING, currentY - 3.0f, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
+        renderer.rect(x + CONTENT_PADDING, currentY - 3.0f, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
         settingsContent.draw(renderer, mouseX, mouseY, x, currentY, width, getRenderFrameId());
     }
 
