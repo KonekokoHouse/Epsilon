@@ -142,7 +142,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     }
 
     @Override public boolean charTyped(CharacterEvent event) {
-        if (!event.isAllowedChatCharacter() || input.length() >= MAX_QUERY_LENGTH) return false;
+        if (input.length() >= MAX_QUERY_LENGTH) return false;
         input += event.codepointAsString();
         return true;
     }

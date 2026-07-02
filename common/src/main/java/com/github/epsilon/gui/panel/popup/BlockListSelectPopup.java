@@ -216,7 +216,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if (!event.isAllowedChatCharacter() || query.length() >= MAX_QUERY_LENGTH) {
+        if (query.length() >= MAX_QUERY_LENGTH) {
             return false;
         }
         query += event.codepointAsString();

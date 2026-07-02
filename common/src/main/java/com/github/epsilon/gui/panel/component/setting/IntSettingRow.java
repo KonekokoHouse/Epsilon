@@ -168,7 +168,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if (!focused || !event.isAllowedChatCharacter()) {
+        if (!focused) {
             return false;
         }
         String value = event.codepointAsString();

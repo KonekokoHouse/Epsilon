@@ -178,7 +178,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if (!event.isAllowedChatCharacter() || query.length() >= MAX_QUERY_LENGTH) return false;
+        if (query.length() >= MAX_QUERY_LENGTH) return false;
         query += event.codepointAsString();
         resetScroll();
         return true;
