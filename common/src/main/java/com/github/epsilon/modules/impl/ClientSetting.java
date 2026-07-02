@@ -2,12 +2,12 @@ package com.github.epsilon.modules.impl;
 
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
+import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;

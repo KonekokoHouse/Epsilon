@@ -21,7 +21,7 @@ public class AutoQueue extends Module {
 
     public static final AutoQueue INSTANCE = new AutoQueue();
 
-    public enum Mode {
+    private enum Mode {
         XIN_2B2T
     }
 
@@ -37,7 +37,8 @@ public class AutoQueue extends Module {
     private JsonObject loadQuestions() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("assets/epsilon/xinqueue_questions.json")),
-                StandardCharsets.UTF_8))) {
+                StandardCharsets.UTF_8))
+        ) {
             String content = reader.lines().collect(Collectors.joining("\n"));
             return JsonParser.parseString(content).getAsJsonObject();
         } catch (Exception e) {
@@ -48,9 +49,7 @@ public class AutoQueue extends Module {
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
-        if (mc.getConnection() == null) return;
         if (mode.getValue() != Mode.XIN_2B2T) return;
-
         if (!(event.getPacket() instanceof ClientboundSystemChatPacket packet)) return;
 
         String message = packet.content().getString();

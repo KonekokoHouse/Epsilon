@@ -71,7 +71,13 @@ public class PopChams extends Module {
     private void onRender3D(Render3DEvent event) {
         if (nullCheck()) return;
         synchronized (ghosts) {
+            if (ghosts.isEmpty()) {
+                return;
+            }
+
+            WireframeEntityRenderer.beginBatch(event.getPoseStack());
             ghosts.removeIf(ghostPlayer -> ghostPlayer.render(event));
+            WireframeEntityRenderer.endBatch();
         }
     }
 
@@ -147,6 +153,6 @@ public class PopChams extends Module {
         public @Nullable Component belowNameDisplay() {
             return null;
         }
-
     }
+
 }

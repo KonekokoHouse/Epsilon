@@ -1,10 +1,6 @@
 package com.github.epsilon.settings;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 将显式 SettingGroup 转换为 GUI 可消费的 section。

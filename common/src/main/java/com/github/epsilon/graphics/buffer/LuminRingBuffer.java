@@ -25,6 +25,12 @@ public class LuminRingBuffer {
     private boolean mapped;
     private long frameId = Long.MIN_VALUE;
 
+    /**
+     * 创建一个新的环形缓冲区。
+     *
+     * @param size  初始字节容量
+     * @param usage 额外的 GPU 使用标记
+     */
     public LuminRingBuffer(long size, @GpuBuffer.Usage int usage) {
         int initialSize = checkedBufferSize(size);
         this.usage = GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_COPY_SRC | usage;
@@ -88,6 +94,13 @@ public class LuminRingBuffer {
         return buffers[current];
     }
 
+    /**
+     * 将源数据写入当前槽位的指定偏移。
+     *
+     * @param commandEncoder 命令编码器
+     * @param offset         写入偏移，单位字节
+     * @param source         待写入数据
+     */
     public void write(CommandEncoder commandEncoder, long offset, ByteBuffer source) {
         ensureCapacity(offset + source.remaining());
         commandEncoder.writeToBuffer(getGpuBuffer().slice(offset, source.remaining()), source);

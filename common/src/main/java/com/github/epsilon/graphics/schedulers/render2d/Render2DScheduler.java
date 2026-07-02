@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+<<<<<<< HEAD
 import java.util.Optional;
 import java.util.OptionalDouble;
 
@@ -866,12 +867,17 @@ public final class Render2DScheduler implements AutoCloseable {
                 return;
             }
             switch (renderer) {
-                case ShadowRenderer shadow -> shadow.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
-                case RoundRectRenderer roundRect -> roundRect.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
-                case RoundRectOutlineRenderer outline -> outline.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                case ShadowRenderer shadow ->
+                        shadow.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                case RoundRectRenderer roundRect ->
+                        roundRect.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                case RoundRectOutlineRenderer outline ->
+                        outline.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case RectRenderer rect -> rect.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
-                case TriangleRenderer triangle -> triangle.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
-                case TextureRenderer texture -> texture.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                case TriangleRenderer triangle ->
+                        triangle.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+                case TextureRenderer texture ->
+                        texture.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 case TextRenderer text -> text.setScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
                 default -> {
                 }
