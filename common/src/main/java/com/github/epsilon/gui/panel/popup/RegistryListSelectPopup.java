@@ -123,10 +123,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         List<T> available = filteredAvailable();
         List<T> selected = filteredSelected();
         float columnContentHeight = Math.max(available.size(), selected.size()) * (ROW_HEIGHT + ROW_GAP);
-        PanelLayout.Rect viewport = getViewport();
-        maxScroll = Math.max(0.0f, columnContentHeight - viewport.height());
-        scroll = Mth.clamp(scroll, 0.0f, maxScroll);
-        updateSmoothScroll(partialTick);
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
@@ -190,6 +186,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 lastViewport = effectiveViewport;
                 maxScroll = Math.max(0.0f, columnContentHeight - effectiveViewport.height());
                 scroll = Mth.clamp(scroll, 0.0f, maxScroll);
+                updateSmoothScroll(partialTick);
                 PanelLayout.Rect localViewport = effectiveViewport.relativeTo(animatedBounds);
                 popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
                     buildColumn(content, available, leftX, effectiveViewportY - scroll, columnWidth, mouseX, mouseY, true, effectiveViewport);
