@@ -200,7 +200,24 @@ public class SettingsContent {
             }
             currentY += getSectionHeight(section);
         }
+        blurAllInputs();
         return false;
+    }
+
+    private void blurAllInputs() {
+        for (SettingSection section : sections) {
+            for (SettingWidget<?> widget : section.widgets()) {
+                if (widget instanceof StringWidget sw && sw.isFocused()) {
+                    sw.blurInput();
+                } else if (widget instanceof IntSliderWidget iw && iw.isFocused()) {
+                    iw.blurInput();
+                } else if (widget instanceof DoubleSliderWidget dw && dw.isFocused()) {
+                    dw.blurInput();
+                } else if (widget instanceof ColorWidget cw && cw.hasFocusedInput()) {
+                    cw.blurAllInputs();
+                }
+            }
+        }
     }
 
     public boolean mouseReleased(double mouseX, double mouseY, int button, float panelX, float contentY, float panelWidth) {

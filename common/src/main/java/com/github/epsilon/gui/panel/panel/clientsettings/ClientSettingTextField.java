@@ -126,9 +126,6 @@ public class ClientSettingTextField {
         if (!focused) {
             return false;
         }
-        if (!event.isAllowedChatCharacter()) {
-            return true;
-        }
         String typed = event.codepointAsString();
         if (typed.isEmpty()) {
             return true;

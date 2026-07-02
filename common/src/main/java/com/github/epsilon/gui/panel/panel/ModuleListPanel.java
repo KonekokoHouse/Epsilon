@@ -289,7 +289,7 @@ public class ModuleListPanel {
      * 处理搜索框的字符输入。
      */
     public boolean charTyped(CharacterEvent event) {
-        if (!searchFocused || !event.isAllowedChatCharacter()) {
+        if (!searchFocused) {
             return false;
         }
         String query = state.getSearchQuery();

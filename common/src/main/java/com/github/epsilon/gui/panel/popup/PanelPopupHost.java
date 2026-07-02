@@ -2,6 +2,7 @@ package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -26,6 +27,7 @@ public class PanelPopupHost {
      */
     public void open(Popup popup) {
         this.activePopup = popup;
+        IMEFocusHelper.activate();
     }
 
     /**
@@ -34,6 +36,7 @@ public class PanelPopupHost {
     public void close() {
         this.activePopup = null;
         this.pendingBatch = null;
+        IMEFocusHelper.deactivate();
     }
 
     /**

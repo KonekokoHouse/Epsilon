@@ -522,7 +522,7 @@ public class SettingListController {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); String p = k != null ? k.getPath() : ""; int i = p.lastIndexOf('.'); return i >= 0 ? p.substring(i + 1) : p; },
+                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); return k != null ? k.getPath() : ""; },
                 setting::add, setting::remove);
     }
 
@@ -531,6 +531,7 @@ public class SettingListController {
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
                 i -> i.getDefaultInstance().getHoverName().getString(),
+                i -> i.getDefaultInstance(),
                 setting::add, setting::remove);
     }
 
@@ -539,6 +540,11 @@ public class SettingListController {
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
                 e -> e.getDisplayName().getString(),
+                e -> net.minecraft.world.item.Items.POTION.getDefaultInstance(),
+                java.util.List.of(
+                        new RegistryListSelectPopup.Category<>("+", e -> e.isBeneficial()),
+                        new RegistryListSelectPopup.Category<>("-", e -> !e.isBeneficial())
+                ),
                 setting::add, setting::remove);
     }
 

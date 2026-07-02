@@ -424,7 +424,7 @@ public class DropdownScreen extends Screen {
 
     @Override
     public void onClose() {
-        IMEFocusHelper.deactivate();
+        IMEFocusHelper.forceDeactivate();
         popupHost.close();
         DropdownLayoutState.save(panels);
         super.onClose();
@@ -599,7 +599,7 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); String p = k != null ? k.getPath() : ""; int i = p.lastIndexOf('.'); return i >= 0 ? p.substring(i + 1) : p; },
+                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); return k != null ? k.getPath() : ""; },
                 setting::add, setting::remove));
     }
 
@@ -610,6 +610,7 @@ public class DropdownScreen extends Screen {
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
                 i -> i.getDefaultInstance().getHoverName().getString(),
+                i -> i.getDefaultInstance(),
                 setting::add, setting::remove));
     }
 
@@ -620,6 +621,11 @@ public class DropdownScreen extends Screen {
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
                 e -> e.getDisplayName().getString(),
+                e -> net.minecraft.world.item.Items.POTION.getDefaultInstance(),
+                java.util.List.of(
+                        new RegistryListSelectPopup.Category<>("+", e -> e.isBeneficial()),
+                        new RegistryListSelectPopup.Category<>("-", e -> !e.isBeneficial())
+                ),
                 setting::add, setting::remove));
     }
 
