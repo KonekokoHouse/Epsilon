@@ -1,7 +1,6 @@
 package com.github.epsilon.gui.panel.component;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -14,7 +13,7 @@ import java.awt.*;
  * 模块列表中的单行展示组件。
  * <p>
  * 一行通常包含模块名称、来源 addon、副标题、快捷键提示以及启用开关。
- * 该类既可以直接渲染，也可以把自身内容写入外部 DSL 作用域。
+ * 该类会把自身内容写入外部 DSL 作用域。
  */
 public class ModuleRow {
 
@@ -59,23 +58,6 @@ public class ModuleRow {
      */
     public PanelLayout.Rect getToggleBounds() {
         return toggleBounds;
-    }
-
-    /**
-     * 直接将模块行编译并写入给定 renderer。
-     *
-     * @param roundRectRenderer   圆角矩形 renderer
-     * @param rectRenderer        矩形 renderer
-     * @param textRenderer        文本 renderer
-     * @param hoverProgress       行悬停进度
-     * @param selectedProgress    行选中进度
-     * @param toggleProgress      开关进度
-     * @param toggleHoverProgress 开关悬停进度
-     */
-    public void render(PanelRenderBatch renderBatch, TextRenderer textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
-        PanelUiTree tree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, rowScope ->
-                buildUi(rowScope, textRenderer, hoverProgress, selectedProgress, toggleProgress, toggleHoverProgress)));
-        renderBatch.render(tree);
     }
 
     /**
@@ -154,14 +136,6 @@ public class ModuleRow {
 
     private String formatKeybind(int keyCode) {
         return KeybindUtils.format(keyCode).toUpperCase();
-    }
-
-    private float centerTextBlockY(PanelLayout.Rect bounds, float textHeight) {
-        return bounds.y() + (bounds.height() - textHeight) / 2.0f;
-    }
-
-    private float centerTextY(PanelLayout.Rect bounds, float textHeight) {
-        return bounds.y() + (bounds.height() - textHeight) / 2.0f;
     }
 
 }

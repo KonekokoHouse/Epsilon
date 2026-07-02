@@ -103,11 +103,11 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
                     PanelLayout.Rect localItemBounds = new PanelLayout.Rect(0.0f, i * ITEM_HEIGHT, itemAreaWidth, ITEM_INNER_HEIGHT);
                     content.roundRect(localItemBounds.x(), localItemBounds.y(), localItemBounds.width(), localItemBounds.height(), 8.0f, background);
                     float textScale = 0.62f;
-                    float textHeight = contentBuffer.textRenderer().getHeight(textScale);
+                    float textHeight = contentBuffer.textMetrics().getHeight(textScale);
                     float textY = localItemBounds.y() + (localItemBounds.height() - textHeight) / 2.0f;
                     if (selected) {
                         float iconScale = 0.72f;
-                        float iconHeight = contentBuffer.textRenderer().getHeight(iconScale, StaticFontLoader.ICONS);
+                        float iconHeight = contentBuffer.textMetrics().getHeight(iconScale, StaticFontLoader.ICONS);
                         float iconY = localItemBounds.y() + (localItemBounds.height() - iconHeight) / 2.0f;
                         // TODO: 换个更合适的 icon
                         content.text(IconChars.KEYBOARD_ARROW_DOWN, localItemBounds.x() + 8.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);

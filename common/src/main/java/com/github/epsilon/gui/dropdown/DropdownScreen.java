@@ -121,7 +121,7 @@ public class DropdownScreen extends Screen {
         beginDropdownLayer();
         Color scrim = DropdownTheme.scrim();
         float scrimAlpha = scrimAnim.getValue();
-        drawContext.rect().addRect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
+        drawContext.rect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
         flushDropdownLayer();
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
@@ -129,7 +129,7 @@ public class DropdownScreen extends Screen {
         int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
         int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
-        // 找出鼠标位置处最上层的可�?panel，被遮挡�?panel 不应响应悬浮
+        // 找出鼠标位置处最上层的可见 panel，被遮挡的 panel 不响应悬浮。
         DropdownPanel topmostHovered = null;
         if (!popupHovered) {
             for (int i = panels.size() - 1; i >= 0; i--) {
@@ -157,13 +157,13 @@ public class DropdownScreen extends Screen {
             float revealedH = panelH * intro;
 
             beginDropdownLayer();
-            setDropdownScissor(
-                    panel.getX() - shadowPad, panel.getY() - shadowPad,
-                    panel.getWidth() + shadowPad * 2, revealedH + shadowPad * 2,
-                    LuminRenderSystem.getScaledHeightInt());
-            panel.drawBackground(drawContext);
+            withDropdownScissor(
+                    panel.getX() - shadowPad,
+                    panel.getY() - shadowPad,
+                    panel.getWidth() + shadowPad * 2,
+                    revealedH + shadowPad * 2,
+                    () -> panel.drawBackground(drawContext));
             flushDropdownLayer();
-            clearDropdownScissor();
 
             float clipY = panel.getContentClipY();
             float clipH = panel.getContentClipHeight();
@@ -171,12 +171,11 @@ public class DropdownScreen extends Screen {
             float actualClipH = Math.min(clipH, revealedBottom - clipY);
             if (actualClipH > 0.5f) {
                 beginDropdownLayer();
-                setDropdownScissor(panel.getX(), clipY, panel.getWidth(), actualClipH, LuminRenderSystem.getScaledHeightInt());
                 int hoverMouseX = panel == topmostHovered ? backgroundMouseX : -1;
                 int hoverMouseY = panel == topmostHovered ? backgroundMouseY : -1;
-                panel.drawContent(drawContext, hoverMouseX, hoverMouseY);
+                withDropdownScissor(panel.getX(), clipY, panel.getWidth(), actualClipH,
+                        () -> panel.drawContent(drawContext, hoverMouseX, hoverMouseY));
                 flushDropdownLayer();
-                clearDropdownScissor();
             }
 
             panel.setPosition(panel.getX(), origY);
@@ -201,7 +200,7 @@ public class DropdownScreen extends Screen {
         if (ClientSetting.INSTANCE.dropdownHints.getValue()) {
             float scale = 0.62f;
             float lineGap = 5.0f;
-            float lineHeight = drawContext.text().getHeight(scale);
+            float lineHeight = drawContext.textHeight(scale);
             String[] hints = {
                     EpsilonTranslations.Gui.DROPDOWN_HINT_SEARCH.getTranslatedName(),
                     EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
@@ -215,8 +214,8 @@ public class DropdownScreen extends Screen {
             }
             Color color = MD3Theme.withAlpha(Color.WHITE, alpha);
             for (String hint : hints) {
-                float x = xRight - drawContext.text().getWidth(hint, scale);
-                drawContext.text().addText(hint, x, y, scale, color);
+                float x = xRight - drawContext.textWidth(hint, scale);
+                drawContext.text(hint, x, y, scale, color);
                 y += lineHeight + lineGap;
             }
         }
@@ -233,13 +232,16 @@ public class DropdownScreen extends Screen {
         dropdownBatch.render(PanelUiTree.from(dropdownScope), dropdownLayer);
     }
 
-    private void setDropdownScissor(float guiX, float guiY, float guiW, float guiH, int guiHeight) {
-        LuminRenderSystem.ScissorRect scissor = LuminRenderSystem.toFramebufferScissor(guiX, guiY, guiW, guiH);
-        dropdownBatch.setLayerScissor(dropdownLayer, scissor.x(), scissor.y(), scissor.width(), scissor.height());
-    }
-
-    private void clearDropdownScissor() {
-        dropdownBatch.clearLayerScissor(dropdownLayer);
+    private void withDropdownScissor(float guiX, float guiY, float guiW, float guiH, Runnable content) {
+        DropdownDrawContext previous = drawContext;
+        dropdownScope.scissor(new PanelLayout.Rect(guiX, guiY, guiW, guiH), scope -> {
+            drawContext = new DropdownDrawContext(scope, new DropdownTextMetrics());
+            try {
+                content.run();
+            } finally {
+                drawContext = previous;
+            }
+        });
     }
 
     private final class DropdownTextMetrics implements DropdownDrawContext.TextMetrics {
@@ -342,7 +344,7 @@ public class DropdownScreen extends Screen {
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             return true;
         }
-        // 从顶层向底层遍历，确保最上层 panel 优先处理滚轮事件
+        // 浠庨《灞傚悜搴曞眰閬嶅巻锛岀‘淇濇渶涓婂眰 panel 浼樺厛澶勭悊婊氳疆浜嬩欢
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;

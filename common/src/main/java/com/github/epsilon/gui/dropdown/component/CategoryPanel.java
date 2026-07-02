@@ -54,7 +54,7 @@ public class CategoryPanel extends AbstractDropdownPanel {
         List<ModuleButton> buttons = visibleButtons();
         float expand = openAnim.getValue();
         int frameId = getRenderFrameId();
-        DropdownDrawContext.Stack stack = renderer.stack(new PanelLayout.Rect(
+        var stack = renderer.scope().stack(new PanelLayout.Rect(
                 x,
                 y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
                 width,
@@ -62,13 +62,13 @@ public class CategoryPanel extends AbstractDropdownPanel {
         ));
         for (ModuleButton button : buttons) {
             float btnH = button.getHeightForFrame(frameId);
-            PanelLayout.Rect bounds = stack.item(btnH);
-
-            float visibleTop = y + DropdownTheme.PANEL_HEADER_HEIGHT;
-            float visibleBottom = visibleTop + visibleHeight * expand;
-            if (bounds.bottom() > visibleTop && bounds.y() < visibleBottom) {
-                button.draw(renderer, mouseX, mouseY, bounds);
-            }
+            stack.item(btnH, (bounds, scope) -> {
+                float visibleTop = y + DropdownTheme.PANEL_HEADER_HEIGHT;
+                float visibleBottom = visibleTop + visibleHeight * expand;
+                if (bounds.bottom() > visibleTop && bounds.y() < visibleBottom) {
+                    button.drawInScope(renderer, mouseX, mouseY, bounds, scope);
+                }
+            });
         }
     }
 
