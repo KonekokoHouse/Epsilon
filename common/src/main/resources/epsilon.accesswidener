@@ -8,6 +8,8 @@ accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket
 mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
 accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
 mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
+accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
+mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket onGround Z
 
 accessible class net/minecraft/client/ResourceLoadStateTracker$ReloadState
 

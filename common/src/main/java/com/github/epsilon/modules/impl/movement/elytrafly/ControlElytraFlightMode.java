@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.movement.elytrafly;
 
-import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.FireworkUpdateEvent;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.movement.follower.Follower;
