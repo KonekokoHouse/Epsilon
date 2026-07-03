@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SettingListController {
+public class SettingListController implements AutoCloseable {
 
     private static final float GROUP_HEADER_HEIGHT = 30.0f;
     private static final float GROUP_ROW_INSET = 4.0f;
@@ -62,7 +62,7 @@ public class SettingListController {
     }
 
     public void prepareLayout(String ownerKey, List<Setting<?>> settings) {
-        rowCache.keySet().removeIf(setting -> settings == null || !settings.contains(setting));
+        closeRowsNotIn(settings);
         List<String> visibleSections = buildSections(ownerKey, settings).stream()
                 .filter(SettingLayoutPlanner.Section::hasHeader)
                 .map(SettingLayoutPlanner.Section::key)
@@ -290,6 +290,7 @@ public class SettingListController {
 
     public void clearAll() {
         clearFocus();
+        rowCache.values().forEach(SettingRow::close);
         settingEntries.clear();
         rowCache.clear();
         sectionHoverAnimations.clear();
@@ -298,6 +299,12 @@ public class SettingListController {
             activeEnumRow.setDropdownOpen(false);
             activeEnumRow = null;
         }
+    }
+
+    @Override
+    public void close() {
+        clearAll();
+        measureTextRenderer.close();
     }
 
     public boolean hasActiveAnimations() {
@@ -384,6 +391,16 @@ public class SettingListController {
         Animation animation = new Animation(Easing.EASE_OUT_CUBIC, duration);
         animation.setStartValue(startValue);
         return animation;
+    }
+
+    private void closeRowsNotIn(List<Setting<?>> settings) {
+        rowCache.entrySet().removeIf(entry -> {
+            boolean remove = settings == null || !settings.contains(entry.getKey());
+            if (remove) {
+                entry.getValue().close();
+            }
+            return remove;
+        });
     }
 
     private String trimToWidth(String value, float scale, float width, TextRenderer textRenderer) {

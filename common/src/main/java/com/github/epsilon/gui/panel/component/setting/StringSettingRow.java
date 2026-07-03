@@ -375,6 +375,11 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         return InputConstants.isKeyDown(mc.getWindow(), 341) || InputConstants.isKeyDown(mc.getWindow(), 345);
     }
 
+    @Override
+    public void close() {
+        measureTextRenderer.close();
+    }
+
     private record DisplaySlice(String text, float textX, int caretIndex, int start, int end) {
     }
 

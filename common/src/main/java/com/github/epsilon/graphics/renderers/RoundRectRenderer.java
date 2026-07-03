@@ -163,6 +163,7 @@ public class RoundRectRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
+        RendererHolder.INSTANCE.unregister(this);
     }
 
     public void setScissor(int x, int y, int width, int height) {

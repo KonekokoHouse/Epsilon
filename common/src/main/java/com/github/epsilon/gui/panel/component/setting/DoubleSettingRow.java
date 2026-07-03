@@ -279,4 +279,9 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         return FIELD_TEXT_SCALE * maxTextWidth / textWidth;
     }
 
+    @Override
+    public void close() {
+        measureTextRenderer.close();
+    }
+
 }

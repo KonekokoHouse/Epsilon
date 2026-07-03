@@ -11,7 +11,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.PreeditEvent;
 import org.jspecify.annotations.Nullable;
 
-public abstract class SettingRow<T extends Setting<?>> {
+public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable {
 
     protected final T setting;
 
@@ -64,6 +64,10 @@ public abstract class SettingRow<T extends Setting<?>> {
 
     public boolean hasActiveAnimation() {
         return false;
+    }
+
+    @Override
+    public void close() {
     }
 
 }

@@ -31,7 +31,7 @@ import java.util.List;
  * 负责渲染分类下的模块列表、搜索框、滚动视口与模块行缓存，
  * 并维护与列表内容相关的输入状态、滚动状态和重建签名。
  */
-public class ModuleListPanel {
+public class ModuleListPanel implements AutoCloseable {
 
     protected final PanelState state;
     private final TextRenderer textRenderer;
@@ -402,5 +402,11 @@ public class ModuleListPanel {
             float caretX = textX + textRenderer.getWidth(query.substring(0, Math.min(searchCursorIndex, query.length())), scale);
             IMEFocusHelper.updateCursorPos(caretX, textY);
         }
+    }
+
+    @Override
+    public void close() {
+        contentBuffer.close();
+        markDirty();
     }
 }

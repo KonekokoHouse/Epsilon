@@ -273,6 +273,7 @@ public class LuminRenderSystem {
         private final Identifier identifier;
         private int width;
         private int height;
+        private boolean closed;
 
         private LuminRenderTarget(String name, int width, int height) {
             this.width = width;
@@ -286,6 +287,7 @@ public class LuminRenderSystem {
         }
 
         private void createTextures() {
+            closed = false;
             var device = RenderSystem.getDevice();
 
             final var colorTexture = device.createTexture(
@@ -361,14 +363,22 @@ public class LuminRenderSystem {
         }
 
         private void destroyTextures() {
+            if (closed) {
+                return;
+            }
+            closed = true;
             mc.getTextureManager().release(identifier);
             if (depthView != null) depthView.close();
             if (depthTexture != null) depthTexture.close();
+            colorTexture = null;
+            depthView = null;
+            depthTexture = null;
         }
 
         @Override
         public void close() {
             destroyTextures();
+            RenderTargetHolder.INSTANCE.unregister(this);
         }
     }
 

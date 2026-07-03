@@ -13,6 +13,7 @@ import java.awt.*;
 public class TextRenderer implements IRenderer {
 
     private final ITextRenderer textRenderer;
+    private boolean registered = true;
 
     private TextRenderer(long bufferSize) {
         textRenderer = new TtfTextRenderer(bufferSize);
@@ -31,10 +32,12 @@ public class TextRenderer implements IRenderer {
     }
 
     public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
+        ensureRegistered();
         textRenderer.addText(text, x, y, scale, color, fontLoader);
     }
 
     public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
+        ensureRegistered();
         textRenderer.addGradientText(text, x, y, scale, startColor, endColor, fontLoader);
     }
 
@@ -102,6 +105,17 @@ public class TextRenderer implements IRenderer {
     @Override
     public void close() {
         textRenderer.close();
+        if (registered) {
+            RendererHolder.INSTANCE.unregister(this);
+            registered = false;
+        }
+    }
+
+    private void ensureRegistered() {
+        if (!registered) {
+            RendererHolder.INSTANCE.register(this);
+            registered = true;
+        }
     }
 
 }

@@ -337,6 +337,22 @@ public class PanelScreen extends Screen {
         super.onClose();
     }
 
+    @Override
+    public void removed() {
+        super.removed();
+        popupHost.close();
+        moduleListPanel.close();
+        moduleDetailPanel.close();
+        clientSettingPanel.close();
+        scene.close();
+        textRenderer.close();
+        if (renderTarget != null) {
+            renderTarget.close();
+            renderTarget = null;
+        }
+        preeditOverlay = null;
+    }
+
     /**
      * 返回当前面板使用的离屏渲染目标。
      *

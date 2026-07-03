@@ -32,7 +32,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public class ModuleDetailPanel {
+public class ModuleDetailPanel implements AutoCloseable {
 
     protected final PanelState state;
     private final TextRenderer textRenderer;
@@ -548,6 +548,13 @@ public class ModuleDetailPanel {
         }
         signature = signature * 31L + SettingLayoutPlanner.signature(settingOwnerKey, settings);
         return signature;
+    }
+
+    @Override
+    public void close() {
+        settingListController.close();
+        contentBuffer.close();
+        markDirty();
     }
 
 }

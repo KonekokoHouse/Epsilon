@@ -19,8 +19,12 @@ public class RenderTargetHolder {
         return target;
     }
 
+    public synchronized void unregister(LuminRenderSystem.LuminRenderTarget target) {
+        targets.remove(target);
+    }
+
     public synchronized void destroyAll() {
-        for (final var target : targets) {
+        for (final var target : List.copyOf(targets)) {
             target.close();
         }
         targets.clear();

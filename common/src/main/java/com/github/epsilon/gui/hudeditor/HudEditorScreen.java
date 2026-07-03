@@ -579,6 +579,7 @@ public class HudEditorScreen extends Screen {
                 renderTargets[i] = null;
             }
         }
+        scene.close();
         textMetrics.close();
     }
 

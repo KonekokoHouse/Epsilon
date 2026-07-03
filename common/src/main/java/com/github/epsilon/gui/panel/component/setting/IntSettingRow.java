@@ -279,4 +279,9 @@ public class IntSettingRow extends SettingRow<IntSetting> {
         return FIELD_TEXT_SCALE * maxTextWidth / textWidth;
     }
 
+    @Override
+    public void close() {
+        measureTextRenderer.close();
+    }
+
 }

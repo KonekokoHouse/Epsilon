@@ -188,6 +188,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
+        RendererHolder.INSTANCE.unregister(this);
     }
 
 }

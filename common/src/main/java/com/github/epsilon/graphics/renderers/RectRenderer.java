@@ -183,6 +183,7 @@ public class RectRenderer implements IRenderer {
     public void close() {
         clear();
         buffer.close();
+        RendererHolder.INSTANCE.unregister(this);
     }
 
 }
