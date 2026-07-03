@@ -154,4 +154,9 @@ public class EnumSelectPopup implements PanelPopupHost.Popup {
         return true;
     }
 
+    @Override
+    public void close() {
+        contentBuffer.close();
+    }
+
 }

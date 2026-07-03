@@ -440,7 +440,10 @@ public class DropdownScreen extends Screen {
             renderTarget.close();
             renderTarget = null;
         }
+        popupHost.close();
+        scene.close();
         textMetrics.close();
+        preeditOverlay = null;
     }
 
     @Override

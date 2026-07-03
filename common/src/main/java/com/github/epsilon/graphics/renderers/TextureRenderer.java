@@ -319,6 +319,7 @@ public class TextureRenderer implements IRenderer {
         }
         batches.clear();
         TextureCacheHolder.INSTANCE.clearCache();
+        RendererHolder.INSTANCE.unregister(this);
     }
 
     private static final class Batch {

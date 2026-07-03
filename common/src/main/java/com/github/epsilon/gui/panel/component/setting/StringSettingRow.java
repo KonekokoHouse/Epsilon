@@ -23,7 +23,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
     private static final float FIELD_WIDTH = 120.0f;
     private static final int MAX_LENGTH = 256;
 
-    private final TextRenderer measureTextRenderer = TextRenderer.create();
+    private TextRenderer textMetrics;
     private boolean focused;
     private String inputBuffer;
     private int cursorIndex;
@@ -35,6 +35,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
 
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+        this.textMetrics = textRenderer;
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
@@ -201,8 +202,9 @@ public class StringSettingRow extends SettingRow<StringSetting> {
     private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds) {
         String text = getDisplayBuffer();
         DisplaySlice slice = buildDisplaySlice(text, fieldBounds, true);
+        TextRenderer metrics = textMetrics();
         for (int i = 0; i <= slice.text().length(); i++) {
-            float width = measureTextRenderer.getWidth(slice.text().substring(0, i), FIELD_SCALE);
+            float width = metrics.getWidth(slice.text().substring(0, i), FIELD_SCALE);
             if (mouseX <= slice.textX() + width) {
                 return slice.start() + i;
             }
@@ -222,16 +224,17 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         int safeCursor = Math.clamp(cursorIndex, 0, safeValue.length());
         int start = 0;
         int end = safeValue.length();
+        TextRenderer metrics = textMetrics();
         while (start < safeCursor) {
             String candidate = safeValue.substring(start, end);
-            float width = measureTextRenderer.getWidth(candidate, FIELD_SCALE);
-            float caretWidth = measureTextRenderer.getWidth(safeValue.substring(start, safeCursor), FIELD_SCALE);
+            float width = metrics.getWidth(candidate, FIELD_SCALE);
+            float caretWidth = metrics.getWidth(safeValue.substring(start, safeCursor), FIELD_SCALE);
             if (width <= availableWidth && caretWidth <= availableWidth - 2.0f) {
                 break;
             }
             start++;
         }
-        while (end > safeCursor && measureTextRenderer.getWidth(safeValue.substring(start, end), FIELD_SCALE) > availableWidth) {
+        while (end > safeCursor && metrics.getWidth(safeValue.substring(start, end), FIELD_SCALE) > availableWidth) {
             end--;
         }
         String shown = safeValue.substring(start, end);
@@ -239,18 +242,19 @@ public class StringSettingRow extends SettingRow<StringSetting> {
     }
 
     private String fitWithEllipsis(String value, float availableWidth) {
-        if (measureTextRenderer.getWidth(value, FIELD_SCALE) <= availableWidth) {
+        TextRenderer metrics = textMetrics();
+        if (metrics.getWidth(value, FIELD_SCALE) <= availableWidth) {
             return value;
         }
         String ellipsis = "...";
-        float ellipsisWidth = measureTextRenderer.getWidth(ellipsis, FIELD_SCALE);
+        float ellipsisWidth = metrics.getWidth(ellipsis, FIELD_SCALE);
         if (ellipsisWidth >= availableWidth) {
             return "";
         }
         int length = value.length();
         while (length > 0) {
             String candidate = value.substring(0, length) + ellipsis;
-            if (measureTextRenderer.getWidth(candidate, FIELD_SCALE) <= availableWidth) {
+            if (metrics.getWidth(candidate, FIELD_SCALE) <= availableWidth) {
                 return candidate;
             }
             length--;
@@ -373,6 +377,10 @@ public class StringSettingRow extends SettingRow<StringSetting> {
 
     private boolean isControlDown() {
         return InputConstants.isKeyDown(mc.getWindow(), 341) || InputConstants.isKeyDown(mc.getWindow(), 345);
+    }
+
+    private TextRenderer textMetrics() {
+        return textMetrics == null ? FALLBACK_TEXT_METRICS : textMetrics;
     }
 
     private record DisplaySlice(String text, float textX, int caretIndex, int start, int end) {

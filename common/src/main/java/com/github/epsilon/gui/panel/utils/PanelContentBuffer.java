@@ -18,7 +18,7 @@ import java.util.List;
  * 内容先写入一个 scheduler-backed 批次，flush 时再统一附加 scissor 和滚动条。
  * 这样列表、设置页、popup 视口不再各自维护一组 GPU renderer，能和主 GUI 一起进入 Render2DScheduler 合批。
  */
-public class PanelContentBuffer {
+public class PanelContentBuffer implements AutoCloseable {
 
     private final PanelRenderBatch batch = new PanelRenderBatch();
     private final PanelRenderBatch scrollBarBatch = batch.view(8);
@@ -127,6 +127,12 @@ public class PanelContentBuffer {
     public void flushAndClear() {
         flush();
         clearContent();
+    }
+
+    @Override
+    public void close() {
+        clear();
+        batch.close();
     }
 
 }

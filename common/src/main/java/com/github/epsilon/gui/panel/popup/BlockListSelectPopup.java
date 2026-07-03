@@ -403,6 +403,13 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
         return item.getDefaultInstance();
     }
 
+    @Override
+    public void close() {
+        contentBuffer.close();
+        textRenderer.close();
+        itemPreviews.clear();
+    }
+
     private record ItemPreview(ItemStack stack, float x, float y, float size) {
     }
 

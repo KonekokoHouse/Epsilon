@@ -41,8 +41,7 @@ public class HudEditorScreen extends Screen {
     private static final float GUIDE_ALPHA = 95.0f;
 
     private CategoryPanel hudPanel;
-    private final LuminRenderSystem.LuminRenderTarget[] renderTargets = new LuminRenderSystem.LuminRenderTarget[2];
-    private int renderTargetIndex;
+    private LuminRenderSystem.LuminRenderTarget renderTarget;
     private int renderFrameId;
     private int panelElementCount = -1;
     private HudModule selectedElement;
@@ -145,13 +144,10 @@ public class HudEditorScreen extends Screen {
     }
 
     private LuminRenderSystem.LuminRenderTarget getRenderTarget(int width, int height) {
-        int index = renderTargetIndex++ & 1;
-        LuminRenderSystem.LuminRenderTarget target = renderTargets[index];
-        if (target == null) {
-            target = LuminRenderSystem.LuminRenderTarget.create("hud-editor-gui-" + index, width, height);
-            renderTargets[index] = target;
+        if (renderTarget == null) {
+            renderTarget = LuminRenderSystem.LuminRenderTarget.create("hud-editor-gui", width, height);
         }
-        return target;
+        return renderTarget;
     }
 
     private void drawElementOverlays(GuiGraphicsExtractor graphics) {
@@ -573,12 +569,11 @@ public class HudEditorScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
-        for (int i = 0; i < renderTargets.length; i++) {
-            if (renderTargets[i] != null) {
-                renderTargets[i].close();
-                renderTargets[i] = null;
-            }
+        if (renderTarget != null) {
+            renderTarget.close();
+            renderTarget = null;
         }
+        scene.close();
         textMetrics.close();
     }
 

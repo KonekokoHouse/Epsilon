@@ -20,7 +20,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import java.util.EnumMap;
 import java.util.List;
 
-public class ClientSettingPanel {
+public class ClientSettingPanel implements AutoCloseable {
 
     private static final List<TabDefinition> TABS = List.of(
             new TabDefinition(PanelState.ClientSettingTab.GENERAL, EpsilonTranslations.Gui.TAB_GENERAL),
@@ -220,6 +220,11 @@ public class ClientSettingPanel {
     }
 
     private record TabDefinition(PanelState.ClientSettingTab tab, TranslateComponent component) {
+    }
+
+    @Override
+    public void close() {
+        tabViews.values().forEach(ClientSettingTabView::close);
     }
 
 }

@@ -234,6 +234,7 @@ public class MainMenuScreen extends Screen {
             uiRenderTarget.close();
             uiRenderTarget = null;
         }
+        scene.close();
     }
 
     @Override

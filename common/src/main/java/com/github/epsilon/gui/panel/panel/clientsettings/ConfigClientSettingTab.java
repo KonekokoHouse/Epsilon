@@ -658,6 +658,12 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         return ellipsis;
     }
 
+    @Override
+    public void close() {
+        contentBuffer.close();
+        markDirty();
+    }
+
     private record ConfigRowEntry(String name, PanelLayout.Rect rowBounds, PanelLayout.Rect deleteBounds) {
     }
 

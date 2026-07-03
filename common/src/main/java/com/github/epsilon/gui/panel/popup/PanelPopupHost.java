@@ -25,6 +25,7 @@ public class PanelPopupHost {
      * @param popup 需要显示的弹窗实例
      */
     public void open(Popup popup) {
+        close();
         this.activePopup = popup;
     }
 
@@ -32,6 +33,9 @@ public class PanelPopupHost {
      * 关闭当前活动弹窗。
      */
     public void close() {
+        if (this.activePopup != null) {
+            this.activePopup.close();
+        }
         this.activePopup = null;
         this.pendingBatch = null;
     }
@@ -181,7 +185,7 @@ public class PanelPopupHost {
      * 弹窗需要实现几何区域、UI 提取以及输入事件处理；普通图元进入主 scene，
      * 私有视口缓冲或原版物品预览等额外输出可以在 {@link #flush(PanelRenderBatch)} 中补充。
      */
-    public interface Popup {
+    public interface Popup extends AutoCloseable {
         float POPUP_SHADOW_RADIUS = 2.5f;
 
         /**
@@ -243,6 +247,10 @@ public class PanelPopupHost {
 
         default boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
             return false;
+        }
+
+        @Override
+        default void close() {
         }
     }
 
