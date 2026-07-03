@@ -26,8 +26,8 @@ public class TtfTextRenderer implements ITextRenderer {
     private static final int STRIDE = 24;
     private static final long GLYPH_BYTES = STRIDE * 4L;
     private static final int LAYOUT_FLOATS_PER_GLYPH = 10;
-    private static final int LAYOUT_CACHE_LIMIT = 512;
-    private static final int WIDTH_CACHE_LIMIT = 512;
+    private static final int LAYOUT_CACHE_LIMIT = 256;
+    private static final int WIDTH_CACHE_LIMIT = 256;
     private static final float SPACE_WIDTH = 3.0f;
     private final long bufferSize;
 
@@ -57,7 +57,7 @@ public class TtfTextRenderer implements ITextRenderer {
     }
 
     public TtfTextRenderer() {
-        this(256 * 1024);
+        this(64 * 1024);
     }
 
     @Override

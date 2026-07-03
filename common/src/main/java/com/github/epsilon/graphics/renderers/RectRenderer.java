@@ -17,7 +17,7 @@ import java.util.OptionalInt;
 
 public class RectRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final long BUFFER_SIZE = 16 * 1024;
     private static final int STRIDE = 16;
     private static final long RECT_BYTES = STRIDE * 4L;
 

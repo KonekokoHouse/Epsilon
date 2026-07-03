@@ -13,6 +13,8 @@ import org.jspecify.annotations.Nullable;
 
 public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable {
 
+    protected static final TextRenderer FALLBACK_TEXT_METRICS = TextRenderer.create();
+
     protected final T setting;
 
     protected SettingRow(T setting) {
