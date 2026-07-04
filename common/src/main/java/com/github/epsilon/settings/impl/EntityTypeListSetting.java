@@ -27,7 +27,7 @@ public class EntityTypeListSetting extends Setting<List<EntityType<?>>> {
             "minecraft:armadillo", "minecraft:axolotl", "minecraft:dolphin",
             "minecraft:goat", "minecraft:iron_golem", "minecraft:llama",
             "minecraft:panda", "minecraft:polar_bear", "minecraft:snow_golem",
-            "minecraft:trader_llama", "minecraft:wolf", "minecraft:horse",
+            "minecraft:trader_llama", "minecraft:wolf",
             "minecraft:skeleton_horse", "minecraft:zombie_horse",
             "minecraft:allay"
     );
