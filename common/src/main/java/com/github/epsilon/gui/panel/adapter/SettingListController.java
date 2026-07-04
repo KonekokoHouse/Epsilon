@@ -569,7 +569,7 @@ public class SettingListController implements AutoCloseable {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
-                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null ? k.getPath().replace('_', ' ') : e.toString(); },
+                e -> e.getDescription().getString(),
                 e -> {
                     var key = BuiltInRegistries.ENTITY_TYPE.getKey(e);
                     if (key == null) return net.minecraft.world.item.ItemStack.EMPTY;

@@ -123,10 +123,7 @@ public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>>
     // ---- Packet registry for popup ----
 
     public static String formatPacketName(Class<? extends Packet<?>> clazz) {
-        String name = clazz.getSimpleName();
-        if (name.startsWith("Clientbound")) name = name.substring(11);
-        else if (name.startsWith("Serverbound")) name = name.substring(11);
-        return name;
+        return clazz.getSimpleName();
     }
 
     public static boolean isS2C(Class<? extends Packet<?>> clazz) {

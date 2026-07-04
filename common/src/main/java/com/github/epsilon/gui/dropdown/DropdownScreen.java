@@ -639,7 +639,7 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
         popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
-                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null ? k.getPath().replace('_', ' ') : e.toString(); },
+                e -> e.getDescription().getString(),
                 e -> {
                     var key = BuiltInRegistries.ENTITY_TYPE.getKey(e);
                     if (key == null) return net.minecraft.world.item.ItemStack.EMPTY;
