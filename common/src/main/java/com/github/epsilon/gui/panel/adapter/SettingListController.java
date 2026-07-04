@@ -13,6 +13,7 @@ import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
+import com.github.epsilon.settings.impl.EnchantmentListSetting;
 import com.github.epsilon.settings.impl.EntityTypeListSetting;
 import com.github.epsilon.settings.impl.PacketListSetting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -617,9 +618,12 @@ public class SettingListController implements AutoCloseable {
     }
 
     private PanelPopupHost.Popup createEnchantmentListSettingPopup(EnchantmentListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(300.0f, popupBounds.width() - 24.0f), Math.min(220.0f, popupBounds.height() - 24.0f));
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
-        return new StringListSelectPopup(bounds, setting, setting::add, setting::remove);
+        return new RegistryListSelectPopup<>(bounds, setting,
+                EnchantmentListSetting.getEnchantmentRegistry(),
+                id -> EnchantmentListSetting.getEnchantmentDisplayName(id),
+                setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createPacketListSettingPopup(PacketListSettingRow row, PanelLayout.Rect popupBounds) {

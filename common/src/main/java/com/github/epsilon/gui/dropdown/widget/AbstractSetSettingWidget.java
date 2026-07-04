@@ -49,8 +49,9 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f,
                 DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        float fieldX = getFieldX();
-        float fieldY = getFieldY();
+        // 渲染使用本地坐标
+        float fieldX = DropdownTheme.SETTING_PADDING_X;
+        float fieldY = DropdownTheme.SETTING_HEIGHT - 1.0f;
         float fieldW = getFieldWidth();
         float hover = hoverAnim.getValue();
         Color background = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, hover * 0.6f);
@@ -75,12 +76,14 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         return true;
     }
 
+    /** hit-test 使用绝对坐标 */
     protected boolean isFieldHovered(double mouseX, double mouseY) {
         return isHovered(mouseX, mouseY, getFieldX(), getFieldY(), getFieldWidth(), FIELD_HEIGHT);
     }
 
-    protected float getFieldX() { return x + DropdownTheme.SETTING_PADDING_X; }
-    protected float getFieldY() { return y + DropdownTheme.SETTING_HEIGHT - 1.0f; }
+    /** hit-test 用绝对坐标（与 BlockListWidget 一致） */
+    protected float getFieldX() { return absoluteX(DropdownTheme.SETTING_PADDING_X); }
+    protected float getFieldY() { return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f); }
     protected float getFieldWidth() { return width - DropdownTheme.SETTING_PADDING_X * 2.0f; }
 
     private float centeredTextY(DropdownDrawContext renderer, float boxY, float boxHeight, float scale) {

@@ -695,10 +695,13 @@ public class DropdownScreen extends Screen {
 
     public void openEnchantmentListSettingPopup(EnchantmentListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
-        popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
+        popupHost.open(new RegistryListSelectPopup<>(bounds, setting,
+                EnchantmentListSetting.getEnchantmentRegistry(),
+                id -> EnchantmentListSetting.getEnchantmentDisplayName(id),
+                setting::add, setting::remove));
     }
 
     public void openPacketListSettingPopup(PacketListSetting setting) {
