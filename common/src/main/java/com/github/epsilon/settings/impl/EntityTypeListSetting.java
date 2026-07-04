@@ -68,10 +68,9 @@ public class EntityTypeListSetting extends Setting<List<EntityType<?>>> {
             "minecraft:acacia_chest_boat", "minecraft:cherry_chest_boat",
             "minecraft:dark_oak_chest_boat", "minecraft:mangrove_chest_boat",
             "minecraft:pale_oak_chest_boat", "minecraft:bamboo_chest_raft",
-            // 矿车（全部变种）
+            // 矿车
             "minecraft:minecart", "minecraft:chest_minecart", "minecraft:furnace_minecart",
-            "minecraft:hopper_minecart", "minecraft:tnt_minecart",
-            "minecraft:command_block_minecart", "minecraft:spawner_minecart"
+            "minecraft:hopper_minecart"
     );
 
     /** 手动指定的技术性实体 ID */
