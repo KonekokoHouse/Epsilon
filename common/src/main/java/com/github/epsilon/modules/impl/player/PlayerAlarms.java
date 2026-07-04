@@ -60,7 +60,7 @@ public class PlayerAlarms extends Module {
     private final IntSetting joinRingDelay = intSetting("join-ring-delay", 20, 1, 100, 1).group(sgJoin);
     private final DoubleSetting joinVolume = doubleSetting("join-volume", 1.0, 0.0, 1.0, 0.05).group(sgJoin);
     private final DoubleSetting joinPitch = doubleSetting("join-pitch", 1.0, 0.5, 2.0, 0.05).group(sgJoin);
-    private final SoundEventListSetting joinSound = soundEventListSetting("join-sound",
+    private final RegistryListSetting<SoundEvent> joinSound = soundEventListSetting("join-sound",
         List.of(SoundEvents.BELL_BLOCK)).group(sgJoin);
     private final BoolSetting joinChatMessage = boolSetting("join-chat-message", true).group(sgJoin);
 
@@ -69,7 +69,7 @@ public class PlayerAlarms extends Module {
     private final IntSetting leaveRingDelay = intSetting("leave-ring-delay", 20, 1, 100, 1).group(sgLeave);
     private final DoubleSetting leaveVolume = doubleSetting("leave-volume", 1.0, 0.0, 1.0, 0.05).group(sgLeave);
     private final DoubleSetting leavePitch = doubleSetting("leave-pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeave);
-    private final SoundEventListSetting leaveSound = soundEventListSetting("leave-sound",
+    private final RegistryListSetting<SoundEvent> leaveSound = soundEventListSetting("leave-sound",
         List.of(SoundEvents.ANVIL_LAND)).group(sgLeave);
     private final BoolSetting leaveChatMessage = boolSetting("leave-chat-message", true).group(sgLeave);
 
@@ -78,7 +78,7 @@ public class PlayerAlarms extends Module {
     private final IntSetting enterRDRingDelay = intSetting("enter-rd-ring-delay", 20, 1, 100, 1).group(sgEnterRD);
     private final DoubleSetting enterRDVolume = doubleSetting("enter-rd-volume", 1.0, 0.0, 1.0, 0.05).group(sgEnterRD);
     private final DoubleSetting enterRDPitch = doubleSetting("enter-rd-pitch", 1.0, 0.5, 2.0, 0.05).group(sgEnterRD);
-    private final SoundEventListSetting enterRDSound = soundEventListSetting("enter-rd-sound",
+    private final RegistryListSetting<SoundEvent> enterRDSound = soundEventListSetting("enter-rd-sound",
         List.of(SoundEvents.ANVIL_DESTROY)).group(sgEnterRD);
     private final BoolSetting enterRDChatMessage = boolSetting("enter-rd-chat-message", true).group(sgEnterRD);
 
@@ -87,7 +87,7 @@ public class PlayerAlarms extends Module {
     private final IntSetting leaveRDRingDelay = intSetting("leave-rd-ring-delay", 20, 1, 100, 1).group(sgLeaveRD);
     private final DoubleSetting leaveRDVolume = doubleSetting("leave-rd-volume", 1.0, 0.0, 1.0, 0.05).group(sgLeaveRD);
     private final DoubleSetting leaveRDPitch = doubleSetting("leave-rd-pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeaveRD);
-    private final SoundEventListSetting leaveRDSound = soundEventListSetting("leave-rd-sound",
+    private final RegistryListSetting<SoundEvent> leaveRDSound = soundEventListSetting("leave-rd-sound",
         List.of(SoundEvents.BELL_BLOCK)).group(sgLeaveRD);
     private final BoolSetting leaveRDChatMessage = boolSetting("leave-rd-chat-message", true).group(sgLeaveRD);
 
@@ -96,7 +96,7 @@ public class PlayerAlarms extends Module {
     private final IntSetting gamemodeRingDelay = intSetting("gamemode-ring-delay", 20, 1, 100, 1).group(sgGamemode);
     private final DoubleSetting gamemodeVolume = doubleSetting("gamemode-volume", 1.0, 0.0, 1.0, 0.05).group(sgGamemode);
     private final DoubleSetting gamemodePitch = doubleSetting("gamemode-pitch", 1.0, 0.5, 2.0, 0.05).group(sgGamemode);
-    private final SoundEventListSetting gamemodeSound = soundEventListSetting("gamemode-sound",
+    private final RegistryListSetting<SoundEvent> gamemodeSound = soundEventListSetting("gamemode-sound",
         List.of(SoundEvents.ARROW_HIT_PLAYER)).group(sgGamemode);
     private final BoolSetting gamemodeChatMessage = boolSetting("gamemode-chat-message", true).group(sgGamemode);
 
