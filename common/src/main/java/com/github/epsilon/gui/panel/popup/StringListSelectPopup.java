@@ -10,7 +10,7 @@ import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.settings.impl.StringListSetting;
+import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -23,6 +23,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class StringListSelectPopup implements PanelPopupHost.Popup {
 
@@ -38,7 +39,9 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private static final int MAX_QUERY_LENGTH = 64;
 
     private final PanelLayout.Rect bounds;
-    private final StringListSetting setting;
+    private final Setting<List<String>> setting;
+    private final Consumer<String> addFn;
+    private final Consumer<String> removeFn;
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
@@ -51,9 +54,11 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private String hoveredRemove;
     private PanelLayout.Rect lastViewport;
 
-    public StringListSelectPopup(PanelLayout.Rect bounds, StringListSetting setting) {
+    public StringListSelectPopup(PanelLayout.Rect bounds, Setting<List<String>> setting, Consumer<String> addFn, Consumer<String> removeFn) {
         this.bounds = bounds;
         this.setting = setting;
+        this.addFn = addFn;
+        this.removeFn = removeFn;
         this.openAnimation.setStartValue(0.0f);
     }
 
@@ -83,7 +88,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
 
                 float titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f);
                 float summaryScale = 0.52f;
-                String summary = setting.size() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName();
+                String summary = setting.getValue().size() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName();
                 popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY);
                 popup.text(summary, animatedBounds.width() - PADDING - textRenderer.getWidth(summary, summaryScale),
                         centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED);
@@ -116,7 +121,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             applyDraggedScroll(event.y(), viewport);
             return true;
         }
-        if (hoveredRemove != null) { setting.remove(hoveredRemove); return true; }
+        if (hoveredRemove != null) { removeFn.accept(hoveredRemove); return true; }
         return true;
     }
 
@@ -129,7 +134,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
 
     @Override public boolean keyPressed(KeyEvent event) {
         if (event.key() == GLFW.GLFW_KEY_ENTER && !input.isBlank()) {
-            setting.add(input.trim());
+            addFn.accept(input.trim());
             input = "";
             resetScroll();
             return true;

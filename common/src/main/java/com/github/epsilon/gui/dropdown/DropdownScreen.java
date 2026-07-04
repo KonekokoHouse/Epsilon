@@ -29,6 +29,7 @@ import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.PreeditEvent;
@@ -593,7 +594,7 @@ public class DropdownScreen extends Screen {
                 Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
-        popupHost.open(new StringListSelectPopup(bounds, setting));
+        popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
     }
 
     public void openSoundEventListSettingPopup(SoundEventListSetting setting) {
@@ -632,12 +633,34 @@ public class DropdownScreen extends Screen {
                 setting::add, setting::remove));
     }
 
-    public void openColorListSettingPopup(ColorListSetting setting) {
-        // No registry for Color; popup not yet implemented
-    }
-
     public void openEntityTypeListSettingPopup(EntityTypeListSetting setting) {
-        // EntityTypeListSetting uses Set<EntityType<?>>, incompatible with RegistryListSelectPopup's List<T> generic
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
+                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null ? k.getPath().replace('_', ' ') : e.toString(); },
+                e -> {
+                    var key = BuiltInRegistries.ENTITY_TYPE.getKey(e);
+                    if (key == null) return net.minecraft.world.item.ItemStack.EMPTY;
+                    Identifier eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
+                    if (eggId == null) return net.minecraft.world.item.ItemStack.EMPTY;
+                    var item = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
+                    return item != null ? item.getDefaultInstance() : net.minecraft.world.item.ItemStack.EMPTY;
+                },
+                java.util.List.of(
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_FRIENDLY.getTranslatedName(),
+                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.FRIENDLY_IDS.contains(k.toString()); }),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_HOSTILE.getTranslatedName(),
+                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.HOSTILE_IDS.contains(k.toString()); }),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_NEUTRAL.getTranslatedName(),
+                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.NEUTRAL_IDS.contains(k.toString()); }),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_RIDEABLE.getTranslatedName(),
+                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.RIDEABLE_IDS.contains(k.toString()); }),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_TECHNICAL.getTranslatedName(),
+                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.TECHNICAL_IDS.contains(k.toString()); })
+                ),
+                setting::add, setting::remove));
     }
 
     public void openParticleTypeListSettingPopup(ParticleTypeListSetting setting) {
@@ -671,15 +694,30 @@ public class DropdownScreen extends Screen {
     }
 
     public void openEnchantmentListSettingPopup(EnchantmentListSetting setting) {
-        // Stores String IDs; popup not yet implemented
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
     }
 
     public void openPacketListSettingPopup(PacketListSetting setting) {
-        // No registry for packet classes; popup not yet implemented
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, PacketListSetting.PACKET_REGISTRY,
+                PacketListSetting::formatPacketName,
+                null,
+                java.util.List.of(
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_PACKET_S2C.getTranslatedName(), PacketListSetting::isS2C),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_PACKET_C2S.getTranslatedName(), PacketListSetting::isC2S)
+                ),
+                setting::add, setting::remove));
     }
 
     public void openModuleListSettingPopup(ModuleListSetting setting) {
-        // Needs ModuleHolder reference; popup not yet implemented
+        // TODO: ModuleListSelectPopup - needs ModuleHolder.getAll() iteration
     }
 
 }

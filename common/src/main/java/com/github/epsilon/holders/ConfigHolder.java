@@ -559,11 +559,6 @@ public class ConfigHolder {
             obj.addProperty("z", s.getValue().z);
             return obj;
         }
-        if (setting instanceof ColorListSetting s) {
-            JsonArray array = new JsonArray();
-            for (Color c : s.getValue()) array.add(c.getRGB());
-            return array;
-        }
         if (setting instanceof SoundEventListSetting s) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
@@ -636,14 +631,6 @@ public class ConfigHolder {
                 if (setting instanceof PacketListSetting s) { s.setClassNames(ids); return; }
                 if (setting instanceof ModuleListSetting s) {
                     s.setModuleNames(ids, ModuleHolder.INSTANCE.getModules());
-                    return;
-                }
-                if (setting instanceof ColorListSetting s) {
-                    List<Color> colors = new java.util.ArrayList<>();
-                    for (JsonElement el : value.getAsJsonArray()) {
-                        if (el.isJsonPrimitive()) colors.add(new Color(el.getAsInt(), true));
-                    }
-                    s.setValue(colors);
                     return;
                 }
                 return;

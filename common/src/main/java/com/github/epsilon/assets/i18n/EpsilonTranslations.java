@@ -94,10 +94,16 @@ public final class EpsilonTranslations {
             Gui.LIST_ENTITIES,
             Gui.LIST_SCREENS,
             Gui.LIST_STORAGE,
-            Gui.LIST_COLORS,
             Gui.LIST_ENCHANTMENTS,
             Gui.LIST_PACKETS,
             Gui.LIST_MODULES,
+            Gui.LIST_ENTITY_FRIENDLY,
+            Gui.LIST_ENTITY_HOSTILE,
+            Gui.LIST_ENTITY_NEUTRAL,
+            Gui.LIST_ENTITY_RIDEABLE,
+            Gui.LIST_ENTITY_TECHNICAL,
+            Gui.LIST_PACKET_S2C,
+            Gui.LIST_PACKET_C2S,
             Notifications.ENABLED,
             Notifications.DISABLED,
             ElytraFly.PITCH40_TAKEOFF_COMPLETE,
@@ -233,10 +239,16 @@ public final class EpsilonTranslations {
         public static final TranslateComponent LIST_ENTITIES = create("gui", "list.entities");
         public static final TranslateComponent LIST_SCREENS = create("gui", "list.screens");
         public static final TranslateComponent LIST_STORAGE = create("gui", "list.storage");
-        public static final TranslateComponent LIST_COLORS = create("gui", "list.colors");
         public static final TranslateComponent LIST_ENCHANTMENTS = create("gui", "list.enchantments");
         public static final TranslateComponent LIST_PACKETS = create("gui", "list.packets");
         public static final TranslateComponent LIST_MODULES = create("gui", "list.modules");
+        public static final TranslateComponent LIST_ENTITY_FRIENDLY = create("gui", "list.entity_friendly");
+        public static final TranslateComponent LIST_ENTITY_HOSTILE = create("gui", "list.entity_hostile");
+        public static final TranslateComponent LIST_ENTITY_NEUTRAL = create("gui", "list.entity_neutral");
+        public static final TranslateComponent LIST_ENTITY_RIDEABLE = create("gui", "list.entity_rideable");
+        public static final TranslateComponent LIST_ENTITY_TECHNICAL = create("gui", "list.entity_technical");
+        public static final TranslateComponent LIST_PACKET_S2C = create("gui", "list.packet_s2c");
+        public static final TranslateComponent LIST_PACKET_C2S = create("gui", "list.packet_c2s");
 
         private Gui() {
         }
