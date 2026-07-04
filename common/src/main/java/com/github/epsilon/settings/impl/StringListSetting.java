@@ -5,7 +5,7 @@ import java.util.Collection;
 public class StringListSetting extends RegistryListSetting<String> {
 
     public StringListSetting(String name, Collection<String> defaultValue, Dependency dependency) {
-        super(name, defaultValue, Type.STRING_LIST, null, dependency);
+        super(name, defaultValue, Type.STRING, null, dependency);
     }
 
     public String get(int index) {

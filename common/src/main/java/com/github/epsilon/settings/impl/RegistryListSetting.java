@@ -26,13 +26,13 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
         ENTITY_TYPE,
         SOUND_EVENT,
         MOB_EFFECT,
-        STRING_LIST,
+        STRING,
         PACKET,
         ENCHANTMENT;
 
         @SuppressWarnings("unchecked")
         <T> Registry<T> registry() {
-            if (this == STRING_LIST || this == ENCHANTMENT) return null;
+            if (this == STRING || this == ENCHANTMENT) return null;
             if (this == PACKET) return (Registry<T>) PacketListSetting.PACKET_REGISTRY;
             return (Registry<T>) switch (this) {
                 case BLOCK -> BuiltInRegistries.BLOCK;
@@ -45,7 +45,7 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
         }
 
         String toId(Object entry) {
-            if (this == STRING_LIST || this == ENCHANTMENT) return (String) entry;
+            if (this == STRING || this == ENCHANTMENT) return (String) entry;
             if (this == PACKET) return ((Class<?>) entry).getName();
             Identifier key = registry().getKey(entry);
             return key != null ? key.toString() : "";
@@ -53,7 +53,7 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
 
         @SuppressWarnings("unchecked")
         <T> T fromId(String id) {
-            if (this == STRING_LIST || this == ENCHANTMENT) return (T) id;
+            if (this == STRING || this == ENCHANTMENT) return (T) id;
             if (this == PACKET) { try { return (T) Class.forName(id); } catch (ClassNotFoundException _) { return null; } }
             Identifier loc = Identifier.tryParse(id);
             if (loc == null) return null;
@@ -66,7 +66,7 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
                 case BLOCK -> (Predicate<Block>) BlockRegistryUtils::isSelectable;
                 case ITEM -> (Predicate<Item>) item -> item != null && item != Items.AIR;
                 case ENTITY_TYPE -> (Predicate<EntityType<?>>) e -> e != null;
-                case STRING_LIST, ENCHANTMENT -> (Predicate<String>) s -> s != null && !s.isBlank();
+                case STRING, ENCHANTMENT -> (Predicate<String>) s -> s != null && !s.isBlank();
                 default -> null;
             };
         }

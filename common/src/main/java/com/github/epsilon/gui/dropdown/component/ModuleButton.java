@@ -75,7 +75,7 @@ public class ModuleButton extends Component {
         if (setting instanceof StringSetting s) return new StringWidget(s);
         if (setting instanceof ButtonSetting s) return new ButtonWidget(s);
         // --- List settings (Row + Widget) ---
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.STRING_LIST) return new StringListSettingWidget((StringListSetting) s);
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.STRING) return new StringListSettingWidget((StringListSetting) s);
         if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT) return new SoundEventListSettingWidget(s);
         if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ITEM) return new ItemListSettingWidget(s);
 

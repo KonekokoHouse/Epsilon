@@ -22,7 +22,7 @@ public class SettingViewFactory {
             case StringSetting stringSetting -> new StringSettingRow(stringSetting);
             case ButtonSetting buttonSetting -> new ButtonSettingRow(buttonSetting);
             // --- List settings (Row + Widget) ---
-            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.STRING_LIST -> new StringListSettingRow((StringListSetting) r);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.STRING -> new StringListSettingRow((StringListSetting) r);
             case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT -> new SoundEventListSettingRow(r);
             case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.ITEM -> new ItemListSettingRow(r);
 
