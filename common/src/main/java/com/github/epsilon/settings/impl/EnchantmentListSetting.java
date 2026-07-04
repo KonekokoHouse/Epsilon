@@ -4,27 +4,27 @@ import com.github.epsilon.settings.Setting;
 
 import java.util.*;
 
-public class EnchantmentListSetting extends Setting<Set<String>> {
+public class EnchantmentListSetting extends Setting<List<String>> {
 
-    public EnchantmentListSetting(String name, Set<String> defaultValue, Dependency dependency) {
+    public EnchantmentListSetting(String name, Collection<String> defaultValue, Dependency dependency) {
         super(name, dependency, null);
         this.defaultValue = normalize(defaultValue);
-        this.value = new LinkedHashSet<>(this.defaultValue);
+        this.value = new ArrayList<>(this.defaultValue);
     }
 
     @Override
-    public void setValue(Set<String> value) {
+    public void setValue(List<String> value) {
         super.setValue(normalize(value));
     }
 
     @Override
-    public void setValueSilently(Set<String> value) {
+    public void setValueSilently(List<String> value) {
         super.setValueSilently(normalize(value));
     }
 
     @Override
     public void reset() {
-        setValue(new LinkedHashSet<>(defaultValue));
+        setValue(new ArrayList<>(defaultValue));
     }
 
     public boolean contains(String enchantmentId) {
@@ -33,14 +33,14 @@ public class EnchantmentListSetting extends Setting<Set<String>> {
 
     public void add(String enchantmentId) {
         if (enchantmentId == null || value.contains(enchantmentId)) return;
-        Set<String> next = new LinkedHashSet<>(value);
+        List<String> next = new ArrayList<>(value);
         next.add(enchantmentId);
         setValue(next);
     }
 
     public void remove(String enchantmentId) {
         if (!value.contains(enchantmentId)) return;
-        Set<String> next = new LinkedHashSet<>(value);
+        List<String> next = new ArrayList<>(value);
         next.remove(enchantmentId);
         setValue(next);
     }
@@ -53,12 +53,12 @@ public class EnchantmentListSetting extends Setting<Set<String>> {
         }
     }
 
-    public Set<String> getIds() {
-        return new LinkedHashSet<>(value);
+    public List<String> getIds() {
+        return new ArrayList<>(value);
     }
 
     public void setIds(Collection<String> ids) {
-        setValue(new LinkedHashSet<>(ids));
+        setValue(new ArrayList<>(ids));
     }
 
     public int size() {
@@ -69,8 +69,12 @@ public class EnchantmentListSetting extends Setting<Set<String>> {
         return value.isEmpty();
     }
 
-    private static Set<String> normalize(Set<String> source) {
-        if (source == null) return new LinkedHashSet<>();
-        return new LinkedHashSet<>(source);
+    private static List<String> normalize(Collection<String> source) {
+        if (source == null) return new ArrayList<>();
+        List<String> result = new ArrayList<>();
+        for (String s : source) {
+            if (s != null && !result.contains(s)) result.add(s);
+        }
+        return result;
     }
 }

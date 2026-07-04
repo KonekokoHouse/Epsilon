@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -389,19 +388,19 @@ public class Module {
 
     // --- EntityTypeListSetting ---
 
-    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue, Predicate<EntityType<?>> filter, Setting.Dependency dependency) {
+    protected EntityTypeListSetting entityTypeListSetting(String name, Collection<EntityType<?>> defaultValue, Predicate<EntityType<?>> filter, Setting.Dependency dependency) {
         return addSetting(new EntityTypeListSetting(name, defaultValue, filter, dependency));
     }
 
-    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue, Setting.Dependency dependency) {
+    protected EntityTypeListSetting entityTypeListSetting(String name, Collection<EntityType<?>> defaultValue, Setting.Dependency dependency) {
         return addSetting(new EntityTypeListSetting(name, defaultValue, null, dependency));
     }
 
-    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue, Predicate<EntityType<?>> filter) {
+    protected EntityTypeListSetting entityTypeListSetting(String name, Collection<EntityType<?>> defaultValue, Predicate<EntityType<?>> filter) {
         return addSetting(new EntityTypeListSetting(name, defaultValue, filter, () -> true));
     }
 
-    protected EntityTypeListSetting entityTypeListSetting(String name, Set<EntityType<?>> defaultValue) {
+    protected EntityTypeListSetting entityTypeListSetting(String name, Collection<EntityType<?>> defaultValue) {
         return addSetting(new EntityTypeListSetting(name, defaultValue, null, () -> true));
     }
 
@@ -441,16 +440,6 @@ public class Module {
 
     protected Vector3dSetting vector3dSetting(String name, Vector3d defaultValue) {
         return addSetting(new Vector3dSetting(name, defaultValue, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, () -> true));
-    }
-
-    // --- ColorListSetting ---
-
-    protected ColorListSetting colorListSetting(String name, Collection<Color> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new ColorListSetting(name, defaultValue, dependency));
-    }
-
-    protected ColorListSetting colorListSetting(String name, Collection<Color> defaultValue) {
-        return addSetting(new ColorListSetting(name, defaultValue, () -> true));
     }
 
     // --- SoundEventListSetting ---
@@ -495,11 +484,11 @@ public class Module {
 
     // --- EnchantmentListSetting ---
 
-    protected EnchantmentListSetting enchantmentListSetting(String name, Set<String> defaultValue, Setting.Dependency dependency) {
+    protected EnchantmentListSetting enchantmentListSetting(String name, Collection<String> defaultValue, Setting.Dependency dependency) {
         return addSetting(new EnchantmentListSetting(name, defaultValue, dependency));
     }
 
-    protected EnchantmentListSetting enchantmentListSetting(String name, Set<String> defaultValue) {
+    protected EnchantmentListSetting enchantmentListSetting(String name, Collection<String> defaultValue) {
         return addSetting(new EnchantmentListSetting(name, defaultValue, () -> true));
     }
 
@@ -525,16 +514,16 @@ public class Module {
 
     // --- PacketListSetting ---
 
-    protected PacketListSetting packetListSetting(String name, Set<Class<? extends Packet<?>>> defaultValue,
+    protected PacketListSetting packetListSetting(String name, Collection<Class<? extends Packet<?>>> defaultValue,
                                                    Predicate<Class<? extends Packet<?>>> filter, Setting.Dependency dependency) {
         return addSetting(new PacketListSetting(name, defaultValue, filter, dependency));
     }
 
-    protected PacketListSetting packetListSetting(String name, Set<Class<? extends Packet<?>>> defaultValue, Setting.Dependency dependency) {
+    protected PacketListSetting packetListSetting(String name, Collection<Class<? extends Packet<?>>> defaultValue, Setting.Dependency dependency) {
         return addSetting(new PacketListSetting(name, defaultValue, null, dependency));
     }
 
-    protected PacketListSetting packetListSetting(String name, Set<Class<? extends Packet<?>>> defaultValue) {
+    protected PacketListSetting packetListSetting(String name, Collection<Class<? extends Packet<?>>> defaultValue) {
         return addSetting(new PacketListSetting(name, defaultValue, null, () -> true));
     }
 

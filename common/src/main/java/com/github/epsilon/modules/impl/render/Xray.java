@@ -9,9 +9,7 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
-import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -26,6 +24,7 @@ import net.minecraft.world.phys.AABB;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Xray extends Module {
@@ -41,6 +40,19 @@ public class Xray extends Module {
         New;
     }
 
+    private static final List<Block> DEFAULT_ORES = List.of(
+            Blocks.DIAMOND_ORE, Blocks.DEEPSLATE_DIAMOND_ORE,
+            Blocks.GOLD_ORE, Blocks.DEEPSLATE_GOLD_ORE, Blocks.NETHER_GOLD_ORE,
+            Blocks.IRON_ORE, Blocks.DEEPSLATE_IRON_ORE,
+            Blocks.EMERALD_ORE, Blocks.DEEPSLATE_EMERALD_ORE,
+            Blocks.REDSTONE_ORE, Blocks.DEEPSLATE_REDSTONE_ORE,
+            Blocks.COAL_ORE, Blocks.DEEPSLATE_COAL_ORE,
+            Blocks.LAPIS_ORE, Blocks.DEEPSLATE_LAPIS_ORE,
+            Blocks.ANCIENT_DEBRIS,
+            Blocks.NETHER_QUARTZ_ORE,
+            Blocks.WATER, Blocks.LAVA
+    );
+
     private final EnumSetting<Plugin> plugin = enumSetting("Plugin", Plugin.New);
     public final BoolSetting wallHack = boolSetting("WallHack", false, _ -> mc.levelRenderer.allChanged());
     private final BoolSetting brutForce = boolSetting("Ore Deobf", false);
@@ -49,20 +61,12 @@ public class Xray extends Module {
     private final IntSetting radius = intSetting("Radius", 5, 1, 64, 1, brutForce::getValue);
     private final IntSetting up = intSetting("Up", 5, 1, 32, 1, brutForce::getValue);
     private final IntSetting down = intSetting("Down", 5, 1, 32, 1, brutForce::getValue);
-    private final BoolSetting netherite = boolSetting("Netherite", false);
-    private final BoolSetting diamond = boolSetting("Diamond ", false);
-    private final BoolSetting gold = boolSetting("Gold", false);
-    private final BoolSetting iron = boolSetting("Iron", false);
-    private final BoolSetting emerald = boolSetting("Emerald", false);
-    private final BoolSetting redstone = boolSetting("Redstone", false);
-    private final BoolSetting lapis = boolSetting("Lapis", false);
-    private final BoolSetting coal = boolSetting("Coal", false);
-    private final BoolSetting quartz = boolSetting("Quartz", false);
-    private final BoolSetting water = boolSetting("Water", false);
-    private final BoolSetting lava = boolSetting("Lava", false);
+    private final BlockListSetting ores = blockListSetting("Ores", DEFAULT_ORES);
+    private final ColorSetting xrayColor = colorSetting("Xray Color", new Color(0, 255, 255, 100), true);
 
     private final TimerUtils delayTimer = new TimerUtils();
-    private final ArrayList<BlockPos> ores = new ArrayList<>();
+    /** 已扫描到的矿物方块位置缓存。命名为 oreCache 而非 ores，避免与同模块的 BlockListSetting ores 产生歧义。 */
+    private final ArrayList<BlockPos> oreCache = new ArrayList<>();
     private final ArrayList<BlockPos> toCheck = new ArrayList<>();
     private final ArrayList<BlockMemory> checked = new ArrayList<>();
     private BlockPos displayBlock;
@@ -71,7 +75,7 @@ public class Xray extends Module {
 
     @Override
     public void onEnable() {
-        ores.clear();
+        oreCache.clear();
         toCheck.clear();
         checked.clear();
         toCheck.addAll(getBlocks());
@@ -92,8 +96,8 @@ public class Xray extends Module {
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         if (plugin.is(Plugin.New)) {
             checked.forEach(blockMemory -> {
-                if (blockMemory.isDelayed() && !ores.contains(blockMemory.blockPos))
-                    ores.add(blockMemory.blockPos);
+                if (blockMemory.isDelayed() && !oreCache.contains(blockMemory.blockPos))
+                    oreCache.add(blockMemory.blockPos);
             });
         }
     }
@@ -101,8 +105,8 @@ public class Xray extends Module {
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (event.getPacket() instanceof ClientboundBlockUpdatePacket pac) {
-            if (isCheckableOre(pac.getBlockState().getBlock()) && !ores.contains(pac.getPos())) {
-                ores.add(pac.getPos());
+            if (isCheckableOre(pac.getBlockState().getBlock()) && !oreCache.contains(pac.getPos())) {
+                oreCache.add(pac.getPos());
             }
         }
     }
@@ -134,38 +138,13 @@ public class Xray extends Module {
     @EventHandler
     private void onRender3D(Render3DEvent event) {
         PoseStack stack = event.getPoseStack();
+        Color color = xrayColor.getValue();
+        int r = color.getRed(), g = color.getGreen(), b = color.getBlue();
 
-        for (BlockPos pos : ores) {
+        for (BlockPos pos : oreCache) {
             Block block = mc.level.getBlockState(pos).getBlock();
-            if ((block == Blocks.DIAMOND_ORE || block == Blocks.DEEPSLATE_DIAMOND_ORE) && diamond.getValue()) {
-                draw(stack, pos, 0, 255, 255);
-            }
-            if ((block == Blocks.GOLD_ORE || block == Blocks.DEEPSLATE_GOLD_ORE) && gold.getValue()) {
-                draw(stack, pos, 255, 215, 0);
-            }
-            if (block == Blocks.NETHER_GOLD_ORE && gold.getValue()) {
-                draw(stack, pos, 255, 215, 0);
-            }
-            if ((block == Blocks.IRON_ORE || block == Blocks.DEEPSLATE_IRON_ORE) && iron.getValue()) {
-                draw(stack, pos, 213, 213, 213);
-            }
-            if ((block == Blocks.EMERALD_ORE || block == Blocks.DEEPSLATE_EMERALD_ORE) && emerald.getValue()) {
-                draw(stack, pos, 0, 255, 77);
-            }
-            if ((block == Blocks.REDSTONE_ORE || block == Blocks.DEEPSLATE_REDSTONE_ORE) && redstone.getValue()) {
-                draw(stack, pos, 255, 0, 0);
-            }
-            if (block == Blocks.COAL_ORE && coal.getValue()) {
-                draw(stack, pos, 0, 0, 0);
-            }
-            if ((block == Blocks.LAPIS_ORE || block == Blocks.DEEPSLATE_LAPIS_ORE) && lapis.getValue()) {
-                draw(stack, pos, 38, 97, 156);
-            }
-            if (block == Blocks.ANCIENT_DEBRIS && netherite.getValue()) {
-                draw(stack, pos, 255, 255, 255);
-            }
-            if (block == Blocks.NETHER_QUARTZ_ORE && quartz.getValue()) {
-                draw(stack, pos, 170, 170, 170);
+            if (isCheckableOre(block)) {
+                draw(stack, pos, r, g, b);
             }
         }
 
@@ -217,20 +196,7 @@ public class Xray extends Module {
     }
 
     public boolean isCheckableOre(Block block) {
-        if (diamond.getValue() && (block == Blocks.DIAMOND_ORE || block == Blocks.DEEPSLATE_DIAMOND_ORE)) return true;
-        if (gold.getValue() && (block == Blocks.GOLD_ORE || block == Blocks.DEEPSLATE_GOLD_ORE || block == Blocks.NETHER_GOLD_ORE))
-            return true;
-        if (iron.getValue() && (block == Blocks.IRON_ORE || block == Blocks.DEEPSLATE_IRON_ORE)) return true;
-        if (emerald.getValue() && (block == Blocks.EMERALD_ORE || block == Blocks.DEEPSLATE_EMERALD_ORE)) return true;
-        if (redstone.getValue() && (block == Blocks.REDSTONE_ORE || block == Blocks.DEEPSLATE_REDSTONE_ORE))
-            return true;
-        if (coal.getValue() && (block == Blocks.COAL_ORE || block == Blocks.DEEPSLATE_COAL_ORE)) return true;
-        if (netherite.getValue() && block == Blocks.ANCIENT_DEBRIS) return true;
-        if (water.getValue() && block == Blocks.WATER) return true;
-        if (lava.getValue() && block == Blocks.LAVA) return true;
-        if (quartz.getValue() && block == Blocks.NETHER_QUARTZ_ORE) return true;
-        if (lapis.getValue() && (block == Blocks.LAPIS_ORE || block == Blocks.DEEPSLATE_LAPIS_ORE)) return true;
-        return lapis.getValue() && (block == Blocks.LAPIS_ORE || block == Blocks.DEEPSLATE_LAPIS_ORE);
+        return ores.contains(block);
     }
 
     private ArrayList<BlockPos> getBlocks() {

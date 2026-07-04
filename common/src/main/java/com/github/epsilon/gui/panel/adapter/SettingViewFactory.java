@@ -25,7 +25,7 @@ public class SettingViewFactory {
             case StringListSetting stringListSetting -> new StringListSettingRow(stringListSetting);
             case SoundEventListSetting soundEventListSetting -> new SoundEventListSettingRow(soundEventListSetting);
             case ItemListSetting itemListSetting -> new ItemListSettingRow(itemListSetting);
-            case ColorListSetting colorListSetting -> new ColorListSettingRow(colorListSetting);
+
             case EntityTypeListSetting entityTypeListSetting -> new EntityTypeListSettingRow(entityTypeListSetting);
             case StatusEffectListSetting statusEffectListSetting -> new StatusEffectListSettingRow(statusEffectListSetting);
             case ParticleTypeListSetting particleTypeListSetting -> new ParticleTypeListSettingRow(particleTypeListSetting);

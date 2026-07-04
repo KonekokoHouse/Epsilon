@@ -71,7 +71,7 @@ public class SettingsContent {
         if (setting instanceof StringListSetting s) return new StringListSettingWidget(s);
         if (setting instanceof SoundEventListSetting s) return new SoundEventListSettingWidget(s);
         if (setting instanceof ItemListSetting s) return new ItemListSettingWidget(s);
-        if (setting instanceof ColorListSetting s) return new ColorListSettingWidget(s);
+
         if (setting instanceof EntityTypeListSetting s) return new EntityTypeListSettingWidget(s);
         if (setting instanceof StatusEffectListSetting s) return new StatusEffectListSettingWidget(s);
         if (setting instanceof ParticleTypeListSetting s) return new ParticleTypeListSettingWidget(s);
