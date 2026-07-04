@@ -7,7 +7,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 
-public interface ClientSettingTabView {
+public interface ClientSettingTabView extends AutoCloseable {
 
     void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick);
 
@@ -37,6 +37,10 @@ public interface ClientSettingTabView {
     }
 
     default void onDeactivated() {
+    }
+
+    @Override
+    default void close() {
     }
 }
 

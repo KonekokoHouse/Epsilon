@@ -271,21 +271,29 @@ public class LuminRenderSystem {
         private GpuTexture depthTexture;
         private GpuTextureView depthView;
         private final Identifier identifier;
+        private final boolean useDepth;
         private int width;
         private int height;
+        private boolean closed;
 
-        private LuminRenderTarget(String name, int width, int height) {
+        private LuminRenderTarget(String name, int width, int height, boolean useDepth) {
             this.width = width;
             this.height = height;
+            this.useDepth = useDepth;
             this.identifier = ResourceLocationUtils.getIdentifier("lumin-rt" + name);
             createTextures();
         }
 
         public static LuminRenderTarget create(String name, int width, int height) {
-            return RenderTargetHolder.INSTANCE.register(new LuminRenderTarget(name, width, height));
+            return RenderTargetHolder.INSTANCE.register(new LuminRenderTarget(name, width, height, false));
+        }
+
+        public static LuminRenderTarget createWithDepth(String name, int width, int height) {
+            return RenderTargetHolder.INSTANCE.register(new LuminRenderTarget(name, width, height, true));
         }
 
         private void createTextures() {
+            closed = false;
             var device = RenderSystem.getDevice();
 
             final var colorTexture = device.createTexture(
@@ -296,13 +304,15 @@ public class LuminRenderSystem {
             );
             final var colorView = device.createTextureView(colorTexture);
 
-            depthTexture = device.createTexture(
-                    "lumin-rt-depth",
-                    GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC,
-                    TextureFormat.DEPTH32,
-                    width, height, 1, 1
-            );
-            depthView = device.createTextureView(depthTexture);
+            if (useDepth) {
+                depthTexture = device.createTexture(
+                        "lumin-rt-depth",
+                        GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_COPY_SRC,
+                        TextureFormat.DEPTH32,
+                        width, height, 1, 1
+                );
+                depthView = device.createTextureView(depthTexture);
+            }
 
             final var sampler = RenderSystem.getDevice().createSampler(
                     AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE,
@@ -329,13 +339,18 @@ public class LuminRenderSystem {
 
         public void clear() {
             var encoder = RenderSystem.getDevice().createCommandEncoder();
-            encoder.clearColorAndDepthTextures(colorTexture.getTexture(), 0, depthTexture, 1.0);
+            if (useDepth) {
+                encoder.clearColorAndDepthTextures(colorTexture.getTexture(), 0, depthTexture, 1.0);
+            } else {
+                encoder.clearColorTexture(colorTexture.getTexture(), 0);
+            }
         }
 
         public GpuTextureView colorView() {
             return colorTexture.getTextureView();
         }
 
+        @Nullable
         public GpuTextureView depthView() {
             return depthView;
         }
@@ -361,14 +376,22 @@ public class LuminRenderSystem {
         }
 
         private void destroyTextures() {
+            if (closed) {
+                return;
+            }
+            closed = true;
             mc.getTextureManager().release(identifier);
             if (depthView != null) depthView.close();
             if (depthTexture != null) depthTexture.close();
+            colorTexture = null;
+            depthView = null;
+            depthTexture = null;
         }
 
         @Override
         public void close() {
             destroyTextures();
+            RenderTargetHolder.INSTANCE.unregister(this);
         }
     }
 

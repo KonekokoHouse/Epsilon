@@ -17,7 +17,7 @@ import java.util.OptionalInt;
 
 public class RoundRectRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final long BUFFER_SIZE = 16 * 1024;
     private static final int STRIDE = 48;
     private static final long RECT_BYTES = STRIDE * 4L;
     private final LuminRingBuffer buffer = new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX);
@@ -163,6 +163,7 @@ public class RoundRectRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
+        RendererHolder.INSTANCE.unregister(this);
     }
 
     public void setScissor(int x, int y, int width, int height) {

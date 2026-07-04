@@ -17,7 +17,7 @@ import java.util.OptionalInt;
 
 public class RoundRectOutlineRenderer implements IRenderer {
 
-    private static final long BUFFER_SIZE = 64 * 1024;
+    private static final long BUFFER_SIZE = 16 * 1024;
     private static final int STRIDE = 52;
     private static final long OUTLINE_BYTES = STRIDE * 4L;
 
@@ -188,6 +188,7 @@ public class RoundRectOutlineRenderer implements IRenderer {
     @Override
     public void close() {
         buffer.close();
+        RendererHolder.INSTANCE.unregister(this);
     }
 
 }

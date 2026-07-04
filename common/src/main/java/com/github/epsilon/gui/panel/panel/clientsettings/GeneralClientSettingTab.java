@@ -298,4 +298,11 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
         return signature;
     }
 
+    @Override
+    public void close() {
+        settingListController.close();
+        contentBuffer.close();
+        markDirty();
+    }
+
 }
