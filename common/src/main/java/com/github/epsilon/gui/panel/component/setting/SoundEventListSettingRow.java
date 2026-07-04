@@ -9,13 +9,13 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
-import com.github.epsilon.settings.impl.SoundEventListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 
-public class SoundEventListSettingRow extends SettingRow<SoundEventListSetting> {
+public class SoundEventListSettingRow extends SettingRow<RegistryListSetting<?>> {
 
-    public SoundEventListSettingRow(SoundEventListSetting setting) {
+    public SoundEventListSettingRow(RegistryListSetting<?> setting) {
         super(setting);
     }
 

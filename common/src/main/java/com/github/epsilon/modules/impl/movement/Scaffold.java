@@ -10,7 +10,7 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -143,7 +143,7 @@ public class Scaffold extends Module {
 
     private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
-    private final BlockListSetting blacklistedBlocks = blockListSetting("Blacklisted Blocks", List.of(
+    private final RegistryListSetting<Block> blacklistedBlocks = blockListSetting("Blacklisted Blocks", List.of(
             Blocks.AIR,
             Blocks.WATER,
             Blocks.LAVA,

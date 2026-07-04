@@ -9,13 +9,13 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
-import com.github.epsilon.settings.impl.ItemListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 
-public class ItemListSettingRow extends SettingRow<ItemListSetting> {
+public class ItemListSettingRow extends SettingRow<RegistryListSetting<?>> {
 
-    public ItemListSettingRow(ItemListSetting setting) {
+    public ItemListSettingRow(RegistryListSetting<?> setting) {
         super(setting);
     }
 

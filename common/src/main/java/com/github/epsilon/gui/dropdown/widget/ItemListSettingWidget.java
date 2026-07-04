@@ -3,11 +3,11 @@ package com.github.epsilon.gui.dropdown.widget;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
-import com.github.epsilon.settings.impl.ItemListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 
-public class ItemListSettingWidget extends AbstractSetSettingWidget<ItemListSetting> {
+public class ItemListSettingWidget extends AbstractSetSettingWidget<RegistryListSetting<?>> {
 
-    public ItemListSettingWidget(ItemListSetting setting) {
+    public ItemListSettingWidget(RegistryListSetting<?> setting) {
         super(setting);
     }
 

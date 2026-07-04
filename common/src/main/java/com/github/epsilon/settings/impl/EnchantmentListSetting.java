@@ -1,12 +1,8 @@
 package com.github.epsilon.settings.impl;
 
-import com.github.epsilon.settings.Setting;
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet;
-import net.minecraft.core.MappedRegistry;
-import net.minecraft.core.Registry;
+import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -17,72 +13,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class EnchantmentListSetting extends Setting<List<String>> {
+public class EnchantmentListSetting extends RegistryListSetting<String> {
 
     public EnchantmentListSetting(String name, Collection<String> defaultValue, Dependency dependency) {
-        super(name, dependency, null);
-        this.defaultValue = normalize(defaultValue);
-        this.value = new ArrayList<>(this.defaultValue);
+        super(name, defaultValue, Type.ENCHANTMENT, null, dependency);
     }
-
-    @Override
-    public void setValue(List<String> value) {
-        super.setValue(normalize(value));
-    }
-
-    @Override
-    public void setValueSilently(List<String> value) {
-        super.setValueSilently(normalize(value));
-    }
-
-    @Override
-    public void reset() {
-        setValue(new ArrayList<>(defaultValue));
-    }
-
-    public boolean contains(String enchantmentId) {
-        return value.contains(enchantmentId);
-    }
-
-    public void add(String enchantmentId) {
-        if (enchantmentId == null || value.contains(enchantmentId)) return;
-        List<String> next = new ArrayList<>(value);
-        next.add(enchantmentId);
-        setValue(next);
-    }
-
-    public void remove(String enchantmentId) {
-        if (!value.contains(enchantmentId)) return;
-        List<String> next = new ArrayList<>(value);
-        next.remove(enchantmentId);
-        setValue(next);
-    }
-
-    public void toggle(String enchantmentId) {
-        if (contains(enchantmentId)) {
-            remove(enchantmentId);
-        } else {
-            add(enchantmentId);
-        }
-    }
-
-    public List<String> getIds() {
-        return new ArrayList<>(value);
-    }
-
-    public void setIds(Collection<String> ids) {
-        setValue(new ArrayList<>(ids));
-    }
-
-    public int size() {
-        return value.size();
-    }
-
-    public boolean isEmpty() {
-        return value.isEmpty();
-    }
-
-    // ---- Enchantment registry for popup ----
 
     /** 从动态注册表获取附魔 ID 的翻译名，如 "minecraft:sharpness" → "Sharpness" */
     public static String getEnchantmentDisplayName(String enchantId) {
@@ -97,7 +32,7 @@ public class EnchantmentListSetting extends Setting<List<String>> {
         return ench.description().getString();
     }
 
-    /** 构建附魔 ID 伪注册表（从动态注册表 + 当前已选值合并） */
+    /** 构建附魔 ID 伪注册表（从动态注册表获取） */
     @SuppressWarnings("unchecked")
     public static Registry<String> getEnchantmentRegistry() {
         return new MappedRegistry<String>(
@@ -141,14 +76,5 @@ public class EnchantmentListSetting extends Setting<List<String>> {
             @Override public Stream<HolderSet.Named<String>> getTags() { return Stream.empty(); }
             @Nullable @Override public Set<ResourceKey<String>> registryKeySet() { return null; }
         };
-    }
-
-    private static List<String> normalize(Collection<String> source) {
-        if (source == null) return new ArrayList<>();
-        List<String> result = new ArrayList<>();
-        for (String s : source) {
-            if (s != null && !result.contains(s)) result.add(s);
-        }
-        return result;
     }
 }

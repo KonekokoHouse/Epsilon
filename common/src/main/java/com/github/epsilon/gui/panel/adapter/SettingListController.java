@@ -16,7 +16,11 @@ import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.settings.impl.EnchantmentListSetting;
 import com.github.epsilon.settings.impl.EntityTypeListSetting;
 import com.github.epsilon.settings.impl.PacketListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.resources.Identifier;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
@@ -255,21 +259,6 @@ public class SettingListController implements AutoCloseable {
                 draggingSliderEntry = null;
                 return true;
             }
-            if (entry.row instanceof ParticleTypeListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createParticleTypeListSettingPopup(listRow, popupBounds));
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof ScreenHandlerListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createScreenHandlerListSettingPopup(listRow, popupBounds));
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof StorageBlockListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createStorageBlockListSettingPopup(listRow, popupBounds));
-                draggingSliderEntry = null;
-                return true;
-            }
             if (entry.row instanceof EnchantmentListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
                 PanelPopupHost.Popup popup = createEnchantmentListSettingPopup(listRow, popupBounds);
                 if (popup != null) popupHost.open(popup);
@@ -278,12 +267,6 @@ public class SettingListController implements AutoCloseable {
             }
             if (entry.row instanceof PacketListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
                 PanelPopupHost.Popup popup = createPacketListSettingPopup(listRow, popupBounds);
-                if (popup != null) popupHost.open(popup);
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof ModuleListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                PanelPopupHost.Popup popup = createModuleListSettingPopup(listRow, popupBounds);
                 if (popup != null) popupHost.open(popup);
                 draggingSliderEntry = null;
                 return true;
@@ -535,34 +518,37 @@ public class SettingListController implements AutoCloseable {
         return new StringListSelectPopup(bounds, setting, setting::add, setting::remove);
     }
 
+    @SuppressWarnings({"rawtypes","unchecked"})
     private PanelPopupHost.Popup createSoundEventListSettingPopup(SoundEventListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); return k != null ? k.getPath() : ""; },
-                setting::add, setting::remove);
+        RegistryListSetting setting = row.getSetting();
+        return new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.SOUND_EVENT,
+                (java.util.function.Function) (s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey((SoundEvent) s); return k != null ? k.getPath() : ""; }),
+                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove);
     }
 
+    @SuppressWarnings({"rawtypes","unchecked"})
     private PanelPopupHost.Popup createItemListSettingPopup(ItemListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
-                i -> i.getDefaultInstance().getHoverName().getString(),
-                i -> i.getDefaultInstance(),
-                setting::add, setting::remove);
+        RegistryListSetting setting = row.getSetting();
+        return new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.ITEM,
+                (java.util.function.Function) (i -> ((Item) i).getDefaultInstance().getHoverName().getString()),
+                (java.util.function.Function) (i -> ((Item) i).getDefaultInstance()),
+                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove);
     }
 
+    @SuppressWarnings({"rawtypes","unchecked"})
     private PanelPopupHost.Popup createStatusEffectListSettingPopup(StatusEffectListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
-                e -> e.getDisplayName().getString(),
+        RegistryListSetting setting = row.getSetting();
+        return new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.MOB_EFFECT,
+                (java.util.function.Function) (e -> ((MobEffect) e).getDisplayName().getString()),
                 null,
                 java.util.List.of(
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_POSITIVE.getTranslatedName(), e -> e.isBeneficial()),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_NEGATIVE.getTranslatedName(), e -> !e.isBeneficial())
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_POSITIVE.getTranslatedName(), e -> ((MobEffect) e).isBeneficial()),
+                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_NEGATIVE.getTranslatedName(), e -> !((MobEffect) e).isBeneficial())
                 ),
-                setting::add, setting::remove);
+                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove);
     }
 
     private PanelPopupHost.Popup createEntityTypeListSettingPopup(EntityTypeListSettingRow row, PanelLayout.Rect popupBounds) {
@@ -598,30 +584,6 @@ public class SettingListController implements AutoCloseable {
                 setting::add, setting::remove);
     }
 
-    private PanelPopupHost.Popup createParticleTypeListSettingPopup(ParticleTypeListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); },
-                setting::add, setting::remove);
-    }
-
-    private PanelPopupHost.Popup createScreenHandlerListSettingPopup(ScreenHandlerListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
-                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); },
-                setting::add, setting::remove);
-    }
-
-    private PanelPopupHost.Popup createStorageBlockListSettingPopup(StorageBlockListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); },
-                setting::add, setting::remove);
-    }
-
     private PanelPopupHost.Popup createEnchantmentListSettingPopup(EnchantmentListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
@@ -642,11 +604,6 @@ public class SettingListController implements AutoCloseable {
                         new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_PACKET_C2S.getTranslatedName(), PacketListSetting::isC2S)
                 ),
                 setting::add, setting::remove);
-    }
-
-    private PanelPopupHost.Popup createModuleListSettingPopup(ModuleListSettingRow row, PanelLayout.Rect popupBounds) {
-        // TODO: Create dedicated ModuleListSelectPopup when available
-        return null;
     }
 
     @FunctionalInterface

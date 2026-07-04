@@ -9,15 +9,12 @@ import com.github.epsilon.settings.impl.*;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import org.joml.Vector3d;
 
 import java.awt.*;
@@ -276,12 +273,12 @@ public class Module {
         return addSetting(new StringSetting(name, defaultValue, () -> true, onChanged));
     }
 
-    protected BlockListSetting blockListSetting(String name, Collection<Block> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new BlockListSetting(name, defaultValue, dependency));
+    protected RegistryListSetting<Block> blockListSetting(String name, Collection<Block> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.BLOCK, null, dependency));
     }
 
-    protected BlockListSetting blockListSetting(String name, Collection<Block> defaultValue) {
-        return addSetting(new BlockListSetting(name, defaultValue, () -> true));
+    protected RegistryListSetting<Block> blockListSetting(String name, Collection<Block> defaultValue) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.BLOCK, null, () -> true));
     }
 
     protected <E extends Enum<E>> EnumSetting<E> enumSetting(String name, E defaultValue, Setting.Dependency dependency, Consumer<E> onChanged) {
@@ -370,20 +367,20 @@ public class Module {
 
     // --- ItemListSetting ---
 
-    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue, Predicate<Item> filter, Setting.Dependency dependency) {
-        return addSetting(new ItemListSetting(name, defaultValue, filter, dependency));
+    protected RegistryListSetting<Item> itemListSetting(String name, Collection<Item> defaultValue, Predicate<Item> filter, Setting.Dependency dependency) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.ITEM, filter, dependency));
     }
 
-    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new ItemListSetting(name, defaultValue, null, dependency));
+    protected RegistryListSetting<Item> itemListSetting(String name, Collection<Item> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.ITEM, null, dependency));
     }
 
-    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue, Predicate<Item> filter) {
-        return addSetting(new ItemListSetting(name, defaultValue, filter, () -> true));
+    protected RegistryListSetting<Item> itemListSetting(String name, Collection<Item> defaultValue, Predicate<Item> filter) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.ITEM, filter, () -> true));
     }
 
-    protected ItemListSetting itemListSetting(String name, Collection<Item> defaultValue) {
-        return addSetting(new ItemListSetting(name, defaultValue, null, () -> true));
+    protected RegistryListSetting<Item> itemListSetting(String name, Collection<Item> defaultValue) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.ITEM, null, () -> true));
     }
 
     // --- EntityTypeListSetting ---
@@ -444,43 +441,25 @@ public class Module {
 
     // --- SoundEventListSetting ---
 
-    protected SoundEventListSetting soundEventListSetting(String name, Collection<SoundEvent> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new SoundEventListSetting(name, defaultValue, dependency));
+    protected RegistryListSetting<SoundEvent> soundEventListSetting(String name, Collection<SoundEvent> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.SOUND_EVENT, null, dependency));
     }
 
-    protected SoundEventListSetting soundEventListSetting(String name, Collection<SoundEvent> defaultValue) {
-        return addSetting(new SoundEventListSetting(name, defaultValue, () -> true));
+    protected RegistryListSetting<SoundEvent> soundEventListSetting(String name, Collection<SoundEvent> defaultValue) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.SOUND_EVENT, null, () -> true));
     }
 
-    // --- ScreenHandlerListSetting ---
-
-    protected ScreenHandlerListSetting screenHandlerListSetting(String name, Collection<MenuType<?>> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new ScreenHandlerListSetting(name, defaultValue, dependency));
-    }
-
-    protected ScreenHandlerListSetting screenHandlerListSetting(String name, Collection<MenuType<?>> defaultValue) {
-        return addSetting(new ScreenHandlerListSetting(name, defaultValue, () -> true));
-    }
 
     // --- StatusEffectListSetting ---
 
-    protected StatusEffectListSetting statusEffectListSetting(String name, Collection<MobEffect> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new StatusEffectListSetting(name, defaultValue, dependency));
+    protected RegistryListSetting<MobEffect> statusEffectListSetting(String name, Collection<MobEffect> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.MOB_EFFECT, null, dependency));
     }
 
-    protected StatusEffectListSetting statusEffectListSetting(String name, Collection<MobEffect> defaultValue) {
-        return addSetting(new StatusEffectListSetting(name, defaultValue, () -> true));
+    protected RegistryListSetting<MobEffect> statusEffectListSetting(String name, Collection<MobEffect> defaultValue) {
+        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.MOB_EFFECT, null, () -> true));
     }
 
-    // --- StorageBlockListSetting ---
-
-    protected StorageBlockListSetting storageBlockListSetting(String name, Collection<BlockEntityType<?>> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new StorageBlockListSetting(name, defaultValue, dependency));
-    }
-
-    protected StorageBlockListSetting storageBlockListSetting(String name, Collection<BlockEntityType<?>> defaultValue) {
-        return addSetting(new StorageBlockListSetting(name, defaultValue, () -> true));
-    }
 
     // --- EnchantmentListSetting ---
 
@@ -502,16 +481,6 @@ public class Module {
         return addSetting(new StatusEffectAmplifierMapSetting(name, defaultValue, () -> true));
     }
 
-    // --- ParticleTypeListSetting ---
-
-    protected ParticleTypeListSetting particleTypeListSetting(String name, Collection<ParticleType<?>> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new ParticleTypeListSetting(name, defaultValue, dependency));
-    }
-
-    protected ParticleTypeListSetting particleTypeListSetting(String name, Collection<ParticleType<?>> defaultValue) {
-        return addSetting(new ParticleTypeListSetting(name, defaultValue, () -> true));
-    }
-
     // --- PacketListSetting ---
 
     protected PacketListSetting packetListSetting(String name, Collection<Class<? extends Packet<?>>> defaultValue,
@@ -529,12 +498,12 @@ public class Module {
 
     // --- ModuleListSetting ---
 
-    protected ModuleListSetting moduleListSetting(String name, List<Module> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new ModuleListSetting(name, defaultValue, dependency));
+    protected StringListSetting moduleListSetting(String name, Collection<String> defaultValue, Setting.Dependency dependency) {
+        return addSetting(new StringListSetting(name, defaultValue, dependency));
     }
 
-    protected ModuleListSetting moduleListSetting(String name, List<Module> defaultValue) {
-        return addSetting(new ModuleListSetting(name, defaultValue, () -> true));
+    protected StringListSetting moduleListSetting(String name, Collection<String> defaultValue) {
+        return addSetting(new StringListSetting(name, defaultValue, () -> true));
     }
 
     protected void resetCustomState() {

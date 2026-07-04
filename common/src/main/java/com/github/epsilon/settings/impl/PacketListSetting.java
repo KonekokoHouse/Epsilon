@@ -17,107 +17,11 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>> {
-
-    private final Predicate<Class<? extends Packet<?>>> filter;
+public class PacketListSetting extends RegistryListSetting<Class<? extends Packet<?>>> {
 
     public PacketListSetting(String name, Collection<Class<? extends Packet<?>>> defaultValue,
                              Predicate<Class<? extends Packet<?>>> filter, Dependency dependency) {
-        super(name, dependency, null);
-        this.filter = filter;
-        this.defaultValue = normalize(defaultValue);
-        this.value = new ArrayList<>(this.defaultValue);
-    }
-
-    @Override
-    public void setValue(List<Class<? extends Packet<?>>> value) {
-        super.setValue(normalize(value));
-    }
-
-    @Override
-    public void setValueSilently(List<Class<? extends Packet<?>>> value) {
-        super.setValueSilently(normalize(value));
-    }
-
-    @Override
-    public void reset() {
-        setValue(new ArrayList<>(defaultValue));
-    }
-
-    public boolean contains(Class<? extends Packet<?>> packetClass) {
-        return value.contains(packetClass);
-    }
-
-    public void add(Class<? extends Packet<?>> packetClass) {
-        if (packetClass == null || value.contains(packetClass)) return;
-        if (filter != null && !filter.test(packetClass)) return;
-        List<Class<? extends Packet<?>>> next = new ArrayList<>(value);
-        next.add(packetClass);
-        setValue(next);
-    }
-
-    public void remove(Class<? extends Packet<?>> packetClass) {
-        if (!value.contains(packetClass)) return;
-        List<Class<? extends Packet<?>>> next = new ArrayList<>(value);
-        next.remove(packetClass);
-        setValue(next);
-    }
-
-    public void toggle(Class<? extends Packet<?>> packetClass) {
-        if (contains(packetClass)) {
-            remove(packetClass);
-        } else {
-            add(packetClass);
-        }
-    }
-
-    public List<String> getClassNames() {
-        List<String> names = new ArrayList<>();
-        for (Class<? extends Packet<?>> clazz : value) {
-            names.add(clazz.getName());
-        }
-        return names;
-    }
-
-    @SuppressWarnings("unchecked")
-    public void setClassNames(Collection<String> names) {
-        List<Class<? extends Packet<?>>> classes = new ArrayList<>();
-        if (names != null) {
-            for (String name : names) {
-                try {
-                    Class<?> clazz = Class.forName(name);
-                    if (Packet.class.isAssignableFrom(clazz)) {
-                        Class<? extends Packet<?>> packetClass = (Class<? extends Packet<?>>) clazz;
-                        if (filter == null || filter.test(packetClass)) {
-                            if (!classes.contains(packetClass)) classes.add(packetClass);
-                        }
-                    }
-                } catch (ClassNotFoundException ignored) {
-                }
-            }
-        }
-        setValue(classes);
-    }
-
-    public int size() {
-        return value.size();
-    }
-
-    public boolean isEmpty() {
-        return value.isEmpty();
-    }
-
-    public Predicate<Class<? extends Packet<?>>> getFilter() {
-        return filter;
-    }
-
-    private static List<Class<? extends Packet<?>>> normalize(Collection<Class<? extends Packet<?>>> source) {
-        if (source == null) return new ArrayList<>();
-        List<Class<? extends Packet<?>>> result = new ArrayList<>();
-        for (Class<? extends Packet<?>> c : source) {
-            if (c != null && !result.contains(c)) result.add(c);
-        }
-        return result;
+        super(name, defaultValue, Type.PACKET, filter, dependency);
     }
 
     // ---- Packet registry for popup ----

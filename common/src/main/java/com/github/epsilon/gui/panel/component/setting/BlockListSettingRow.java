@@ -8,13 +8,13 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 
-public class BlockListSettingRow extends SettingRow<BlockListSetting> {
+public class BlockListSettingRow extends SettingRow<RegistryListSetting<?>> {
 
-    public BlockListSettingRow(BlockListSetting setting) {
+    public BlockListSettingRow(RegistryListSetting<?> setting) {
         super(setting);
     }
 

@@ -517,7 +517,7 @@ public class ConfigHolder {
         if (setting instanceof IntSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof DoubleSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof StringSetting s) return new JsonPrimitive(s.getValue());
-        if (setting instanceof BlockListSetting s) {
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.BLOCK) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
             return array;
@@ -530,7 +530,7 @@ public class ConfigHolder {
         // --- new setting types ---
         if (setting instanceof BlockSetting s) return new JsonPrimitive(s.getId());
         if (setting instanceof ItemSetting s) return new JsonPrimitive(s.getId());
-        if (setting instanceof ItemListSetting s) {
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ITEM) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
             return array;
@@ -559,26 +559,17 @@ public class ConfigHolder {
             obj.addProperty("z", s.getValue().z);
             return obj;
         }
-        if (setting instanceof SoundEventListSetting s) {
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
             return array;
         }
-        if (setting instanceof ScreenHandlerListSetting s) {
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
             return array;
         }
-        if (setting instanceof StatusEffectListSetting s) {
-            JsonArray array = new JsonArray();
-            for (String id : s.getIds()) array.add(id);
-            return array;
-        }
-        if (setting instanceof StorageBlockListSetting s) {
-            JsonArray array = new JsonArray();
-            for (String id : s.getIds()) array.add(id);
-            return array;
-        }
+
         if (setting instanceof EnchantmentListSetting s) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
@@ -591,19 +582,14 @@ public class ConfigHolder {
             }
             return obj;
         }
-        if (setting instanceof ParticleTypeListSetting s) {
-            JsonArray array = new JsonArray();
-            for (String id : s.getIds()) array.add(id);
-            return array;
-        }
         if (setting instanceof PacketListSetting s) {
             JsonArray array = new JsonArray();
-            for (String name : s.getClassNames()) array.add(name);
+            for (String name : s.getIds()) array.add(name);
             return array;
         }
-        if (setting instanceof ModuleListSetting s) {
+        if (setting instanceof StringListSetting s) {
             JsonArray array = new JsonArray();
-            for (String name : s.getModuleNames()) array.add(name);
+            for (String name : s.getValue()) array.add(name);
             return array;
         }
         return null;
@@ -618,19 +604,16 @@ public class ConfigHolder {
                 for (JsonElement element : value.getAsJsonArray()) {
                     if (element != null && element.isJsonPrimitive()) ids.add(element.getAsString());
                 }
-                if (setting instanceof BlockListSetting s) { s.setIds(ids); return; }
-                if (setting instanceof ItemListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.BLOCK) { s.setIds(ids); return; }
+                if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ITEM) { s.setIds(ids); return; }
                 if (setting instanceof EntityTypeListSetting s) { s.setIds(ids); return; }
                 if (setting instanceof StringListSetting s) { s.setValue(ids); return; }
-                if (setting instanceof SoundEventListSetting s) { s.setIds(ids); return; }
-                if (setting instanceof ScreenHandlerListSetting s) { s.setIds(ids); return; }
-                if (setting instanceof StatusEffectListSetting s) { s.setIds(ids); return; }
-                if (setting instanceof StorageBlockListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT) { s.setIds(ids); return; }
+                if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT) { s.setIds(ids); return; }
                 if (setting instanceof EnchantmentListSetting s) { s.setIds(ids); return; }
-                if (setting instanceof ParticleTypeListSetting s) { s.setIds(ids); return; }
-                if (setting instanceof PacketListSetting s) { s.setClassNames(ids); return; }
-                if (setting instanceof ModuleListSetting s) {
-                    s.setModuleNames(ids, ModuleHolder.INSTANCE.getModules());
+                if (setting instanceof PacketListSetting s) { s.setIds(ids); return; }
+                if (setting instanceof StringListSetting s) {
+                    s.setValue(ids);
                     return;
                 }
                 return;

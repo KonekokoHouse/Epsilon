@@ -18,22 +18,18 @@ public class SettingViewFactory {
             case IntSetting intSetting -> new IntSettingRow(intSetting);
             case DoubleSetting doubleSetting -> new DoubleSettingRow(doubleSetting);
             case ColorSetting colorSetting -> new ColorSettingRow(colorSetting);
-            case BlockListSetting blockListSetting -> new BlockListSettingRow(blockListSetting);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.BLOCK -> new BlockListSettingRow(r);
             case StringSetting stringSetting -> new StringSettingRow(stringSetting);
             case ButtonSetting buttonSetting -> new ButtonSettingRow(buttonSetting);
             // --- List settings (Row + Widget) ---
-            case StringListSetting stringListSetting -> new StringListSettingRow(stringListSetting);
-            case SoundEventListSetting soundEventListSetting -> new SoundEventListSettingRow(soundEventListSetting);
-            case ItemListSetting itemListSetting -> new ItemListSettingRow(itemListSetting);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.STRING -> new StringListSettingRow((StringListSetting) r);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT -> new SoundEventListSettingRow(r);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.ITEM -> new ItemListSettingRow(r);
 
             case EntityTypeListSetting entityTypeListSetting -> new EntityTypeListSettingRow(entityTypeListSetting);
-            case StatusEffectListSetting statusEffectListSetting -> new StatusEffectListSettingRow(statusEffectListSetting);
-            case ParticleTypeListSetting particleTypeListSetting -> new ParticleTypeListSettingRow(particleTypeListSetting);
-            case ScreenHandlerListSetting screenHandlerListSetting -> new ScreenHandlerListSettingRow(screenHandlerListSetting);
-            case StorageBlockListSetting storageBlockListSetting -> new StorageBlockListSettingRow(storageBlockListSetting);
-            case EnchantmentListSetting enchantmentListSetting -> new EnchantmentListSettingRow(enchantmentListSetting);
-            case PacketListSetting packetListSetting -> new PacketListSettingRow(packetListSetting);
-            case ModuleListSetting moduleListSetting -> new ModuleListSettingRow(moduleListSetting);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT -> new StatusEffectListSettingRow(r);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.ENCHANTMENT -> new EnchantmentListSettingRow((EnchantmentListSetting) r);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.PACKET -> new PacketListSettingRow((PacketListSetting) r);
             // --- Simple settings (Row only) ---
             case BlockSetting blockSetting -> new BlockSettingRow(blockSetting);
             case ItemSetting itemSetting -> new ItemSettingRow(itemSetting);
