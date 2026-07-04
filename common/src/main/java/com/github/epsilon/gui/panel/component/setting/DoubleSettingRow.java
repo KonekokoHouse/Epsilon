@@ -21,7 +21,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     private final Animation hoverAnimation = new Animation(Easing.EASE_OUT_QUART, 150L);
     private final Animation pressAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private final Animation indicatorAnimation = new Animation(Easing.EASE_OUT_QUART, 150L);
-    private final TextRenderer measureTextRenderer = TextRenderer.create();
+    private TextRenderer textMetrics;
     private boolean dragging;
     private boolean focused;
     private String inputBuffer;
@@ -36,6 +36,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
 
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+        this.textMetrics = textRenderer;
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         hoverAnimation.run(dragging ? 1.0f : hoverProgress);
@@ -258,11 +259,12 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
 
     private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds) {
         String text = getDisplayBuffer();
-        float scale = getFieldTextScale(measureTextRenderer, text, fieldBounds);
-        float textWidth = measureTextRenderer.getWidth(text, scale);
+        TextRenderer metrics = textMetrics();
+        float scale = getFieldTextScale(metrics, text, fieldBounds);
+        float textWidth = metrics.getWidth(text, scale);
         float textStart = fieldBounds.x() + (fieldBounds.width() - textWidth) / 2.0f;
         for (int i = 0; i <= text.length(); i++) {
-            float width = measureTextRenderer.getWidth(text.substring(0, i), scale);
+            float width = metrics.getWidth(text.substring(0, i), scale);
             if (mouseX <= textStart + width) {
                 return i;
             }
@@ -277,6 +279,10 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
             return FIELD_TEXT_SCALE;
         }
         return FIELD_TEXT_SCALE * maxTextWidth / textWidth;
+    }
+
+    private TextRenderer textMetrics() {
+        return textMetrics == null ? FALLBACK_TEXT_METRICS : textMetrics;
     }
 
 }

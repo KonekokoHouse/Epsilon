@@ -19,8 +19,12 @@ public class RendererHolder {
         return renderer;
     }
 
+    public synchronized void unregister(IRenderer renderer) {
+        renderers.remove(renderer);
+    }
+
     public synchronized void destroyAll() {
-        for (IRenderer renderer : renderers) {
+        for (IRenderer renderer : List.copyOf(renderers)) {
             renderer.close();
         }
         renderers.clear();

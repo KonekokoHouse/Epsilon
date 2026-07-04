@@ -361,6 +361,12 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         return animation;
     }
 
+    @Override
+    public void close() {
+        contentBuffer.close();
+        markDirty();
+    }
+
     private record FriendRowEntry(String name, PanelLayout.Rect rowBounds, PanelLayout.Rect removeBounds) {
     }
 

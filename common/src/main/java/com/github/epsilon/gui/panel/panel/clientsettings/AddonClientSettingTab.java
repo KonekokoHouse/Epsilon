@@ -639,6 +639,14 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         return animation;
     }
 
+    @Override
+    public void close() {
+        settingListController.close();
+        listBuffer.close();
+        detailBuffer.close();
+        markDirty();
+    }
+
     private record AddonRowEntry(String addonId, PanelLayout.Rect bounds) {
     }
 

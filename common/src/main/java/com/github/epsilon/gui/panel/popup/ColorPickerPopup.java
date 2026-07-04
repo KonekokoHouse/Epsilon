@@ -394,4 +394,9 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         return text.length();
     }
 
+    @Override
+    public void close() {
+        textRenderer.close();
+    }
+
 }
