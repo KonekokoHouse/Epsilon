@@ -564,21 +564,12 @@ public class ConfigHolder {
             for (String id : s.getIds()) array.add(id);
             return array;
         }
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MENU) {
-            JsonArray array = new JsonArray();
-            for (String id : s.getIds()) array.add(id);
-            return array;
-        }
         if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
             return array;
         }
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.BLOCK_ENTITY_TYPE) {
-            JsonArray array = new JsonArray();
-            for (String id : s.getIds()) array.add(id);
-            return array;
-        }
+
         if (setting instanceof EnchantmentListSetting s) {
             JsonArray array = new JsonArray();
             for (String id : s.getIds()) array.add(id);
@@ -590,11 +581,6 @@ public class ConfigHolder {
                 obj.addProperty(entry.getKey(), entry.getValue());
             }
             return obj;
-        }
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.PARTICLE_TYPE) {
-            JsonArray array = new JsonArray();
-            for (String id : s.getIds()) array.add(id);
-            return array;
         }
         if (setting instanceof PacketListSetting s) {
             JsonArray array = new JsonArray();
@@ -623,11 +609,8 @@ public class ConfigHolder {
                 if (setting instanceof EntityTypeListSetting s) { s.setIds(ids); return; }
                 if (setting instanceof StringListSetting s) { s.setValue(ids); return; }
                 if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT) { s.setIds(ids); return; }
-                if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MENU) { s.setIds(ids); return; }
                 if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT) { s.setIds(ids); return; }
-                if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.BLOCK_ENTITY_TYPE) { s.setIds(ids); return; }
                 if (setting instanceof EnchantmentListSetting s) { s.setIds(ids); return; }
-                if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.PARTICLE_TYPE) { s.setIds(ids); return; }
                 if (setting instanceof PacketListSetting s) { s.setIds(ids); return; }
                 if (setting instanceof StringListSetting s) {
                     s.setValue(ids);

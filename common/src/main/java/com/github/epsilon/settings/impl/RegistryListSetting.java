@@ -25,10 +25,7 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
         ITEM,
         ENTITY_TYPE,
         SOUND_EVENT,
-        PARTICLE_TYPE,
-        MENU,
         MOB_EFFECT,
-        BLOCK_ENTITY_TYPE,
         STRING_LIST,
         PACKET,
         ENCHANTMENT;
@@ -42,10 +39,7 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
                 case ITEM -> BuiltInRegistries.ITEM;
                 case ENTITY_TYPE -> BuiltInRegistries.ENTITY_TYPE;
                 case SOUND_EVENT -> BuiltInRegistries.SOUND_EVENT;
-                case PARTICLE_TYPE -> BuiltInRegistries.PARTICLE_TYPE;
-                case MENU -> BuiltInRegistries.MENU;
                 case MOB_EFFECT -> BuiltInRegistries.MOB_EFFECT;
-                case BLOCK_ENTITY_TYPE -> BuiltInRegistries.BLOCK_ENTITY_TYPE;
                 default -> null;
             };
         }

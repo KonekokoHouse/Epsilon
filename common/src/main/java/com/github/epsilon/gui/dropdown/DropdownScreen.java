@@ -29,9 +29,7 @@ import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -674,38 +672,6 @@ public class DropdownScreen extends Screen {
                 setting::add, setting::remove));
     }
 
-    @SuppressWarnings({"rawtypes","unchecked"})
-    public void openParticleTypeListSettingPopup(RegistryListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                (java.util.function.Function) (p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey((ParticleType<?>) p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); }),
-                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove));
-    }
-
-    @SuppressWarnings({"rawtypes","unchecked"})
-    public void openScreenHandlerListSettingPopup(RegistryListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.MENU,
-                (java.util.function.Function) (m -> { var k = BuiltInRegistries.MENU.getKey((MenuType<?>) m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); }),
-                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove));
-    }
-
-    @SuppressWarnings({"rawtypes","unchecked"})
-    public void openStorageBlockListSettingPopup(RegistryListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                (java.util.function.Function) (b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey((BlockEntityType<?>) b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); }),
-                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove));
-    }
 
     public void openEnchantmentListSettingPopup(EnchantmentListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(

@@ -259,18 +259,6 @@ public class SettingListController implements AutoCloseable {
                 draggingSliderEntry = null;
                 return true;
             }
-            if (entry.row instanceof ParticleTypeListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof ScreenHandlerListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof StorageBlockListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                draggingSliderEntry = null;
-                return true;
-            }
             if (entry.row instanceof EnchantmentListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
                 PanelPopupHost.Popup popup = createEnchantmentListSettingPopup(listRow, popupBounds);
                 if (popup != null) popupHost.open(popup);

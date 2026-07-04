@@ -9,15 +9,12 @@ import com.github.epsilon.settings.impl.*;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleType;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import org.joml.Vector3d;
 
 import java.awt.*;
@@ -452,15 +449,6 @@ public class Module {
         return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.SOUND_EVENT, null, () -> true));
     }
 
-    // --- ScreenHandlerListSetting ---
-
-    protected RegistryListSetting<MenuType<?>> screenHandlerListSetting(String name, Collection<MenuType<?>> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.MENU, null, dependency));
-    }
-
-    protected RegistryListSetting<MenuType<?>> screenHandlerListSetting(String name, Collection<MenuType<?>> defaultValue) {
-        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.MENU, null, () -> true));
-    }
 
     // --- StatusEffectListSetting ---
 
@@ -472,15 +460,6 @@ public class Module {
         return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.MOB_EFFECT, null, () -> true));
     }
 
-    // --- StorageBlockListSetting ---
-
-    protected RegistryListSetting<BlockEntityType<?>> storageBlockListSetting(String name, Collection<BlockEntityType<?>> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.BLOCK_ENTITY_TYPE, null, dependency));
-    }
-
-    protected RegistryListSetting<BlockEntityType<?>> storageBlockListSetting(String name, Collection<BlockEntityType<?>> defaultValue) {
-        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.BLOCK_ENTITY_TYPE, null, () -> true));
-    }
 
     // --- EnchantmentListSetting ---
 
@@ -500,16 +479,6 @@ public class Module {
 
     protected StatusEffectAmplifierMapSetting statusEffectAmplifierMapSetting(String name, Map<MobEffect, Integer> defaultValue) {
         return addSetting(new StatusEffectAmplifierMapSetting(name, defaultValue, () -> true));
-    }
-
-    // --- ParticleTypeListSetting ---
-
-    protected RegistryListSetting<ParticleType<?>> particleTypeListSetting(String name, Collection<ParticleType<?>> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.PARTICLE_TYPE, null, dependency));
-    }
-
-    protected RegistryListSetting<ParticleType<?>> particleTypeListSetting(String name, Collection<ParticleType<?>> defaultValue) {
-        return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.PARTICLE_TYPE, null, () -> true));
     }
 
     // --- PacketListSetting ---
