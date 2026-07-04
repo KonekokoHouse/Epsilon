@@ -11,7 +11,7 @@ import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.world.BlockRegistryUtils;
@@ -51,7 +51,8 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     private static final int MAX_QUERY_LENGTH = 64;
 
     private final PanelLayout.Rect bounds;
-    private final BlockListSetting setting;
+    @SuppressWarnings({"rawtypes","unchecked"})
+    private final RegistryListSetting setting;
     private final List<Block> allBlocks = BlockRegistryUtils.allSelectableBlocks();
     private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
     private final TextRenderer textRenderer = TextRenderer.create();
@@ -67,7 +68,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     private Block hoveredRemove;
     private PanelLayout.Rect lastViewport;
 
-    public BlockListSelectPopup(PanelLayout.Rect bounds, BlockListSetting setting) {
+    public BlockListSelectPopup(PanelLayout.Rect bounds, RegistryListSetting setting) {
         this.bounds = bounds;
         this.setting = setting;
         this.openAnimation.setStartValue(0.0f);
@@ -328,7 +329,7 @@ public class BlockListSelectPopup implements PanelPopupHost.Popup {
     private List<Block> filteredSelected() {
         String needle = query.toLowerCase(Locale.ROOT).trim();
         List<Block> result = new ArrayList<>();
-        for (Block block : setting.getValue()) {
+        List blocks = (List) setting.getValue(); for (Object b : blocks) { Block block = (Block) b;
             if (needle.isEmpty() || BlockRegistryUtils.searchText(block).contains(needle)) {
                 result.add(block);
             }

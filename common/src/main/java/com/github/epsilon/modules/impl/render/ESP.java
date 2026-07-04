@@ -6,7 +6,7 @@ import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -40,7 +40,7 @@ public class ESP extends Module {
     }
 
     private final BoolSetting blocksValue = boolSetting("Blocks", true);
-    private final BlockListSetting blockListValue = blockListSetting("Block List",
+    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List",
             List.of(
                     Blocks.CHEST,
                     Blocks.TRAPPED_CHEST,

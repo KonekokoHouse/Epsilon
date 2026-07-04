@@ -3,11 +3,11 @@ package com.github.epsilon.gui.dropdown.widget;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
-import com.github.epsilon.settings.impl.SoundEventListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 
-public class SoundEventListSettingWidget extends AbstractSetSettingWidget<SoundEventListSetting> {
+public class SoundEventListSettingWidget extends AbstractSetSettingWidget<RegistryListSetting<?>> {
 
-    public SoundEventListSettingWidget(SoundEventListSetting setting) {
+    public SoundEventListSettingWidget(RegistryListSetting<?> setting) {
         super(setting);
     }
 

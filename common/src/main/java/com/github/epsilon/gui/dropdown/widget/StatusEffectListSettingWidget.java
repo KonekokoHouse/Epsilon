@@ -3,11 +3,11 @@ package com.github.epsilon.gui.dropdown.widget;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
-import com.github.epsilon.settings.impl.StatusEffectListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 
-public class StatusEffectListSettingWidget extends AbstractSetSettingWidget<StatusEffectListSetting> {
+public class StatusEffectListSettingWidget extends AbstractSetSettingWidget<RegistryListSetting<?>> {
 
-    public StatusEffectListSettingWidget(StatusEffectListSetting setting) {
+    public StatusEffectListSettingWidget(RegistryListSetting<?> setting) {
         super(setting);
     }
 

@@ -28,10 +28,14 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
         PARTICLE_TYPE,
         MENU,
         MOB_EFFECT,
-        BLOCK_ENTITY_TYPE;
+        BLOCK_ENTITY_TYPE,
+        STRING_LIST,
+        PACKET;
 
         @SuppressWarnings("unchecked")
         <T> Registry<T> registry() {
+            if (this == STRING_LIST) return null;
+            if (this == PACKET) return (Registry<T>) PacketListSetting.PACKET_REGISTRY;
             return (Registry<T>) switch (this) {
                 case BLOCK -> BuiltInRegistries.BLOCK;
                 case ITEM -> BuiltInRegistries.ITEM;
@@ -41,30 +45,33 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
                 case MENU -> BuiltInRegistries.MENU;
                 case MOB_EFFECT -> BuiltInRegistries.MOB_EFFECT;
                 case BLOCK_ENTITY_TYPE -> BuiltInRegistries.BLOCK_ENTITY_TYPE;
+                default -> null;
             };
         }
 
-        /** 将注册表条目转为用于序列化的 ID 字符串 */
         String toId(Object entry) {
+            if (this == STRING_LIST) return (String) entry;
+            if (this == PACKET) return ((Class<?>) entry).getName();
             Identifier key = registry().getKey(entry);
             return key != null ? key.toString() : "";
         }
 
-        /** 从 ID 字符串还原注册表条目 */
         @SuppressWarnings("unchecked")
         <T> T fromId(String id) {
+            if (this == STRING_LIST) return (T) id;
+            if (this == PACKET) { try { return (T) Class.forName(id); } catch (ClassNotFoundException _) { return null; } }
             Identifier loc = Identifier.tryParse(id);
             if (loc == null) return null;
             return (T) registry().getOptional(loc).orElse(null);
         }
 
-        /** 参数化构造时使用的过滤器（如方块需要排除 AIR 等） */
         @SuppressWarnings("unchecked")
         <T> Predicate<T> defaultFilter() {
             return (Predicate<T>) switch (this) {
                 case BLOCK -> (Predicate<Block>) BlockRegistryUtils::isSelectable;
                 case ITEM -> (Predicate<Item>) item -> item != null && item != Items.AIR;
                 case ENTITY_TYPE -> (Predicate<EntityType<?>>) e -> e != null;
+                case STRING_LIST -> (Predicate<String>) s -> s != null && !s.isBlank();
                 default -> null;
             };
         }

@@ -29,7 +29,10 @@ import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.PreeditEvent;
@@ -579,7 +582,7 @@ public class DropdownScreen extends Screen {
         return sessionId;
     }
 
-    public void openBlockListPopup(BlockListSetting setting) {
+    public void openBlockListPopup(RegistryListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
@@ -597,7 +600,8 @@ public class DropdownScreen extends Screen {
         popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
     }
 
-    public void openSoundEventListSettingPopup(SoundEventListSetting setting) {
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public void openSoundEventListSettingPopup(RegistryListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
@@ -607,7 +611,8 @@ public class DropdownScreen extends Screen {
                 setting::add, setting::remove));
     }
 
-    public void openItemListSettingPopup(ItemListSetting setting) {
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public void openItemListSettingPopup(RegistryListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
@@ -618,7 +623,8 @@ public class DropdownScreen extends Screen {
                 setting::add, setting::remove));
     }
 
-    public void openStatusEffectListSettingPopup(StatusEffectListSetting setting) {
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public void openStatusEffectListSettingPopup(RegistryListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
@@ -668,34 +674,37 @@ public class DropdownScreen extends Screen {
                 setting::add, setting::remove));
     }
 
-    public void openParticleTypeListSettingPopup(ParticleTypeListSetting setting) {
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public void openParticleTypeListSettingPopup(RegistryListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
-                p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey(p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); },
-                setting::add, setting::remove));
+        popupHost.open(new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.PARTICLE_TYPE,
+                (java.util.function.Function) (p -> { var k = BuiltInRegistries.PARTICLE_TYPE.getKey((ParticleType<?>) p); return k != null ? k.getPath().replace('_', ' ') : p.toString(); }),
+                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove));
     }
 
-    public void openScreenHandlerListSettingPopup(ScreenHandlerListSetting setting) {
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public void openScreenHandlerListSettingPopup(RegistryListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MENU,
-                m -> { var k = BuiltInRegistries.MENU.getKey(m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); },
-                setting::add, setting::remove));
+        popupHost.open(new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.MENU,
+                (java.util.function.Function) (m -> { var k = BuiltInRegistries.MENU.getKey((MenuType<?>) m); return k != null ? k.getPath().replace('_', ' ') : m.toString(); }),
+                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove));
     }
 
-    public void openStorageBlockListSettingPopup(StorageBlockListSetting setting) {
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public void openStorageBlockListSettingPopup(RegistryListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); },
-                setting::add, setting::remove));
+        popupHost.open(new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                (java.util.function.Function) (b -> { var k = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey((BlockEntityType<?>) b); return k != null ? k.getPath().replace('_', ' ') : b.toString(); }),
+                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove));
     }
 
     public void openEnchantmentListSettingPopup(EnchantmentListSetting setting) {
@@ -724,8 +733,6 @@ public class DropdownScreen extends Screen {
                 setting::add, setting::remove));
     }
 
-    public void openModuleListSettingPopup(ModuleListSetting setting) {
-        // TODO: ModuleListSelectPopup - needs ModuleHolder.getAll() iteration
-    }
+
 
 }

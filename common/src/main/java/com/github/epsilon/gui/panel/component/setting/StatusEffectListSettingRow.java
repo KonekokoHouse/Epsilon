@@ -9,13 +9,13 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
-import com.github.epsilon.settings.impl.StatusEffectListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 
-public class StatusEffectListSettingRow extends SettingRow<StatusEffectListSetting> {
+public class StatusEffectListSettingRow extends SettingRow<RegistryListSetting<?>> {
 
-    public StatusEffectListSettingRow(StatusEffectListSetting setting) {
+    public StatusEffectListSettingRow(RegistryListSetting<?> setting) {
         super(setting);
     }
 

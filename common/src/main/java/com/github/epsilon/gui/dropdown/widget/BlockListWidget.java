@@ -6,18 +6,18 @@ import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 
 import java.awt.*;
 
-public class BlockListWidget extends SettingWidget<BlockListSetting> {
+public class BlockListWidget extends SettingWidget<RegistryListSetting<?>> {
 
     private static final float FIELD_HEIGHT = 14.0f;
     private final Animation hoverAnim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER);
 
-    public BlockListWidget(BlockListSetting setting) {
+    public BlockListWidget(RegistryListSetting<?> setting) {
         super(setting);
     }
 
