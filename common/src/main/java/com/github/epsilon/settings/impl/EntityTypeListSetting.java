@@ -4,6 +4,7 @@ import com.github.epsilon.settings.Setting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -12,86 +13,175 @@ public class EntityTypeListSetting extends Setting<List<EntityType<?>>> {
 
     private static final List<String> GROUPS = List.of("animal", "wateranimal", "monster", "ambient", "misc");
 
-    // ---- 实体分类（基于 entity ID，不依赖 MC 原版 MobCategory） ----
+    // ---- 实体分类（动态构建，覆盖全部注册表实体） ----
 
-    /** 友善生物 */
-    public static final Set<String> FRIENDLY_IDS = Set.of(
-            "minecraft:bat", "minecraft:cat", "minecraft:chicken", "minecraft:cod",
-            "minecraft:cow", "minecraft:donkey", "minecraft:fox", "minecraft:frog",
-            "minecraft:glow_squid", "minecraft:horse", "minecraft:mooshroom",
-            "minecraft:mule", "minecraft:ocelot", "minecraft:parrot", "minecraft:pig",
-            "minecraft:rabbit", "minecraft:salmon", "minecraft:sheep", "minecraft:squid",
-            "minecraft:strider", "minecraft:tadpole", "minecraft:tropical_fish",
-            "minecraft:turtle", "minecraft:villager", "minecraft:wandering_trader",
-            "minecraft:bee", "minecraft:camel", "minecraft:sniffer",
-            "minecraft:armadillo", "minecraft:axolotl", "minecraft:dolphin",
-            "minecraft:goat", "minecraft:iron_golem", "minecraft:llama",
-            "minecraft:panda", "minecraft:polar_bear", "minecraft:snow_golem",
-            "minecraft:trader_llama", "minecraft:wolf",
-            "minecraft:skeleton_horse", "minecraft:zombie_horse",
-            "minecraft:allay"
+    /** 手动指定的友善实体 ID（作为分类基础） */
+    private static final Set<String> FRIENDLY_BASE = Set.of(
+            "minecraft:allay", "minecraft:armadillo", "minecraft:axolotl", "minecraft:bat",
+            "minecraft:bee", "minecraft:camel", "minecraft:cat", "minecraft:chicken",
+            "minecraft:cod", "minecraft:cow", "minecraft:dolphin", "minecraft:donkey",
+            "minecraft:fox", "minecraft:frog", "minecraft:glow_squid", "minecraft:goat",
+            "minecraft:horse", "minecraft:iron_golem", "minecraft:llama", "minecraft:mooshroom",
+            "minecraft:mule", "minecraft:ocelot", "minecraft:panda", "minecraft:parrot",
+            "minecraft:pig", "minecraft:polar_bear", "minecraft:rabbit", "minecraft:salmon",
+            "minecraft:sheep", "minecraft:skeleton_horse", "minecraft:sniffer",
+            "minecraft:snow_golem", "minecraft:squid", "minecraft:strider", "minecraft:tadpole",
+            "minecraft:trader_llama", "minecraft:tropical_fish", "minecraft:turtle",
+            "minecraft:villager", "minecraft:wandering_trader", "minecraft:wolf",
+            "minecraft:zombie_horse",
+            "minecraft:copper_golem", "minecraft:happy_ghast", "minecraft:nautilus"
     );
 
-    /** 敌对生物 */
-    public static final Set<String> HOSTILE_IDS = Set.of(
-            "minecraft:blaze", "minecraft:bogged", "minecraft:breeze",
-            "minecraft:cave_spider", "minecraft:creeper", "minecraft:drowned",
-            "minecraft:elder_guardian", "minecraft:enderman",
-            "minecraft:endermite", "minecraft:evoker", "minecraft:ghast",
-            "minecraft:guardian", "minecraft:hoglin", "minecraft:husk",
-            "minecraft:magma_cube", "minecraft:phantom", "minecraft:piglin",
+    /** 手动指定的敌对实体 ID */
+    private static final Set<String> HOSTILE_BASE = Set.of(
+            "minecraft:blaze", "minecraft:bogged", "minecraft:breeze", "minecraft:cave_spider",
+            "minecraft:creaking", "minecraft:creeper", "minecraft:drowned",
+            "minecraft:elder_guardian", "minecraft:enderman", "minecraft:endermite",
+            "minecraft:evoker", "minecraft:ghast", "minecraft:guardian", "minecraft:hoglin",
+            "minecraft:husk", "minecraft:magma_cube", "minecraft:phantom", "minecraft:piglin",
             "minecraft:piglin_brute", "minecraft:pillager", "minecraft:ravager",
-            "minecraft:shulker", "minecraft:silverfish", "minecraft:skeleton",
-            "minecraft:slime", "minecraft:spider", "minecraft:stray",
-            "minecraft:vex", "minecraft:vindicator", "minecraft:warden",
-            "minecraft:witch", "minecraft:wither_skeleton", "minecraft:zoglin",
-            "minecraft:zombie", "minecraft:zombie_villager",
-            "minecraft:zombified_piglin", "minecraft:creaking"
+            "minecraft:shulker", "minecraft:silverfish", "minecraft:skeleton", "minecraft:slime",
+            "minecraft:spider", "minecraft:stray", "minecraft:vex", "minecraft:vindicator",
+            "minecraft:warden", "minecraft:witch", "minecraft:wither", "minecraft:wither_skeleton",
+            "minecraft:zoglin", "minecraft:zombie", "minecraft:zombie_villager",
+            "minecraft:zombified_piglin",
+            "minecraft:camel_husk", "minecraft:giant", "minecraft:illusioner",
+            "minecraft:zombie_nautilus"
     );
 
-    /** 中立生物（包括未驯服时中立、被激怒时攻击的） */
-    public static final Set<String> NEUTRAL_IDS = Set.of(
-            "minecraft:bee", "minecraft:cave_spider", "minecraft:dolphin",
-            "minecraft:enderman", "minecraft:goat", "minecraft:iron_golem",
-            "minecraft:llama", "minecraft:panda", "minecraft:piglin",
-            "minecraft:polar_bear", "minecraft:spider", "minecraft:trader_llama",
-            "minecraft:wolf", "minecraft:zombified_piglin"
+    /** 手动指定的可骑乘实体 ID */
+    private static final Set<String> RIDEABLE_BASE = Set.of(
+            // 可骑乘生物
+            "minecraft:camel", "minecraft:camel_husk", "minecraft:donkey",
+            "minecraft:horse", "minecraft:llama", "minecraft:mule",
+            "minecraft:nautilus", "minecraft:pig", "minecraft:skeleton_horse",
+            "minecraft:strider", "minecraft:trader_llama", "minecraft:zombie_horse",
+            "minecraft:zombie_nautilus",
+            // 船（全部木质变种）
+            "minecraft:oak_boat", "minecraft:spruce_boat", "minecraft:birch_boat",
+            "minecraft:jungle_boat", "minecraft:acacia_boat", "minecraft:cherry_boat",
+            "minecraft:dark_oak_boat", "minecraft:mangrove_boat", "minecraft:pale_oak_boat",
+            "minecraft:bamboo_raft",
+            // 运输船
+            "minecraft:oak_chest_boat", "minecraft:spruce_chest_boat",
+            "minecraft:birch_chest_boat", "minecraft:jungle_chest_boat",
+            "minecraft:acacia_chest_boat", "minecraft:cherry_chest_boat",
+            "minecraft:dark_oak_chest_boat", "minecraft:mangrove_chest_boat",
+            "minecraft:pale_oak_chest_boat", "minecraft:bamboo_chest_raft",
+            // 矿车
+            "minecraft:minecart", "minecraft:chest_minecart", "minecraft:furnace_minecart",
+            "minecraft:hopper_minecart"
     );
 
-    /** 可骑乘实体 */
-    public static final Set<String> RIDEABLE_IDS = Set.of(
-            "minecraft:horse", "minecraft:donkey", "minecraft:mule",
-            "minecraft:skeleton_horse", "minecraft:zombie_horse",
-            "minecraft:pig", "minecraft:strider", "minecraft:camel",
-            "minecraft:llama", "minecraft:trader_llama"
-    );
-
-    /** 技术性实体（非生物实体：掉落物、展示框、经验球等） */
-    public static final Set<String> TECHNICAL_IDS = Set.of(
+    /** 手动指定的技术性实体 ID */
+    private static final Set<String> TECHNICAL_BASE = Set.of(
             "minecraft:area_effect_cloud", "minecraft:armor_stand",
-            "minecraft:arrow", "minecraft:boat", "minecraft:chest_boat",
-            "minecraft:chest_minecart", "minecraft:command_block_minecart",
-            "minecraft:dragon_fireball", "minecraft:egg", "minecraft:end_crystal",
-            "minecraft:ender_pearl", "minecraft:evoker_fangs",
+            "minecraft:block_display", "minecraft:end_crystal",
             "minecraft:experience_bottle", "minecraft:experience_orb",
             "minecraft:eye_of_ender", "minecraft:falling_block",
-            "minecraft:fireball", "minecraft:firework_rocket",
-            "minecraft:fishing_bobber", "minecraft:furnace_minecart",
-            "minecraft:glow_item_frame", "minecraft:hopper_minecart",
-            "minecraft:item", "minecraft:item_frame", "minecraft:leash_knot",
-            "minecraft:lightning_bolt", "minecraft:llama_spit",
-            "minecraft:marker", "minecraft:minecart",
-            "minecraft:oak_boat", "minecraft:oak_chest_boat",
-            "minecraft:painting", "minecraft:potion", "minecraft:shulker_bullet",
-            "minecraft:small_fireball", "minecraft:snowball",
-            "minecraft:spawner_minecart", "minecraft:spectral_arrow",
-            "minecraft:text_display", "minecraft:tnt",
-            "minecraft:tnt_minecart", "minecraft:trident",
-            "minecraft:wither_skull", "minecraft:block_display",
-            "minecraft:interaction", "minecraft:item_display",
-            "minecraft:ominous_item_spawner", "minecraft:wind_charge",
-            "minecraft:breeze_wind_charge"
+            "minecraft:fishing_bobber", "minecraft:glow_item_frame",
+            "minecraft:interaction", "minecraft:item", "minecraft:item_display",
+            "minecraft:item_frame", "minecraft:leash_knot", "minecraft:lightning_bolt",
+            "minecraft:marker", "minecraft:ominous_item_spawner",
+            "minecraft:painting", "minecraft:text_display"
     );
+
+    // ---- 运行时动态构建的完整分类（覆盖全部实体） ----
+
+    /** 友善生物（动态构建，覆盖注册表全部实体） */
+    public static final Set<String> FRIENDLY_IDS;
+    /** 敌对生物 */
+    public static final Set<String> HOSTILE_IDS;
+    /** 中立生物 */
+    public static final Set<String> NEUTRAL_IDS;
+    /** 可骑乘实体 */
+    public static final Set<String> RIDEABLE_IDS;
+    /** 技术性实体（弹射物、展示框等所有非生物实体） */
+    public static final Set<String> TECHNICAL_IDS;
+
+    static {
+        // 收集所有实体 ID
+        Set<String> allIds = new LinkedHashSet<>();
+        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
+            Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            if (id != null) allIds.add(id.toString());
+        }
+
+        // 友善：手动指定 + 基于 MobCategory.CREATURE 补充
+        Set<String> friendly = new LinkedHashSet<>(FRIENDLY_BASE);
+        for (String id : allIds) {
+            if (!friendly.contains(id) && !HOSTILE_BASE.contains(id)
+                    && !RIDEABLE_BASE.contains(id) && !TECHNICAL_BASE.contains(id)) {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(
+                        Identifier.tryParse(id)).orElse(null);
+                if (type != null && type.getCategory() == MobCategory.CREATURE) {
+                    friendly.add(id);
+                }
+            }
+        }
+
+        // 敌对：手动指定 + 基于 MobCategory.MONSTER 补充
+        Set<String> hostile = new LinkedHashSet<>(HOSTILE_BASE);
+        for (String id : allIds) {
+            if (!friendly.contains(id) && !hostile.contains(id)
+                    && !RIDEABLE_BASE.contains(id) && !TECHNICAL_BASE.contains(id)) {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(
+                        Identifier.tryParse(id)).orElse(null);
+                if (type != null && type.getCategory() == MobCategory.MONSTER) {
+                    hostile.add(id);
+                }
+            }
+        }
+
+        // 可骑乘
+        Set<String> rideable = new LinkedHashSet<>(RIDEABLE_BASE);
+
+        // 技术性：手动指定 + 所有未被以上分类覆盖的实体
+        Set<String> technical = new LinkedHashSet<>(TECHNICAL_BASE);
+        for (String id : allIds) {
+            if (!friendly.contains(id) && !hostile.contains(id) && !rideable.contains(id)) {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(
+                        Identifier.tryParse(id)).orElse(null);
+                if (type != null) {
+                    MobCategory cat = type.getCategory();
+                    if (cat == MobCategory.MISC) {
+                        technical.add(id);
+                    }
+                }
+            }
+        }
+        // 放入所有未被前面分类覆盖的实体（弹射物、物品、经验球等）
+        for (String id : allIds) {
+            if (!friendly.contains(id) && !hostile.contains(id)
+                    && !rideable.contains(id) && !technical.contains(id)) {
+                technical.add(id);
+            }
+        }
+
+        // 中立：手动指定（与 friendly/hostile 可能有重叠——从各自的 base 中取交集相关项）
+        Set<String> neutral = new LinkedHashSet<>();
+        for (String id : allIds) {
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(
+                    Identifier.tryParse(id)).orElse(null);
+            if (type != null && type.getCategory() == MobCategory.AMBIENT) {
+                neutral.add(id);
+            }
+        }
+        // 手动补充已知中立实体
+        neutral.addAll(Set.of(
+                "minecraft:bee", "minecraft:dolphin", "minecraft:enderman",
+                "minecraft:goat", "minecraft:iron_golem", "minecraft:llama",
+                "minecraft:panda", "minecraft:polar_bear", "minecraft:spider",
+                "minecraft:cave_spider", "minecraft:trader_llama", "minecraft:wolf",
+                "minecraft:zombified_piglin", "minecraft:piglin"
+        ));
+
+        FRIENDLY_IDS = Collections.unmodifiableSet(friendly);
+        HOSTILE_IDS = Collections.unmodifiableSet(hostile);
+        NEUTRAL_IDS = Collections.unmodifiableSet(neutral);
+        RIDEABLE_IDS = Collections.unmodifiableSet(rideable);
+        TECHNICAL_IDS = Collections.unmodifiableSet(technical);
+    }
 
     private final Predicate<EntityType<?>> filter;
 
@@ -209,16 +299,6 @@ public class EntityTypeListSetting extends Setting<List<EntityType<?>>> {
 
     public Predicate<EntityType<?>> getFilter() {
         return filter;
-    }
-
-    /** 根据实体 ID 字符串判断分类（用于弹窗分类标签） */
-    public static String classify(String entityId) {
-        if (FRIENDLY_IDS.contains(entityId)) return "friendly";
-        if (HOSTILE_IDS.contains(entityId)) return "hostile";
-        if (NEUTRAL_IDS.contains(entityId)) return "neutral";
-        if (RIDEABLE_IDS.contains(entityId)) return "rideable";
-        if (TECHNICAL_IDS.contains(entityId)) return "technical";
-        return null;
     }
 
     private static List<EntityType<?>> normalize(Collection<EntityType<?>> source) {

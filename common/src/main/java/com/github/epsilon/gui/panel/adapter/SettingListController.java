@@ -13,6 +13,7 @@ import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
+import com.github.epsilon.settings.impl.EnchantmentListSetting;
 import com.github.epsilon.settings.impl.EntityTypeListSetting;
 import com.github.epsilon.settings.impl.PacketListSetting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -568,13 +569,18 @@ public class SettingListController implements AutoCloseable {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
-                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null ? k.getPath().replace('_', ' ') : e.toString(); },
+                e -> e.getDescription().getString(),
                 e -> {
                     var key = BuiltInRegistries.ENTITY_TYPE.getKey(e);
                     if (key == null) return net.minecraft.world.item.ItemStack.EMPTY;
+                    // 优先查找刷怪蛋
                     Identifier eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
-                    if (eggId == null) return net.minecraft.world.item.ItemStack.EMPTY;
-                    net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
+                    if (eggId != null) {
+                        net.minecraft.world.item.Item egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
+                        if (egg != null) return egg.getDefaultInstance();
+                    }
+                    // 没有刷怪蛋时，查找与实体同名的物品（如船、矿车、画、物品展示框等）
+                    net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.getOptional(key).orElse(null);
                     return item != null ? item.getDefaultInstance() : net.minecraft.world.item.ItemStack.EMPTY;
                 },
                 java.util.List.of(
@@ -617,9 +623,12 @@ public class SettingListController implements AutoCloseable {
     }
 
     private PanelPopupHost.Popup createEnchantmentListSettingPopup(EnchantmentListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(300.0f, popupBounds.width() - 24.0f), Math.min(220.0f, popupBounds.height() - 24.0f));
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
-        return new StringListSelectPopup(bounds, setting, setting::add, setting::remove);
+        return new RegistryListSelectPopup<>(bounds, setting,
+                EnchantmentListSetting.getEnchantmentRegistry(),
+                id -> EnchantmentListSetting.getEnchantmentDisplayName(id),
+                setting::add, setting::remove);
     }
 
     private PanelPopupHost.Popup createPacketListSettingPopup(PacketListSettingRow row, PanelLayout.Rect popupBounds) {
