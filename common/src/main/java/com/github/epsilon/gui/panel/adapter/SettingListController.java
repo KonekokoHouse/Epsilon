@@ -573,9 +573,14 @@ public class SettingListController implements AutoCloseable {
                 e -> {
                     var key = BuiltInRegistries.ENTITY_TYPE.getKey(e);
                     if (key == null) return net.minecraft.world.item.ItemStack.EMPTY;
+                    // 优先查找刷怪蛋
                     Identifier eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
-                    if (eggId == null) return net.minecraft.world.item.ItemStack.EMPTY;
-                    net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
+                    if (eggId != null) {
+                        net.minecraft.world.item.Item egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
+                        if (egg != null) return egg.getDefaultInstance();
+                    }
+                    // 没有刷怪蛋时，查找与实体同名的物品（如船、矿车、画、物品展示框等）
+                    net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.getOptional(key).orElse(null);
                     return item != null ? item.getDefaultInstance() : net.minecraft.world.item.ItemStack.EMPTY;
                 },
                 java.util.List.of(
