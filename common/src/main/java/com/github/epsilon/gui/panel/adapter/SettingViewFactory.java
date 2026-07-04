@@ -22,14 +22,14 @@ public class SettingViewFactory {
             case StringSetting stringSetting -> new StringSettingRow(stringSetting);
             case ButtonSetting buttonSetting -> new ButtonSettingRow(buttonSetting);
             // --- List settings (Row + Widget) ---
-            case StringListSetting stringListSetting -> new StringListSettingRow(stringListSetting);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.STRING_LIST -> new StringListSettingRow((StringListSetting) r);
             case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT -> new SoundEventListSettingRow(r);
             case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.ITEM -> new ItemListSettingRow(r);
 
             case EntityTypeListSetting entityTypeListSetting -> new EntityTypeListSettingRow(entityTypeListSetting);
             case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT -> new StatusEffectListSettingRow(r);
-            case EnchantmentListSetting enchantmentListSetting -> new EnchantmentListSettingRow(enchantmentListSetting);
-            case PacketListSetting packetListSetting -> new PacketListSettingRow(packetListSetting);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.ENCHANTMENT -> new EnchantmentListSettingRow((EnchantmentListSetting) r);
+            case RegistryListSetting<?> r when r.getRegistryType() == RegistryListSetting.Type.PACKET -> new PacketListSettingRow((PacketListSetting) r);
             // --- Simple settings (Row only) ---
             case BlockSetting blockSetting -> new BlockSettingRow(blockSetting);
             case ItemSetting itemSetting -> new ItemSettingRow(itemSetting);

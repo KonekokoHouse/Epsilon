@@ -68,14 +68,14 @@ public class SettingsContent {
         if (setting instanceof StringSetting s) return new StringWidget(s);
         if (setting instanceof ButtonSetting s) return new ButtonWidget(s);
         // --- List settings (Row + Widget) ---
-        if (setting instanceof StringListSetting s) return new StringListSettingWidget(s);
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.STRING_LIST) return new StringListSettingWidget((StringListSetting) s);
         if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT) return new SoundEventListSettingWidget(s);
         if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ITEM) return new ItemListSettingWidget(s);
 
         if (setting instanceof EntityTypeListSetting s) return new EntityTypeListSettingWidget(s);
         if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT) return new StatusEffectListSettingWidget(s);
-        if (setting instanceof EnchantmentListSetting s) return new EnchantmentListSettingWidget(s);
-        if (setting instanceof PacketListSetting s) return new PacketListSettingWidget(s);
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ENCHANTMENT) return new EnchantmentListSettingWidget((EnchantmentListSetting) s);
+        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.PACKET) return new PacketListSettingWidget((PacketListSetting) s);
         // --- Simple & Map settings ---
         if (setting instanceof BlockSetting s) {
             return new SimpleValueWidget(s, st -> {
