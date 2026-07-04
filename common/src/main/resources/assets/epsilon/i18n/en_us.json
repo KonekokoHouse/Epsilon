@@ -1194,8 +1194,6 @@
   "epsilon.modules.xray.quartz": "Quartz",
   "epsilon.modules.xray.water": "Water",
   "epsilon.modules.xray.lava": "Lava",
-  "epsilon.modules.xray.ores": "Ores",
-  "epsilon.modules.xray.xray color": "Xray Color",
   "epsilon.modules.auto queue": "Auto Queue",
   "epsilon.modules.auto queue.queue mode": "Queue Mode",
   "epsilon.modules.auto queue.queue mode.xin_2b2t": "2b2t.xin",

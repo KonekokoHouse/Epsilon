@@ -1194,8 +1194,6 @@
   "epsilon.modules.xray.quartz": "石英",
   "epsilon.modules.xray.water": "水",
   "epsilon.modules.xray.lava": "岩浆",
-  "epsilon.modules.xray.ores": "矿物",
-  "epsilon.modules.xray.xray color": "X光颜色",
   "epsilon.modules.auto queue": "自动排队",
   "epsilon.modules.auto queue.queue mode": "排队模式",
   "epsilon.modules.auto queue.queue mode.xin_2b2t": "2b2t.xin",
