@@ -146,10 +146,10 @@ public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>>
         @SuppressWarnings("unchecked")
         private static List<Class<? extends Packet<?>>> collectKnownPackets() {
             List<Class<? extends Packet<?>>> list = new ArrayList<>();
+            // 完整列表提取自 minecraft-merged-deobf-26.1.2.jar，覆盖 game/common/configuration/login/cookie/ping/status/handshake 全部协议
             String[] classNames = {
-                    // -- Clientbound (S2C) --
+                    // === game.Clientbound (S2C) ===
                     "net.minecraft.network.protocol.game.ClientboundAddEntityPacket",
-                    "net.minecraft.network.protocol.game.ClientboundAddExperienceOrbPacket",
                     "net.minecraft.network.protocol.game.ClientboundAnimatePacket",
                     "net.minecraft.network.protocol.game.ClientboundAwardStatsPacket",
                     "net.minecraft.network.protocol.game.ClientboundBlockChangedAckPacket",
@@ -188,7 +188,6 @@ public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>>
                     "net.minecraft.network.protocol.game.ClientboundGameEventPacket",
                     "net.minecraft.network.protocol.game.ClientboundGameRuleValuesPacket",
                     "net.minecraft.network.protocol.game.ClientboundGameTestHighlightPosPacket",
-                    "net.minecraft.network.protocol.game.ClientboundHorseStepPacket",
                     "net.minecraft.network.protocol.game.ClientboundHurtAnimationPacket",
                     "net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket",
                     "net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket",
@@ -200,7 +199,8 @@ public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>>
                     "net.minecraft.network.protocol.game.ClientboundMapItemDataPacket",
                     "net.minecraft.network.protocol.game.ClientboundMerchantOffersPacket",
                     "net.minecraft.network.protocol.game.ClientboundMountScreenOpenPacket",
-                    "net.minecraft.network.protocol.game.ClientboundMoveMinecartAlongTrackPacket",
+                    "net.minecraft.network.protocol.game.ClientboundMoveEntityPacket",
+                    "net.minecraft.network.protocol.game.ClientboundMoveMinecartPacket",
                     "net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket",
                     "net.minecraft.network.protocol.game.ClientboundOpenBookPacket",
                     "net.minecraft.network.protocol.game.ClientboundOpenScreenPacket",
@@ -266,19 +266,16 @@ public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>>
                     "net.minecraft.network.protocol.game.ClientboundTagQueryPacket",
                     "net.minecraft.network.protocol.game.ClientboundTakeItemEntityPacket",
                     "net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket",
-                    "net.minecraft.network.protocol.game.ClientboundTestInstanceBlockStatusPacket",
                     "net.minecraft.network.protocol.game.ClientboundTickingStatePacket",
                     "net.minecraft.network.protocol.game.ClientboundTickingStepPacket",
+                    "net.minecraft.network.protocol.game.ClientboundTrackedWaypointPacket",
                     "net.minecraft.network.protocol.game.ClientboundUpdateAdvancementsPacket",
                     "net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket",
                     "net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket",
                     "net.minecraft.network.protocol.game.ClientboundUpdateRecipesPacket",
-                    "net.minecraft.network.protocol.game.ClientboundWaypointPacket",
-                    "net.minecraft.network.protocol.game.ClientboundMoveEntityPacketPos",
-                    "net.minecraft.network.protocol.game.ClientboundMoveEntityPacketPosRot",
-                    "net.minecraft.network.protocol.game.ClientboundMoveEntityPacketRot",
-                    // -- Serverbound (C2S) --
+                    // === game.Serverbound (C2S) ===
                     "net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket",
+                    "net.minecraft.network.protocol.game.ServerboundAttackPacket",
                     "net.minecraft.network.protocol.game.ServerboundBlockEntityTagQueryPacket",
                     "net.minecraft.network.protocol.game.ServerboundChangeDifficultyPacket",
                     "net.minecraft.network.protocol.game.ServerboundChangeGameModePacket",
@@ -303,10 +300,6 @@ public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>>
                     "net.minecraft.network.protocol.game.ServerboundJigsawGeneratePacket",
                     "net.minecraft.network.protocol.game.ServerboundLockDifficultyPacket",
                     "net.minecraft.network.protocol.game.ServerboundMovePlayerPacket",
-                    "net.minecraft.network.protocol.game.ServerboundMovePlayerPosPacket",
-                    "net.minecraft.network.protocol.game.ServerboundMovePlayerPosRotPacket",
-                    "net.minecraft.network.protocol.game.ServerboundMovePlayerRotPacket",
-                    "net.minecraft.network.protocol.game.ServerboundMovePlayerStatusOnlyPacket",
                     "net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket",
                     "net.minecraft.network.protocol.game.ServerboundPaddleBoatPacket",
                     "net.minecraft.network.protocol.game.ServerboundPickItemFromBlockPacket",
@@ -339,23 +332,56 @@ public class PacketListSetting extends Setting<List<Class<? extends Packet<?>>>>
                     "net.minecraft.network.protocol.game.ServerboundTestInstanceBlockActionPacket",
                     "net.minecraft.network.protocol.game.ServerboundUseItemOnPacket",
                     "net.minecraft.network.protocol.game.ServerboundUseItemPacket",
-                    // -- Other protocol --
+                    // === common ===
+                    "net.minecraft.network.protocol.common.ClientboundClearDialogPacket",
                     "net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket",
-                    "net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket",
-                    "net.minecraft.network.protocol.common.ClientboundKeepAlivePacket",
-                    "net.minecraft.network.protocol.common.ServerboundKeepAlivePacket",
-                    "net.minecraft.network.protocol.common.ClientboundPingPacket",
-                    "net.minecraft.network.protocol.common.ServerboundPongPacket",
+                    "net.minecraft.network.protocol.common.ClientboundCustomReportDetailsPacket",
                     "net.minecraft.network.protocol.common.ClientboundDisconnectPacket",
+                    "net.minecraft.network.protocol.common.ClientboundKeepAlivePacket",
+                    "net.minecraft.network.protocol.common.ClientboundPingPacket",
                     "net.minecraft.network.protocol.common.ClientboundResourcePackPopPacket",
                     "net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket",
-                    "net.minecraft.network.protocol.common.ServerboundResourcePackPacket",
+                    "net.minecraft.network.protocol.common.ClientboundServerLinksPacket",
+                    "net.minecraft.network.protocol.common.ClientboundShowDialogPacket",
                     "net.minecraft.network.protocol.common.ClientboundStoreCookiePacket",
-                    "net.minecraft.network.protocol.common.ServerboundCookieResponsePacket",
                     "net.minecraft.network.protocol.common.ClientboundTransferPacket",
                     "net.minecraft.network.protocol.common.ClientboundUpdateTagsPacket",
+                    "net.minecraft.network.protocol.common.ServerboundClientInformationPacket",
+                    "net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket",
+                    "net.minecraft.network.protocol.common.ServerboundKeepAlivePacket",
+                    "net.minecraft.network.protocol.common.ServerboundPongPacket",
+                    "net.minecraft.network.protocol.common.ServerboundResourcePackPacket",
+                    "net.minecraft.network.protocol.common.ServerboundCookieResponsePacket",
+                    "net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket",
+                    // === configuration ===
+                    "net.minecraft.network.protocol.configuration.ClientboundCodeOfConductPacket",
+                    "net.minecraft.network.protocol.configuration.ClientboundFinishConfigurationPacket",
+                    "net.minecraft.network.protocol.configuration.ClientboundRegistryDataPacket",
+                    "net.minecraft.network.protocol.configuration.ClientboundResetChatPacket",
+                    "net.minecraft.network.protocol.configuration.ClientboundUpdateEnabledFeaturesPacket",
+                    "net.minecraft.network.protocol.configuration.ServerboundAcceptCodeOfConductPacket",
+                    "net.minecraft.network.protocol.configuration.ServerboundFinishConfigurationPacket",
+                    // === login ===
+                    "net.minecraft.network.protocol.login.ClientboundCustomQueryPacket",
+                    "net.minecraft.network.protocol.login.ClientboundHelloPacket",
+                    "net.minecraft.network.protocol.login.ClientboundLoginCompressionPacket",
                     "net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket",
+                    "net.minecraft.network.protocol.login.ClientboundLoginFinishedPacket",
+                    "net.minecraft.network.protocol.login.ServerboundCustomQueryAnswerPacket",
+                    "net.minecraft.network.protocol.login.ServerboundHelloPacket",
+                    "net.minecraft.network.protocol.login.ServerboundKeyPacket",
                     "net.minecraft.network.protocol.login.ServerboundLoginAcknowledgedPacket",
+                    // === cookie ===
+                    "net.minecraft.network.protocol.cookie.ClientboundCookieRequestPacket",
+                    "net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket",
+                    // === ping ===
+                    "net.minecraft.network.protocol.ping.ClientboundPongResponsePacket",
+                    "net.minecraft.network.protocol.ping.ServerboundPingRequestPacket",
+                    // === status ===
+                    "net.minecraft.network.protocol.status.ClientboundStatusResponsePacket",
+                    "net.minecraft.network.protocol.status.ServerboundStatusRequestPacket",
+                    // === handshake ===
+                    "net.minecraft.network.protocol.handshake.ClientIntentionPacket",
             };
             for (String name : classNames) {
                 try { list.add((Class<? extends Packet<?>>) Class.forName(name)); } catch (Exception ignored) {}
