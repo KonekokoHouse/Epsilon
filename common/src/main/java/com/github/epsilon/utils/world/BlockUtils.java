@@ -1,10 +1,8 @@
 package com.github.epsilon.utils.world;
 
-import com.github.epsilon.modules.impl.combat.FeetTrap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownExperienceBottle;
