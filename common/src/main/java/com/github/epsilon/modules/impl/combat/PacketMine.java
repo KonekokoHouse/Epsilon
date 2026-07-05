@@ -101,12 +101,13 @@ public class PacketMine extends Module {
     private BlockPos renderPos, secondRenderPos;
     private double renderProgress, secondRenderProgress;
     private int oldSlot = -1;
+    private boolean hasSwitch = false, secondHasSwitch = false;
+
     private final TimerUtils bypassTimer = new TimerUtils();
     private final TimerUtils timer = new TimerUtils();
     private final TimerUtils secondTimer = new TimerUtils();
     public final TimerUtils mineTimer = new TimerUtils();
     private final TimerUtils instantTimer = new TimerUtils();
-    private boolean hasSwitch = false, secondHasSwitch = false;
 
     @Override
     protected void onEnable() {

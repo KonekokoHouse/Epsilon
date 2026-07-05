@@ -35,7 +35,7 @@ public class HudElementHolder {
         addElement(ModuleList.INSTANCE);
         addElement(Potions.INSTANCE);
         addElement(ScaffoldBlock.INSTANCE);
-        addElement(TargetHud.INSTANCE);
+        addElement(TargetHUD.INSTANCE);
         addElement(Watermark.INSTANCE);
     }
 
