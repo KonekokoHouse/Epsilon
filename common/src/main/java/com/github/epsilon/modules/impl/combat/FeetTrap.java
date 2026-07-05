@@ -6,7 +6,6 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.*;
@@ -31,42 +30,30 @@ import net.minecraft.world.phys.Vec3;
 public class FeetTrap extends Module {
 
     public static final FeetTrap INSTANCE = new FeetTrap();
-    private static final Direction[] SURROUND_DIRECTIONS = {
-            Direction.DOWN,
-            Direction.NORTH,
-            Direction.SOUTH,
-            Direction.WEST,
-            Direction.EAST
-    };
 
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
     }
 
-    private final SettingGroup sgGeneral = settingGroup("General");
-    private final SettingGroup sgRotate = settingGroup("Rotate");
-    private final SettingGroup sgCheck = settingGroup("Check");
-
-    private final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1).group(sgGeneral);
-    private final BoolSetting extend = boolSetting("Extend", true).group(sgGeneral);
-    private final BoolSetting onlySelf = boolSetting("Only Self", false, extend::getValue).group(sgGeneral);
-    private final IntSetting blocksPerTick = intSetting("Blocks Per Tick", 1, 1, 8, 1).group(sgGeneral);
-    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true).group(sgGeneral);
-    private final BoolSetting inventorySwap = boolSetting("Inventory Swap", true).group(sgGeneral);
-    private final BoolSetting enderChest = boolSetting("Ender Chest", true).group(sgGeneral);
-
-    private final BoolSetting rotate = boolSetting("Rotate", true).group(sgRotate);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 18, 180, 18).group(sgRotate);
-
-    private final BoolSetting inAir = boolSetting("In Air", true).group(sgCheck);
-    private final BoolSetting toggleOnMove = boolSetting("Toggle On Move", true).group(sgCheck);
-    private final BoolSetting toggleOnJump = boolSetting("Toggle On Jump", true).group(sgCheck);
+    private final BoolSetting toggleOnMove = boolSetting("Toggle On Move", true);
+    private final BoolSetting toggleOnJump = boolSetting("Toggle On Jump", true);
+    private final BoolSetting inAir = boolSetting("In Air", true);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true);
+    private final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 50);
+    private final BoolSetting extend = boolSetting("Extend", true);
+    private final IntSetting blocksPerTick = intSetting("Blocks Per Tick", 1, 1, 8, 1);
+    private final BoolSetting rotate = boolSetting("Rotate", true);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 18, 180, 18, rotate::getValue);
+    private final BoolSetting enderChest = boolSetting("Ender Chest", true);
+    private final BoolSetting inventorySwap = boolSetting("Inventory Swap", true);
 
     private double startX = 0, startY = 0, startZ = 0;
     private int progress = 0;
     private Rot2f rotation = null;
 
     private final TimerUtils timer = new TimerUtils();
+
+    private static final Direction[] SURROUND_DIRECTIONS = {Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
 
     @Override
     public void onEnable() {
@@ -127,10 +114,10 @@ public class FeetTrap extends Module {
         for (Direction i : SURROUND_DIRECTIONS) {
             BlockPos offsetPos = pos.relative(i);
             tryPlaceBlockOrHelper(offsetPos, slot);
-            if ((selfIntersectPos(offsetPos) || !onlySelf.getValue() && otherIntersectPos(offsetPos)) && extend.getValue()) {
+            if ((selfIntersectPos(offsetPos) || otherIntersectPos(offsetPos)) && extend.getValue()) {
                 for (Direction i2 : SURROUND_DIRECTIONS) {
                     BlockPos offsetPos2 = offsetPos.relative(i2);
-                    if (selfIntersectPos(offsetPos2) || !onlySelf.getValue() && otherIntersectPos(offsetPos2)) {
+                    if (selfIntersectPos(offsetPos2) || otherIntersectPos(offsetPos2)) {
                         for (Direction i3 : SURROUND_DIRECTIONS) {
                             tryPlaceBlock(offsetPos2, slot);
                             BlockPos offsetPos3 = offsetPos2.relative(i3);
