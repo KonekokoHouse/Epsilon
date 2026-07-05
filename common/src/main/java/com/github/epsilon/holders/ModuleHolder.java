@@ -88,6 +88,7 @@ public class ModuleHolder {
         // Movement
         addModule(ElytraFly.INSTANCE);
         addModule(Follower.INSTANCE);
+        addModule(AirJump.INSTANCE);
         addModule(AutoSprint.INSTANCE);
         addModule(Blink.INSTANCE);
         addModule(Eagle.INSTANCE);
