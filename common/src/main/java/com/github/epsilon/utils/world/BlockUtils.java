@@ -17,8 +17,4 @@ public class BlockUtils {
         return mc.level.getEntities((Entity) null, new AABB(pos), entity -> !(entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof ThrownExperienceBottle || entity instanceof Arrow)).isEmpty();
     }
 
-    public static boolean isSolidBlock(BlockPos pos) {
-        return mc.level.getBlockState(pos).isSolidRender();
-    }
-
 }

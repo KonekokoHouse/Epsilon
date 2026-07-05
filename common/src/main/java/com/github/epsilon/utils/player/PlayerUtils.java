@@ -1,6 +1,5 @@
 package com.github.epsilon.utils.player;
 
-import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
@@ -55,7 +54,7 @@ public class PlayerUtils {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
                     mutablePos.set(x, y, z);
-                    if (BlockUtils.isSolidBlock(mutablePos)) {
+                    if (mc.level.getBlockState(mutablePos).isSolidRender()) {
                         return true;
                     }
                 }
