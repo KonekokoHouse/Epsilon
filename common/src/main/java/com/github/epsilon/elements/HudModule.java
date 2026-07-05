@@ -165,15 +165,12 @@ public abstract class HudModule extends Module {
         return LuminRenderSystem.getScaledHeightInt();
     }
 
-    public final void renderWithBatch(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, PanelRenderBatch renderBatch) {
+    public final void renderWithBatch(DeltaTracker deltaTracker, PanelRenderBatch renderBatch) {
         PanelUiTree.Scope previous = currentRenderScope;
         PanelUiTree.Scope scope = new PanelUiTree.Scope();
         currentRenderScope = scope;
-        try {
-            render(graphics, deltaTracker);
-        } finally {
-            currentRenderScope = previous;
-        }
+        render(deltaTracker);
+        currentRenderScope = previous;
         renderBatch.render(PanelUiTree.from(scope));
     }
 
@@ -184,7 +181,7 @@ public abstract class HudModule extends Module {
         return currentRenderScope;
     }
 
-    public abstract void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker);
+    public abstract void render(DeltaTracker deltaTracker);
 
     public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
     }

@@ -96,6 +96,14 @@ public class TextureRenderer implements IRenderer {
         addRoundedTexture(texture, x, y, width, height, radiusTL, radiusTR, radiusBR, radiusBL, u0, v0, u1, v1, color, true);
     }
 
+    public void addRotatedTexture(Identifier texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color, float originX, float originY, float rotationDegrees, boolean useLinearFilter) {
+        addRotatedTexture((Object) texture, x, y, width, height, u0, v0, u1, v1, color, originX, originY, rotationDegrees, useLinearFilter);
+    }
+
+    public void addRotatedTexture(LuminTexture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color, float originX, float originY, float rotationDegrees) {
+        addRotatedTexture(texture, x, y, width, height, u0, v0, u1, v1, color, originX, originY, rotationDegrees, true);
+    }
+
     public void addPlayerHead(LuminTexture texture, float x, float y, float size, float radius, Color color) {
         addRoundedTexture(texture, x, y, size, size, radius, 8f / 64f, 8f / 64f, 16f / 64f, 16f / 64f, color);
         addRoundedTexture(texture, x, y, size, size, radius, 40f / 64f, 8f / 64f, 48f / 64f, 16f / 64f, color);
@@ -131,6 +139,60 @@ public class TextureRenderer implements IRenderer {
 
         batch.currentOffset += QUAD_BYTES;
         batch.vertexCount += 4;
+    }
+
+    private void addRotatedTexture(Object textureKey, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Color color, float originX, float originY, float rotationDegrees, boolean useLinearFilter) {
+        Batch batch = batches.computeIfAbsent(textureKey, k -> {
+            Batch b = new Batch(new LuminRingBuffer(BUFFER_SIZE, GpuBuffer.USAGE_VERTEX));
+            b.useLinearFilter = useLinearFilter;
+            return b;
+        });
+
+        batch.buffer.ensureCapacity(batch.currentOffset + QUAD_BYTES);
+        batch.buffer.tryMap();
+
+        int argb = ARGB.toABGR(color.getRGB());
+        float x2 = x + width;
+        float y2 = y + height;
+        float radians = (float) Math.toRadians(rotationDegrees);
+        float cos = (float) Math.cos(radians);
+        float sin = (float) Math.sin(radians);
+
+        float rx1 = rotateX(x, y, originX, originY, cos, sin);
+        float ry1 = rotateY(x, y, originX, originY, cos, sin);
+        float rx2 = rotateX(x, y2, originX, originY, cos, sin);
+        float ry2 = rotateY(x, y2, originX, originY, cos, sin);
+        float rx3 = rotateX(x2, y2, originX, originY, cos, sin);
+        float ry3 = rotateY(x2, y2, originX, originY, cos, sin);
+        float rx4 = rotateX(x2, y, originX, originY, cos, sin);
+        float ry4 = rotateY(x2, y, originX, originY, cos, sin);
+        float minX = Math.min(Math.min(rx1, rx2), Math.min(rx3, rx4));
+        float minY = Math.min(Math.min(ry1, ry2), Math.min(ry3, ry4));
+        float maxX = Math.max(Math.max(rx1, rx2), Math.max(rx3, rx4));
+        float maxY = Math.max(Math.max(ry1, ry2), Math.max(ry3, ry4));
+
+        long baseAddr = MemoryUtil.memAddress(batch.buffer.getMappedBuffer());
+        long p = baseAddr + batch.currentOffset;
+
+        writeVertex(p, rx1, ry1, u0, v0, argb, minX, minY, maxX, maxY, 0.0f, 0.0f, 0.0f, 0.0f);
+        writeVertex(p + STRIDE, rx2, ry2, u0, v1, argb, minX, minY, maxX, maxY, 0.0f, 0.0f, 0.0f, 0.0f);
+        writeVertex(p + STRIDE * 2L, rx3, ry3, u1, v1, argb, minX, minY, maxX, maxY, 0.0f, 0.0f, 0.0f, 0.0f);
+        writeVertex(p + STRIDE * 3L, rx4, ry4, u1, v0, argb, minX, minY, maxX, maxY, 0.0f, 0.0f, 0.0f, 0.0f);
+
+        batch.currentOffset += QUAD_BYTES;
+        batch.vertexCount += 4;
+    }
+
+    private static float rotateX(float x, float y, float originX, float originY, float cos, float sin) {
+        float dx = x - originX;
+        float dy = y - originY;
+        return originX + dx * cos - dy * sin;
+    }
+
+    private static float rotateY(float x, float y, float originX, float originY, float cos, float sin) {
+        float dx = x - originX;
+        float dy = y - originY;
+        return originY + dx * sin + dy * cos;
     }
 
     private void writeVertex(long addr, float x, float y, float u, float v, int color, float rx1, float ry1, float rx2, float ry2, float r1, float r2, float r3, float r4) {

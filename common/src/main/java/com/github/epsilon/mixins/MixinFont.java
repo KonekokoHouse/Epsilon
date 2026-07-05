@@ -19,13 +19,11 @@ public class MixinFont {
 
     @Inject(method = "getGlyph", at = @At("HEAD"), cancellable = true)
     private void onGetGlyph(int codepoint, Style style, CallbackInfoReturnable<BakedGlyph> cir) {
-        if (!ClientSetting.INSTANCE.replaceMinecraftFont.getValue()) {
-            return;
-        }
-
-        EpsilonFontGlyph glyph = EpsilonFontGlyph.create(codepoint);
-        if (glyph != null) {
-            cir.setReturnValue(glyph);
+        if (ClientSetting.INSTANCE.replaceMinecraftFont.getValue()) {
+            EpsilonFontGlyph glyph = EpsilonFontGlyph.create(codepoint);
+            if (glyph != null) {
+                cir.setReturnValue(glyph);
+            }
         }
     }
 

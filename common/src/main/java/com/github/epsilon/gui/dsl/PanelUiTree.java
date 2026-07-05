@@ -417,6 +417,22 @@ public class PanelUiTree {
             addNode(layer, new TextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader));
         }
 
+        public void rotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
+            nodes.add(new RotatedTextNode(text, resolveX(x), resolveY(y), scale, color, null, resolveX(originX), resolveY(originY), rotationDegrees));
+        }
+
+        public void rotatedText(int layer, String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
+            addNode(layer, new RotatedTextNode(text, resolveX(x), resolveY(y), scale, color, null, resolveX(originX), resolveY(originY), rotationDegrees));
+        }
+
+        public void rotatedText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
+            nodes.add(new RotatedTextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader, resolveX(originX), resolveY(originY), rotationDegrees));
+        }
+
+        public void rotatedText(int layer, String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
+            addNode(layer, new RotatedTextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader, resolveX(originX), resolveY(originY), rotationDegrees));
+        }
+
         /**
          * 添加一个带独立裁剪区域的文本节点（跑马灯）。
          * <p>
@@ -448,6 +464,14 @@ public class PanelUiTree {
         public void texture(LuminTexture texture, float x, float y, float width, float height,
                             float u0, float v0, float u1, float v1, Color color) {
             texture(new Render2DTexture.LuminRef(texture), x, y, width, height, u0, v0, u1, v1, color);
+        }
+
+        public void rotatedTexture(LuminTexture texture, float x, float y, float width, float height,
+                                   float u0, float v0, float u1, float v1, Color color,
+                                   float originX, float originY, float rotationDegrees) {
+            nodes.add(new RotatedTextureNode(new Render2DTexture.LuminRef(texture),
+                    resolveX(x), resolveY(y), width, height, u0, v0, u1, v1, color,
+                    resolveX(originX), resolveY(originY), rotationDegrees));
         }
 
         public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height, float radius,
@@ -949,7 +973,7 @@ public class PanelUiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, MarqueeTextNode, TextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
@@ -1036,6 +1060,11 @@ public class PanelUiTree {
                     TtfFontLoader fontLoader) implements UiNode {
     }
 
+    record RotatedTextNode(String text, float x, float y, float scale, Color color,
+                           TtfFontLoader fontLoader, float originX, float originY,
+                           float rotationDegrees) implements UiNode {
+    }
+
     record MarqueeTextNode(String text, float x, float y, float scale, Color color,
                            TtfFontLoader fontLoader, PanelLayout.Rect clip) implements UiNode {
     }
@@ -1043,6 +1072,11 @@ public class PanelUiTree {
     record TextureNode(Render2DTexture texture, float x, float y, float width, float height,
                        float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                        float u0, float v0, float u1, float v1, Color color) implements UiNode {
+    }
+
+    record RotatedTextureNode(Render2DTexture texture, float x, float y, float width, float height,
+                              float u0, float v0, float u1, float v1, Color color,
+                              float originX, float originY, float rotationDegrees) implements UiNode {
     }
 
     record ButtonNode(float x, float y, float width, float height, float radius, Color background,

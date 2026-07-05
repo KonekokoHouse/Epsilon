@@ -36,7 +36,7 @@ public class Inventory extends HudModule {
     private static final float PADDING = 4.5f;
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         if (nullCheck()) return;
 
         var scope = renderScope();

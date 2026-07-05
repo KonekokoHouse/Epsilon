@@ -10,7 +10,6 @@ import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
@@ -20,8 +19,6 @@ import java.util.function.Supplier;
 public class BPS extends HudModule {
 
     public static final BPS INSTANCE = new BPS();
-
-    private static final int GRAPH_SIZE = 72;
 
     private BPS() {
         super("BPS HUD", 0f, 0f, 158f, 68f);
@@ -51,8 +48,7 @@ public class BPS extends HudModule {
     private final BoolSetting smoothNumber = boolSetting("Smooth Number", true);
     private final DoubleSetting numberDelay = doubleSetting("Number Delay", 0.15, 0.0, 0.5, 0.01, smoothNumber::getValue);
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-
+    private static final int GRAPH_SIZE = 72;
     private final float[] graphValues = new float[GRAPH_SIZE];
     private int graphIndex;
     private double lastX;
@@ -69,6 +65,8 @@ public class BPS extends HudModule {
     private float numberAnimProgress = 1.0f;
     private float delayTimer;
 
+    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
+
     @Override
     protected void onEnable() {
         resetBps();
@@ -80,7 +78,7 @@ public class BPS extends HudModule {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         if (nullCheck()) return;
 
         updateBps();

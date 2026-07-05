@@ -46,12 +46,11 @@ public final class EpsilonFontMetrics {
         if (font == null) {
             return 0.0f;
         }
-        if (codepoint < Character.MIN_CODE_POINT || codepoint > Character.MAX_VALUE) {
+        if (codepoint < Character.MIN_CODE_POINT || codepoint > Character.MAX_CODE_POINT) {
             return 0.0f;
         }
 
-        char ch = (char) codepoint;
-        return font.getAdvance(ch) * minecraftScale(font) + LETTER_SPACING + (style.isBold() ? 1.0f : 0.0f);
+        return font.getAdvance(codepoint) * minecraftScale(font) + LETTER_SPACING + (style.isBold() ? 1.0f : 0.0f);
     }
 
     public static @Nullable Float width(String text) {

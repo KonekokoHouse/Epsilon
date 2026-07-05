@@ -7,7 +7,10 @@ import org.lwjgl.stb.STBTruetype;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class TtfFontFile {
 
@@ -21,13 +24,21 @@ public class TtfFontFile {
     public final int fontHeight;
 
     public TtfFontFile(Identifier ttfFile, int totalHeight, int padding) {
-        fontData = ResourceLocationUtils.loadResource(ttfFile);
+        this(ResourceLocationUtils.loadResource(ttfFile), totalHeight, padding, ttfFile.toString());
+    }
+
+    public TtfFontFile(Path ttfFile, int totalHeight, int padding) {
+        this(loadFontFile(ttfFile), totalHeight, padding, ttfFile.toString());
+    }
+
+    private TtfFontFile(ByteBuffer fontData, int totalHeight, int padding, String debugName) {
+        this.fontData = fontData;
 
         fontInfo = STBTTFontinfo.create();
 
         if (!STBTruetype.stbtt_InitFont(fontInfo, fontData)) {
             MemoryUtil.memFree(fontData);
-            throw new IllegalStateException("STB TrueType failed to load ttf font: " + ttfFile);
+            throw new IllegalStateException("STB TrueType failed to load ttf font: " + debugName);
         }
 
         this.padding = padding;
@@ -52,8 +63,24 @@ public class TtfFontFile {
 
     }
 
+    private static ByteBuffer loadFontFile(Path path) {
+        try {
+            byte[] bytes = Files.readAllBytes(path);
+            ByteBuffer buffer = MemoryUtil.memAlloc(bytes.length);
+            buffer.put(bytes);
+            buffer.flip();
+            return buffer;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read font file: " + path, e);
+        }
+    }
+
     public synchronized TtfGlyph generateGlyph(char ch) {
-        final var glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, ch);
+        return generateGlyph((int) ch);
+    }
+
+    public synchronized TtfGlyph generateGlyph(int codepoint) {
+        final var glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint);
 
         byte onEdgeValue = (byte) 128;
         float pixelDistScale = (float) onEdgeValue / padding;
@@ -85,7 +112,11 @@ public class TtfFontFile {
     }
 
     public synchronized int getAdvance(char ch) {
-        final var glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, ch);
+        return getAdvance((int) ch);
+    }
+
+    public synchronized int getAdvance(int codepoint) {
+        final var glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint);
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             final var advance = stack.callocInt(1);

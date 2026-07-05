@@ -9,6 +9,11 @@ public interface ITextRenderer {
 
     void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader);
 
+    default void addRotatedText(String text, float x, float y, float scale, Color color,
+                                TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
+        addText(text, x, y, scale, color, fontLoader);
+    }
+
     default void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
         addText(text, x, y, scale, startColor, fontLoader);
     }

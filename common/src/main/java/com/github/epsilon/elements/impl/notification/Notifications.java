@@ -10,7 +10,6 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -35,7 +34,7 @@ public class Notifications extends HudModule {
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         Managers.NOTIFICATION.update();
         Notification previewNotification = createPreviewNotification();
         if (Managers.NOTIFICATION.isEmpty() && previewNotification == null) return;

@@ -31,6 +31,7 @@ public class HudElementHolder {
     public void initElements() {
         addElement(Notifications.INSTANCE);
         addElement(BPS.INSTANCE);
+        addElement(MTF.INSTANCE);
         addElement(Inventory.INSTANCE);
         addElement(ModuleList.INSTANCE);
         addElement(Potions.INSTANCE);
@@ -58,7 +59,7 @@ public class HudElementHolder {
             if (element.isEnabled()) {
                 element.updateLayout();
                 // HUD chrome 统一提交到 scheduler；原版物品等 overlay 在 flush 后单独绘制。
-                element.renderWithBatch(event.getGuiGraphics(), mc.getDeltaTracker(), scene.batch(GuiLayer.CONTENT));
+                element.renderWithBatch(mc.getDeltaTracker(), scene.batch(GuiLayer.CONTENT));
             }
         }
         scene.endFrame();

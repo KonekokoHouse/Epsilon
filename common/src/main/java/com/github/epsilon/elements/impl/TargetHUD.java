@@ -77,7 +77,7 @@ public class TargetHUD extends HudModule {
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         float panelScale = scale.getValue().floatValue();
         float panelWidth = width.getValue().floatValue() * panelScale;
         float panelHeight = height.getValue().floatValue() * panelScale;

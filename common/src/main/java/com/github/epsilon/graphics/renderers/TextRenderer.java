@@ -41,8 +41,17 @@ public class TextRenderer implements IRenderer {
         textRenderer.addGradientText(text, x, y, scale, startColor, endColor, fontLoader);
     }
 
+    public void addRotatedText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
+        ensureRegistered();
+        textRenderer.addRotatedText(text, x, y, scale, color, fontLoader, originX, originY, rotationDegrees);
+    }
+
     public void addText(String text, float x, float y, float scale, Color color) {
         textRenderer.addText(text, x, y, scale, color, StaticFontLoader.DEFAULT);
+    }
+
+    public void addRotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
+        textRenderer.addRotatedText(text, x, y, scale, color, StaticFontLoader.DEFAULT, originX, originY, rotationDegrees);
     }
 
     public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {

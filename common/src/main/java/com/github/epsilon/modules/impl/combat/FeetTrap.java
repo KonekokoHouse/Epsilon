@@ -183,6 +183,7 @@ public class FeetTrap extends Module {
                 // 在这个 tick 转头已经到达，无需继续设置转头
                 this.rotation = null;
             } else {
+                // 没到，给劳资转！
                 return;
             }
         }

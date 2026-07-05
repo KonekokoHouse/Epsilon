@@ -14,7 +14,6 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
@@ -71,7 +70,7 @@ public class ScaffoldBlock extends HudModule {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         int blockCount = getDisplayBlockCount();
         boolean shouldShow = shouldShowHud(blockCount);
         updateVisibilityAnimation(shouldShow);

@@ -9,7 +9,6 @@ import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -64,7 +63,7 @@ public class Potions extends HudModule {
     private final Map<Holder<MobEffect>, Integer> maxDurationMap = new HashMap<>();
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         if (nullCheck()) return;
 
         List<EffectInfo> items = collectItems(deltaTracker);

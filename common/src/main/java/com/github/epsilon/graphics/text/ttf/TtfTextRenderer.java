@@ -74,6 +74,14 @@ public class TtfTextRenderer implements ITextRenderer {
     }
 
     @Override
+    public void addRotatedText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
+        if (text.isEmpty() || color.getAlpha() == 0) return;
+
+        fontLoader.prepareChars(text);
+        emitRotatedLayout(layoutFor(text, fontLoader), x, y, scale, ARGB.toABGR(color.getRGB()), originX, originY, rotationDegrees);
+    }
+
+    @Override
     public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor, TtfFontLoader fontLoader) {
         if (text.isEmpty() || startColor.getAlpha() == 0 && endColor.getAlpha() == 0) return;
 
@@ -109,20 +117,21 @@ public class TtfTextRenderer implements ITextRenderer {
         boolean complete = true;
         int glyphCount = 0;
 
-        for (int i = 0; i < text.length(); i++) {
-            char ch = text.charAt(i);
-            if (ch == ' ') {
+        for (int i = 0; i < text.length(); ) {
+            int codepoint = text.codePointAt(i);
+            i += Character.charCount(codepoint);
+            if (codepoint == ' ') {
                 xOffset += SPACE_WIDTH;
                 continue;
             }
-            if (ch == '\n') {
+            if (codepoint == '\n') {
                 maxLine = Math.max(maxLine, xOffset);
                 xOffset = 0.0f;
                 yOffset += lineHeight;
                 continue;
             }
 
-            GlyphDescriptor glyph = fontLoader.getGlyph(ch);
+            GlyphDescriptor glyph = fontLoader.getGlyph(codepoint);
             if (glyph == null) {
                 complete = false;
                 continue;
@@ -166,6 +175,23 @@ public class TtfTextRenderer implements ITextRenderer {
         }
     }
 
+    private void emitRotatedLayout(TextLayout layout, float x, float y, float scale, int argb, float originX, float originY, float rotationDegrees) {
+        if (layout.glyphCount == 0) return;
+
+        float radians = (float) Math.toRadians(rotationDegrees);
+        float cos = (float) Math.cos(radians);
+        float sin = (float) Math.sin(radians);
+        for (LayoutRun run : layout.runs) {
+            Batch batch = batchFor(run.atlas);
+            long p = batch.beginWrite(run.glyphCount);
+            float[] data = run.data;
+            for (int i = 0; i < run.glyphCount; i++) {
+                writeRotatedGlyph(p, x, y, scale, data, i * LAYOUT_FLOATS_PER_GLYPH, argb, argb, originX, originY, cos, sin);
+                p += GLYPH_BYTES;
+            }
+        }
+    }
+
     private void emitGradientLayout(TextLayout layout, float x, float y, float scale, float width, int startArgb, int endArgb) {
         if (layout.glyphCount == 0) return;
 
@@ -204,6 +230,30 @@ public class TtfTextRenderer implements ITextRenderer {
         BufferUtils.writeUvRectToAddr(p + STRIDE * 3L, x2, y1, u1, v0, rightArgb);
     }
 
+    private static void writeRotatedGlyph(long p, float x, float y, float scale, float[] data, int base, int leftArgb, int rightArgb, float originX, float originY, float cos, float sin) {
+        float x1 = x + data[base] * scale;
+        float y1 = y + data[base + 1] * scale;
+        float x2 = x + data[base + 2] * scale;
+        float y2 = y + data[base + 3] * scale;
+        float u0 = data[base + 4];
+        float v0 = data[base + 5];
+        float u1 = data[base + 6];
+        float v1 = data[base + 7];
+
+        writeRotatedVertex(p, x1, y1, u0, v0, leftArgb, originX, originY, cos, sin);
+        writeRotatedVertex(p + STRIDE, x1, y2, u0, v1, leftArgb, originX, originY, cos, sin);
+        writeRotatedVertex(p + STRIDE * 2L, x2, y2, u1, v1, rightArgb, originX, originY, cos, sin);
+        writeRotatedVertex(p + STRIDE * 3L, x2, y1, u1, v0, rightArgb, originX, originY, cos, sin);
+    }
+
+    private static void writeRotatedVertex(long p, float x, float y, float u, float v, int color, float originX, float originY, float cos, float sin) {
+        float dx = x - originX;
+        float dy = y - originY;
+        float rx = originX + dx * cos - dy * sin;
+        float ry = originY + dx * sin + dy * cos;
+        BufferUtils.writeUvRectToAddr(p, rx, ry, u, v, color);
+    }
+
     private float baseWidth(String text, TtfFontLoader fontLoader) {
         LayoutKey key = new LayoutKey(fontLoader, text);
         Float cached = widthCache.get(key);
@@ -213,15 +263,16 @@ public class TtfTextRenderer implements ITextRenderer {
 
         float maxLine = 0.0f;
         float currentLine = 0.0f;
-        for (int i = 0; i < text.length(); i++) {
-            char ch = text.charAt(i);
-            if (ch == ' ') {
+        for (int i = 0; i < text.length(); ) {
+            int codepoint = text.codePointAt(i);
+            i += Character.charCount(codepoint);
+            if (codepoint == ' ') {
                 currentLine += SPACE_WIDTH;
-            } else if (ch == '\n') {
+            } else if (codepoint == '\n') {
                 maxLine = Math.max(maxLine, currentLine);
                 currentLine = 0.0f;
             } else {
-                currentLine += fontLoader.getAdvance(ch) * DEFAULT_SCALE + SPACING;
+                currentLine += fontLoader.getAdvance(codepoint) * DEFAULT_SCALE + SPACING;
             }
         }
 

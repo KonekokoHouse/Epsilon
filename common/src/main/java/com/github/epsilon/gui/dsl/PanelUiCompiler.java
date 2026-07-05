@@ -132,6 +132,13 @@ public class PanelUiCompiler {
             layer.addText(text, x, y, scale, color, fontLoader);
             return;
         }
+        if (node instanceof PanelUiTree.RotatedTextNode(
+                String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX,
+                float originY, float rotationDegrees
+        )) {
+            layer.addRotatedText(text, x, y, scale, color, fontLoader, originX, originY, rotationDegrees);
+            return;
+        }
         if (node instanceof PanelUiTree.MarqueeTextNode(
                 String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, PanelLayout.Rect clip
         )) {
@@ -149,6 +156,14 @@ public class PanelUiCompiler {
         )) {
             layer.addRoundedTexture(texture, x, y, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
                     u0, v0, u1, v1, color);
+            return;
+        }
+        if (node instanceof PanelUiTree.RotatedTextureNode(
+                var texture, float x, float y, float width, float height,
+                float u0, float v0, float u1, float v1, Color color,
+                float originX, float originY, float rotationDegrees
+        )) {
+            layer.addRotatedTexture(texture, x, y, width, height, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
             return;
         }
         if (node instanceof PanelUiTree.ButtonNode(

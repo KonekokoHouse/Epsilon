@@ -82,7 +82,7 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
     record Texture(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
                    Render2DTexture texture, float radiusTopLeft, float radiusTopRight,
                    float radiusBottomRight, float radiusBottomLeft, float u0, float v0, float u1, float v1,
-                   Color color) implements Render2DCommand {
+                   Color color, float originX, float originY, float rotationDegrees) implements Render2DCommand {
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.TEXTURE;
@@ -91,7 +91,8 @@ sealed interface Render2DCommand permits Render2DCommand.Shadow, Render2DCommand
 
     record Text(int layer, long sequence, Render2DBounds bounds, Render2DScissor scissor,
                 String text, float x, float y, float scale, Color color,
-                TtfFontLoader fontLoader) implements Render2DCommand {
+                TtfFontLoader fontLoader, float originX, float originY,
+                float rotationDegrees) implements Render2DCommand {
         @Override
         public Render2DCommandKind kind() {
             return Render2DCommandKind.TEXT;

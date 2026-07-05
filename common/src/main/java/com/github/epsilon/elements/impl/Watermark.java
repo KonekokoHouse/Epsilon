@@ -7,7 +7,6 @@ import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.awt.*;
 import java.util.function.Supplier;
@@ -26,7 +25,7 @@ public class Watermark extends HudModule {
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         TextRenderer textRenderer = textRendererSupplier.get();
 
         String traditionText = "EPSILON";

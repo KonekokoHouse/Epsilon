@@ -1292,5 +1292,9 @@
   "epsilon.elements.target hud.shadow color": "阴影颜色",
   "epsilon.elements.watermark": "水印",
   "epsilon.elements.watermark.scale": "缩放",
-  "epsilon.elements.watermark.text color": "文本颜色"
+  "epsilon.elements.watermark.text color": "文本颜色",
+  "epsilon.elements.mtf": "补佳乐",
+  "epsilon.elements.mtf.size": "大小",
+  "epsilon.elements.mtf.speed": "速度",
+  "epsilon.elements.mtf.color": "颜色"
 }

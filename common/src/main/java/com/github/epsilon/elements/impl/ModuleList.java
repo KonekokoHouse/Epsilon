@@ -12,7 +12,6 @@ import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
@@ -85,7 +84,7 @@ public class ModuleList extends HudModule {
     private static final float OPEN_INFO_PADDING_END = 3.5f;
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void render(DeltaTracker deltaTracker) {
         TextRenderer textRenderer = textRendererSupplier.get();
         float s = scale.getValue().floatValue();
         float textScale = style.is(Style.Open) ? Math.max(0.1f, s + openTextScaleOffset.getValue().floatValue()) : 0.72f * s;

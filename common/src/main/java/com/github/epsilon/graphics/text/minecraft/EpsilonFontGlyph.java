@@ -51,13 +51,12 @@ public final class EpsilonFontGlyph implements BakedGlyph {
         if (Character.isWhitespace(codepoint)) {
             return new EpsilonFontGlyph(codepoint, font, null);
         }
-        if (codepoint < Character.MIN_CODE_POINT || codepoint > Character.MAX_VALUE) {
+        if (codepoint < Character.MIN_CODE_POINT || codepoint > Character.MAX_CODE_POINT) {
             return null;
         }
 
-        char ch = (char) codepoint;
-        font.requestChars(String.valueOf(ch));
-        GlyphDescriptor descriptor = font.getGlyph(ch);
+        font.requestChars(new String(Character.toChars(codepoint)));
+        GlyphDescriptor descriptor = font.getGlyph(codepoint);
         return descriptor != null ? new EpsilonFontGlyph(codepoint, font, descriptor) : null;
     }
 

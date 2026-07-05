@@ -1292,5 +1292,9 @@
   "epsilon.elements.target hud.shadow color": "Shadow Color",
   "epsilon.elements.watermark": "Watermark",
   "epsilon.elements.watermark.scale": "Scale",
-  "epsilon.elements.watermark.text color": "Text Color"
+  "epsilon.elements.watermark.text color": "Text Color",
+  "epsilon.elements.mtf": "MTF",
+  "epsilon.elements.mtf.size": "Size",
+  "epsilon.elements.mtf.speed": "Speed",
+  "epsilon.elements.mtf.color": "Color"
 }

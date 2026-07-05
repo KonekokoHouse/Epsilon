@@ -232,22 +232,44 @@ public final class Render2DScheduler implements AutoCloseable {
             );
             case Render2DCommand.Texture texture -> {
                 if (texture.texture() instanceof Render2DTexture.IdentifierRef ref) {
-                    renderers.textureRenderer().addRoundedTexture(ref.identifier(),
-                            texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
-                            texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                            texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(), ref.linearFilter());
+                    if (texture.rotationDegrees() == 0.0f) {
+                        renderers.textureRenderer().addRoundedTexture(ref.identifier(),
+                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
+                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(), ref.linearFilter());
+                    } else {
+                        renderers.textureRenderer().addRotatedTexture(ref.identifier(),
+                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
+                                texture.originX(), texture.originY(), texture.rotationDegrees(), ref.linearFilter());
+                    }
                 } else if (texture.texture() instanceof Render2DTexture.LuminRef ref) {
-                    renderers.textureRenderer().addRoundedTexture(ref.texture(),
-                            texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
-                            texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
-                            texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color());
+                    if (texture.rotationDegrees() == 0.0f) {
+                        renderers.textureRenderer().addRoundedTexture(ref.texture(),
+                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.radiusTopLeft(), texture.radiusTopRight(), texture.radiusBottomRight(), texture.radiusBottomLeft(),
+                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color());
+                    } else {
+                        renderers.textureRenderer().addRotatedTexture(ref.texture(),
+                                texture.bounds().x(), texture.bounds().y(), texture.bounds().width(), texture.bounds().height(),
+                                texture.u0(), texture.v0(), texture.u1(), texture.v1(), texture.color(),
+                                texture.originX(), texture.originY(), texture.rotationDegrees());
+                    }
                 }
             }
             case Render2DCommand.Text text -> {
                 if (text.fontLoader() != null) {
-                    renderers.textRenderer().addText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.fontLoader());
+                    if (text.rotationDegrees() == 0.0f) {
+                        renderers.textRenderer().addText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.fontLoader());
+                    } else {
+                        renderers.textRenderer().addRotatedText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.fontLoader(), text.originX(), text.originY(), text.rotationDegrees());
+                    }
                 } else {
-                    renderers.textRenderer().addText(text.text(), text.x(), text.y(), text.scale(), text.color());
+                    if (text.rotationDegrees() == 0.0f) {
+                        renderers.textRenderer().addText(text.text(), text.x(), text.y(), text.scale(), text.color());
+                    } else {
+                        renderers.textRenderer().addRotatedText(text.text(), text.x(), text.y(), text.scale(), text.color(), text.originX(), text.originY(), text.rotationDegrees());
+                    }
                 }
             }
         }
@@ -370,7 +392,16 @@ public final class Render2DScheduler implements AutoCloseable {
             scheduler.add(new Render2DCommand.Texture(layer, scheduler.nextSequence(),
                     Render2DBounds.of(x, y, width, height), scissor, texture,
                     radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft,
-                    u0, v0, u1, v1, color));
+                    u0, v0, u1, v1, color, x, y, 0.0f));
+        }
+
+        public void addRotatedTexture(Render2DTexture texture, float x, float y, float width, float height,
+                                      float u0, float v0, float u1, float v1, Color color,
+                                      float originX, float originY, float rotationDegrees) {
+            scheduler.add(new Render2DCommand.Texture(layer, scheduler.nextSequence(),
+                    Render2DBounds.of(x, y, width, height), scissor, texture,
+                    0.0f, 0.0f, 0.0f, 0.0f,
+                    u0, v0, u1, v1, color, originX, originY, rotationDegrees));
         }
 
         public void addText(String text, float x, float y, float scale, Color color) {
@@ -378,12 +409,58 @@ public final class Render2DScheduler implements AutoCloseable {
         }
 
         public void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader) {
+            addText(text, x, y, scale, color, fontLoader, x, y, 0.0f);
+        }
+
+        public void addRotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
+            addText(text, x, y, scale, color, null, originX, originY, rotationDegrees);
+        }
+
+        public void addRotatedText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
+            addText(text, x, y, scale, color, fontLoader, originX, originY, rotationDegrees);
+        }
+
+        private void addText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, float originX, float originY, float rotationDegrees) {
             TextRenderer metrics = scheduler.textMetrics();
             float width = fontLoader != null ? metrics.getWidth(text, scale, fontLoader) : metrics.getWidth(text, scale);
             float height = fontLoader != null ? metrics.getHeight(scale, fontLoader) : metrics.getHeight(scale);
+            Render2DBounds bounds = rotationDegrees == 0.0f
+                    ? Render2DBounds.of(x, y, width, height)
+                    : rotatedBounds(x, y, width, height, originX, originY, rotationDegrees);
             scheduler.add(new Render2DCommand.Text(layer, scheduler.nextSequence(),
-                    Render2DBounds.of(x, y, width, height), scissor,
-                    text, x, y, scale, color, fontLoader));
+                    bounds, scissor,
+                    text, x, y, scale, color, fontLoader, originX, originY, rotationDegrees));
+        }
+
+        private static Render2DBounds rotatedBounds(float x, float y, float width, float height, float originX, float originY, float rotationDegrees) {
+            float radians = (float) Math.toRadians(rotationDegrees);
+            float cos = (float) Math.cos(radians);
+            float sin = (float) Math.sin(radians);
+            float x1 = rotateX(x, y, originX, originY, cos, sin);
+            float y1 = rotateY(x, y, originX, originY, cos, sin);
+            float x2 = rotateX(x, y + height, originX, originY, cos, sin);
+            float y2 = rotateY(x, y + height, originX, originY, cos, sin);
+            float x3 = rotateX(x + width, y + height, originX, originY, cos, sin);
+            float y3 = rotateY(x + width, y + height, originX, originY, cos, sin);
+            float x4 = rotateX(x + width, y, originX, originY, cos, sin);
+            float y4 = rotateY(x + width, y, originX, originY, cos, sin);
+            float minX = Math.min(Math.min(x1, x2), Math.min(x3, x4));
+            float minY = Math.min(Math.min(y1, y2), Math.min(y3, y4));
+            float maxX = Math.max(Math.max(x1, x2), Math.max(x3, x4));
+            float maxY = Math.max(Math.max(y1, y2), Math.max(y3, y4));
+            return Render2DBounds.of(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        private static float rotateX(float x, float y, float originX, float originY, float cos, float sin) {
+            float dx = x - originX;
+            float dy = y - originY;
+            return originX + dx * cos - dy * sin;
+        }
+
+        private static float rotateY(float x, float y, float originX, float originY, float cos, float sin) {
+            float dx = x - originX;
+            float dy = y - originY;
+            return originY + dx * sin + dy * cos;
         }
     }
 

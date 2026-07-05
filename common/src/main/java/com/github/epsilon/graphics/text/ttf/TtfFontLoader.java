@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.text.IFontLoader;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.stb.STBTruetype;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -29,10 +30,10 @@ public class TtfFontLoader implements IFontLoader {
     private final GlyphDescriptor[] asciiGlyphMap = new GlyphDescriptor[ASCII_LIMIT];
     private final int[] asciiAdvanceMap = new int[ASCII_LIMIT];
     private final boolean[] asciiPendingGlyphs = new boolean[ASCII_LIMIT];
-    private final HashMap<Character, GlyphDescriptor> glyphMap = new HashMap<>();
-    private final HashMap<Character, Integer> advanceMap = new HashMap<>();
-    private final HashMap<Character, CompletableFuture<TtfGlyph>> pendingGlyphs = new HashMap<>();
-    private final Set<Character> deferredReadyGlyphs = new LinkedHashSet<>();
+    private final HashMap<Integer, GlyphDescriptor> glyphMap = new HashMap<>();
+    private final HashMap<Integer, Integer> advanceMap = new HashMap<>();
+    private final HashMap<Integer, CompletableFuture<TtfGlyph>> pendingGlyphs = new HashMap<>();
+    private final Set<Integer> deferredReadyGlyphs = new LinkedHashSet<>();
     private final List<TtfGlyphAtlas> atlases = new ArrayList<>();
 
     private TtfGlyphAtlas currentAtlas;
@@ -50,43 +51,56 @@ public class TtfFontLoader implements IFontLoader {
         Arrays.fill(asciiAdvanceMap, ADVANCE_UNSET);
     }
 
+    public TtfFontLoader(Path ttfFile) {
+        this.fontFile = new TtfFontFile(ttfFile, 48, 4);
+        Arrays.fill(asciiAdvanceMap, ADVANCE_UNSET);
+    }
+
     @Override
     public void checkAndLoadChar(char ch) {
         loadCharImmediately(ch);
     }
 
     public void loadCharImmediately(char ch) {
-        if (hasGlyph(ch)) return;
+        loadCodepointImmediately(ch);
+    }
 
-        CompletableFuture<TtfGlyph> pending = removePendingGlyph(ch);
-        deferredReadyGlyphs.remove(ch);
+    public void loadCodepointImmediately(int codepoint) {
+        if (hasGlyph(codepoint)) return;
+
+        CompletableFuture<TtfGlyph> pending = removePendingGlyph(codepoint);
+        deferredReadyGlyphs.remove(codepoint);
         TtfGlyph glyph;
         try {
-            glyph = pending != null ? pending.join() : fontFile.generateGlyph(ch);
+            glyph = pending != null ? pending.join() : fontFile.generateGlyph(codepoint);
         } catch (RuntimeException ignored) {
-            glyph = fontFile.generateGlyph(ch);
+            glyph = fontFile.generateGlyph(codepoint);
         }
-        appendGlyph(ch, glyph);
+        appendGlyph(codepoint, glyph);
     }
 
     public int getAdvance(char ch) {
-        GlyphDescriptor glyph = getGlyph(ch);
+        return getAdvance((int) ch);
+    }
+
+    public int getAdvance(int codepoint) {
+        GlyphDescriptor glyph = getGlyph(codepoint);
         if (glyph != null) {
             return glyph.advance();
         }
 
-        if (isAscii(ch)) {
-            int advance = asciiAdvanceMap[ch];
+        if (isAscii(codepoint)) {
+            int advance = asciiAdvanceMap[codepoint];
             if (advance != ADVANCE_UNSET) {
                 return advance;
             }
 
-            advance = fontFile.getAdvance(ch);
-            asciiAdvanceMap[ch] = advance;
+            advance = fontFile.getAdvance(codepoint);
+            asciiAdvanceMap[codepoint] = advance;
             return advance;
         }
 
-        return advanceMap.computeIfAbsent(ch, fontFile::getAdvance);
+        return advanceMap.computeIfAbsent(codepoint, fontFile::getAdvance);
     }
 
     public void requestChars(String chars) {
@@ -101,13 +115,14 @@ public class TtfFontLoader implements IFontLoader {
     }
 
     private void requestMissingChars(String chars) {
-        for (int i = 0; i < chars.length(); i++) {
-            char ch = chars.charAt(i);
-            if (ch == ' ' || ch == '\n' || hasGlyph(ch) || hasPendingGlyph(ch)) {
+        for (int i = 0; i < chars.length(); ) {
+            int codepoint = chars.codePointAt(i);
+            i += Character.charCount(codepoint);
+            if (codepoint == ' ' || codepoint == '\n' || hasGlyph(codepoint) || hasPendingGlyph(codepoint)) {
                 continue;
             }
 
-            putPendingGlyph(ch, CompletableFuture.supplyAsync(() -> fontFile.generateGlyph(ch), GLYPH_WORKER));
+            putPendingGlyph(codepoint, CompletableFuture.supplyAsync(() -> fontFile.generateGlyph(codepoint), GLYPH_WORKER));
         }
     }
 
@@ -117,8 +132,8 @@ public class TtfFontLoader implements IFontLoader {
             return;
         }
 
-        List<Character> newlyReadyChars = null;
-        for (Map.Entry<Character, CompletableFuture<TtfGlyph>> entry : pendingGlyphs.entrySet()) {
+        List<Integer> newlyReadyChars = null;
+        for (Map.Entry<Integer, CompletableFuture<TtfGlyph>> entry : pendingGlyphs.entrySet()) {
             if (entry.getValue().isDone()) {
                 if (newlyReadyChars == null) {
                     newlyReadyChars = new ArrayList<>();
@@ -135,13 +150,13 @@ public class TtfFontLoader implements IFontLoader {
             return;
         }
 
-        Iterator<Character> iterator = deferredReadyGlyphs.iterator();
+        Iterator<Integer> iterator = deferredReadyGlyphs.iterator();
         while (iterator.hasNext() && canUploadMoreGlyphsThisFrame()) {
-            char ch = iterator.next();
+            int codepoint = iterator.next();
             iterator.remove();
-            CompletableFuture<TtfGlyph> future = removePendingGlyph(ch);
+            CompletableFuture<TtfGlyph> future = removePendingGlyph(codepoint);
             if (future != null && !future.isCompletedExceptionally() && !future.isCancelled()) {
-                appendGlyph(ch, future.join());
+                appendGlyph(codepoint, future.join());
                 glyphUploadsThisFrame++;
             }
         }
@@ -180,7 +195,7 @@ public class TtfFontLoader implements IFontLoader {
         return glyphUploadsThisFrame < maxGlyphUploadsPerFrame;
     }
 
-    private void appendGlyph(char ch, TtfGlyph glyph) {
+    private void appendGlyph(int codepoint, TtfGlyph glyph) {
         if (glyph == null || glyph.glyphData() == null) return;
 
         if (currentAtlas == null) {
@@ -201,7 +216,7 @@ public class TtfFontLoader implements IFontLoader {
                     glyph.xOffset(), glyph.yOffset(),
                     glyph.advance()
             );
-            putGlyph(ch, descriptor);
+            putGlyph(codepoint, descriptor);
             glyphRevision++;
         }
 
@@ -216,8 +231,10 @@ public class TtfFontLoader implements IFontLoader {
 
     @Override
     public void checkAndLoadChars(String chars) {
-        for (final var ch : chars.toCharArray()) {
-            checkAndLoadChar(ch);
+        for (int i = 0; i < chars.length(); ) {
+            int codepoint = chars.codePointAt(i);
+            i += Character.charCount(codepoint);
+            loadCodepointImmediately(codepoint);
         }
     }
 
@@ -255,47 +272,51 @@ public class TtfFontLoader implements IFontLoader {
 
     @Override
     public GlyphDescriptor getGlyph(char ch) {
-        if (isAscii(ch)) {
-            return asciiGlyphMap[ch];
-        }
-        return glyphMap.get(ch);
+        return getGlyph((int) ch);
     }
 
-    private void putGlyph(char ch, GlyphDescriptor glyph) {
-        if (isAscii(ch)) {
-            asciiGlyphMap[ch] = glyph;
+    public GlyphDescriptor getGlyph(int codepoint) {
+        if (isAscii(codepoint)) {
+            return asciiGlyphMap[codepoint];
+        }
+        return glyphMap.get(codepoint);
+    }
+
+    private void putGlyph(int codepoint, GlyphDescriptor glyph) {
+        if (isAscii(codepoint)) {
+            asciiGlyphMap[codepoint] = glyph;
         } else {
-            glyphMap.put(ch, glyph);
+            glyphMap.put(codepoint, glyph);
         }
     }
 
-    private boolean hasGlyph(char ch) {
-        return getGlyph(ch) != null;
+    private boolean hasGlyph(int codepoint) {
+        return getGlyph(codepoint) != null;
     }
 
-    private void putPendingGlyph(char ch, CompletableFuture<TtfGlyph> future) {
-        pendingGlyphs.put(ch, future);
-        if (isAscii(ch)) {
-            asciiPendingGlyphs[ch] = true;
+    private void putPendingGlyph(int codepoint, CompletableFuture<TtfGlyph> future) {
+        pendingGlyphs.put(codepoint, future);
+        if (isAscii(codepoint)) {
+            asciiPendingGlyphs[codepoint] = true;
         }
     }
 
-    private CompletableFuture<TtfGlyph> removePendingGlyph(char ch) {
-        CompletableFuture<TtfGlyph> future = pendingGlyphs.remove(ch);
-        if (isAscii(ch)) {
-            asciiPendingGlyphs[ch] = false;
+    private CompletableFuture<TtfGlyph> removePendingGlyph(int codepoint) {
+        CompletableFuture<TtfGlyph> future = pendingGlyphs.remove(codepoint);
+        if (isAscii(codepoint)) {
+            asciiPendingGlyphs[codepoint] = false;
         }
         return future;
     }
 
-    private boolean hasPendingGlyph(char ch) {
-        if (isAscii(ch)) {
-            return asciiPendingGlyphs[ch];
+    private boolean hasPendingGlyph(int codepoint) {
+        if (isAscii(codepoint)) {
+            return asciiPendingGlyphs[codepoint];
         }
-        return pendingGlyphs.containsKey(ch);
+        return pendingGlyphs.containsKey(codepoint);
     }
 
-    private static boolean isAscii(char ch) {
-        return ch < ASCII_LIMIT;
+    private static boolean isAscii(int codepoint) {
+        return codepoint >= 0 && codepoint < ASCII_LIMIT;
     }
 }

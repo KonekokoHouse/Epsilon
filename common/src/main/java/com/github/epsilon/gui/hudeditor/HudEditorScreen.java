@@ -123,7 +123,7 @@ public class HudEditorScreen extends Screen {
 
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
-            element.renderWithBatch(graphics, minecraft.getDeltaTracker(), scene.batch(GuiLayer.CONTENT, -40));
+            element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(GuiLayer.CONTENT, -40));
         }
 
         beginEditorLayer(100);
