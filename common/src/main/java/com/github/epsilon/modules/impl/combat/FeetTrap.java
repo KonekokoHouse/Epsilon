@@ -18,10 +18,11 @@ import com.github.epsilon.utils.world.BlockUtils;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.Mth;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.NoteBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -30,6 +31,13 @@ import net.minecraft.world.phys.Vec3;
 public class FeetTrap extends Module {
 
     public static final FeetTrap INSTANCE = new FeetTrap();
+    private static final Direction[] SURROUND_DIRECTIONS = {
+            Direction.DOWN,
+            Direction.NORTH,
+            Direction.SOUTH,
+            Direction.WEST,
+            Direction.EAST
+    };
 
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
@@ -39,21 +47,20 @@ public class FeetTrap extends Module {
     private final SettingGroup sgRotate = settingGroup("Rotate");
     private final SettingGroup sgCheck = settingGroup("Check");
 
-    public final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1).group(sgGeneral);
-    public final BoolSetting extend = boolSetting("Extend", true).group(sgGeneral);
-    public final BoolSetting onlySelf = boolSetting("Only Self", false, extend::getValue).group(sgGeneral);
-    private final IntSetting blocksPer = intSetting("Blocks Per Tick", 1, 1, 8, 1).group(sgGeneral);
-    private final BoolSetting breakCrystal = boolSetting("Break", true).group(sgGeneral);
-    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true, breakCrystal::getValue).group(sgGeneral);
+    private final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1).group(sgGeneral);
+    private final BoolSetting extend = boolSetting("Extend", true).group(sgGeneral);
+    private final BoolSetting onlySelf = boolSetting("Only Self", false, extend::getValue).group(sgGeneral);
+    private final IntSetting blocksPerTick = intSetting("Blocks Per Tick", 1, 1, 8, 1).group(sgGeneral);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true).group(sgGeneral);
     private final BoolSetting inventorySwap = boolSetting("Inventory Swap", true).group(sgGeneral);
     private final BoolSetting enderChest = boolSetting("Ender Chest", true).group(sgGeneral);
 
     private final BoolSetting rotate = boolSetting("Rotate", true).group(sgRotate);
     private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 18, 180, 18).group(sgRotate);
 
-    public final BoolSetting inAir = boolSetting("In Air", true).group(sgCheck);
-    private final BoolSetting moveDisable = boolSetting("Toggle On Move", true).group(sgCheck);
-    private final BoolSetting jumpDisable = boolSetting("Toggle On Jump", true).group(sgCheck);
+    private final BoolSetting inAir = boolSetting("In Air", true).group(sgCheck);
+    private final BoolSetting toggleOnMove = boolSetting("Toggle On Move", true).group(sgCheck);
+    private final BoolSetting toggleOnJump = boolSetting("Toggle On Jump", true).group(sgCheck);
 
     private double startX = 0, startY = 0, startZ = 0;
     private int progress = 0;
@@ -99,8 +106,7 @@ public class FeetTrap extends Module {
             return;
         }
 
-        double distanceToStart = Mth.sqrt((float) mc.player.distanceToSqr(startX, startY, startZ));
-        if ((moveDisable.getValue() && distanceToStart > 1.0 || jumpDisable.getValue() && mc.player.input.keyPresses.jump())) {
+        if (toggleOnMove.getValue() && mc.player.distanceToSqr(startX, startY, startZ) > 1.0 || toggleOnJump.getValue() && mc.player.input.keyPresses.jump()) {
             toggle();
             return;
         }
@@ -117,41 +123,43 @@ public class FeetTrap extends Module {
         doSurround(BlockPos.containing(mc.player.getX(), mc.player.getY() + 0.8, mc.player.getZ()), result.slot());
     }
 
-    public void doSurround(BlockPos pos, int slot) {
-        for (Direction i : Direction.values()) {
-            if (i == Direction.UP) continue;
+    private void doSurround(BlockPos pos, int slot) {
+        for (Direction i : SURROUND_DIRECTIONS) {
             BlockPos offsetPos = pos.relative(i);
-            if (getPlaceSide(offsetPos) != null) {
-                tryPlaceBlock(offsetPos, slot);
-            } else if (mc.level.getBlockState(offsetPos).canBeReplaced()) {
-                tryPlaceBlock(getHelperPos(offsetPos), slot);
-            }
+            tryPlaceBlockOrHelper(offsetPos, slot);
             if ((selfIntersectPos(offsetPos) || !onlySelf.getValue() && otherIntersectPos(offsetPos)) && extend.getValue()) {
-                for (Direction i2 : Direction.values()) {
-                    if (i2 == Direction.UP) continue;
+                for (Direction i2 : SURROUND_DIRECTIONS) {
                     BlockPos offsetPos2 = offsetPos.relative(i2);
                     if (selfIntersectPos(offsetPos2) || !onlySelf.getValue() && otherIntersectPos(offsetPos2)) {
-                        for (Direction i3 : Direction.values()) {
-                            if (i3 == Direction.UP) continue;
+                        for (Direction i3 : SURROUND_DIRECTIONS) {
                             tryPlaceBlock(offsetPos2, slot);
                             BlockPos offsetPos3 = offsetPos2.relative(i3);
-                            tryPlaceBlock(getPlaceSide(offsetPos3) != null || !mc.level.getBlockState(offsetPos3).canBeReplaced() ? offsetPos3 : getHelperPos(offsetPos3), slot);
+                            tryPlaceBlockOrHelper(offsetPos3, slot);
                         }
                     }
-                    tryPlaceBlock(getPlaceSide(offsetPos2) != null || !mc.level.getBlockState(offsetPos2).canBeReplaced() ? offsetPos2 : getHelperPos(offsetPos2), slot);
+                    tryPlaceBlockOrHelper(offsetPos2, slot);
                 }
             }
         }
     }
 
-    public Direction getPlaceSide(BlockPos pos) {
+    private void tryPlaceBlockOrHelper(BlockPos pos, int slot) {
+        if (getPlaceSide(pos) != null || !mc.level.getBlockState(pos).canBeReplaced()) {
+            tryPlaceBlock(pos, slot);
+        } else {
+            tryPlaceBlock(getHelperPos(pos), slot);
+        }
+    }
+
+    private Direction getPlaceSide(BlockPos pos) {
         double minDistance = Double.MAX_VALUE;
         Direction side = null;
         for (Direction i : Direction.values()) {
-            if (!canClick(pos.relative(i))) continue;
-            if (mc.level.getBlockState(pos.relative(i)).canBeReplaced()) continue;
-            if (!RotationUtils.canSee(pos.relative(i), i.getOpposite())) continue;
-            double vecDis = mc.player.getEyePosition().distanceToSqr(pos.getCenter().add(i.getUnitVec3i().getX() * 0.5, i.getUnitVec3i().getY() * 0.5, i.getUnitVec3i().getZ() * 0.5));
+            BlockPos neighbourPos = pos.relative(i);
+            BlockState neighbourState = mc.level.getBlockState(neighbourPos);
+            if (neighbourState.canBeReplaced() || !isClickable(neighbourState, neighbourPos)) continue;
+            if (!RotationUtils.canSee(neighbourPos, i.getOpposite())) continue;
+            double vecDis = mc.player.getEyePosition().distanceToSqr(hitVec(pos, i));
             if (vecDis > minDistance) {
                 continue;
             }
@@ -161,41 +169,28 @@ public class FeetTrap extends Module {
         return side;
     }
 
-    public boolean canClick(BlockPos pos) {
-        BlockState state = mc.level.getBlockState(pos);
-        Block block = state.getBlock();
-        return mc.player.isCrouching() || !isClickable(block);
-    }
-
-    public boolean isClickable(Block block) {
-        return block instanceof CraftingTableBlock
-                || block instanceof AnvilBlock
-                || block instanceof LoomBlock
-                || block instanceof CartographyTableBlock
-                || block instanceof GrindstoneBlock
-                || block instanceof StonecutterBlock
-                || block instanceof ButtonBlock
-                || block instanceof BasePressurePlateBlock
-                || block instanceof BedBlock
-                || block instanceof FenceGateBlock
-                || block instanceof DoorBlock
-                || block instanceof NoteBlock
-                || block instanceof TrapDoorBlock;
+    private boolean isClickable(BlockState state, BlockPos pos) {
+        return mc.player.isSecondaryUseActive() || !(
+                state.getMenuProvider(mc.level, pos) != null
+                        || state.getBlock() instanceof EntityBlock
+                        || state.is(BlockTags.BUTTONS)
+                        || state.is(BlockTags.PRESSURE_PLATES)
+                        || state.is(BlockTags.BEDS)
+                        || state.is(BlockTags.FENCE_GATES)
+                        || state.is(BlockTags.DOORS)
+                        || state.is(BlockTags.TRAPDOORS)
+                        || state.getBlock() instanceof NoteBlock
+        );
     }
 
     private void tryPlaceBlock(BlockPos pos, int slot) {
         if (pos == null) return;
-        if (!(progress < blocksPer.getValue())) return;
+        if (!(progress < blocksPerTick.getValue())) return;
         Direction side = getPlaceSide(pos);
         if (side == null) return;
         if (!BlockUtils.canPlaceAt(pos)) return;
         if (rotate.getValue()) {
-            Vec3 directionVec = new Vec3(
-                    pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5,
-                    pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5,
-                    pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5
-            );
-            this.rotation = RotationUtils.calculate(directionVec);
+            this.rotation = RotationUtils.calculate(hitVec(pos, side));
             if (RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), pos.relative(side))) {
                 // 在这个 tick 转头已经到达，无需继续设置转头
                 this.rotation = null;
@@ -217,16 +212,16 @@ public class FeetTrap extends Module {
         progress++;
     }
 
-    public void placeBlock(BlockPos pos, Direction side, InteractionHand hand) {
-        Vec3 directionVec = new Vec3(
-                pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5,
-                pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5,
-                pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5
-        );
-        mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(directionVec, side, pos, false));
+    private void placeBlock(BlockPos pos, Direction side, InteractionHand hand) {
+        BlockHitResult result = new BlockHitResult(hitVec(pos, side), side, pos, false);
+        mc.gameMode.useItemOn(mc.player, hand, result);
     }
 
-    public BlockPos getHelperPos(BlockPos pos) {
+    private Vec3 hitVec(BlockPos pos, Direction side) {
+        return pos.getCenter().relative(side, 0.5);
+    }
+
+    private BlockPos getHelperPos(BlockPos pos) {
         for (Direction i : Direction.values()) {
             if (!RotationUtils.canSee(pos.relative(i), i.getOpposite())) continue;
             if (BlockUtils.canPlaceAt(pos.relative(i))) return pos.relative(i);
