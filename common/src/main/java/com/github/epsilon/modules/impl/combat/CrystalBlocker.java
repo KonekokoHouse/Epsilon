@@ -115,7 +115,7 @@ public class CrystalBlocker extends Module {
         }
 
         // 3. Check if placeable
-        if (!BlockUtils.canPlaceAt(placePos)) return;
+        if (!BlockUtils.canPlaceAt(placePos, false)) return;
         if (!mc.level.getBlockState(placePos.below()).isSolid()) return;
 
         // 4. Find obsidian

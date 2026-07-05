@@ -1,45 +1,35 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.bus.listeners.ConsumerListener;
+import com.github.epsilon.events.impl.ClientTickEvent;
+import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
-import com.github.epsilon.settings.impl.ColorSetting;
-import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.player.FindItemResult;
-import com.github.epsilon.utils.player.InteractionUtils;
-import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.PlayerUtils;
-import com.github.epsilon.utils.render.animation.Easing;
+import com.github.epsilon.utils.player.*;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.timer.TimerUtils;
 import com.github.epsilon.utils.world.BlockUtils;
-import com.github.epsilon.utils.world.HoleUtils;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
-import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class FeetTrap extends Module {
 
@@ -47,442 +37,304 @@ public class FeetTrap extends Module {
 
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class,
-                _ -> {
-                    if (!render.getValue() || renderBoxes.isEmpty()) return;
-
-                    long time = System.currentTimeMillis();
-                    long fadeTime = this.fadeTime.getValue().longValue();
-
-                    renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
-
-                    for (RenderInfo box : renderBoxes) {
-                        float progress = Mth.clamp((float) (time - box.startTime()) / fadeTime, 0.0f, 1.0f);
-
-                        double scale = 1.0;
-                        if (box.shrink()) {
-                            scale = 1.0 - Easing.EASE_IN_OUT_EXPO.getFunction().apply(progress);
-                            if (scale < 0) scale = 0;
-                        }
-
-                        float alphaFactor = box.fade() ? Mth.clamp(1.0f - progress, 0.0f, 1.0f) : 1.0f;
-
-                        Color sideColor = box.sideColor();
-                        Color lineColor = box.lineColor();
-
-                        Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
-                        Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
-
-                        AABB renderBox = box.aabb;
-                        if (box.shrink()) {
-                            renderBox = AABB.ofSize(renderBox.getCenter(), renderBox.getXsize() * scale, renderBox.getYsize() * scale, renderBox.getZsize() * scale);
-                        }
-
-                        Render3DScheduler.INSTANCE.addFilledBox(renderBox, side);
-                        Render3DScheduler.INSTANCE.addOutlineBox(renderBox, line);
-                    }
-                }
-        ));
     }
 
-    private enum SwitchMode {
-        Visible,
-        Silent
+    private final SettingGroup sgGeneral = settingGroup("General");
+    private final SettingGroup sgRotate = settingGroup("Rotate");
+    private final SettingGroup sgCheck = settingGroup("Check");
+
+    public final IntSetting placeDelay = intSetting("Place Delay", 50, 0, 500, 1).group(sgGeneral);
+    public final BoolSetting extend = boolSetting("Extend", true).group(sgGeneral);
+    public final BoolSetting onlySelf = boolSetting("Only Self", false, extend::getValue).group(sgGeneral);
+    private final IntSetting blocksPer = intSetting("Blocks Per Tick", 1, 1, 8, 1).group(sgGeneral);
+    private final BoolSetting breakCrystal = boolSetting("Break", true).group(sgGeneral);
+    private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true, breakCrystal::getValue).group(sgGeneral);
+    private final BoolSetting center = boolSetting("Center", true).group(sgGeneral);
+    private final BoolSetting inventory = boolSetting("Inventory Swap", true).group(sgGeneral);
+    private final BoolSetting enderChest = boolSetting("Ender Chest", true).group(sgGeneral);
+
+    private final BoolSetting rotate = boolSetting("Rotate", true).group(sgRotate);
+
+    public final BoolSetting inAir = boolSetting("In Air", true).group(sgCheck);
+    private final BoolSetting moveDisable = boolSetting("Move Disable", true).group(sgCheck);
+    private final BoolSetting jumpDisable = boolSetting("Jump Disable", true).group(sgCheck);
+
+    public Vec3 directionVec = null;
+    private double startX = 0;
+    private double startY = 0;
+    private double startZ = 0;
+    private int progress = 0;
+    private boolean shouldCenter = true;
+
+    private final TimerUtils timer = new TimerUtils();
+
+    public boolean selfIntersectPos(BlockPos pos) {
+        return mc.player.getBoundingBox().intersects(new AABB(pos));
     }
 
-    private enum RotateMode {
-        None,
-        Silent
-    }
-
-    private enum PlaceResult {
-        Placed,
-        Waiting,
-        Skipped
-    }
-
-    private final EnumSetting<SwitchMode> switchMode = enumSetting("Switch", SwitchMode.Visible);
-    private final EnumSetting<RotateMode> rotate = enumSetting("Rotate", RotateMode.Silent);
-    private final EnumSetting<PlayerUtils.HelperMode> helperMode = enumSetting("Helper Mode", PlayerUtils.HelperMode.Grim);
-    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 10, 180, 10, () -> rotate.is(RotateMode.Silent));
-    private final BoolSetting sideCheck = boolSetting("Side Check", false, () -> rotate.is(RotateMode.Silent));
-    private final IntSetting blocksPerTick = intSetting("Blocks Per Tick", 2, 1, 8, 1);
-    private final IntSetting delay = intSetting("Delay", 0, 0, 20, 1);
-    private final BoolSetting toggleOnYChange = boolSetting("Toggle On Y Change", true);
-    private final BoolSetting toggleWhenDone = boolSetting("Toggle When Done", false);
-    private final BoolSetting autoSneak = boolSetting("Auto Sneak", true);
-    private final BoolSetting airPlace = boolSetting("Air Place", false);
-    private final BoolSetting airPlacePacket = boolSetting("Air Place Packet", true, airPlace::getValue);
-    private final BoolSetting airPlaceGrimBypass = boolSetting("Air Place Grim Bypass", false, airPlace::getValue);
-
-    private final BoolSetting swingHand = boolSetting("Swing Hand", true);
-    private final BoolSetting render = boolSetting("Render", true);
-    private final BoolSetting fade = boolSetting("Fade", true, render::getValue);
-    private final IntSetting fadeTime = intSetting("Fade Time", 500, 0, 3000, 50, () -> render.getValue() && fade.getValue());
-    private final BoolSetting shrink = boolSetting("Shrink", false, render::getValue);
-    private final ColorSetting sideColor = colorSetting("Side Color", new Color(255, 183, 197, 100), render::getValue);
-    private final ColorSetting lineColor = colorSetting("Line Color", new Color(255, 105, 180), render::getValue);
-
-    private int timer;
-    private double prevY;
-    private BlockPos pendingPos;
-
-    private final List<RenderInfo> renderBoxes = new ArrayList<>();
-
-    @Override
-    protected void onEnable() {
-        if (nullCheck()) {
-            toggle();
-            return;
+    public boolean otherIntersectPos(BlockPos pos) {
+        for (AbstractClientPlayer player : mc.level.players()) {
+            if (player.getBoundingBox().intersects(new AABB(pos))) {
+                return true;
+            }
         }
-        timer = 0;
-        prevY = mc.player.getY();
-        pendingPos = null;
+        return false;
     }
 
-    @Override
-    protected void onDisable() {
-        pendingPos = null;
-        InvUtils.swapBack();
+    public Rot2f getRotationTo(Vec3 posFrom, Vec3 posTo) {
+        Vec3 vec3d = posTo.subtract(posFrom);
+        return getRotationFromVec(vec3d);
+    }
+
+    private Rot2f getRotationFromVec(Vec3 vec) {
+        double d = vec.x;
+        double d2 = vec.z;
+        double xz = Math.hypot(d, d2);
+        d2 = vec.z;
+        double d3 = vec.x;
+        double yaw = normalizeAngle(Math.toDegrees(Math.atan2(d2, d3)) - 90.0);
+        double pitch = normalizeAngle(Math.toDegrees(-Math.atan2(vec.y, xz)));
+        return new Rot2f((float) yaw, (float) pitch);
+    }
+
+    private static double normalizeAngle(double angleIn) {
+        double angle = angleIn;
+        if ((angle %= 360.0) >= 180.0) {
+            angle -= 360.0;
+        }
+        if (angle < -180.0) {
+            angle += 360.0;
+        }
+        return angle;
     }
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
-        if (toggleOnYChange.getValue() && prevY != mc.player.getY()) {
+        if (directionVec != null && rotate.getValue()) {
+            Managers.ROTATION.setRotations(RotationUtils.calculate(directionVec), 180f);
+        }
+    }
+
+    @EventHandler
+    private void onClientTick(ClientTickEvent.Pre event) {
+        if (nullCheck()) return;
+        if (inventory.getValue() && mc.screen != null) return;
+        if (!timer.passedMillise(placeDelay.getValue().longValue())) return;
+
+        progress = 0;
+
+        if (!MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
+            startX = mc.player.getX();
+            startY = mc.player.getY();
+            startZ = mc.player.getZ();
+        }
+
+        FindItemResult result = findBlocks();
+        if (!result.found()) {
+            ChatUtils.addChatMessage("[FeetTrap] No block found");
             toggle();
             return;
         }
 
-        prevY = mc.player.getY();
-
-        if (timer > 0) {
-            timer--;
-            pendingPos = null;
+        double distanceToStart = Mth.sqrt((float) mc.player.distanceToSqr(startX, startY, startZ));
+        if ((moveDisable.getValue() && distanceToStart > 1.0 || jumpDisable.getValue() && mc.player.input.keyPresses.jump())) {
+            toggle();
             return;
         }
 
-        List<BlockPos> blocks = getBlocks();
-        if (blocks.isEmpty()) {
-            pendingPos = null;
-            if (toggleWhenDone.getValue()) toggle();
+        if (pauseOnEat.getValue() && PlayerUtils.isEating()) {
             return;
         }
 
-        FindItemResult obsidian = switchMode.is(SwitchMode.Silent) ? InvUtils.find(Items.OBSIDIAN) : InvUtils.findInHotbar(Items.OBSIDIAN);
-        if (!obsidian.found()) return;
+        if (!inAir.getValue() && !mc.player.onGround()) return;
+        doSurround(BlockPos.containing(mc.player.getX(), mc.player.getY(), mc.player.getZ()), result.slot());
+        doSurround(BlockPos.containing(mc.player.getX(), mc.player.getY() + 0.8, mc.player.getZ()), result.slot());
+    }
 
-        if (timer > 0) return;
-
-        int placed = 0;
-        List<BlockPos> skipped = new ArrayList<>();
-        while (placed < blocksPerTick.getValue()) {
-            // 静默转头模式会优先继续尝试上一 tick 的目标，避免刚转到一半就切换位置。
-            if (pendingPos != null && !BlockUtils.canPlaceAt(pendingPos)) {
-                pendingPos = null;
+    public void doSurround(BlockPos pos, int slot) {
+        for (Direction i : Direction.values()) {
+            if (i == Direction.UP) continue;
+            BlockPos offsetPos = pos.relative(i);
+            if (getPlaceSide(offsetPos) != null) {
+                tryPlaceBlock(offsetPos, slot);
+            } else if (mc.level.getBlockState(offsetPos).canBeReplaced()) {
+                tryPlaceBlock(getHelperPos(offsetPos), slot);
             }
-
-            BlockPos targetBlock = pendingPos != null ? pendingPos : getSequentialPos(skipped);
-            if (targetBlock == null) break;
-
-            PlaceResult result = placeBlock(targetBlock, obsidian);
-            switch (result) {
-                case Placed -> {
-                    pendingPos = null;
-                    placed++;
-                    timer = delay.getValue();
-                }
-                case Waiting -> {
-                    return;
-                }
-                case Skipped -> {
-                    pendingPos = null;
-                    skipped.add(targetBlock);
+            if ((selfIntersectPos(offsetPos) || !onlySelf.getValue() && otherIntersectPos(offsetPos)) && extend.getValue()) {
+                for (Direction i2 : Direction.values()) {
+                    if (i2 == Direction.UP) continue;
+                    BlockPos offsetPos2 = offsetPos.relative(i2);
+                    if (selfIntersectPos(offsetPos2) || !onlySelf.getValue() && otherIntersectPos(offsetPos2)) {
+                        for (Direction i3 : Direction.values()) {
+                            if (i3 == Direction.UP) continue;
+                            tryPlaceBlock(offsetPos2, slot);
+                            BlockPos offsetPos3 = offsetPos2.relative(i3);
+                            tryPlaceBlock(getPlaceSide(offsetPos3) != null || !mc.level.getBlockState(offsetPos3).canBeReplaced() ? offsetPos3 : getHelperPos(offsetPos3), slot);
+                        }
+                    }
+                    tryPlaceBlock(getPlaceSide(offsetPos2) != null || !mc.level.getBlockState(offsetPos2).canBeReplaced() ? offsetPos2 : getHelperPos(offsetPos2), slot);
                 }
             }
         }
     }
 
-    private List<BlockPos> getBlocks() {
-        BlockPos playerPos = getPlayerPos();
-        List<BlockPos> offsets = new ArrayList<>();
-
-        // 玩家靠近方块边缘时碰撞箱会跨格，需要向对应方向扩展围脚范围。
-        int x;
-        int z;
-        double decimalX = Math.abs(mc.player.getX()) - Math.floor(Math.abs(mc.player.getX()));
-        double decimalZ = Math.abs(mc.player.getZ()) - Math.floor(Math.abs(mc.player.getZ()));
-        int lengthXPos = HoleUtils.calcLength(decimalX, false);
-        int lengthXNeg = HoleUtils.calcLength(decimalX, true);
-        int lengthZPos = HoleUtils.calcLength(decimalZ, false);
-        int lengthZNeg = HoleUtils.calcLength(decimalZ, true);
-        List<BlockPos> tempOffsets = new ArrayList<>();
-        // 先补玩家脚下可能重叠的格子，防止贴边时漏掉底部方块。
-        offsets.addAll(getOverlapPos());
-
-        // 根据玩家跨格范围生成外侧一圈围脚方块。
-        for (x = 1; x < lengthXPos + 1; ++x) {
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, x, 0.0, 1 + lengthZPos));
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, x, 0.0, -(1 + lengthZNeg)));
-        }
-        for (x = 0; x <= lengthXNeg; ++x) {
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, -x, 0.0, 1 + lengthZPos));
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, -x, 0.0, -(1 + lengthZNeg)));
-        }
-        for (z = 1; z < lengthZPos + 1; ++z) {
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, 1 + lengthXPos, 0.0, z));
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, -(1 + lengthXNeg), 0.0, z));
-        }
-        for (z = 0; z <= lengthZNeg; ++z) {
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, 1 + lengthXPos, 0.0, -z));
-            tempOffsets.add(HoleUtils.addToPlayer(playerPos, -(1 + lengthXNeg), 0.0, -z));
-        }
-
-        for (BlockPos pos : tempOffsets) {
-            // 如果目标位置周围都是可替换方块，则额外尝试向下一格补底。
-            if (getDown(pos)) {
-                offsets.add(pos.offset(0, -1, 0));
+    public Direction getPlaceSide(BlockPos pos) {
+        double minDistance = Double.MAX_VALUE;
+        Direction side = null;
+        for (Direction i : Direction.values()) {
+            if (!canClick(pos.relative(i))) continue;
+            if (mc.level.getBlockState(pos.relative(i)).canBeReplaced()) continue;
+            if (!RotationUtils.canSee(pos.relative(i), i.getOpposite())) continue;
+            double vecDis = mc.player.getEyePosition().distanceToSqr(pos.getCenter().add(i.getUnitVec3i().getX() * 0.5, i.getUnitVec3i().getY() * 0.5, i.getUnitVec3i().getZ() * 0.5));
+            if (vecDis > minDistance) {
+                continue;
             }
-            offsets.add(pos);
+            side = i;
+            minDistance = vecDis;
         }
-
-        return offsets;
+        return side;
     }
 
-    private List<BlockPos> getOverlapPos() {
-        List<BlockPos> positions = new ArrayList<>();
+    public boolean canClick(BlockPos pos) {
+        BlockState state = mc.level.getBlockState(pos);
+        Block block = state.getBlock();
+        return mc.player.isCrouching() || !isClickable(block);
+    }
 
-        // calcOffset 使用原始小数部分，负坐标会保留 floor 后的跨格方向。
-        double decimalX = mc.player.getX() - Math.floor(mc.player.getX());
-        double decimalZ = mc.player.getZ() - Math.floor(mc.player.getZ());
-        int offX = HoleUtils.calcOffset(decimalX);
-        int offZ = HoleUtils.calcOffset(decimalZ);
-        positions.add(getPlayerPos());
-        for (int x = 0; x <= Math.abs(offX); ++x) {
-            for (int z = 0; z <= Math.abs(offZ); ++z) {
-                int properX = x * offX;
-                int properZ = z * offZ;
-                positions.add(getPlayerPos().offset(properX, -1, properZ));
+    public boolean isClickable(Block block) {
+        return block instanceof CraftingTableBlock
+                || block instanceof AnvilBlock
+                || block instanceof LoomBlock
+                || block instanceof CartographyTableBlock
+                || block instanceof GrindstoneBlock
+                || block instanceof StonecutterBlock
+                || block instanceof ButtonBlock
+                || block instanceof BasePressurePlateBlock
+                || block instanceof BedBlock
+                || block instanceof FenceGateBlock
+                || block instanceof DoorBlock
+                || block instanceof NoteBlock
+                || block instanceof TrapDoorBlock;
+    }
+
+    @Override
+    public void onEnable() {
+        if (nullCheck()) {
+            if (moveDisable.getValue() || jumpDisable.getValue()) {
+                toggle();
             }
+            return;
+        }
+        startX = mc.player.getX();
+        startY = mc.player.getY();
+        startZ = mc.player.getZ();
+        shouldCenter = true;
+    }
+
+    @EventHandler
+    public void onMove(MoveEvent event) {
+        if (!center.getValue() || mc.player.isFallFlying()) {
+            return;
         }
 
-        return positions;
-    }
-
-    private boolean getDown(BlockPos pos) {
-        // 只有目标及六个相邻方向都可替换时，才认为该位置下方也需要补方块。
-        for (Direction dir : Direction.values()) {
-            if (!mc.level.getBlockState(pos.relative(dir)).canBeReplaced()) {
-                return false;
+        BlockPos blockPos = BlockPos.containing(mc.player.position());
+        if (mc.player.getX() - blockPos.getX() - 0.5 <= 0.2 && mc.player.getX() - blockPos.getX() - 0.5 >= -0.2 && mc.player.getZ() - blockPos.getZ() - 0.5 <= 0.2 && mc.player.getZ() - 0.5 - blockPos.getZ() >= -0.2) {
+            if (shouldCenter && (mc.player.onGround() || MoveUtils.isMoving())) {
+                event.setX(0);
+                event.setZ(0);
+                shouldCenter = false;
+            }
+        } else {
+            if (shouldCenter) {
+                Vec3 centerPos = blockPos.getCenter();
+                float rotation = getRotationTo(mc.player.position(), centerPos).getYaw();
+                float yawRad = rotation / 180.0f * 3.1415927f;
+                double dist = mc.player.position().distanceTo(new Vec3(centerPos.x, mc.player.getY(), centerPos.z));
+                double cappedSpeed = Math.min(0.2873, dist);
+                double x = -(float) Math.sin(yawRad) * cappedSpeed;
+                double z = (float) Math.cos(yawRad) * cappedSpeed;
+                event.setX(x);
+                event.setZ(z);
             }
         }
-
-        return mc.level.getBlockState(pos).canBeReplaced();
     }
 
-    private BlockPos getPlayerPos() {
-        return BlockPos.containing(mc.player.getX(), mc.player.getY() - Math.floor(mc.player.getY()) > 0.8 ? Math.floor(mc.player.getY()) + 1.0 : Math.floor(mc.player.getY()), mc.player.getZ());
-    }
-
-    private BlockPos getSequentialPos(List<BlockPos> skipped) {
-        for (BlockPos bp : getBlocks()) {
-            if (skipped.contains(bp)) continue;
-            if (new AABB(bp).intersects(mc.player.getBoundingBox())) continue;
-            if (BlockUtils.canPlaceAt(bp)) {
-                return bp;
+    private void tryPlaceBlock(BlockPos pos, int slot) {
+        if (pos == null) return;
+        if (!(progress < blocksPer.getValue())) return;
+        Direction side = getPlaceSide(pos);
+        if (side == null) return;
+        Vec3 directionVec = new Vec3(pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5, pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5, pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5);
+        if (!BlockUtils.canPlaceAt(pos, false)) return;
+        if (rotate.getValue()) {
+            this.directionVec = directionVec;
+            if (RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), pos.relative(side))) {
+                // 在这个 tick 转头已经到达，无需继续设置转头
+                this.directionVec = null;
+            } else {
+                return;
             }
+        }
+        if (breakCrystal.getValue()) {
+            attackCrystal(pos, rotate.getValue(), pauseOnEat.getValue());
+        } else if (BlockUtils.noEntity(pos, false)) {
+            return;
+        }
+
+        if (inventory.getValue()) InvUtils.invSwap(slot);
+        else InvUtils.swap(slot, true);
+
+        clickBlock(pos.relative(side), side.getOpposite(), InteractionHand.MAIN_HAND);
+
+        timer.reset();
+
+        if (inventory.getValue()) InvUtils.invSwapBack();
+        else InvUtils.swapBack();
+
+        progress++;
+    }
+
+    public void clickBlock(BlockPos pos, Direction side, InteractionHand hand) {
+        Vec3 directionVec = new Vec3(pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5, pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5, pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5);
+        BlockHitResult result = new BlockHitResult(directionVec, side, pos, false);
+        mc.gameMode.useItemOn(mc.player, hand, result);
+    }
+
+    public void attackCrystal(BlockPos blockPos, boolean rotate, boolean eatingPause) {
+        for (Entity entity : mc.level.entitiesForRendering()) {
+            if (entity instanceof EndCrystal crystal) {
+                if (crystal.getBoundingBox().intersects(new AABB(blockPos))) {
+                    if (eatingPause && PlayerUtils.isEating()) return;
+                    Managers.ROTATION.setRotations(RotationUtils.calculate(crystal), 360f, Priority.Highest);
+                    mc.gameMode.attack(mc.player, crystal);
+                    mc.player.swing(InteractionHand.MAIN_HAND);
+                }
+            }
+        }
+    }
+
+    private FindItemResult findBlocks() {
+        if (inventory.getValue()) {
+            FindItemResult result = InvUtils.find(Items.OBSIDIAN);
+            if (result.found() || !enderChest.getValue()) {
+                return result;
+            }
+            return InvUtils.find(Items.ENDER_CHEST);
+        } else {
+            FindItemResult result = InvUtils.findInHotbar(Items.OBSIDIAN);
+            if (result.found() || !enderChest.getValue()) {
+                return result;
+            }
+            return InvUtils.findInHotbar(Items.ENDER_CHEST);
+        }
+    }
+
+    public BlockPos getHelperPos(BlockPos pos) {
+        for (Direction i : Direction.values()) {
+            if (!RotationUtils.canSee(pos.relative(i), i.getOpposite())) continue;
+            if (BlockUtils.canPlaceAt(pos.relative(i), false)) return pos.relative(i);
         }
         return null;
-    }
-
-    private PlaceResult placeBlock(BlockPos blockPos, FindItemResult item) {
-        BlockHitResult hitResult = PlayerUtils.getPlaceResult(blockPos, helperMode.getValue(), true);
-        if (hitResult == null) {
-            return airPlace(blockPos, item);
-        }
-        if (mc.level.isEmptyBlock(hitResult.getBlockPos())) {
-            pendingPos = null;
-            return PlaceResult.Skipped;
-        }
-        if (!PlayerUtils.isValidBlock(hitResult.getBlockPos())) {
-            pendingPos = null;
-            return PlaceResult.Skipped;
-        }
-
-        if (rotate.is(RotateMode.Silent)) {
-            // 第一次看到该目标时只提交旋转，下一 tick 对准后再实际放置。
-            if (!blockPos.equals(pendingPos)) {
-                pendingPos = blockPos;
-                setRotation(hitResult);
-                return PlaceResult.Waiting;
-            }
-
-            // 旋转尚未命中目标面时继续等待，避免未对准就发放置包。
-            if (!isLookingAt(hitResult)) {
-                setRotation(hitResult);
-                return PlaceResult.Waiting;
-            }
-
-            // 等待转头期间世界状态可能变化，放置前再校验一次点击目标。
-            if (mc.level.isEmptyBlock(hitResult.getBlockPos())) {
-                pendingPos = null;
-                return PlaceResult.Skipped;
-            }
-
-            if (!PlayerUtils.isValidBlock(hitResult.getBlockPos())) {
-                pendingPos = null;
-                return PlaceResult.Skipped;
-            }
-        }
-
-        int oldSlot = mc.player.getInventory().getSelectedSlot();
-        Input oldInput = mc.player.input.keyPresses;
-
-        // 可见切换用于普通交互，静默切换用于尽量不改变玩家当前手持物显示。
-        if (switchMode.is(SwitchMode.Visible)) {
-            if (oldSlot != item.slot()) {
-                InvUtils.swap(item.slot(), true);
-            }
-        } else {
-            InvUtils.invSwap(item.slot());
-        }
-
-        if (autoSneak.getValue()) {
-            // 放置时临时按下 Shift，防止右键打开容器或与方块交互。
-            setShiftState(true);
-        }
-
-        InteractionResult result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hitResult);
-        if (result.consumesAction()) {
-            if (swingHand.getValue()) {
-                mc.player.swing(InteractionHand.MAIN_HAND);
-            } else {
-                mc.getConnection().send(new ServerboundSwingPacket(InteractionHand.MAIN_HAND));
-            }
-
-            if (render.getValue()) {
-                renderBoxes.add(new RenderInfo(new AABB(blockPos), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
-            }
-        }
-
-        if (autoSneak.getValue()) {
-            setShiftState(oldInput);
-        }
-
-        if (switchMode.is(SwitchMode.Visible)) {
-            if (oldSlot != item.slot()) {
-                InvUtils.swapBack();
-            }
-        } else {
-            InvUtils.invSwapBack();
-        }
-
-        return result.consumesAction() ? PlaceResult.Placed : PlaceResult.Skipped;
-    }
-
-    private PlaceResult airPlace(BlockPos blockPos, FindItemResult item) {
-        if (!airPlace.getValue()) {
-            pendingPos = null;
-            return PlaceResult.Skipped;
-        }
-
-        if (rotate.is(RotateMode.Silent)) {
-            if (!blockPos.equals(pendingPos)) {
-                pendingPos = blockPos;
-                setAirPlaceRotation(blockPos);
-                return PlaceResult.Waiting;
-            }
-        }
-
-        int oldSlot = mc.player.getInventory().getSelectedSlot();
-        Input oldInput = mc.player.input.keyPresses;
-
-        if (switchMode.is(SwitchMode.Visible)) {
-            if (oldSlot != item.slot()) {
-                InvUtils.swap(item.slot(), true);
-            }
-        } else {
-            InvUtils.invSwap(item.slot());
-        }
-
-        if (autoSneak.getValue()) {
-            setShiftState(true);
-        }
-
-        InteractionResult result = InteractionUtils.airPlace(
-                blockPos,
-                rotate.is(RotateMode.Silent),
-                InteractionHand.MAIN_HAND,
-                airPlacePacket.getValue(),
-                airPlaceGrimBypass.getValue()
-        );
-
-        if (result.consumesAction()) {
-            InteractionHand swing = airPlaceGrimBypass.getValue() ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
-            if (swingHand.getValue()) {
-                mc.player.swing(swing);
-            } else {
-                mc.getConnection().send(new ServerboundSwingPacket(swing));
-            }
-
-            if (render.getValue()) {
-                renderBoxes.add(new RenderInfo(new AABB(blockPos), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
-            }
-        }
-
-        if (autoSneak.getValue()) {
-            setShiftState(oldInput);
-        }
-
-        if (switchMode.is(SwitchMode.Visible)) {
-            if (oldSlot != item.slot()) {
-                InvUtils.swapBack();
-            }
-        } else {
-            InvUtils.invSwapBack();
-        }
-
-        return result.consumesAction() ? PlaceResult.Placed : PlaceResult.Skipped;
-    }
-
-    private void setRotation(BlockHitResult hitResult) {
-        Rot2f rotation = RotationUtils.calculate(hitResult.getLocation());
-        Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
-    }
-
-    private void setAirPlaceRotation(BlockPos pos) {
-        Direction side = RotationUtils.getDirection(pos);
-        Rot2f rotation = RotationUtils.calculate(Vec3.atCenterOf(pos).relative(side, 0.5));
-        Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue(), Priority.High);
-    }
-
-    private boolean isLookingAt(BlockHitResult hitResult) {
-        return RaytraceUtils.overBlock(
-                Managers.ROTATION.getRotation(),
-                hitResult.getDirection(),
-                hitResult.getBlockPos(),
-                sideCheck.getValue()
-        );
-    }
-
-    private void setShiftState(boolean state) {
-        Input current = mc.player.input.keyPresses;
-        setShiftState(new Input(current.forward(), current.backward(), current.left(), current.right(), current.jump(), state, current.sprint()));
-    }
-
-    private void setShiftState(Input input) {
-        mc.player.input.keyPresses = input;
-        mc.player.setShiftKeyDown(input.shift());
-        mc.getConnection().send(new ServerboundPlayerInputPacket(input));
-    }
-
-    private record RenderInfo(
-            AABB aabb,
-            Color lineColor,
-            Color sideColor,
-            long startTime,
-            boolean fade,
-            boolean shrink
-    ) {
     }
 
 }

@@ -10,10 +10,6 @@ public class FallFlyingEvent {
         this.pitch = pitch;
     }
 
-    public FallFlyingEvent(float pitch) {
-        this(0.0F, pitch);
-    }
-
     public void setYaw(float yaw) {
         this.yaw = yaw;
     }
