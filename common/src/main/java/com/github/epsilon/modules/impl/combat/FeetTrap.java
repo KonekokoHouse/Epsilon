@@ -2,7 +2,6 @@ package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
-import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
@@ -11,7 +10,6 @@ import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.*;
-import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -22,8 +20,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,77 +45,44 @@ public class FeetTrap extends Module {
     private final IntSetting blocksPer = intSetting("Blocks Per Tick", 1, 1, 8, 1).group(sgGeneral);
     private final BoolSetting breakCrystal = boolSetting("Break", true).group(sgGeneral);
     private final BoolSetting pauseOnEat = boolSetting("Pause On Eat", true, breakCrystal::getValue).group(sgGeneral);
-    private final BoolSetting center = boolSetting("Center", true).group(sgGeneral);
-    private final BoolSetting inventory = boolSetting("Inventory Swap", true).group(sgGeneral);
+    private final BoolSetting inventorySwap = boolSetting("Inventory Swap", true).group(sgGeneral);
     private final BoolSetting enderChest = boolSetting("Ender Chest", true).group(sgGeneral);
 
     private final BoolSetting rotate = boolSetting("Rotate", true).group(sgRotate);
+    private final IntSetting rotationSpeed = intSetting("Rotation Speed", 180, 18, 180, 18).group(sgRotate);
 
     public final BoolSetting inAir = boolSetting("In Air", true).group(sgCheck);
-    private final BoolSetting moveDisable = boolSetting("Move Disable", true).group(sgCheck);
-    private final BoolSetting jumpDisable = boolSetting("Jump Disable", true).group(sgCheck);
+    private final BoolSetting moveDisable = boolSetting("Toggle On Move", true).group(sgCheck);
+    private final BoolSetting jumpDisable = boolSetting("Toggle On Jump", true).group(sgCheck);
 
-    public Vec3 directionVec = null;
-    private double startX = 0;
-    private double startY = 0;
-    private double startZ = 0;
+    private double startX = 0, startY = 0, startZ = 0;
     private int progress = 0;
-    private boolean shouldCenter = true;
+    private Rot2f rotation = null;
 
     private final TimerUtils timer = new TimerUtils();
 
-    public boolean selfIntersectPos(BlockPos pos) {
-        return mc.player.getBoundingBox().intersects(new AABB(pos));
-    }
-
-    public boolean otherIntersectPos(BlockPos pos) {
-        for (AbstractClientPlayer player : mc.level.players()) {
-            if (player.getBoundingBox().intersects(new AABB(pos))) {
-                return true;
-            }
+    @Override
+    public void onEnable() {
+        if (nullCheck()) {
+            toggle();
+            return;
         }
-        return false;
-    }
-
-    public Rot2f getRotationTo(Vec3 posFrom, Vec3 posTo) {
-        Vec3 vec3d = posTo.subtract(posFrom);
-        return getRotationFromVec(vec3d);
-    }
-
-    private Rot2f getRotationFromVec(Vec3 vec) {
-        double d = vec.x;
-        double d2 = vec.z;
-        double xz = Math.hypot(d, d2);
-        d2 = vec.z;
-        double d3 = vec.x;
-        double yaw = normalizeAngle(Math.toDegrees(Math.atan2(d2, d3)) - 90.0);
-        double pitch = normalizeAngle(Math.toDegrees(-Math.atan2(vec.y, xz)));
-        return new Rot2f((float) yaw, (float) pitch);
-    }
-
-    private static double normalizeAngle(double angleIn) {
-        double angle = angleIn;
-        if ((angle %= 360.0) >= 180.0) {
-            angle -= 360.0;
-        }
-        if (angle < -180.0) {
-            angle += 360.0;
-        }
-        return angle;
+        startX = mc.player.getX();
+        startY = mc.player.getY();
+        startZ = mc.player.getZ();
     }
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
-        if (directionVec != null && rotate.getValue()) {
-            Managers.ROTATION.setRotations(RotationUtils.calculate(directionVec), 180f);
+        if (rotation != null && rotate.getValue()) {
+            Managers.ROTATION.setRotations(rotation, rotationSpeed.getValue().doubleValue());
         }
     }
 
     @EventHandler
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
-        if (inventory.getValue() && mc.screen != null) return;
-        if (!timer.passedMillise(placeDelay.getValue().longValue())) return;
+        if (!timer.passedMillise(placeDelay.getValue())) return;
 
         progress = 0;
 
@@ -146,7 +109,10 @@ public class FeetTrap extends Module {
             return;
         }
 
-        if (!inAir.getValue() && !mc.player.onGround()) return;
+        if (!inAir.getValue() && !mc.player.onGround()) {
+            return;
+        }
+
         doSurround(BlockPos.containing(mc.player.getX(), mc.player.getY(), mc.player.getZ()), result.slot());
         doSurround(BlockPos.containing(mc.player.getX(), mc.player.getY() + 0.8, mc.player.getZ()), result.slot());
     }
@@ -217,104 +183,72 @@ public class FeetTrap extends Module {
                 || block instanceof TrapDoorBlock;
     }
 
-    @Override
-    public void onEnable() {
-        if (nullCheck()) {
-            if (moveDisable.getValue() || jumpDisable.getValue()) {
-                toggle();
-            }
-            return;
-        }
-        startX = mc.player.getX();
-        startY = mc.player.getY();
-        startZ = mc.player.getZ();
-        shouldCenter = true;
-    }
-
-    @EventHandler
-    public void onMove(MoveEvent event) {
-        if (!center.getValue() || mc.player.isFallFlying()) {
-            return;
-        }
-
-        BlockPos blockPos = BlockPos.containing(mc.player.position());
-        if (mc.player.getX() - blockPos.getX() - 0.5 <= 0.2 && mc.player.getX() - blockPos.getX() - 0.5 >= -0.2 && mc.player.getZ() - blockPos.getZ() - 0.5 <= 0.2 && mc.player.getZ() - 0.5 - blockPos.getZ() >= -0.2) {
-            if (shouldCenter && (mc.player.onGround() || MoveUtils.isMoving())) {
-                event.setX(0);
-                event.setZ(0);
-                shouldCenter = false;
-            }
-        } else {
-            if (shouldCenter) {
-                Vec3 centerPos = blockPos.getCenter();
-                float rotation = getRotationTo(mc.player.position(), centerPos).getYaw();
-                float yawRad = rotation / 180.0f * 3.1415927f;
-                double dist = mc.player.position().distanceTo(new Vec3(centerPos.x, mc.player.getY(), centerPos.z));
-                double cappedSpeed = Math.min(0.2873, dist);
-                double x = -(float) Math.sin(yawRad) * cappedSpeed;
-                double z = (float) Math.cos(yawRad) * cappedSpeed;
-                event.setX(x);
-                event.setZ(z);
-            }
-        }
-    }
-
     private void tryPlaceBlock(BlockPos pos, int slot) {
         if (pos == null) return;
         if (!(progress < blocksPer.getValue())) return;
         Direction side = getPlaceSide(pos);
         if (side == null) return;
-        Vec3 directionVec = new Vec3(pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5, pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5, pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5);
-        if (!BlockUtils.canPlaceAt(pos, false)) return;
+        if (!BlockUtils.canPlaceAt(pos)) return;
         if (rotate.getValue()) {
-            this.directionVec = directionVec;
+            Vec3 directionVec = new Vec3(
+                    pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5,
+                    pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5,
+                    pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5
+            );
+            this.rotation = RotationUtils.calculate(directionVec);
             if (RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), pos.relative(side))) {
                 // 在这个 tick 转头已经到达，无需继续设置转头
-                this.directionVec = null;
+                this.rotation = null;
             } else {
                 return;
             }
         }
-        if (breakCrystal.getValue()) {
-            attackCrystal(pos, rotate.getValue(), pauseOnEat.getValue());
-        } else if (BlockUtils.noEntity(pos, false)) {
-            return;
-        }
 
-        if (inventory.getValue()) InvUtils.invSwap(slot);
+        if (inventorySwap.getValue()) InvUtils.invSwap(slot);
         else InvUtils.swap(slot, true);
 
-        clickBlock(pos.relative(side), side.getOpposite(), InteractionHand.MAIN_HAND);
+        placeBlock(pos.relative(side), side.getOpposite(), InteractionHand.MAIN_HAND);
 
         timer.reset();
 
-        if (inventory.getValue()) InvUtils.invSwapBack();
+        if (inventorySwap.getValue()) InvUtils.invSwapBack();
         else InvUtils.swapBack();
 
         progress++;
     }
 
-    public void clickBlock(BlockPos pos, Direction side, InteractionHand hand) {
-        Vec3 directionVec = new Vec3(pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5, pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5, pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5);
-        BlockHitResult result = new BlockHitResult(directionVec, side, pos, false);
-        mc.gameMode.useItemOn(mc.player, hand, result);
+    public void placeBlock(BlockPos pos, Direction side, InteractionHand hand) {
+        Vec3 directionVec = new Vec3(
+                pos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5,
+                pos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5,
+                pos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5
+        );
+        mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(directionVec, side, pos, false));
     }
 
-    public void attackCrystal(BlockPos blockPos, boolean rotate, boolean eatingPause) {
-        for (Entity entity : mc.level.entitiesForRendering()) {
-            if (entity instanceof EndCrystal crystal) {
-                if (crystal.getBoundingBox().intersects(new AABB(blockPos))) {
-                    if (eatingPause && PlayerUtils.isEating()) return;
-                    Managers.ROTATION.setRotations(RotationUtils.calculate(crystal), 360f, Priority.Highest);
-                    mc.gameMode.attack(mc.player, crystal);
-                    mc.player.swing(InteractionHand.MAIN_HAND);
-                }
+    public BlockPos getHelperPos(BlockPos pos) {
+        for (Direction i : Direction.values()) {
+            if (!RotationUtils.canSee(pos.relative(i), i.getOpposite())) continue;
+            if (BlockUtils.canPlaceAt(pos.relative(i))) return pos.relative(i);
+        }
+        return null;
+    }
+
+    private boolean selfIntersectPos(BlockPos pos) {
+        return mc.player.getBoundingBox().intersects(new AABB(pos));
+    }
+
+    private boolean otherIntersectPos(BlockPos pos) {
+        for (AbstractClientPlayer player : mc.level.players()) {
+            if (player.getBoundingBox().intersects(new AABB(pos))) {
+                return true;
             }
         }
+        return false;
     }
 
     private FindItemResult findBlocks() {
-        if (inventory.getValue()) {
+        if (inventorySwap.getValue()) {
             FindItemResult result = InvUtils.find(Items.OBSIDIAN);
             if (result.found() || !enderChest.getValue()) {
                 return result;
@@ -327,14 +261,6 @@ public class FeetTrap extends Module {
             }
             return InvUtils.findInHotbar(Items.ENDER_CHEST);
         }
-    }
-
-    public BlockPos getHelperPos(BlockPos pos) {
-        for (Direction i : Direction.values()) {
-            if (!RotationUtils.canSee(pos.relative(i), i.getOpposite())) continue;
-            if (BlockUtils.canPlaceAt(pos.relative(i), false)) return pos.relative(i);
-        }
-        return null;
     }
 
 }
