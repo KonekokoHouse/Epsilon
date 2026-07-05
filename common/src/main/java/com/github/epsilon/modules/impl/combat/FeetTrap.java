@@ -53,7 +53,7 @@ public class FeetTrap extends Module {
 
     private final TimerUtils timer = new TimerUtils();
 
-    private static final Direction[] SURROUND_DIRECTIONS = {Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
+    private static final Direction[] DIRECTIONS = {Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
 
     @Override
     public void onEnable() {
@@ -111,14 +111,14 @@ public class FeetTrap extends Module {
     }
 
     private void doSurround(BlockPos pos, int slot) {
-        for (Direction i : SURROUND_DIRECTIONS) {
+        for (Direction i : DIRECTIONS) {
             BlockPos offsetPos = pos.relative(i);
             tryPlaceBlockOrHelper(offsetPos, slot);
             if ((selfIntersectPos(offsetPos) || otherIntersectPos(offsetPos)) && extend.getValue()) {
-                for (Direction i2 : SURROUND_DIRECTIONS) {
+                for (Direction i2 : DIRECTIONS) {
                     BlockPos offsetPos2 = offsetPos.relative(i2);
                     if (selfIntersectPos(offsetPos2) || otherIntersectPos(offsetPos2)) {
-                        for (Direction i3 : SURROUND_DIRECTIONS) {
+                        for (Direction i3 : DIRECTIONS) {
                             tryPlaceBlock(offsetPos2, slot);
                             BlockPos offsetPos3 = offsetPos2.relative(i3);
                             tryPlaceBlockOrHelper(offsetPos3, slot);
@@ -176,6 +176,7 @@ public class FeetTrap extends Module {
         Direction side = getPlaceSide(pos);
         if (side == null) return;
         if (!BlockUtils.canPlaceAt(pos)) return;
+
         if (rotate.getValue()) {
             this.rotation = RotationUtils.calculate(hitVec(pos, side));
             if (RaytraceUtils.overBlock(Managers.ROTATION.getRotation(), pos.relative(side))) {
