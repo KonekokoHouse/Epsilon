@@ -15,20 +15,15 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.player.ChatUtils;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
-//import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
-//import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
-
-//import static com.github.epsilon.Constants.mc;
 
 public class EntityControl extends Module {
 
@@ -102,9 +97,6 @@ public class EntityControl extends Module {
     private final IntSetting autoPlaneY = intSetting("autoplane-y", 320, -1000, 4000, 1).group(sgAutoPilot);
     private final StringSetting destinationX = stringSetting("destination-x", "0").group(sgAutoPilot);
     private final StringSetting destinationZ = stringSetting("destination-z", "0").group(sgAutoPilot);
-    private final BoolSetting toggleAutoPlane = boolSetting("auto-toggle-autoplane", true).group(sgAutoPilot);
-    private final BoolSetting autoPauseAutoPlane = boolSetting("auto-pause-autoplane", false).group(sgAutoPilot);
-    private final BoolSetting playerDodge = boolSetting("player-dodge", false).group(sgAutoPilot);
     private final ButtonSetting resetDestBtn = buttonSetting("reset-destination", () -> {
         destinationX.setValue("0");
         destinationZ.setValue("0");
@@ -119,6 +111,10 @@ public class EntityControl extends Module {
             }
         }
     }).group(sgAutoPilot);
+    private final BoolSetting toggleAutoPlane = boolSetting("auto-toggle-autoplane", true).group(sgAutoPilot);
+    private final BoolSetting autoPauseAutoPlane = boolSetting("auto-pause-autoplane", false).group(sgAutoPilot);
+    private final BoolSetting playerDodge = boolSetting("player-dodge", false).group(sgAutoPilot);
+    
 
     // ==================== State ====================
     private int delayLeft;
