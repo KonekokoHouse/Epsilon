@@ -4,21 +4,18 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.JumpEvent;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
-import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.modules.impl.player.JumpCooldown;
 import com.github.epsilon.modules.impl.render.HandsView;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.github.epsilon.Constants.mc;
@@ -80,15 +77,4 @@ public class MixinLivingEntity {
         }
     }
 
-    @Inject(method = "travel", at = @At("HEAD"), cancellable = true)
-    private void onTravel(Vec3 movement, CallbackInfo ci) {
-        LivingEntity self = (LivingEntity) (Object) this;
-        if (!self.level().isClientSide()) return;
-        if (Minecraft.getInstance().player != self) return;
-        TravelEvent event = TravelEvent.get(movement);
-        EventBus.INSTANCE.post(event);
-        if (event.isCancelled()) {
-            ci.cancel();
-        }
-    }
 }
