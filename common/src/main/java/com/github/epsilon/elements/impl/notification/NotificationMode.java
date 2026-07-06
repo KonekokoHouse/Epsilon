@@ -4,11 +4,11 @@ import java.awt.*;
 
 public enum NotificationMode {
 
-    Success(118, 185, 0),
+    Success(33, 207, 178),
 
     Info(255, 255, 255),
 
-    Error(255, 75, 75);
+    Error(236, 67, 48);
 
     private final int red;
     private final int green;

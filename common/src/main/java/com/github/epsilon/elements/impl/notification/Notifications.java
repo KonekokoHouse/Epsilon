@@ -21,16 +21,24 @@ public class Notifications extends HudModule {
     public static final Notifications INSTANCE = new Notifications();
 
     private Notifications() {
-        super("Notifications", 3.2f, 3.2f, 120f, 28f);
+        super("Notifications", 3.2f, 3.2f, DEFAULT_BOX_WIDTH, DEFAULT_BOX_HEIGHT);
     }
 
-    private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.1);
+    private final DoubleSetting scale = doubleSetting("Scale", 1.0, 0.5, 2.0, 0.05);
+    private final DoubleSetting fontScale = doubleSetting("Font Scale", 0.80, 0.5, 2.0, 0.05);
+    private final DoubleSetting subtitleYOffset = doubleSetting("Subtitle Y Offset", 0.4, -10.0, 20.0, 0.1);
+    private final IntSetting boxWidth = intSetting("Width", DEFAULT_BOX_WIDTH, 80, 300, 1);
+    private final IntSetting boxHeight = intSetting("Height", DEFAULT_BOX_HEIGHT, 24, 80, 1);
     private final IntSetting backgroundAlpha = intSetting("Background Alpha", 145, 0, 255, 1);
     public final IntSetting displayTime = intSetting("Display Time", 2000, 500, 5000, 100);
 
-    private static final float MIN_BOX_WIDTH = 138.0f;
+    private static final int DEFAULT_BOX_WIDTH = 120;
+    private static final int DEFAULT_BOX_HEIGHT = 30;
     private static final float ACCENT_BAR_WIDTH = 2.4f;
-    private static final float TEXT_PADDING = 3.0f;
+    private static final float TEXT_PADDING = 6.0f;
+    private static final float ENTRY_GAP = 3.0f;
+    private static final float LINE_GAP = 1.8f;
+    private static final float SUBTITLE_SCALE = 0.92f;
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
@@ -44,9 +52,10 @@ public class Notifications extends HudModule {
         PanelUiTree.Scope scope = renderScope();
 
         float s = scale.getValue().floatValue();
-        float anchorWidth = MIN_BOX_WIDTH * s;
-        float boxHeight = textRenderer.getHeight(s) * 2.5f;
-        float spacing = boxHeight + TEXT_PADDING * s;
+        float textScale = fontScale.getValue().floatValue() * s;
+        float anchorWidth = boxWidth.getValue() * s;
+        float boxHeight = this.boxHeight.getValue() * s;
+        float spacing = boxHeight + ENTRY_GAP * s;
         int bgAlpha = backgroundAlpha.getValue();
 
         List<RenderEntry> entries = new ArrayList<>();
@@ -56,15 +65,13 @@ public class Notifications extends HudModule {
             RenderFrame frame = getRenderFrame(notification, spacing);
             if (frame.stage == RenderStage.HIDDEN) continue;
 
-            float boxWidth = getBoxWidth(textRenderer, notification, s);
             totalHeight += frame.occupiedHeight;
-            entries.add(new RenderEntry(notification, boxWidth, frame));
+            entries.add(new RenderEntry(notification, anchorWidth, frame));
         }
 
         if (entries.isEmpty() && previewNotification != null) {
-            float boxWidth = getBoxWidth(textRenderer, previewNotification, s);
             totalHeight = spacing;
-            entries.add(new RenderEntry(previewNotification, boxWidth, new RenderFrame(RenderStage.SHOW, 1.0f, spacing)));
+            entries.add(new RenderEntry(previewNotification, anchorWidth, new RenderFrame(RenderStage.SHOW, 1.0f, spacing)));
         }
 
         if (entries.isEmpty()) return;
@@ -74,15 +81,15 @@ public class Notifications extends HudModule {
 
         for (RenderEntry entry : entries) {
             float renderX = getRenderX(anchorWidth, entry.boxWidth);
-            renderNotification(scope, textRenderer, entry.notification, entry.frame, renderX, currentY, anchorWidth, entry.boxWidth, boxHeight, s, bgAlpha);
+            renderNotification(scope, textRenderer, entry.notification, entry.frame, renderX, currentY, anchorWidth, entry.boxWidth, boxHeight, s, textScale, bgAlpha);
             currentY += entry.frame.occupiedHeight;
         }
 
         setBounds(anchorWidth, boxHeight);
     }
 
-    private float getBoxWidth(TextRenderer textRenderer, Notification notification, float scale) {
-        return Math.max(MIN_BOX_WIDTH * scale, TEXT_PADDING * 3.0f * scale + textRenderer.getWidth(notification.getTitle() + " " + notification.getSubTitle(), scale));
+    private float getSubTitleScale(float scale) {
+        return scale * SUBTITLE_SCALE;
     }
 
     private float getRenderX(float anchorWidth, float boxWidth) {
@@ -127,13 +134,13 @@ public class Notifications extends HudModule {
         return new RenderFrame(RenderStage.HIDDEN, 0.0f, 0.0f);
     }
 
-    private void renderNotification(PanelUiTree.Scope scope, TextRenderer metrics, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, int bgAlpha) {
+    private void renderNotification(PanelUiTree.Scope scope, TextRenderer metrics, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha) {
         switch (frame.stage) {
             case ENTER_BAR, EXIT_BAR -> {
                 renderStage1(scope, notification, x, y, anchorWidth, boxWidth, boxHeight, frame.progress);
             }
             case ENTER_CONTENT, EXIT_CONTENT, SHOW -> {
-                renderStage2(scope, metrics, notification, x, y, boxWidth, boxHeight, scale, bgAlpha, frame.progress);
+                renderStage2(scope, metrics, notification, x, y, boxWidth, boxHeight, scale, textScale, bgAlpha, frame.progress);
             }
             case HIDDEN -> {
             }
@@ -146,19 +153,43 @@ public class Notifications extends HudModule {
         scope.rect(renderX, y, width, boxHeight, notification.getMode().getColor());
     }
 
-    private void renderStage2(PanelUiTree.Scope scope, TextRenderer metrics, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, int bgAlpha, float progress) {
+    private void renderStage2(PanelUiTree.Scope scope, TextRenderer metrics, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha, float progress) {
         scope.rect(x, y, boxWidth, boxHeight, new Color(0, 0, 0, bgAlpha));
-        renderText(scope, metrics, notification, x, y, boxHeight, scale, Math.round(255.0f * progress));
+        scope.scissor(x, y, boxWidth, boxHeight, textScope -> renderText(textScope, metrics, notification, x, y, boxWidth, boxHeight, scale, textScale, Math.round(255.0f * progress)));
         float accentWidth = ACCENT_BAR_WIDTH * scale + (boxWidth - ACCENT_BAR_WIDTH * scale) * (1.0f - progress);
         float accentX = isLeftDocked() ? x + boxWidth - accentWidth : x;
         scope.rect(accentX, y, accentWidth, boxHeight, notification.getMode().getColor());
     }
 
-    private void renderText(PanelUiTree.Scope scope, TextRenderer metrics, Notification n, float x, float y, float boxHeight, float s, int alpha) {
-        float textY = y + boxHeight / 2.0f - s - metrics.getHeight(s) / 2.0f;
-        float textX = x + (isLeftDocked() ? TEXT_PADDING * s : TEXT_PADDING * 2.0f * s);
-        scope.text(n.getTitle(), textX, textY, s, new Color(255, 255, 255, alpha));
-        scope.text(" " + n.getSubTitle(), textX + metrics.getWidth(n.getTitle(), s), textY, s, n.getMode().getColor(alpha));
+    private void renderText(PanelUiTree.Scope scope, TextRenderer metrics, Notification n, float x, float y, float boxWidth, float boxHeight, float scale, float desiredTextScale, int alpha) {
+        boolean hasSubTitle = !n.getSubTitle().isEmpty();
+        float textScale = getFittedTextScale(metrics, n, boxWidth, scale, desiredTextScale);
+        float subTitleScale = getSubTitleScale(textScale);
+        float lineGap = getLineGap(textScale, scale);
+        float titleHeight = metrics.getHeight(textScale);
+        float subTitleHeight = hasSubTitle ? metrics.getHeight(subTitleScale) : 0.0f;
+        float contentHeight = titleHeight + subTitleHeight + (hasSubTitle ? lineGap : 0.0f);
+        float textX = x + (isLeftDocked() ? TEXT_PADDING * scale : (ACCENT_BAR_WIDTH + TEXT_PADDING) * scale);
+        float titleY = y + (boxHeight - contentHeight) / 2.0f;
+
+        scope.text(n.getTitle(), textX, titleY, textScale, new Color(255, 255, 255, alpha));
+        if (hasSubTitle) {
+            float subTitleY = titleY + titleHeight + lineGap;
+            scope.text(n.getSubTitle(), textX, subTitleY, subTitleScale, n.getMode().getColor(Math.round(alpha * 0.86f)));
+        }
+    }
+
+    private float getLineGap(float textScale, float scale) {
+        return LINE_GAP * textScale + subtitleYOffset.getValue().floatValue() * scale;
+    }
+
+    private float getFittedTextScale(TextRenderer metrics, Notification notification, float boxWidth, float scale, float desiredTextScale) {
+        float maxWidth = Math.max(metrics.getWidth(notification.getTitle(), desiredTextScale),
+                metrics.getWidth(notification.getSubTitle(), getSubTitleScale(desiredTextScale)));
+        float availableWidth = Math.max(1.0f, boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale);
+        float widthFit = maxWidth > availableWidth ? availableWidth / maxWidth : 1.0f;
+
+        return Math.max(0.35f, desiredTextScale * widthFit);
     }
 
     private boolean isLeftDocked() {
