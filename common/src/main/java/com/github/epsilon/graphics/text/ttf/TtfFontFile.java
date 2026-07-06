@@ -126,6 +126,44 @@ public class TtfFontFile {
         }
     }
 
+    public synchronized float getVisualHeight(String sample) {
+        if (sample == null || sample.isEmpty()) {
+            return fontHeight;
+        }
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            final var x0 = stack.mallocInt(1);
+            final var y0 = stack.mallocInt(1);
+            final var x1 = stack.mallocInt(1);
+            final var y1 = stack.mallocInt(1);
+            int minY = Integer.MAX_VALUE;
+            int maxY = Integer.MIN_VALUE;
+
+            for (int i = 0; i < sample.length(); ) {
+                int codepoint = sample.codePointAt(i);
+                i += Character.charCount(codepoint);
+                if (Character.isWhitespace(codepoint)) {
+                    continue;
+                }
+
+                int glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint);
+                if (glyphIndex == 0) {
+                    continue;
+                }
+
+                STBTruetype.stbtt_GetGlyphBitmapBox(fontInfo, glyphIndex, scale, scale, x0, y0, x1, y1);
+                if (y1.get(0) <= y0.get(0)) {
+                    continue;
+                }
+
+                minY = Math.min(minY, y0.get(0));
+                maxY = Math.max(maxY, y1.get(0));
+            }
+
+            return maxY > minY ? maxY - minY : fontHeight;
+        }
+    }
+
     public void destroy() {
         MemoryUtil.memFree(fontData);
     }

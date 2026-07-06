@@ -2,6 +2,7 @@ package com.github.epsilon.graphics;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+<<<<<<< HEAD
 import com.github.epsilon.graphics.vulkan.LuminVulkanContext;
 import com.github.epsilon.holders.RenderTargetHolder;
 import com.github.epsilon.holders.RendererHolder;
@@ -58,9 +59,9 @@ public class LuminRenderSystem {
         guiProjectionMatrixBuffer.close();
         ShaderUniforms.closeAll();
         RenderTargetHolder.INSTANCE.destroyAll();
-        StaticFontLoader.destroyAll();
         RendererHolder.INSTANCE.destroyAll();
         vulkanContext.destroy();
+        StaticFontLoader.destroyDefault();
     }
 
     public static <T extends DynamicUniformStorage.DynamicUniform> GpuBufferSlice writeDynamicUniform(

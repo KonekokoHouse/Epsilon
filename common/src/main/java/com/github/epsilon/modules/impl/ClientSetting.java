@@ -76,6 +76,11 @@ public class ClientSetting extends Module {
         Vanilla
     }
 
+    public enum FontMode {
+        Default,
+        Custom
+    }
+
     private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
@@ -110,6 +115,12 @@ public class ClientSetting extends Module {
     }).group(sgGeneral);
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
+
+    public final EnumSetting<FontMode> font = enumSetting("Font", FontMode.Default).group(sgGeneral);
+
+    public final StringSetting customFont = stringSetting("Custom Font", "", () -> font.is(FontMode.Custom))
+            .group(sgGeneral)
+            .applyWhenRelease();
 
     public final IntSetting fontGlyphsPerFrame = intSetting("Font Glyphs Per Frame", 8, 1, 64, 1, this::applyFontGlyphUploadBudget).group(sgGeneral);
 

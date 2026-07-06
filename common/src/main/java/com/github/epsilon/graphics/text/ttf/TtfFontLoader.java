@@ -25,6 +25,7 @@ public class TtfFontLoader implements IFontLoader {
     });
 
     public final TtfFontFile fontFile;
+    private float renderScale = 1.0f;
 
     // ASCII 是 GUI/HUD 文本的主路径，用数组避免 Character 装箱和 HashMap 查找。
     private final GlyphDescriptor[] asciiGlyphMap = new GlyphDescriptor[ASCII_LIMIT];
@@ -54,6 +55,18 @@ public class TtfFontLoader implements IFontLoader {
     public TtfFontLoader(Path ttfFile) {
         this.fontFile = new TtfFontFile(ttfFile, 48, 4);
         Arrays.fill(asciiAdvanceMap, ADVANCE_UNSET);
+    }
+
+    public float getRenderScale() {
+        return renderScale;
+    }
+
+    public void setRenderScale(float renderScale) {
+        if (Float.isFinite(renderScale) && renderScale > 0.0f) {
+            this.renderScale = renderScale;
+        } else {
+            this.renderScale = 1.0f;
+        }
     }
 
     @Override
