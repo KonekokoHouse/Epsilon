@@ -66,7 +66,7 @@ public class EntityControl extends Module {
 
     // ==================== Speed ====================
     private final BoolSetting speed = boolSetting("speed", false).group(sgSpeed);
-    private final DoubleSetting horizontalSpeed = doubleSetting("horizontal-speed", 100, 0, 10000, 1,
+    private final DoubleSetting horizontalSpeed = doubleSetting("horizontal-speed", 100, 0, 400, 0.1,
             () -> speed.getValue()).group(sgSpeed);
     private final BoolSetting onlyOnGround = boolSetting("only-on-ground", false,
             () -> speed.getValue()).group(sgSpeed);
@@ -75,7 +75,7 @@ public class EntityControl extends Module {
 
     // ==================== Flight ====================
     private final BoolSetting flight = boolSetting("fly", false).group(sgFlight);
-    private final DoubleSetting verticalSpeed = doubleSetting("vertical-speed", 20, 0, 100000, 0.1,//傻子山水根本不限速垂直方向的实体飞行 ——liuliuliu0127
+    private final DoubleSetting verticalSpeed = doubleSetting("vertical-speed", 20, 0, 50, 0.1,
             () -> flight.getValue()).group(sgFlight);
     private final DoubleSetting fallSpeed = doubleSetting("fall-speed", 0, 0, 50, 0.1,
             () -> flight.getValue()).group(sgFlight);
