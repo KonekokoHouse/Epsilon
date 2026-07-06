@@ -28,6 +28,8 @@ accessible field net/minecraft/client/renderer/RenderPipelines ITEM_SNIPPET Lcom
 
 accessible method net/minecraft/client/renderer/rendertype/RenderType create (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)Lnet/minecraft/client/renderer/rendertype/RenderType;
 
+accessible method net/minecraft/world/entity/Entity setSharedFlag (IZ)V
+
 accessible class net/minecraft/core/component/DataComponentInitializers$InitializerEntry
 
 accessible field net/minecraft/client/Minecraft reloadStateTracker Lnet/minecraft/client/ResourceLoadStateTracker;

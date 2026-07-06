@@ -57,7 +57,11 @@
     "MixinTitleScreen",
     "MixinWalkAnimationState",
     "MixinWebBlock",
-    "MixinWindow"
+    "MixinWindow",
+    "Vec3Mixin",
+    "MixinMob",
+    "MixinPig",
+    "MixinStrider"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,16 +1,20 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
+import com.github.epsilon.events.impl.EntityMoveEvent;
 import com.github.epsilon.events.impl.RaytraceEvent;
 import com.github.epsilon.events.impl.StrafeEvent;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import static com.github.epsilon.Constants.mc;
@@ -45,6 +49,14 @@ public class MixinEntity {
                 args.set(2, 0.0);
             }
         }
+    }
+
+    @Inject(method = "move", at = @At("HEAD"))
+    private void onMove(MoverType moverType, Vec3 delta, CallbackInfo ci) {
+        if (mc.player == null) return;
+        Entity self = (Entity) (Object) this;
+        if (self == mc.player) return;
+        EventBus.INSTANCE.post(EntityMoveEvent.get(self, delta));
     }
 
 }

@@ -3,6 +3,7 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
 import com.github.epsilon.interfaces.EntityRenderStateAccessor;
+import com.github.epsilon.modules.impl.movement.EntityControl;
 import com.github.epsilon.modules.impl.render.Chams;
 import com.github.epsilon.modules.impl.render.NameTags;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.github.epsilon.Constants.mc;
@@ -68,6 +70,15 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     private void onShouldShowName(T entity, double distance, CallbackInfoReturnable<Boolean> cir) {
         if (entity instanceof Player && (!NameTags.INSTANCE.vanillaNameTags.getValue()) && NameTags.INSTANCE.isEnabled()) {
             cir.setReturnValue(false);
+        }
+    }
+
+    // EntityControl - mount scaling
+    @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At("TAIL"))
+    private void onExtractScale(T entity, S renderState, float tickDelta, CallbackInfo ci) {
+        EntityControl ec = EntityControl.INSTANCE;
+        if (ec.isEnabled() && ec.shouldScaleMount() && entity == ec.getMountedEntity()) {
+            renderState.scale = ec.getMountScale();
         }
     }
 
