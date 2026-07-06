@@ -10,6 +10,8 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.movement.AutoPilotUtil;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.elements.impl.notification.NotificationMode;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.player.ChatUtils;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
@@ -39,6 +41,7 @@ public class EntityControl extends Module {
     // ==================== Enums ====================
     private enum ControlMode { Tradition, HappyGhast }
     private enum ActivationMode { Immediate, DoubleTapSpace }
+    private enum AlertDisplayMode { Chat, Notification, Both }
 
     // ==================== Setting Groups ====================
     private final SettingGroup sgControl = settingGroup("Control");
@@ -57,6 +60,8 @@ public class EntityControl extends Module {
     private final EnumSetting<ActivationMode> activationMode = enumSetting("activation-mode", ActivationMode.Immediate).group(sgControl);
     private final BoolSetting activationMessage = boolSetting("activation-message", true,
             () -> activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgControl);
+    private final EnumSetting<AlertDisplayMode> alertDisplayMode = enumSetting("alert-display-mode", AlertDisplayMode.Chat,
+            () -> activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgControl);
     private final IntSetting dismountResetDelay = intSetting("dismount-reset-delay", 10, 1, 50, 1,
             () -> activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgControl);
     private final BoolSetting persistentUntilDismount = boolSetting("persistent-until-dismount", true,
@@ -66,7 +71,7 @@ public class EntityControl extends Module {
 
     // ==================== Speed ====================
     private final BoolSetting speed = boolSetting("speed", false).group(sgSpeed);
-    private final DoubleSetting horizontalSpeed = doubleSetting("horizontal-speed", 100, 0, 1000, 1,
+    private final DoubleSetting horizontalSpeed = doubleSetting("horizontal-speed", 100, 0, 10000, 1,
             () -> speed.getValue()).group(sgSpeed);
     private final BoolSetting onlyOnGround = boolSetting("only-on-ground", false,
             () -> speed.getValue()).group(sgSpeed);
@@ -75,7 +80,7 @@ public class EntityControl extends Module {
 
     // ==================== Flight ====================
     private final BoolSetting flight = boolSetting("fly", false).group(sgFlight);
-    private final DoubleSetting verticalSpeed = doubleSetting("vertical-speed", 20, 0, 10000000, 0.1,
+    private final DoubleSetting verticalSpeed = doubleSetting("vertical-speed", 20, 0, 100000, 0.1,//傻子山水根本不限速垂直方向的实体飞行 ——liuliuliu0127
             () -> flight.getValue()).group(sgFlight);
     private final DoubleSetting fallSpeed = doubleSetting("fall-speed", 0, 0, 50, 0.1,
             () -> flight.getValue()).group(sgFlight);
@@ -377,8 +382,7 @@ public class EntityControl extends Module {
                         String msg = doubleTapActive
                                 ? com.github.epsilon.assets.i18n.EpsilonTranslations.EntityControl.ACTIVATED.getTranslatedName()
                                 : com.github.epsilon.assets.i18n.EpsilonTranslations.EntityControl.DEACTIVATED.getTranslatedName();
-                        ChatUtils.addChatMessage(Component.literal(msg)
-                                .withStyle(doubleTapActive ? ChatFormatting.GREEN : ChatFormatting.RED));
+                        sendActivationAlert(msg, doubleTapActive);
                     }
                 }
                 lastSpacePressTime = now;
@@ -394,9 +398,9 @@ public class EntityControl extends Module {
                 doubleTapActive = false;
                 persistentActive = false;
                 if (activationMessage.getValue()) {
-                    ChatUtils.addChatMessage(Component.literal(
-                            com.github.epsilon.assets.i18n.EpsilonTranslations.EntityControl.DEACTIVATED_DISMOUNT.getTranslatedName())
-                            .withStyle(ChatFormatting.RED));
+                    sendActivationAlert(
+                            com.github.epsilon.assets.i18n.EpsilonTranslations.EntityControl.DEACTIVATED_DISMOUNT.getTranslatedName(),
+                            false);
                 }
             }
         }
@@ -451,6 +455,19 @@ public class EntityControl extends Module {
     private boolean shouldFlyDown(double currentY) {
         if (currentY >= lastPacketY) return true;
         return lastPacketY - currentY < 0.03130D;
+    }
+
+    private void sendActivationAlert(String msg, boolean isActivation) {
+        AlertDisplayMode mode = alertDisplayMode.getValue();
+        ChatFormatting color = isActivation ? ChatFormatting.GREEN : ChatFormatting.RED;
+        if (mode == AlertDisplayMode.Chat || mode == AlertDisplayMode.Both) {
+            ChatUtils.addChatMessage(Component.literal(msg).withStyle(color));
+        }
+        if (mode == AlertDisplayMode.Notification || mode == AlertDisplayMode.Both) {
+            Managers.NOTIFICATION.notifyHud(msg, "",
+                    isActivation ? NotificationMode.Success : NotificationMode.Error,
+                    msg.hashCode());
+        }
     }
 
     private Vec3 getHorizontalVelocity(double hSpeed) {
