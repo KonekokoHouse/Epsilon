@@ -72,20 +72,27 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final Consumer<T> removeFn;
     private final List<T> allEntries;
     private final List<Category<T>> categories;
-    private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
+    private final PanelContentBuffer availableBuffer = new PanelContentBuffer();
+    private final PanelContentBuffer selectedBuffer = new PanelContentBuffer();
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
-    private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
+    private final ScrollBarDragState availableScrollBarDrag = new ScrollBarDragState();
+    private final ScrollBarDragState selectedScrollBarDrag = new ScrollBarDragState();
     private final List<ItemPreview> itemPreviews = new ArrayList<>();
 
     private String query = "";
     private int selectedCategory = -1; // -1 = all
-    private float scroll;
-    private float scrollVelocity;
-    private float maxScroll;
+    private float availableScroll;
+    private float selectedScroll;
+    private float availableScrollVelocity;
+    private float selectedScrollVelocity;
+    private float maxAvailableScroll;
+    private float maxSelectedScroll;
     private T hoveredAdd;
     private T hoveredRemove;
-    private PanelLayout.Rect lastViewport;
+    private PanelLayout.Rect lastAvailableViewport;
+    private PanelLayout.Rect lastSelectedViewport;
+    private PanelLayout.Rect lastOverlayViewport;
 
     public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Consumer<T> addFn, Consumer<T> removeFn) {
@@ -281,11 +288,13 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
-        contentBuffer.clear();
+        availableBuffer.clear();
+        selectedBuffer.clear();
         itemPreviews.clear();
         List<T> available = filteredAvailable();
         List<T> selected = filteredSelected();
-        float columnContentHeight = Math.max(available.size(), selected.size()) * (ROW_HEIGHT + ROW_GAP);
+        float availableContentHeight = available.size() * (ROW_HEIGHT + ROW_GAP);
+        float selectedContentHeight = selected.size() * (ROW_HEIGHT + ROW_GAP);
 
         PanelUiTree tree = PanelUiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
@@ -293,7 +302,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             PanelLayout.Rect animatedBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
             PanelLayout.Rect searchBounds = getSearchBounds(popupY);
             PanelLayout.Rect animatedViewport = getViewport(popupY);
-            lastViewport = animatedViewport;
             scope.pushAbsolute(animatedBounds, popup -> {
                 popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, POPUP_SHADOW_RADIUS,
                         MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
@@ -312,10 +320,9 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 IMEFocusHelper.updateCursorPos(searchBounds.x() + 8.0f, searchBounds.y() + 4.0f);
 
                 // Category tabs
-                float contentWidth = animatedViewport.width() - SCROLLBAR_GUTTER;
-                float columnWidth = (contentWidth - COLUMN_GAP) / 2.0f;
+                float columnViewportWidth = (animatedViewport.width() - COLUMN_GAP) / 2.0f;
                 float leftX = animatedViewport.x();
-                float rightX = leftX + columnWidth + COLUMN_GAP;
+                float rightX = leftX + columnViewportWidth + COLUMN_GAP;
                 float viewportY = animatedViewport.y();
                 if (!categories.isEmpty()) {
                     float catY = searchBounds.bottom() + 4.0f;
@@ -345,39 +352,60 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
                 hoveredAdd = null;
                 hoveredRemove = null;
-                PanelLayout.Rect effectiveViewport = new PanelLayout.Rect(animatedViewport.x(), effectiveViewportY, animatedViewport.width(), animatedViewport.bottom() - effectiveViewportY);
-                lastViewport = effectiveViewport;
-                maxScroll = Math.max(0.0f, columnContentHeight - effectiveViewport.height());
-                scroll = Mth.clamp(scroll, 0.0f, maxScroll);
-                updateSmoothScroll(partialTick);
-                PanelLayout.Rect localViewport = effectiveViewport.relativeTo(animatedBounds);
-                popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, columnContentHeight, content -> {
-                    buildColumn(content, available, leftX, effectiveViewportY - scroll, columnWidth, mouseX, mouseY, true, effectiveViewport);
-                    buildColumn(content, selected, rightX, effectiveViewportY - scroll, columnWidth, mouseX, mouseY, false, effectiveViewport);
+                float viewportHeight = animatedViewport.bottom() - effectiveViewportY;
+                PanelLayout.Rect availableViewport = new PanelLayout.Rect(leftX, effectiveViewportY, columnViewportWidth, viewportHeight);
+                PanelLayout.Rect selectedViewport = new PanelLayout.Rect(rightX, effectiveViewportY, columnViewportWidth, viewportHeight);
+                lastAvailableViewport = availableViewport;
+                lastSelectedViewport = selectedViewport;
+                lastOverlayViewport = new PanelLayout.Rect(availableViewport.x(), availableViewport.y(),
+                        selectedViewport.right() - availableViewport.x(), availableViewport.height());
+
+                maxAvailableScroll = Math.max(0.0f, availableContentHeight - availableViewport.height());
+                maxSelectedScroll = Math.max(0.0f, selectedContentHeight - selectedViewport.height());
+                availableScroll = Mth.clamp(availableScroll, 0.0f, maxAvailableScroll);
+                selectedScroll = Mth.clamp(selectedScroll, 0.0f, maxSelectedScroll);
+                updateAvailableSmoothScroll(partialTick);
+                updateSelectedSmoothScroll(partialTick);
+
+                PanelLayout.Rect localAvailableViewport = availableViewport.relativeTo(animatedBounds);
+                popup.viewport(availableBuffer, localAvailableViewport, guiGraphics.guiHeight(), availableScroll,
+                        maxAvailableScroll, availableContentHeight, content -> {
+                    buildColumn(content, available, availableViewport.x(), availableViewport.y() - availableScroll,
+                            availableViewport.width() - SCROLLBAR_GUTTER, mouseX, mouseY, true, availableViewport);
+                });
+                PanelLayout.Rect localSelectedViewport = selectedViewport.relativeTo(animatedBounds);
+                popup.viewport(selectedBuffer, localSelectedViewport, guiGraphics.guiHeight(), selectedScroll,
+                        maxSelectedScroll, selectedContentHeight, content -> {
+                    buildColumn(content, selected, selectedViewport.x(), selectedViewport.y() - selectedScroll,
+                            selectedViewport.width() - SCROLLBAR_GUTTER, mouseX, mouseY, false, selectedViewport);
                 });
             });
         });
         renderBatch.render(tree);
     }
 
-    @Override public void flush(PanelRenderBatch renderBatch) { contentBuffer.flushAndClear(); }
+    @Override
+    public void flush(PanelRenderBatch renderBatch) {
+        availableBuffer.flushAndClear();
+        selectedBuffer.flushAndClear();
+    }
 
     @Override
     public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (iconProvider == null || itemPreviews.isEmpty()) return;
         guiGraphics.nextStratum();
-        if (lastViewport != null) {
+        if (lastOverlayViewport != null) {
             guiGraphics.enableScissor(
-                    toMinecraftGuiXInt(lastViewport.x()),
-                    toMinecraftGuiYInt(lastViewport.y()),
-                    toMinecraftGuiXInt(lastViewport.right()),
-                    toMinecraftGuiYInt(lastViewport.bottom())
+                    toMinecraftGuiXInt(lastOverlayViewport.x()),
+                    toMinecraftGuiYInt(lastOverlayViewport.y()),
+                    toMinecraftGuiXInt(lastOverlayViewport.right()),
+                    toMinecraftGuiYInt(lastOverlayViewport.bottom())
             );
         }
         for (ItemPreview preview : itemPreviews) {
             drawItemPreview(guiGraphics, preview);
         }
-        if (lastViewport != null) {
+        if (lastOverlayViewport != null) {
             guiGraphics.disableScissor();
         }
     }
@@ -402,9 +430,14 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 catTabX += catTextW + CATEGORY_TAB_GAP;
             }
         }
-        PanelLayout.Rect viewport = lastViewport != null ? lastViewport : getViewport();
-        if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, scroll, maxScroll)) {
-            applyDraggedScroll(event.y(), viewport);
+        PanelLayout.Rect availableViewport = lastAvailableViewport != null ? lastAvailableViewport : getAvailableViewport();
+        PanelLayout.Rect selectedViewport = lastSelectedViewport != null ? lastSelectedViewport : getSelectedViewport();
+        if (availableScrollBarDrag.mouseClicked(event.x(), event.y(), availableViewport, availableScroll, maxAvailableScroll)) {
+            applyDraggedAvailableScroll(event.y(), availableViewport);
+            return true;
+        }
+        if (selectedScrollBarDrag.mouseClicked(event.x(), event.y(), selectedViewport, selectedScroll, maxSelectedScroll)) {
+            applyDraggedSelectedScroll(event.y(), selectedViewport);
             return true;
         }
         if (hoveredAdd != null) { addFn.accept(hoveredAdd); return true; }
@@ -412,13 +445,23 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         return true;
     }
 
-    @Override public boolean mouseReleased(MouseButtonEvent event) { return scrollBarDrag.mouseReleased(); }
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        return availableScrollBarDrag.mouseReleased() | selectedScrollBarDrag.mouseReleased();
+    }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
-        if (!scrollBarDrag.isDragging()) return false;
-        applyDraggedScroll(event.y(), lastViewport != null ? lastViewport : getViewport());
-        return true;
+        boolean handled = false;
+        if (availableScrollBarDrag.isDragging()) {
+            applyDraggedAvailableScroll(event.y(), lastAvailableViewport != null ? lastAvailableViewport : getAvailableViewport());
+            handled = true;
+        }
+        if (selectedScrollBarDrag.isDragging()) {
+            applyDraggedSelectedScroll(event.y(), lastSelectedViewport != null ? lastSelectedViewport : getSelectedViewport());
+            handled = true;
+        }
+        return handled;
     }
 
     @Override public boolean keyPressed(KeyEvent event) {
@@ -439,9 +482,17 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (!getViewport(bounds.y()).contains(mouseX, mouseY) || maxScroll <= 0.0f) return false;
-        scrollVelocity -= (float) scrollY * SCROLL_STEP;
-        return true;
+        PanelLayout.Rect availableViewport = lastAvailableViewport != null ? lastAvailableViewport : getAvailableViewport();
+        if (availableViewport.contains(mouseX, mouseY) && maxAvailableScroll > 0.0f) {
+            availableScrollVelocity -= (float) scrollY * SCROLL_STEP;
+            return true;
+        }
+        PanelLayout.Rect selectedViewport = lastSelectedViewport != null ? lastSelectedViewport : getSelectedViewport();
+        if (selectedViewport.contains(mouseX, mouseY) && maxSelectedScroll > 0.0f) {
+            selectedScrollVelocity -= (float) scrollY * SCROLL_STEP;
+            return true;
+        }
+        return false;
     }
 
     private List<T> filteredAvailable() {
@@ -523,19 +574,71 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         return new PanelLayout.Rect(bounds.x() + PADDING, y, bounds.width() - PADDING * 2.0f, bounds.bottom() - y - PADDING);
     }
 
-    private void updateSmoothScroll(float partialTick) {
-        if (maxScroll <= 0.0f) { resetScroll(); return; }
-        if (Math.abs(scrollVelocity) <= 0.01f || partialTick <= 0.0f) return;
-        float nextScroll = Mth.clamp(scroll + scrollVelocity * partialTick, 0.0f, maxScroll);
-        if (Float.compare(nextScroll, scroll) == 0) { scrollVelocity = 0.0f; return; }
-        scroll = nextScroll;
-        scrollVelocity *= SCROLL_DECAY;
-        if (Math.abs(scrollVelocity) < MIN_SCROLL_VELOCITY) scrollVelocity = 0.0f;
+    private PanelLayout.Rect getAvailableViewport() {
+        return getColumnViewports(getViewport(bounds.y()))[0];
     }
-    private void resetScroll() { scroll = 0.0f; scrollVelocity = 0.0f; }
-    private void applyDraggedScroll(double mouseY, PanelLayout.Rect viewport) {
-        float newScroll = scrollBarDrag.mouseDragged(mouseY, viewport, maxScroll);
-        if (newScroll >= 0.0f) { scroll = Mth.clamp(newScroll, 0.0f, maxScroll); scrollVelocity = 0.0f; }
+
+    private PanelLayout.Rect getSelectedViewport() {
+        return getColumnViewports(getViewport(bounds.y()))[1];
+    }
+
+    private PanelLayout.Rect[] getColumnViewports(PanelLayout.Rect viewport) {
+        float columnViewportWidth = (viewport.width() - COLUMN_GAP) / 2.0f;
+        PanelLayout.Rect availableViewport = new PanelLayout.Rect(viewport.x(), viewport.y(), columnViewportWidth, viewport.height());
+        PanelLayout.Rect selectedViewport = new PanelLayout.Rect(availableViewport.right() + COLUMN_GAP,
+                viewport.y(), columnViewportWidth, viewport.height());
+        return new PanelLayout.Rect[]{availableViewport, selectedViewport};
+    }
+
+    private void updateAvailableSmoothScroll(float partialTick) {
+        if (maxAvailableScroll <= 0.0f) { resetAvailableScroll(); return; }
+        if (Math.abs(availableScrollVelocity) <= 0.01f || partialTick <= 0.0f) return;
+        float nextScroll = Mth.clamp(availableScroll + availableScrollVelocity * partialTick, 0.0f, maxAvailableScroll);
+        if (Float.compare(nextScroll, availableScroll) == 0) { availableScrollVelocity = 0.0f; return; }
+        availableScroll = nextScroll;
+        availableScrollVelocity *= SCROLL_DECAY;
+        if (Math.abs(availableScrollVelocity) < MIN_SCROLL_VELOCITY) availableScrollVelocity = 0.0f;
+    }
+
+    private void updateSelectedSmoothScroll(float partialTick) {
+        if (maxSelectedScroll <= 0.0f) { resetSelectedScroll(); return; }
+        if (Math.abs(selectedScrollVelocity) <= 0.01f || partialTick <= 0.0f) return;
+        float nextScroll = Mth.clamp(selectedScroll + selectedScrollVelocity * partialTick, 0.0f, maxSelectedScroll);
+        if (Float.compare(nextScroll, selectedScroll) == 0) { selectedScrollVelocity = 0.0f; return; }
+        selectedScroll = nextScroll;
+        selectedScrollVelocity *= SCROLL_DECAY;
+        if (Math.abs(selectedScrollVelocity) < MIN_SCROLL_VELOCITY) selectedScrollVelocity = 0.0f;
+    }
+
+    private void resetScroll() {
+        resetAvailableScroll();
+        resetSelectedScroll();
+    }
+
+    private void resetAvailableScroll() {
+        availableScroll = 0.0f;
+        availableScrollVelocity = 0.0f;
+    }
+
+    private void resetSelectedScroll() {
+        selectedScroll = 0.0f;
+        selectedScrollVelocity = 0.0f;
+    }
+
+    private void applyDraggedAvailableScroll(double mouseY, PanelLayout.Rect viewport) {
+        float newScroll = availableScrollBarDrag.mouseDragged(mouseY, viewport, maxAvailableScroll);
+        if (newScroll >= 0.0f) {
+            availableScroll = Mth.clamp(newScroll, 0.0f, maxAvailableScroll);
+            availableScrollVelocity = 0.0f;
+        }
+    }
+
+    private void applyDraggedSelectedScroll(double mouseY, PanelLayout.Rect viewport) {
+        float newScroll = selectedScrollBarDrag.mouseDragged(mouseY, viewport, maxSelectedScroll);
+        if (newScroll >= 0.0f) {
+            selectedScroll = Mth.clamp(newScroll, 0.0f, maxSelectedScroll);
+            selectedScrollVelocity = 0.0f;
+        }
     }
     private String trim(String value, float scale, float maxWidth) {
         if (value == null || value.isEmpty()) return "";
@@ -577,7 +680,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public void close() {
-        contentBuffer.close();
+        availableBuffer.close();
+        selectedBuffer.close();
         textRenderer.close();
         itemPreviews.clear();
     }
