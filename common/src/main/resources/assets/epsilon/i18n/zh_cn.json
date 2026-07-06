@@ -1371,7 +1371,7 @@
   "epsilon.modules.entity control.cancel-server-packets": "取消服务端移动包",
   "epsilon.modules.entity control.control-mode": "操控模式",
   "epsilon.modules.entity control.control-mode.tradition": "传统模式",
-  "epsilon.modules.entity control.control-mode.happy ghast": "快乐恶魂模式",
+  "epsilon.modules.entity control.control-mode.happyghast": "快乐恶魂模式",
   "epsilon.modules.entity control.activation-mode": "激活模式",
   "epsilon.modules.entity control.activation-mode.immediate": "立即生效",
   "epsilon.modules.entity control.activation-mode.doubletapspace": "双击空格",

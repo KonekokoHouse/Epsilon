@@ -75,7 +75,7 @@ public class EntityControl extends Module {
 
     // ==================== Flight ====================
     private final BoolSetting flight = boolSetting("fly", false).group(sgFlight);
-    private final DoubleSetting verticalSpeed = doubleSetting("vertical-speed", 20, 0, 50, 0.1,
+    private final DoubleSetting verticalSpeed = doubleSetting("vertical-speed", 20, 0, 10000000, 0.1,
             () -> flight.getValue()).group(sgFlight);
     private final DoubleSetting fallSpeed = doubleSetting("fall-speed", 0, 0, 50, 0.1,
             () -> flight.getValue()).group(sgFlight);
@@ -280,18 +280,19 @@ public class EntityControl extends Module {
             }
             velY = 0;
             ((com.github.epsilon.interfaces.IVec3) (Object) event.movement).epsilon$set(velX, velY, velZ);
-            // Auto-toggle when near destination (matching original calcAutoMoveYaw)
-            if (toggleAutoPlane.getValue() && autoPlane.getValue()) {
-                try {
-                    double dx = Double.parseDouble(destinationX.getValue());
-                    double dz = Double.parseDouble(destinationZ.getValue());
-                    if (Math.sqrt((mc.player.getX() - dx) * (mc.player.getX() - dx)
-                            + (mc.player.getZ() - dz) * (mc.player.getZ() - dz)) <= 40) {
-                        autoPlane.setValue(false);
-                    }
-                } catch (NumberFormatException ignored) {}
-            }
             return;
+        }
+
+        // Auto-toggle autopilot when near destination (runs every tick, even when autopilot idle)
+        if (autoPlane.getValue() && toggleAutoPlane.getValue()) {
+            try {
+                double dx = Double.parseDouble(destinationX.getValue());
+                double dz = Double.parseDouble(destinationZ.getValue());
+                if (Math.sqrt((mc.player.getX() - dx) * (mc.player.getX() - dx)
+                        + (mc.player.getZ() - dz) * (mc.player.getZ() - dz)) <= 40) {
+                    autoPlane.setValue(false);
+                }
+            } catch (NumberFormatException ignored) {}
         }
 
         // Speed boost (horizontal only, before flight like original)

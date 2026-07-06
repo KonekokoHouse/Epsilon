@@ -1371,7 +1371,7 @@
   "epsilon.modules.entity control.cancel-server-packets": "Cancel Server Packets",
   "epsilon.modules.entity control.control-mode": "Control Mode",
   "epsilon.modules.entity control.control-mode.tradition": "Tradition",
-  "epsilon.modules.entity control.control-mode.happy ghast": "Happy Ghast",
+  "epsilon.modules.entity control.control-mode.happyghast": "Happy Ghast",
   "epsilon.modules.entity control.activation-mode": "Activation Mode",
   "epsilon.modules.entity control.activation-mode.immediate": "Immediate",
   "epsilon.modules.entity control.activation-mode.doubletapspace": "Double Tap Space",
