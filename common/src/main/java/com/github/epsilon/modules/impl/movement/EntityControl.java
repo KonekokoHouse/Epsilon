@@ -490,12 +490,21 @@ public class EntityControl extends Module {
     }
 
     private static Set<EntityType<?>> getAllRideableEntities() {
-        Set<EntityType<?>> set = new HashSet<>();
-        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
-            if (type != EntityType.MINECART && type != EntityType.LLAMA && type != EntityType.TRADER_LLAMA) {
-                set.add(type);
-            }
-        }
-        return set;
+        // All rideable entity types in MC 26.1.2 (minecarts excluded, llamas included)
+        return Set.of(
+            EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
+            EntityType.SKELETON_HORSE, EntityType.ZOMBIE_HORSE,
+            EntityType.PIG, EntityType.STRIDER,
+            EntityType.CAMEL, EntityType.LLAMA, EntityType.TRADER_LLAMA,
+            EntityType.HAPPY_GHAST, EntityType.NAUTILUS, EntityType.ZOMBIE_NAUTILUS,
+            EntityType.OAK_BOAT, EntityType.SPRUCE_BOAT, EntityType.BIRCH_BOAT,
+            EntityType.JUNGLE_BOAT, EntityType.ACACIA_BOAT, EntityType.DARK_OAK_BOAT,
+            EntityType.CHERRY_BOAT, EntityType.MANGROVE_BOAT, EntityType.PALE_OAK_BOAT,
+            EntityType.BAMBOO_RAFT,
+            EntityType.OAK_CHEST_BOAT, EntityType.SPRUCE_CHEST_BOAT, EntityType.BIRCH_CHEST_BOAT,
+            EntityType.JUNGLE_CHEST_BOAT, EntityType.ACACIA_CHEST_BOAT, EntityType.DARK_OAK_CHEST_BOAT,
+            EntityType.CHERRY_CHEST_BOAT, EntityType.MANGROVE_CHEST_BOAT, EntityType.PALE_OAK_CHEST_BOAT,
+            EntityType.BAMBOO_CHEST_RAFT
+        );
     }
 }
