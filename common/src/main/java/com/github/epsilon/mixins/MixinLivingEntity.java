@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.JumpEvent;
 import com.github.epsilon.events.impl.RotationAnimationEvent;
+import com.github.epsilon.modules.impl.movement.AirJump;
 import com.github.epsilon.modules.impl.player.JumpCooldown;
 import com.github.epsilon.modules.impl.render.HandsView;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -66,6 +67,17 @@ public class MixinLivingEntity {
             newValue = module.cooldown.getValue();
         }
         original.call(instance, newValue);
+    }
+
+    // aiStep 中第三个 onGround() 调用（ordinal=2）是真正的跳跃判断：
+    // (this.onGround() || inWaterAndHasFluidHeight && fluidHeight <= fluidJumpThreshold) && this.noJumpDelay == 0
+    // AirJump 模块在该处返回 true 即可让玩家在空中跳跃
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;onGround()Z", ordinal = 2))
+    private boolean hookAirJump(LivingEntity instance, Operation<Boolean> original) {
+        if (instance == mc.player && AirJump.INSTANCE.allowJump()) {
+            return true;
+        }
+        return original.call(instance);
     }
 
     @Inject(method = "getCurrentSwingDuration", at = @At("HEAD"), cancellable = true)
