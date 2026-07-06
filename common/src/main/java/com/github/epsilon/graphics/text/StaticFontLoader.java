@@ -6,13 +6,24 @@ import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.resources.Identifier;
 
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class StaticFontLoader {
 
+    private static final String[] FONT_FILE_EXTENSIONS = {".ttf", ".otf", ".ttc"};
     private static final String SIZE_REFERENCE_SAMPLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789简体中文字体设置默认自定义战斗移动玩家渲染";
     private static final Identifier DEFAULT_FONT_ID = ResourceLocationUtils.getIdentifier("fonts/font.ttf");
     private static TtfFontLoader builtinDefault = new TtfFontLoader(DEFAULT_FONT_ID);
@@ -31,6 +42,7 @@ public class StaticFontLoader {
     private static ClientSetting.FontMode appliedMode;
     private static String appliedCustomFont;
     private static boolean destroyed;
+    private static volatile Map<String, Path> systemFontLookup;
 
     public static TtfFontLoader defaultFont() {
         if (destroyed) {
@@ -156,22 +168,31 @@ public class StaticFontLoader {
         String normalized = stripQuotes(fontPath.trim());
         try {
             Path path = Path.of(normalized);
+            Path directPath = resolveExistingFontPath(path);
+            if (directPath != null) {
+                return directPath;
+            }
+
             if (path.isAbsolute()) {
-                return path.normalize();
+                return resolveSystemFont(normalized);
             }
 
-            Path workingDirectoryPath = path.toAbsolutePath().normalize();
-            if (Files.isRegularFile(workingDirectoryPath)) {
-                return workingDirectoryPath;
+            directPath = resolveExistingFontPath(path.toAbsolutePath().normalize());
+            if (directPath != null) {
+                return directPath;
             }
 
-            return Path.of(System.getProperty("user.home"), ".epsilon", "fonts")
+            directPath = resolveExistingFontPath(Path.of(System.getProperty("user.home"), ".epsilon", "fonts")
                     .resolve(path)
                     .toAbsolutePath()
-                    .normalize();
+                    .normalize());
+            if (directPath != null) {
+                return directPath;
+            }
         } catch (InvalidPathException ignored) {
-            return null;
         }
+
+        return resolveSystemFont(normalized);
     }
 
     private static String stripQuotes(String value) {
@@ -181,6 +202,168 @@ public class StaticFontLoader {
             return value.substring(1, value.length() - 1).trim();
         }
         return value;
+    }
+
+    private static Path resolveExistingFontPath(Path path) {
+        Path normalized = path.normalize();
+        if (Files.isRegularFile(normalized)) {
+            return normalized.toAbsolutePath().normalize();
+        }
+
+        if (hasSupportedFontExtension(normalized)) {
+            return null;
+        }
+
+        Path fileName = normalized.getFileName();
+        if (fileName == null) {
+            return null;
+        }
+
+        Path parent = normalized.getParent();
+        for (String extension : FONT_FILE_EXTENSIONS) {
+            Path candidate = parent == null
+                    ? Path.of(fileName + extension)
+                    : parent.resolve(fileName + extension);
+            if (Files.isRegularFile(candidate)) {
+                return candidate.toAbsolutePath().normalize();
+            }
+        }
+        return null;
+    }
+
+    private static Path resolveSystemFont(String fontName) {
+        String key = normalizeFontLookupKey(fontName);
+        if (key.isEmpty()) {
+            return null;
+        }
+        return getSystemFontLookup().get(key);
+    }
+
+    private static Map<String, Path> getSystemFontLookup() {
+        Map<String, Path> lookup = systemFontLookup;
+        if (lookup != null) {
+            return lookup;
+        }
+
+        synchronized (StaticFontLoader.class) {
+            lookup = systemFontLookup;
+            if (lookup == null) {
+                lookup = buildSystemFontLookup();
+                systemFontLookup = lookup;
+            }
+            return lookup;
+        }
+    }
+
+    private static Map<String, Path> buildSystemFontLookup() {
+        Map<String, Path> lookup = new LinkedHashMap<>();
+        for (Path directory : systemFontDirectories()) {
+            if (!Files.isDirectory(directory)) {
+                continue;
+            }
+
+            try (Stream<Path> paths = Files.walk(directory)) {
+                paths.filter(Files::isRegularFile)
+                        .filter(StaticFontLoader::hasSupportedFontExtension)
+                        .sorted(Comparator.comparing(path -> path.toString().toLowerCase(Locale.ROOT)))
+                        .forEach(path -> registerSystemFont(lookup, path.toAbsolutePath().normalize()));
+            } catch (IOException | SecurityException ignored) {
+            }
+        }
+        return lookup;
+    }
+
+    private static Set<Path> systemFontDirectories() {
+        Set<Path> directories = new LinkedHashSet<>();
+        String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+        String userHome = System.getProperty("user.home");
+
+        if (osName.contains("win")) {
+            addDirectory(directories, System.getenv("WINDIR"), "Fonts");
+            addDirectory(directories, System.getenv("SystemRoot"), "Fonts");
+            addDirectory(directories, System.getenv("LOCALAPPDATA"), "Microsoft", "Windows", "Fonts");
+        } else if (osName.contains("mac")) {
+            addDirectory(directories, "/System/Library/Fonts");
+            addDirectory(directories, "/Library/Fonts");
+            addDirectory(directories, userHome, "Library", "Fonts");
+        } else {
+            addDirectory(directories, "/usr/share/fonts");
+            addDirectory(directories, "/usr/local/share/fonts");
+            addDirectory(directories, userHome, ".fonts");
+            addDirectory(directories, userHome, ".local", "share", "fonts");
+        }
+
+        return directories;
+    }
+
+    private static void addDirectory(Set<Path> directories, String first, String... more) {
+        if (first == null || first.isBlank()) {
+            return;
+        }
+
+        try {
+            directories.add(Path.of(first, more).toAbsolutePath().normalize());
+        } catch (InvalidPathException ignored) {
+        }
+    }
+
+    private static void registerSystemFont(Map<String, Path> lookup, Path path) {
+        String fileName = path.getFileName().toString();
+        putFontLookupKey(lookup, fileName, path);
+        putFontLookupKey(lookup, stripFontExtension(fileName), path);
+
+        try {
+            for (Font font : Font.createFonts(path.toFile())) {
+                putFontLookupKey(lookup, font.getFontName(Locale.ROOT), path);
+                putFontLookupKey(lookup, font.getFamily(Locale.ROOT), path);
+                putFontLookupKey(lookup, font.getPSName(), path);
+            }
+        } catch (FontFormatException | IOException | RuntimeException ignored) {
+        }
+    }
+
+    private static void putFontLookupKey(Map<String, Path> lookup, String name, Path path) {
+        String key = normalizeFontLookupKey(name);
+        if (!key.isEmpty()) {
+            lookup.putIfAbsent(key, path);
+        }
+    }
+
+    private static String normalizeFontLookupKey(String name) {
+        if (name == null) {
+            return "";
+        }
+
+        return stripFontExtension(stripQuotes(name.trim()))
+                .replace("-", "")
+                .replace("_", "")
+                .replace(" ", "")
+                .toLowerCase(Locale.ROOT);
+    }
+
+    private static String stripFontExtension(String value) {
+        String lower = value.toLowerCase(Locale.ROOT);
+        for (String extension : FONT_FILE_EXTENSIONS) {
+            if (lower.endsWith(extension)) {
+                return value.substring(0, value.length() - extension.length());
+            }
+        }
+        return value;
+    }
+
+    private static boolean hasSupportedFontExtension(Path path) {
+        Path fileName = path.getFileName();
+        return fileName != null && hasSupportedFontExtension(fileName.toString());
+    }
+
+    private static boolean hasSupportedFontExtension(String fileName) {
+        String lower = fileName.toLowerCase(Locale.ROOT);
+        for (String extension : FONT_FILE_EXTENSIONS) {
+            if (lower.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static float customRenderScale(TtfFontLoader fontLoader) {
