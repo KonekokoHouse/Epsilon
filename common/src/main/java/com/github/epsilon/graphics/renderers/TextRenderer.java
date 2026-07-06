@@ -47,15 +47,15 @@ public class TextRenderer implements IRenderer {
     }
 
     public void addText(String text, float x, float y, float scale, Color color) {
-        textRenderer.addText(text, x, y, scale, color, StaticFontLoader.DEFAULT);
+        textRenderer.addText(text, x, y, scale, color, StaticFontLoader.defaultFont());
     }
 
     public void addRotatedText(String text, float x, float y, float scale, Color color, float originX, float originY, float rotationDegrees) {
-        textRenderer.addRotatedText(text, x, y, scale, color, StaticFontLoader.DEFAULT, originX, originY, rotationDegrees);
+        textRenderer.addRotatedText(text, x, y, scale, color, StaticFontLoader.defaultFont(), originX, originY, rotationDegrees);
     }
 
     public void addGradientText(String text, float x, float y, float scale, Color startColor, Color endColor) {
-        textRenderer.addGradientText(text, x, y, scale, startColor, endColor, StaticFontLoader.DEFAULT);
+        textRenderer.addGradientText(text, x, y, scale, startColor, endColor, StaticFontLoader.defaultFont());
     }
 
     public void addText(String text, float x, float y, Color color, TtfFontLoader fontLoader) {
@@ -63,11 +63,11 @@ public class TextRenderer implements IRenderer {
     }
 
     public void addText(String text, float x, float y, Color color) {
-        textRenderer.addText(text, x, y, 1.0f, color, StaticFontLoader.DEFAULT);
+        textRenderer.addText(text, x, y, 1.0f, color, StaticFontLoader.defaultFont());
     }
 
     public float getHeight(float scale) {
-        return textRenderer.getHeight(scale, StaticFontLoader.DEFAULT);
+        return textRenderer.getHeight(scale, StaticFontLoader.defaultFont());
     }
 
     public float getHeight(float scale, TtfFontLoader fontLoader) {
@@ -75,7 +75,7 @@ public class TextRenderer implements IRenderer {
     }
 
     public float getWidth(String text, float scale) {
-        return textRenderer.getWidth(text, scale, StaticFontLoader.DEFAULT);
+        return textRenderer.getWidth(text, scale, StaticFontLoader.defaultFont());
     }
 
     public float getWidth(String text, float scale, TtfFontLoader fontLoader) {

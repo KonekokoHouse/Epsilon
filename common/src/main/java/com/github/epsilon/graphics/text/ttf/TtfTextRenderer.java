@@ -89,7 +89,7 @@ public class TtfTextRenderer implements ITextRenderer {
     private TextLayout layoutFor(String text, TtfFontLoader fontLoader) {
         long revision = fontLoader.getGlyphRevision();
         long atlasRevision = fontLoader.getAtlasRevision();
-        LayoutKey key = new LayoutKey(fontLoader, text);
+        LayoutKey key = new LayoutKey(fontLoader, text, fontLoader.getRenderScale());
         TextLayout cached = layoutCache.get(key);
         // 完整布局可跨无关 glyph 加载复用；未完成布局等待 glyphRevision 变化后重建。
         if (cached != null && cached.atlasRevision == atlasRevision && (cached.complete || cached.glyphRevision == revision)) {
@@ -107,8 +107,11 @@ public class TtfTextRenderer implements ITextRenderer {
         float xOffset = 0.0f;
         float yOffset = 0.0f;
         float maxLine = 0.0f;
-        float ascent = fontLoader.fontFile.pixelAscent * DEFAULT_SCALE;
-        float lineHeight = fontLoader.fontFile.fontHeight * DEFAULT_SCALE;
+        float fontScale = fontLoader.getRenderScale();
+        float scaledFont = DEFAULT_SCALE * fontScale;
+        float ascent = fontLoader.fontFile.pixelAscent * scaledFont;
+        float lineHeight = fontLoader.fontFile.fontHeight * scaledFont;
+        float spaceWidth = SPACE_WIDTH * fontScale;
         boolean complete = true;
         int glyphCount = 0;
 
@@ -116,7 +119,7 @@ public class TtfTextRenderer implements ITextRenderer {
             int codepoint = text.codePointAt(i);
             i += Character.charCount(codepoint);
             if (codepoint == ' ') {
-                xOffset += SPACE_WIDTH;
+                xOffset += spaceWidth;
                 continue;
             }
             if (codepoint == '\n') {
@@ -132,14 +135,14 @@ public class TtfTextRenderer implements ITextRenderer {
                 continue;
             }
 
-            float x1 = xOffset + glyph.xOffset() * DEFAULT_SCALE;
-            float x2 = x1 + glyph.width() * DEFAULT_SCALE;
-            float y1 = yOffset + ascent + glyph.yOffset() * DEFAULT_SCALE;
-            float y2 = y1 + glyph.height() * DEFAULT_SCALE;
-            float advance = glyph.advance() * DEFAULT_SCALE + SPACING;
+            float x1 = xOffset + glyph.xOffset() * scaledFont;
+            float x2 = x1 + glyph.width() * scaledFont;
+            float y1 = yOffset + ascent + glyph.yOffset() * scaledFont;
+            float y2 = y1 + glyph.height() * scaledFont;
+            float advance = glyph.advance() * scaledFont + SPACING;
 
             runBuilders.computeIfAbsent(glyph.atlas(), LayoutRunBuilder::new)
-                    .add(x1, y1, x2, y2, glyph.uv(), xOffset, xOffset + glyph.advance() * DEFAULT_SCALE);
+                    .add(x1, y1, x2, y2, glyph.uv(), xOffset, xOffset + glyph.advance() * scaledFont);
 
             xOffset += advance;
             glyphCount++;
@@ -250,7 +253,7 @@ public class TtfTextRenderer implements ITextRenderer {
     }
 
     private float baseWidth(String text, TtfFontLoader fontLoader) {
-        LayoutKey key = new LayoutKey(fontLoader, text);
+        LayoutKey key = new LayoutKey(fontLoader, text, fontLoader.getRenderScale());
         Float cached = widthCache.get(key);
         if (cached != null) {
             return cached;
@@ -258,16 +261,19 @@ public class TtfTextRenderer implements ITextRenderer {
 
         float maxLine = 0.0f;
         float currentLine = 0.0f;
+        float fontScale = fontLoader.getRenderScale();
+        float scaledFont = DEFAULT_SCALE * fontScale;
+        float spaceWidth = SPACE_WIDTH * fontScale;
         for (int i = 0; i < text.length(); ) {
             int codepoint = text.codePointAt(i);
             i += Character.charCount(codepoint);
             if (codepoint == ' ') {
-                currentLine += SPACE_WIDTH;
+                currentLine += spaceWidth;
             } else if (codepoint == '\n') {
                 maxLine = Math.max(maxLine, currentLine);
                 currentLine = 0.0f;
             } else {
-                currentLine += fontLoader.getAdvance(codepoint) * DEFAULT_SCALE + SPACING;
+                currentLine += fontLoader.getAdvance(codepoint) * scaledFont + SPACING;
             }
         }
 
@@ -411,7 +417,7 @@ public class TtfTextRenderer implements ITextRenderer {
 
     @Override
     public float getHeight(float scale, TtfFontLoader fontLoader) {
-        return fontLoader.fontFile.fontHeight * DEFAULT_SCALE * scale;
+        return fontLoader.fontFile.fontHeight * DEFAULT_SCALE * fontLoader.getRenderScale() * scale;
     }
 
     @Override
@@ -462,7 +468,7 @@ public class TtfTextRenderer implements ITextRenderer {
         }
     }
 
-    private record LayoutKey(TtfFontLoader fontLoader, String text) {
+    private record LayoutKey(TtfFontLoader fontLoader, String text, float renderScale) {
     }
 
     private static final class TextLayout {

@@ -14,6 +14,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 
 import java.awt.*;
+import java.util.Objects;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -78,9 +79,12 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         if (!fieldBounds.contains(event.x(), event.y())) {
             return false;
         }
+        boolean wasFocused = focused;
         focused = true;
         IMEFocusHelper.activate();
-        inputBuffer = normalize(setting.getValue());
+        if (!wasFocused || inputBuffer == null) {
+            inputBuffer = normalize(setting.getValue());
+        }
         cursorIndex = getCursorIndex(event.x(), fieldBounds);
         clearSelection();
         return true;
@@ -193,7 +197,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
     private void commitInput() {
         String value = inputBuffer == null ? normalize(setting.getValue()) : inputBuffer;
         value = value.length() > MAX_LENGTH ? value.substring(0, MAX_LENGTH) : value;
-        setting.setValue(value);
+        applyValue(value);
         inputBuffer = value;
         cursorIndex = inputBuffer.length();
         clearSelection();
@@ -336,6 +340,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         inputBuffer = current.substring(0, start) + value + current.substring(end);
         cursorIndex = start + value.length();
         clearSelection();
+        previewInput();
     }
 
     private void deleteBackward() {
@@ -346,6 +351,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         if (inputBuffer != null && cursorIndex > 0) {
             inputBuffer = inputBuffer.substring(0, cursorIndex - 1) + inputBuffer.substring(cursorIndex);
             cursorIndex--;
+            previewInput();
         }
     }
 
@@ -356,6 +362,19 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         }
         if (inputBuffer != null && cursorIndex < inputBuffer.length()) {
             inputBuffer = inputBuffer.substring(0, cursorIndex) + inputBuffer.substring(cursorIndex + 1);
+            previewInput();
+        }
+    }
+
+    private void previewInput() {
+        if (!setting.isApplyWhenRelease()) {
+            applyValue(getDisplayBuffer());
+        }
+    }
+
+    private void applyValue(String value) {
+        if (!Objects.equals(setting.getValue(), value)) {
+            setting.setValue(value);
         }
     }
 
