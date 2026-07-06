@@ -4,6 +4,8 @@ import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.settings.impl.StringSetting;
 
+import java.util.Objects;
+
 public class StringWidget extends SettingWidget<StringSetting> {
 
     private final DropdownTextField inputField = new DropdownTextField(100);
@@ -39,12 +41,15 @@ public class StringWidget extends SettingWidget<StringSetting> {
         float fieldW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
         float fieldH = DropdownTheme.INPUT_HEIGHT;
 
-        if (button == 0 && inputField.focusIfContains(mouseX, mouseY, fieldX, fieldY, fieldW, fieldH)) {
-            inputField.setText(setting.getValue());
+        if (button == 0 && isHovered(mouseX, mouseY, fieldX, fieldY, fieldW, fieldH)) {
+            if (!inputField.isFocused()) {
+                inputField.setText(setting.getValue());
+            }
+            inputField.focusIfContains(mouseX, mouseY, fieldX, fieldY, fieldW, fieldH);
             return true;
         }
         if (inputField.isFocused()) {
-            syncSetting();
+            commitSetting();
             inputField.blur();
         }
         return false;
@@ -55,7 +60,7 @@ public class StringWidget extends SettingWidget<StringSetting> {
         if (!inputField.isFocused()) return false;
 
         if (keyCode == 257 || keyCode == 335) {
-            syncSetting();
+            commitSetting();
             inputField.blur();
             return true;
         }
@@ -65,7 +70,7 @@ public class StringWidget extends SettingWidget<StringSetting> {
             return true;
         }
         if (inputField.keyPressed(keyCode)) {
-            syncSetting();
+            previewSetting();
             return true;
         }
         return false;
@@ -74,7 +79,7 @@ public class StringWidget extends SettingWidget<StringSetting> {
     @Override
     public boolean charTyped(String typedText) {
         if (inputField.charTyped(typedText)) {
-            syncSetting();
+            previewSetting();
             return true;
         }
         return false;
@@ -85,12 +90,24 @@ public class StringWidget extends SettingWidget<StringSetting> {
     }
 
     public void blurInput() {
-        syncSetting();
+        commitSetting();
         inputField.blur();
     }
 
-    private void syncSetting() {
-        setting.setValue(inputField.getText());
+    private void previewSetting() {
+        if (!setting.isApplyWhenRelease()) {
+            applyText(inputField.getText());
+        }
+    }
+
+    private void commitSetting() {
+        applyText(inputField.getText());
+    }
+
+    private void applyText(String value) {
+        if (!Objects.equals(setting.getValue(), value)) {
+            setting.setValue(value);
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package com.github.epsilon.graphics;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.holders.RenderTargetHolder;
 import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -47,6 +48,7 @@ public class LuminRenderSystem {
         ShaderUniforms.closeAll();
         RenderTargetHolder.INSTANCE.destroyAll();
         RendererHolder.INSTANCE.destroyAll();
+        StaticFontLoader.destroyDefault();
     }
 
     public static <T extends DynamicUniformStorage.DynamicUniform> GpuBufferSlice writeDynamicUniform(
