@@ -199,7 +199,6 @@ public class EntityControl extends Module {
     @EventHandler
     private void onMove(MoveEvent event) {
         if (nullCheck()) return;
-        // TP override and forcePause handled via direct position modification
         if (isTeleporting && pendingTpTarget != null) {
             Entity vehicle = mc.player.getVehicle();
             if (vehicle != null) {
@@ -469,7 +468,6 @@ public class EntityControl extends Module {
     private Vec3 getHorizontalVelocity(double hSpeed) {
         float yaw = mc.player.getYHeadRot();
         double rad = Math.toRadians(yaw + 90);
-        // Calculate movement direction from WASD input (like Meteor's PlayerUtils.getHorizontalVelocity)
         float forward = 0, sideways = 0;
         if (mc.options.keyUp.isDown()) forward += 1;
         if (mc.options.keyDown.isDown()) forward -= 1;
@@ -486,7 +484,6 @@ public class EntityControl extends Module {
     }
 
     private static Set<EntityType<?>> getAllRideableEntities() {
-        // All rideable entity types in MC 26.1.2 (minecarts excluded, llamas included)
         return Set.of(
             EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
             EntityType.SKELETON_HORSE, EntityType.ZOMBIE_HORSE,
