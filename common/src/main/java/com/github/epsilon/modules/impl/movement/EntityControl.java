@@ -108,7 +108,7 @@ public class EntityControl extends Module {
             double[] coords = AutoPilotUtil.parseCoordinates(clip);
             if (coords != null) {
                 destinationX.setValue(String.valueOf((int) coords[0]));
-                destinationZ.setValue(String.valueOf((int) coords[1]));
+                destinationZ.setValue(String.valueOf((int) coords[0]));
             }
         }
     }).group(sgAutoPilot);
