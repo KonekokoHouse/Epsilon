@@ -104,7 +104,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             for (ActionButton button : getActionButtons(inputSection)) {
                 buildActionButton(scope, button, mouseX, mouseY);
             }
-            scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getConfigScroll(), maxScroll, contentHeight, content -> {
+            scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getConfigScroll(), maxScroll, contentHeight, mouseX, mouseY, content -> {
                 if (!rebuildContent) {
                     return;
                 }

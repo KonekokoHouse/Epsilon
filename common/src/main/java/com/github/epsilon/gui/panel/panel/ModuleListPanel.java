@@ -105,7 +105,7 @@ public class ModuleListPanel implements AutoCloseable {
                 panel.text(EpsilonTranslations.Gui.MODULES.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 21.0f, 0.56f, MD3Theme.TEXT_SECONDARY);
             });
             buildSearchField(scope, mouseX, mouseY);
-            scope.viewport(contentBuffer, viewport, guiHeight, state.getModuleScroll(), maxModuleScroll, contentHeight, content -> {
+            scope.viewport(contentBuffer, viewport, guiHeight, state.getModuleScroll(), maxModuleScroll, contentHeight, mouseX, mouseY, content -> {
                 if (!rebuildContent) {
                     return;
                 }

@@ -330,11 +330,17 @@ public class DropdownScreen extends Screen {
         if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
             return true;
         }
+        boolean handled = false;
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
-            panel.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
+            if (panel.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()))) {
+                handled = true;
+            }
         }
-        DropdownLayoutState.save(panels);
+        if (handled) {
+            DropdownLayoutState.save(panels);
+            return true;
+        }
         return super.mouseDragged(epsilonEvent, LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
     }
 

@@ -27,7 +27,7 @@ public interface DropdownPanel {
 
     boolean mouseReleased(double mouseX, double mouseY, int button);
 
-    void mouseDragged(double mouseX, double mouseY);
+    boolean mouseDragged(double mouseX, double mouseY);
 
     boolean mouseScrolled(double mouseX, double mouseY, double amount);
 
