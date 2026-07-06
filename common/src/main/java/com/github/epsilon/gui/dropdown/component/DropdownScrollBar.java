@@ -14,7 +14,7 @@ public class DropdownScrollBar {
     public static final float RIGHT_INSET = 2.5f;
     public static final float MIN_THUMB_HEIGHT = 10.0f;
     public static final float HIT_WIDTH = 10.0f;
-    public static final float HOVER_WIDTH = 3.0f;
+    public static final float HOVER_WIDTH = 2.5f;
     public static final float TOTAL_WIDTH = HIT_WIDTH;
 
     private final Animation hoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_HOVER);
