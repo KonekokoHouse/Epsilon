@@ -99,8 +99,14 @@ public final class EpsilonFontGlyph implements BakedGlyph {
         return EpsilonFontMetrics.minecraftScale(this.font);
     }
 
-    private float left(float x) {
-        return x;
+    private float left(float x, boolean bold, boolean italic) {
+        if (this.descriptor == null) {
+            return x;
+        }
+        float left = x + this.descriptor.xOffset() * scale();
+        if (italic) left += Math.min(italicShearTop(yTop(0.0f)), italicShearBottom(yBottom(0.0f)));
+        if (bold) left -= extraThickness(true);
+        return left;
     }
 
     private static float extraThickness(boolean bold) {
@@ -111,39 +117,55 @@ public final class EpsilonFontGlyph implements BakedGlyph {
         if (this.descriptor == null) {
             return y;
         }
-        return baselineY(y) + this.descriptor.yOffset() * scale();
+        return yTop(y);
     }
 
     private float right(float x, boolean hasShadow, float shadowOffset, boolean bold, boolean italic) {
         if (this.descriptor == null) {
             return x + this.info.getAdvance(bold);
         }
-        float right = x + this.descriptor.width() * scale();
+        float right = x + this.descriptor.xOffset() * scale() + this.descriptor.width() * scale();
         if (hasShadow) right += shadowOffset;
         if (bold) right += extraThickness(true);
-        if (italic) right += 1.0f;
+        if (italic) right += Math.max(italicShearTop(yTop(0.0f)), italicShearBottom(yBottom(0.0f)));
         return right;
     }
 
     private float bottom(float y, boolean hasShadow, float shadowOffset, boolean bold) {
-        float bottom = top(y) + this.descriptor.height() * scale();
+        float bottom = yBottom(y);
         if (hasShadow) bottom += shadowOffset;
         if (bold) bottom += extraThickness(true);
         return bottom;
+    }
+
+    private float yTop(float y) {
+        return baselineY(y) + this.descriptor.yOffset() * scale();
+    }
+
+    private float yBottom(float y) {
+        return yTop(y) + this.descriptor.height() * scale();
+    }
+
+    private static float italicShearTop(float glyphTopRelativeToTextY) {
+        return 1.0f - 0.25f * glyphTopRelativeToTextY;
+    }
+
+    private static float italicShearBottom(float glyphBottomRelativeToTextY) {
+        return 1.0f - 0.25f * glyphBottomRelativeToTextY;
     }
 
     private void renderGlyph(Matrix4fc pose, VertexConsumer buffer, GlyphInstance instance, float offsetX, float offsetY, float z, int color, boolean bold) {
         if (this.descriptor == null) {
             return;
         }
-        float x0 = instance.x + offsetX;
+        float x0 = instance.x + this.descriptor.xOffset() * scale() + offsetX;
         float x1 = x0 + this.descriptor.width() * scale();
         float y0 = top(instance.y) + offsetY;
         float y1 = y0 + this.descriptor.height() * scale();
         float extraThickness = extraThickness(bold);
 
-        float shearTop = instance.style.isItalic() ? 1.0f - 0.25f * (y0 - instance.y) : 0.0f;
-        float shearBottom = instance.style.isItalic() ? 1.0f - 0.25f * (y1 - instance.y) : 0.0f;
+        float shearTop = instance.style.isItalic() ? italicShearTop(y0 - instance.y) : 0.0f;
+        float shearBottom = instance.style.isItalic() ? italicShearBottom(y1 - instance.y) : 0.0f;
 
         TtfGlyphAtlas.GlyphUV uv = this.descriptor.uv();
         buffer.addVertex(pose, x0 + shearTop - extraThickness, y0 - extraThickness, z).setUv(uv.u0(), uv.v0()).setColor(color);
@@ -213,7 +235,7 @@ public final class EpsilonFontGlyph implements BakedGlyph {
 
         @Override
         public float left() {
-            return this.glyph.left(this.x);
+            return this.glyph.left(this.x, this.style.isBold(), this.style.isItalic());
         }
 
         @Override

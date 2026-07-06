@@ -132,7 +132,7 @@ public class TtfTextRenderer implements ITextRenderer {
                 continue;
             }
 
-            float x1 = xOffset;
+            float x1 = xOffset + glyph.xOffset() * DEFAULT_SCALE;
             float x2 = x1 + glyph.width() * DEFAULT_SCALE;
             float y1 = yOffset + ascent + glyph.yOffset() * DEFAULT_SCALE;
             float y2 = y1 + glyph.height() * DEFAULT_SCALE;
