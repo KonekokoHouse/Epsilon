@@ -177,7 +177,8 @@ public class PanelPopupHost {
             return false;
         }
         if (activePopup.getBounds().contains(mouseX, mouseY)) {
-            return activePopup.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+            activePopup.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+            return true;
         }
         return false;
     }
