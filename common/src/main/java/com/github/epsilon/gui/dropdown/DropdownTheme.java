@@ -178,6 +178,10 @@ public class DropdownTheme {
         return MD3Theme.withAlpha(MD3Theme.OUTLINE, 64);
     }
 
+    public static Color scrollbar(float hoverProgress) {
+        return MD3Theme.lerp(scrollbar(), MD3Theme.withAlpha(MD3Theme.PRIMARY, 190), hoverProgress);
+    }
+
     public static Color scrim() {
         return new Color(0, 0, 0, 50);
     }

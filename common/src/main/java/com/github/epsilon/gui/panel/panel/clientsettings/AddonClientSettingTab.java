@@ -145,7 +145,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                 return;
             }
 
-            scope.viewport(listBuffer, listViewport, guiGraphics.guiHeight(), state.getAddonListScroll(), maxListScroll, listContentHeight, content -> {
+            scope.viewport(listBuffer, listViewport, guiGraphics.guiHeight(), state.getAddonListScroll(), maxListScroll, listContentHeight, mouseX, mouseY, content -> {
                 if (!rebuildContent) {
                     return;
                 }
@@ -173,7 +173,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                     String hint = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
                     scope.text(hint, settingsViewport.x() + 2.0f, settingsViewport.y() + 2.0f, hintScale, MD3Theme.TEXT_MUTED);
                 } else {
-                    scope.viewport(detailBuffer, settingsViewport, guiGraphics.guiHeight(), state.getAddonDetailScroll(), maxDetailScroll, settingsContentHeight, content -> {
+                    scope.viewport(detailBuffer, settingsViewport, guiGraphics.guiHeight(), state.getAddonDetailScroll(), maxDetailScroll, settingsContentHeight, effectiveMouseX, effectiveMouseY, content -> {
                         if (!rebuildContent) {
                             return;
                         }

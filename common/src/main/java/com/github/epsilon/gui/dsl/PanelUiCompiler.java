@@ -247,11 +247,11 @@ public class PanelUiCompiler {
         }
         if (node instanceof PanelUiTree.ViewportNode(
                 PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight, float scroll, float maxScroll,
-                float contentHeight, List<PanelUiTree.UiNode> children
+                float contentHeight, int mouseX, int mouseY, List<PanelUiTree.UiNode> children
         )) {
             buffer.beginViewport(viewport);
             renderNodesIntoTarget(children, RenderTarget.forContentBuffer(buffer), null);
-            buffer.queueViewport(viewport, guiHeight, scroll, maxScroll, contentHeight);
+            buffer.queueViewport(viewport, guiHeight, scroll, maxScroll, contentHeight, mouseX, mouseY);
         }
     }
 

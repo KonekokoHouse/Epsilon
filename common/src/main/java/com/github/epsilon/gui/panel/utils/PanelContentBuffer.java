@@ -4,6 +4,7 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.github.epsilon.gui.dropdown.component.DropdownScrollBar;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -23,6 +24,7 @@ public class PanelContentBuffer implements AutoCloseable {
     private final PanelRenderBatch batch = new PanelRenderBatch();
     private final PanelRenderBatch scrollBarBatch = batch.view(8);
     private final PanelRenderBatch marqueeBatch = batch.view(9);
+    private final DropdownScrollBar scrollBar = new DropdownScrollBar();
     private final List<MarqueeTextDraw> marqueeDraws = new ArrayList<>();
 
     private boolean pending;
@@ -63,9 +65,14 @@ public class PanelContentBuffer implements AutoCloseable {
      * 记录本帧视口信息，并为滚动条与跑马灯文本准备本帧附加层。
      */
     public void queueViewport(PanelLayout.Rect viewport, int guiHeight, float scroll, float maxScroll, float contentHeight) {
+        queueViewport(viewport, guiHeight, scroll, maxScroll, contentHeight, Integer.MIN_VALUE, Integer.MIN_VALUE);
+    }
+
+    public void queueViewport(PanelLayout.Rect viewport, int guiHeight, float scroll, float maxScroll,
+                              float contentHeight, int mouseX, int mouseY) {
         beginViewport(viewport);
         scrollBarBatch.clear();
-        scrollBarBatch.render(PanelUiTree.build(scope -> ScrollBarUtils.draw(scope, viewport, scroll, maxScroll, contentHeight)));
+        scrollBarBatch.render(PanelUiTree.build(scope -> scrollBar.draw(scope, viewport, scroll, maxScroll, contentHeight, mouseX, mouseY)));
         pendingViewport = viewport;
         pending = true;
     }

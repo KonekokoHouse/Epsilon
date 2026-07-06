@@ -124,7 +124,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         }
 
         PanelUiTree contentTree = PanelUiTree.build(scope -> scope.viewport(contentBuffer, viewport, guiHeight,
-                state.getDetailScroll(), maxDetailScroll, contentHeight, content -> {
+                state.getDetailScroll(), maxDetailScroll, contentHeight, effectiveMouseX, effectiveMouseY, content -> {
                     if (!rebuildContent) {
                         return;
                     }
