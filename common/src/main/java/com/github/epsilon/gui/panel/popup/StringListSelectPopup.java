@@ -107,7 +107,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
                 hoveredMoveUp = null;
                 hoveredMoveDown = null;
                 PanelLayout.Rect localViewport = animatedViewport.relativeTo(animatedBounds);
-                popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, contentHeight, content -> {
+                popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, contentHeight, mouseX, mouseY, content -> {
                     buildEntryList(content, entries, animatedViewport.x(), animatedViewport.y() - scroll,
                             localViewport, mouseX, mouseY, animatedViewport);
                 });

@@ -87,7 +87,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
         }
 
         PanelUiTree tree = PanelUiTree.build(scope -> scope.viewport(contentBuffer, bounds, guiGraphics.guiHeight(),
-                state.getClientSettingScroll(), maxScroll, contentHeight, content -> {
+                state.getClientSettingScroll(), maxScroll, contentHeight, effectiveMouseX, effectiveMouseY, content -> {
                     if (!rebuildContent) {
                         return;
                     }

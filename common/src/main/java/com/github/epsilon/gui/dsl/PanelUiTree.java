@@ -733,13 +733,20 @@ public class PanelUiTree {
         public void viewport(PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight,
                              float scroll, float maxScroll, float contentHeight,
                              Consumer<Scope> content) {
+            viewport(buffer, viewport, guiHeight, scroll, maxScroll, contentHeight,
+                    Integer.MIN_VALUE, Integer.MIN_VALUE, content);
+        }
+
+        public void viewport(PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight,
+                             float scroll, float maxScroll, float contentHeight,
+                             int mouseX, int mouseY, Consumer<Scope> content) {
             PanelLayout.Rect resolvedViewport = resolveRect(viewport);
             CaptureResult capture = capture(scope -> scope.pushAbsolute(
                     new PanelLayout.Rect(resolvedViewport.x(), resolvedViewport.y() - scroll,
                             resolvedViewport.width(), contentHeight),
                     content));
             hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
-            nodes.add(new ViewportNode(buffer, resolvedViewport, guiHeight, scroll, maxScroll, contentHeight, capture.nodes()));
+            nodes.add(new ViewportNode(buffer, resolvedViewport, guiHeight, scroll, maxScroll, contentHeight, mouseX, mouseY, capture.nodes()));
         }
 
         private CaptureResult capture(Consumer<Scope> content) {
@@ -1119,7 +1126,7 @@ public class PanelUiTree {
 
     record ViewportNode(PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight,
                         float scroll, float maxScroll, float contentHeight,
-                        List<UiNode> children) implements UiNode {
+                        int mouseX, int mouseY, List<UiNode> children) implements UiNode {
     }
 
 }

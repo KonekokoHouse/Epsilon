@@ -1,74 +1,38 @@
 package com.github.epsilon.gui.panel.utils;
 
+import com.github.epsilon.gui.dropdown.component.DropdownScrollBar;
 import com.github.epsilon.gui.panel.PanelLayout;
 
-/**
- * Encapsulates scroll bar drag state for a single scroll region.
- * Once dragging starts, it continues regardless of whether the cursor
- * is still within the scroll bar bounds until the mouse is released.
- */
 public class ScrollBarDragState {
 
-    private boolean dragging;
-    private float dragOffset;
+    private final DropdownScrollBar scrollBar = new DropdownScrollBar();
 
     public boolean isDragging() {
-        return dragging;
+        return scrollBar.isDragging();
     }
 
-    /**
-     * Try to begin a scrollbar drag. Returns true if the click was on the
-     * scrollbar track (thumb or empty track area).
-     */
     public boolean mouseClicked(double mouseX, double mouseY, PanelLayout.Rect viewport,
                                 float scroll, float maxScroll) {
-        if (maxScroll <= 0) {
+        if (maxScroll <= 0.0f) {
             return false;
         }
         float contentHeight = maxScroll + viewport.height();
-        ScrollBarUtils.ThumbGeometry thumb = ScrollBarUtils.computeThumb(viewport, scroll, maxScroll, contentHeight);
-        if (thumb == null) {
-            return false;
-        }
-        if (!thumb.trackContains(mouseX, mouseY)) {
-            return false;
-        }
-        if (thumb.thumbContains(mouseX, mouseY)) {
-            dragging = true;
-            dragOffset = (float) mouseY - thumb.thumbY();
-            return true;
-        }
-        // Clicked on the track but not the thumb — center thumb on click position
-        dragging = true;
-        dragOffset = thumb.thumbHeight() / 2.0f;
-        return true;
+        return scrollBar.mouseClicked(mouseX, mouseY, viewport, scroll, maxScroll, contentHeight);
     }
 
-    /**
-     * Update scroll based on the current mouse Y during a drag.
-     * Returns the new absolute scroll value, or -1 if not dragging.
-     */
     public float mouseDragged(double mouseY, PanelLayout.Rect viewport, float maxScroll) {
-        if (!dragging || maxScroll <= 0) {
-            return -1;
+        if (!scrollBar.isDragging() || maxScroll <= 0.0f) {
+            return -1.0f;
         }
         float contentHeight = maxScroll + viewport.height();
-        return ScrollBarUtils.scrollFromMouseY((float) mouseY - dragOffset, viewport, maxScroll, contentHeight);
+        return scrollBar.mouseDragged(mouseY, viewport, maxScroll, contentHeight);
     }
 
-    /**
-     * End dragging. Returns true if a drag was active.
-     */
     public boolean mouseReleased() {
-        if (dragging) {
-            dragging = false;
-            return true;
-        }
-        return false;
+        return scrollBar.mouseReleased();
     }
 
     public void reset() {
-        dragging = false;
+        scrollBar.reset();
     }
 }
-

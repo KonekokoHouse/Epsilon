@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.util.Mth;
@@ -18,6 +19,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     protected final String icon;
     protected final Animation openAnim = new Animation(Easing.EASE_IN_OUT_CUBIC, DropdownTheme.ANIM_OPEN);
     protected final Animation introAnim;
+    protected final DropdownScrollBar scrollBar = new DropdownScrollBar();
 
     protected float x;
     protected float y;
@@ -115,15 +117,6 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         renderer.text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY);
         renderer.triangle(x + width - 10.0f, y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f, 3.0f, expand, DropdownTheme.groupChevron(0.0f));
 
-        if (contentHeight > visibleHeight && opened && expand > 0.5f) {
-            float scrollbarX = x + width - 2.5f;
-            float scrollbarTrackY = y + DropdownTheme.PANEL_HEADER_HEIGHT;
-            float scrollbarTrackH = visibleHeight * expand;
-            float thumbRatio = visibleHeight / contentHeight;
-            float thumbH = Math.max(10.0f, scrollbarTrackH * thumbRatio);
-            float thumbY = scrollbarTrackY + (scrollbarTrackH - thumbH) * (maxScroll > 0 ? scroll / maxScroll : 0);
-            renderer.roundRect(scrollbarX, thumbY, 2.0f, thumbH, 1.0f, DropdownTheme.scrollbar());
-        }
     }
 
     @Override
@@ -134,7 +127,12 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         float contentHeight = cachedContentHeight;
         float visibleHeight = cachedVisibleContentHeight;
         updateScroll(contentHeight, visibleHeight, false);
-        drawPanelContent(renderer, mouseX, mouseY, visibleHeight);
+        PanelLayout.Rect scrollbarViewport = getScrollbarViewport();
+        boolean scrollbarHovered = scrollBar.isHovered(mouseX, mouseY, scrollbarViewport, scroll, maxScroll, contentHeight);
+        int contentMouseX = scrollbarHovered || scrollBar.isDragging() ? Integer.MIN_VALUE : mouseX;
+        int contentMouseY = scrollbarHovered || scrollBar.isDragging() ? Integer.MIN_VALUE : mouseY;
+        drawPanelContent(renderer, contentMouseX, contentMouseY, visibleHeight);
+        scrollBar.draw(renderer, scrollbarViewport, scroll, maxScroll, contentHeight, mouseX, mouseY);
     }
 
     @Override
@@ -156,6 +154,9 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        ensureFrameMetrics();
+        updateScroll(cachedContentHeight, cachedVisibleContentHeight, false);
+
         if (isHeaderHovered(mouseX, mouseY)) {
             if (button == 0) {
                 dragging = true;
@@ -169,7 +170,15 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
             }
         }
 
-        if (opened && openAnim.getValue() > 0.5f && isContentHovered(mouseX, mouseY)) {
+        if (button == 0 && scrollBar.mouseClicked(mouseX, mouseY, getScrollbarViewport(), scroll, maxScroll, cachedContentHeight)) {
+            float newScroll = scrollBar.mouseDragged(mouseY, getScrollbarViewport(), maxScroll, cachedContentHeight);
+            if (newScroll >= 0.0f) {
+                setScrollImmediate(newScroll);
+            }
+            return true;
+        }
+
+        if (opened && cachedExpand > 0.5f && isContentHovered(mouseX, mouseY)) {
             return mouseClickedContent(mouseX, mouseY, button);
         }
         return false;
@@ -177,6 +186,9 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0 && scrollBar.mouseReleased()) {
+            return true;
+        }
         if (button == 0 && dragging) {
             dragging = false;
             return true;
@@ -185,11 +197,20 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
-    public void mouseDragged(double mouseX, double mouseY) {
+    public boolean mouseDragged(double mouseX, double mouseY) {
+        if (scrollBar.isDragging()) {
+            float newScroll = scrollBar.mouseDragged(mouseY, getScrollbarViewport(), maxScroll, cachedContentHeight);
+            if (newScroll >= 0.0f) {
+                setScrollImmediate(newScroll);
+            }
+            return true;
+        }
         if (dragging) {
             x = (float) (mouseX + dragOffsetX);
             y = (float) (mouseY + dragOffsetY);
+            return true;
         }
+        return false;
     }
 
     @Override
@@ -251,7 +272,10 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     @Override
     public void setOpened(boolean opened) {
         this.opened = opened;
-        if (!opened) setScrollImmediate(0.0f);
+        if (!opened) {
+            scrollBar.reset();
+            setScrollImmediate(0.0f);
+        }
     }
 
     @Override
@@ -262,6 +286,10 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     @Override
     public void setVisible(boolean visible) {
         this.visible = visible;
+        if (!visible) {
+            dragging = false;
+            scrollBar.reset();
+        }
     }
 
     protected abstract float computeContentHeight();
@@ -334,6 +362,9 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         maxScroll = Math.max(0.0f, contentHeight - visibleHeight);
         targetScroll = Mth.clamp(targetScroll, 0.0f, maxScroll);
         scroll = Mth.clamp(scroll, 0.0f, maxScroll);
+        if (maxScroll <= 0.0f) {
+            scrollBar.reset();
+        }
 
         if (!animate) {
             return;
@@ -344,6 +375,10 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         } else {
             scroll = Mth.lerp(SCROLL_SMOOTHING, scroll, targetScroll);
         }
+    }
+
+    private PanelLayout.Rect getScrollbarViewport() {
+        return new PanelLayout.Rect(x, y + DropdownTheme.PANEL_HEADER_HEIGHT, width, cachedVisibleContentHeight * cachedExpand);
     }
 
     protected String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {

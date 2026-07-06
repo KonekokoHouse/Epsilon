@@ -124,7 +124,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         }
 
         PanelUiTree contentTree = PanelUiTree.build(scope -> scope.viewport(contentBuffer, viewport, guiHeight,
-                state.getDetailScroll(), maxDetailScroll, contentHeight, content -> {
+                state.getDetailScroll(), maxDetailScroll, contentHeight, effectiveMouseX, effectiveMouseY, content -> {
                     if (!rebuildContent) {
                         return;
                     }
@@ -501,6 +501,19 @@ public class ModuleDetailPanel implements AutoCloseable {
                 || !bindModeHoverAnimation.isFinished()
                 || !hiddenAnimation.isFinished()
                 || !hiddenHoverAnimation.isFinished();
+    }
+
+    public void resetTransientState() {
+        scrollBarDrag.reset();
+        scrollVelocity = 0;
+        settingListController.resetTransientState();
+        if (state.getListeningKeyBindModule() != null) {
+            state.setListeningKeyBindModule(null);
+        }
+        if (state.getListeningKeybindSetting() != null) {
+            state.setListeningKeybindSetting(null);
+        }
+        markDirty();
     }
 
     private boolean shouldRebuildContent(PanelLayout.Rect bounds, int mouseX, int mouseY, Module module, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {

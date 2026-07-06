@@ -88,7 +88,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         PanelUiTree tree = PanelUiTree.build(scope -> {
             inputField.buildUi(scope, inputBounds, mouseX, mouseY, textRenderer,
                     EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵");
-            scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getFriendScroll(), maxScroll, contentHeight, content -> {
+            scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getFriendScroll(), maxScroll, contentHeight, mouseX, mouseY, content -> {
                 if (!rebuildContent) {
                     return;
                 }

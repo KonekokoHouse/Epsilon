@@ -15,6 +15,8 @@ Epsilon/
 └── docs/            ← 文档
 ```
 
+> 以下结构图仅描述 `common/` 下的核心代码组织。所有平台无关代码位于 `common/src/main/java/com/github/epsilon/`。
+
 ## 关键原则
 - `common/` 中的代码**不能调用任何 ModLoader 的 API**
 - 需要加载器 API 时，在 `fabric/` 或 `neoforge/` 子项目中实现，通过 compat 接口传入 common
@@ -43,9 +45,12 @@ mkdir -p reference && unzip common/build/moddev/artifacts/vanilla-*-sources.jar 
 
 ## 构建系统
 
-### 版本信息 (`gradle.properties`)
+### 版本信息
 
-当前 Minecraft 版本、Fabric API、NeoForge 版本等信息均在 `gradle.properties` 中定义，编写代码时参考此文件获取准确的版本号。
+- **项目元信息**（`mod_id`、`mod_name`、`mod_author`、`version`）在 `gradle.properties` 中定义
+- **依赖版本**（Minecraft、Fabric API、Fabric Loader、NeoForge、NeoForm、Mixin、Sodium 等）在 `gradle/libs.versions.toml` 中定义
+
+编写代码时优先参考 `gradle/libs.versions.toml` 获取准确的依赖版本号。`gradle.properties` 中的 `version` 字段是 Epsilon 自身的发布版本号。
 
 ### buildSrc 约定插件
 
@@ -60,14 +65,17 @@ mkdir -p reference && unzip common/build/moddev/artifacts/vanilla-*-sources.jar 
 |------|------|
 | `addon/` | Addon 基类、注册事件、Bootstrap 工具 |
 | `assets/` | i18n 翻译、配置文件迁移、资源持有者 |
-| `events/` | 自定义事件总线、27 种事件类型 |
-| `graphics/` | Lumin Graphics 渲染框架 |
-| `gui/` | 点击 GUI（Panel、Dropdown、HUD 编辑器） |
-| `managers/` | 各种管理器（Addon、Config、Module、Rotation 等） |
-| `mixins/` | 37 个 Mixin 注入类 |
-| `modules/` | Module 基类、Category 枚举、HudModule |
+| `elements/` | HUD 元素基类 `HudModule` 与具体实现（`Watermark`、`BPS`、`ModuleList`、`Potions`、`Inventory`、`TargetHud`、`ScaffoldBlock`） |
+| `events/` | 自定义事件总线、33 种事件类型 |
+| `graphics/` | Lumin Graphics 渲染框架（含 `renderers/`、`shaders/`、`text/`、`buffer/`、`immediate/`、`schedulers/` 子包） |
+| `gui/` | 点击 GUI（Panel、Dropdown、HUD 编辑器、Scene 系统） |
+| `holders/` | 各种持有者（`ModuleHolder`、`ConfigHolder`、`AddonHolder`、`HudElementHolder`、`RendererHolder`、`ShaderHolder` 等，负责初始化与生命周期） |
+| `interfaces/` | Mixin 用的 accessor 接口（`ChatComponentAccessor`、`EntityRenderStateAccessor`、`WalkAnimationStateAccessor`） |
+| `managers/` | 各种管理器（Rotation、Target、Health、Friend、Sound、Notification、Packet 等） |
+| `mixins/` | 51 个 Mixin 注入类 |
+| `modules/` | Module 基类、Category 枚举、`ClientSetting`、83 个内置模块（combat/movement/player/render 四大类） |
 | `settings/` | Setting 基类与 8 种设置类型 |
-| `utils/` | 工具类（client、combat、math、network、player、render、timer、rotation、world） |
+| `utils/` | 工具类（client、combat、math、network、player、render、rotation、timer、world） |
 
 ## Module 开发
 
@@ -133,7 +141,7 @@ public class MyModule extends Module {
 
     // -- 事件监听 --
     @EventHandler
-    private void onTick(TickEvent.Pre event) {
+    private void onTick(PlayerTickEvent.Pre event) {
         if (nullCheck()) return; // 检查 mc.player == null || mc.level == null
         // 处理每 tick 逻辑
     }
@@ -207,28 +215,30 @@ Module 启用时自动 `subscribe(this)`，禁用时自动 `unsubscribe(this)`�
 
 | 事件类 | 描述 |
 |--------|------|
-| `TickEvent.Pre` / `TickEvent.Post` | 每 tick 前后 |
+| `PlayerTickEvent.Pre` / `PlayerTickEvent.Post` | 玩家每 tick 前后（最常用，可取消 Pre） |
+| `ClientTickEvent.Pre` / `ClientTickEvent.Post` | 客户端每 tick 前后 |
 | `Render2DEvent.Level` / `Render2DEvent.HUD` | 2D 渲染（含 GuiGraphics） |
-| `Render3DEvent` | 3D 渲染（含 PoseStack） |
-| `PacketEvent.Send` / `PacketEvent.Receive` | 网络包收发 |
+| `Render3DEvent` / `AfterRender3DEvent` | 3D 渲染（含 PoseStack）及渲染后回调 |
+| `PacketEvent.Send` / `PacketEvent.Receive` | 网络包收发（可取消） |
 | `KeyPressEvent` | 按键按下/释放 |
 | `MousePressEvent` | 鼠标按键 |
-| `AttackEntityEvent` | 攻击实体 |
+| `AttackEntityEvent` / `AttackBlockEvent` / `DestroyBlockEvent` | 攻击实体/方块/破坏方块 |
 | `ClickEvent` | 点击 |
 | `JumpEvent` | 跳跃 |
 | `CollisionEvent` | 碰撞检测 |
-| `SlowdownEvent` | 减速（灵魂沙等） |
-| `StrafeEvent` | 侧移 |
-| `TravelEvent` | 移动 |
-| `VelocityEvent` | 击退 |
-| `RotationAnimationEvent` | 旋转动画 |
-| `AfterRotationEvent` | 旋转完成标记事件（通过 RotationManager.getYRot()/getXRot() 获取角度） |
-| `AttackYawEvent` | 攻击偏航角 |
-| `SendPositionEvent` | 发送位置包 |
-| `SwingHandEvent` | 挥手 |
-| `RaytraceEvent` | 射线追踪 |
+| `SlowdownEvent` / `AttackSlowDownEvent` | 减速（灵魂沙等）/攻击减速 |
+| `StrafeEvent` / `MoveEvent` / `TravelEvent` | 侧移 / 移动 / 行进 |
 | `KeyboardInputEvent` | 键盘输入 |
-| ... | 等 27 个事件 |
+| `RotationAnimationEvent` | 旋转动画（可设置渲染用的 yaw/pitch） |
+| `AfterRotationEvent` | 旋转更新标记事件（无字段，通过 `Managers.ROTATION.getYaw()/getPitch()` 获取角度） |
+| `AttackYawEvent` | 攻击偏航角 |
+| `SendPositionEvent` | 发送位置包（RotationManager 在此写入旋转） |
+| `SwingHandEvent` | 挥手 |
+| `RaytraceEvent` / `UseItemRaytraceEvent` | 射线追踪 / 使用物品射线追踪 |
+| `UseItemEvent` / `StartUseItemEvent` | 使用物品 |
+| `FallFlyingEvent` / `FireworkUpdateEvent` | 鞘翅飞行 / 烟花更新 |
+| `LevelUpdateEvent` / `RespawnEvent` | 世界切换 / 重生 |
+| ... | 共 33 个事件类（部分含 Pre/Post 内部类） |
 
 ### 事件优先级
 
@@ -267,81 +277,106 @@ Mixin 类位于 `common/src/main/java/com/github/epsilon/mixins/`。
 4. 事件发布通常在 Mixin 的 `@Inject` 回调中进行：`EventBus.INSTANCE.post(new SomeEvent(...))`
 5. 如果遇到不熟悉的类/方法签名，必须查阅文档确认
 
-## 管理器（Managers）
+## 管理器（Managers）与持有者（Holders）
 
-### ModuleManager (`common/.../managers/ModuleManager.java`)
+Epsilon 把"持有者"（Holders，负责初始化与生命周期）和"管理器"（Managers，负责运行时逻辑）分开：
 
-- `initModules()` — 注册所有内置模块（在 `EpsilonCommon.init()` 中调用）
+- **Holders** 位于 `common/.../holders/`，单例模式，由 `EpsilonCommon.init()` 依次调用其 `initXxx()` 方法
+- **Managers** 位于 `common/.../managers/`，运行时业务逻辑，部分通过 `Managers.initManagers()` 实例化并暴露为 `Managers.XXX` 静态字段
+
+### ModuleHolder (`common/.../holders/ModuleHolder.java`)
+
+- `initModules()` — 注册所有内置模块（在 `EpsilonCommon.init()` 中调用，注册了 83 个内置模块）
 - `registerAddonModule(addonId, module, translateComponent)` — 注册 Addon 的模块
 - `getModules()` — 获取所有已注册模块列表
+- 内部订阅 `KeyPressEvent` / `MousePressEvent`，负责把键位分发到对应模块（Toggle / Hold 模式）
 
-### AddonManager (`common/.../managers/AddonManager.java`)
+### AddonHolder (`common/.../holders/AddonHolder.java`)
 
 - `registerAddon(addon)` — 注册单个 addon（含重复 ID 校验）
 - `registerAddons(Iterable)` — 批量注册
 - `setupAddons()` — 依次初始化所有 addon 的 i18n 并调用 `onSetup()`（含异常隔离）
 - `getAddons()` — 获取已注册 addon 列表
 
-### 其他管理器
+### 其他 Holder / Manager
 
-| 管理器 | 职责 |
+| 类 | 职责 |
 |--------|------|
-| `ConfigManager` | 配置序列化/反序列化、自动保存 |
-| `RotationManager` | 旋转角度管理（优先级队列） |
-| `HealthManager` | 实体生命值缓存 |
+| `ConfigHolder` | 配置序列化/反序列化、自动保存（`initConfig()` / `saveNow()`） |
+| `HudElementHolder` | HUD 元素初始化（`initElements()`） |
+| `RotationManager`（抽象基类） | 旋转角度管理（优先级队列、平滑插值、raytrace 偏移） |
+| `SilentRotationManager` / `SnapRotationManager` | RotationManager 的两种实现，由 `Managers.switchRotationManager()` 动态切换 |
 | `TargetManager` | 目标选择（FOV、距离、实体类型过滤） |
+| `HealthManager` | 实体生命值缓存 |
 | `FriendManager` | 好友管理 |
 | `SoundManager` | 音效播放 |
+| `NotificationManager` | 通知系统 |
 | `ServerboundPacketManager` / `ClientboundPacketManager` | 网络包管理 |
 
-### RotationManager (`common/.../managers/RotationManager.java`)
+> 注意：Rotation / Target / Health / C2SPacket / S2CPacket / Friend / Sound / Notification 这些管理器实例通过 `Managers.ROTATION`、`Managers.TARGET` 等静态字段访问，而非各自类的 `INSTANCE`。
 
-RotationManager 管理玩家视角旋转，支持优先级队列、平滑插值和射线追踪偏移。
+### RotationManager (`common/.../managers/rotations/RotationManager.java`)
+
+RotationManager 是**抽象基类**，管理玩家视角旋转，支持优先级队列、平滑插值和射线追踪偏移。有两种实现：
+
+- `SilentRotationManager` — 静默旋转（不改变玩家可见视角，只在发包时写入旋转）
+- `SnapRotationManager` — 瞬时旋转（直接 snap 到目标角度）
+
+通过 `ClientSetting.rotationMode` 配置选择，由 `Managers.switchRotationManager(mode)` 动态切换。**所有访问必须通过 `Managers.ROTATION`**（而非 `RotationManager.INSTANCE`，因为是抽象类）。
 
 **核心概念**：
 - `setRotations()` 设置目标旋转角度后，RotationManager 每 tick 自动平滑旋转，并在 `SendPositionEvent` 中将旋转角度写入发包
 - 旋转完成后（与真实角度差值 < 1 度）自动 `active = false`
-- 多个模块可同时调用 `setRotations()`，高优先级覆盖低优先级
-- 旋转过程中每 tick 发布 `AfterRotationEvent`，可在其中做 raycast 检测确认旋转已对准目标后再执行操作
+- 多个模块可同时调用 `setRotations()`，高优先级覆盖低优先级（仅当新 priority 数值 ≥ 当前 priority 时才接受）
+- 旋转过程中每 tick 发布 `AfterRotationEvent`（无字段，纯标记事件），仅供需要知道旋转已更新的模块订阅
+- 收到 `ClientboundPlayerPositionPacket` / `ClientboundPlayerRotationPacket`（S08 旋转包）时自动重置状态以避免与服务端冲突
 
 **主要 API**：
 
 ```java
-// 获取当前旋转角度
-float yaw = RotationManager.INSTANCE.getYRot();   // 水平角度
-float pitch = RotationManager.INSTANCE.getXRot(); // 垂直角度
-Vector2f current = RotationManager.INSTANCE.getRotation(); // Vector2f(yaw, pitch)
+import com.github.epsilon.utils.rotation.Rot2f;
+import com.github.epsilon.utils.rotation.Priority;
+import com.github.epsilon.managers.Managers;
+
+// 获取当前旋转角度（active 时返回平滑后的旋转，否则返回玩家真实视角）
+float yaw = Managers.ROTATION.getYaw();     // 水平角度
+float pitch = Managers.ROTATION.getPitch(); // 垂直角度
+Rot2f current = Managers.ROTATION.getRotation();       // Rot2f(yaw, pitch)
+Rot2f last = Managers.ROTATION.getLastRotation();      // 上一 tick 旋转
 
 // 设置旋转（默认优先级 Medium）
-RotationManager.INSTANCE.setRotations(new Vector2f(yaw, pitch), rotationSpeed);
+Managers.ROTATION.setRotations(new Rot2f(yaw, pitch), rotationSpeed);
 
 // 设置旋转 + 优先级
-RotationManager.INSTANCE.setRotations(new Vector2f(yaw, pitch), rotationSpeed, Priority.High);
+Managers.ROTATION.setRotations(new Rot2f(yaw, pitch), rotationSpeed, Priority.High);
 
 // 设置旋转 + 射线追踪偏移（用于绕过反作弊）
-RotationManager.INSTANCE.setRotations(rotations, rotationSpeed, rayTraceFunction, Priority.High);
+Managers.ROTATION.setRotations(rotations, rotationSpeed, rayTraceFunction, Priority.High);
 
 // 设置旋转 + 回调（旋转每 tick 平滑后执行，用于 raycast 检测 + 实际操作）
-RotationManager.INSTANCE.setRotations(rotations, rotationSpeed, null, Priority.High, () -> {
-    if (RaytraceUtils.overBlock(new Vector2f(getYRot(), getXRot()), side, blockPos, true)) {
+Managers.ROTATION.setRotations(rotations, rotationSpeed, null, Priority.High, () -> {
+    if (RaytraceUtils.overBlock(new Rot2f(Managers.ROTATION.getYaw(), Managers.ROTATION.getPitch()), side, blockPos, true)) {
         // 执行放置/攻击操作
     }
 });
 
-// 检查旋转是否激活 / 已完成
-boolean active = RotationManager.INSTANCE.isActive();
-boolean done = RotationManager.INSTANCE.isDone();
+// 检查旋转是否激活（注意：没有 isDone() 方法，用 !isActive() 判断完成）
+boolean active = Managers.ROTATION.isActive();
 ```
 
-**优先级（Priority）**：
+> 类型说明：旋转角度使用 `Rot2f`（位于 `utils.rotation.Rot2f`，含 `getYaw()` / `getPitch()`），不是 Mojang 的 `Vector2f`。
+
+**优先级（`com.github.epsilon.utils.rotation.Priority`）**：
 
 | 优先级 | 值    | 用途 |
 |--------|------|------|
-| `Lowest` | -200 | 预旋转（Pre Rotation） |
-| `Low` | -100 | 低优先级旋转 |
-| `Medium` | 0    | 默认优先级 |
+| `Lowest` | 0    | 预旋转（Pre Rotation） |
+| `Low` | 10   | 低优先级旋转 |
+| `Medium` | 50   | 默认优先级 |
 | `High` | 100  | 攻击/放置等即时操作 |
-| `Highest` | 200  | 最高优先级 |
+| `Highest` | 1000 | 最高优先级 |
+
+> 注意：Priority 枚举的数值与 EventBus 的 `EventPriority` 是**两套独立的系统**，不要混淆。EventPriority 的 HIGHEST=200、HIGH=100、MEDIUM=0、LOW=-100、LOWEST=-200。
 
 **回调使用模式**：
 
@@ -349,10 +384,10 @@ boolean done = RotationManager.INSTANCE.isDone();
 
 ```java
 // 设置旋转 + callback，在旋转对准后执行操作
-RotationManager.INSTANCE.setRotations(rotation, speed, null, Priority.High, () -> {
-    // 使用 getYRot()/getXRot() 获取当前平滑后的旋转角度
+Managers.ROTATION.setRotations(rotation, speed, null, Priority.High, () -> {
+    // 使用 Managers.ROTATION.getYaw() / getPitch() 获取当前平滑后的旋转角度
     if (RaytraceUtils.overBlock(
-            new Vector2f(RotationManager.INSTANCE.getYRot(), RotationManager.INSTANCE.getXRot()),
+            new Rot2f(Managers.ROTATION.getYaw(), Managers.ROTATION.getPitch()),
             side, blockPos, true)) {
         mc.gameMode.useItemOn(mc.player, hand, hitResult);
     }
@@ -360,11 +395,11 @@ RotationManager.INSTANCE.setRotations(rotation, speed, null, Priority.High, () -
 ```
 
 **关键设计要点**：
-- callback 在 `RotationManager.onTick()` (priority=-1000) 中每 tick 执行一次，直到被新的 `setRotations()` 覆盖或旋转完成（`active=false`）
-- callback 内使用 `RotationManager.INSTANCE.getYRot()` / `getXRot()` 获取当前平滑后的旋转角度，而非使用 `AfterRotationEvent` 的字段（已移除）
-- callback 应防止重复执行（通过 boolean 标记），避免同一操作触发多次
-- `AfterRotationEvent` 现在是纯标记事件（无字段），仅供需要知道旋转已更新的模块订阅
-- raycast 函数用于在平滑旋转时加入随机偏移绕过反作弊，如果偏移后射线被遮挡则重新计算偏移方向
+- callback 在 `RotationManager.onPlayerTick(PlayerTickEvent.Pre)`（`@EventHandler(priority = -1000)`）中每 tick 执行一次。**注意：callback 只执行一次**就被置 null（见 `runCallback()` 实现），不是每 tick 重复执行，所以若需要持续轮询直到 raycast 命中，应在外部用 boolean 标记控制并在 callback 中重新 `setRotations` 或直接执行
+- callback 内使用 `Managers.ROTATION.getYaw()` / `getPitch()` 获取当前平滑后的旋转角度，而非使用 `AfterRotationEvent` 的字段（该事件已无字段）
+- `AfterRotationEvent` 是纯标记事件（无字段），仅供需要知道旋转已更新的模块订阅
+- raytrace 函数（`Function<Rot2f, Boolean>`）用于在平滑旋转时加入随机偏移绕过反作弊，如果偏移后射线被遮挡则重新计算偏移方向
+- `Managers.switchRotationManager()` 切换实现时会通过 `copyStateFrom()` 把当前状态迁移到新实例
 - 模块禁用时应清理 pending 状态并 `InvUtils.swapBack()` 恢复物品栏
 
 ## Lumin Graphics 渲染系统
@@ -421,7 +456,7 @@ rectRenderer.get().close();
 
 ### 文本渲染
 
-静态字体加载器：`StaticFontLoader.OSAKA_CHIPS`、`StaticFontLoader.MINECRAFTIA` 等。
+静态字体加载器（实际为 `TtfFontLoader` 实例）：`StaticFontLoader.DEFAULT`、`StaticFontLoader.ICONS`、`StaticFontLoader.JURA_LIGHT`、`StaticFontLoader.OSAKA_CHIPS`。
 
 ```java
 TextRenderer textRenderer = textRendererSupplier.get();
@@ -439,7 +474,7 @@ textRenderer.drawAndClear();
 
 ### 参考示例
 
-完整 HUD 渲染示例：`common/.../modules/impl/hud/WatermarkHUD.java`
+完整 HUD 渲染示例：`common/.../elements/impl/Watermark.java`
 
 ## i18n 翻译系统
 

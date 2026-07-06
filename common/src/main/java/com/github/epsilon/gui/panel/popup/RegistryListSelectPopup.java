@@ -369,14 +369,14 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
                 PanelLayout.Rect localAvailableViewport = availableViewport.relativeTo(animatedBounds);
                 popup.viewport(availableBuffer, localAvailableViewport, guiGraphics.guiHeight(), availableScroll,
-                        maxAvailableScroll, availableContentHeight, content -> {
+                        maxAvailableScroll, availableContentHeight, mouseX, mouseY, content -> {
                     buildColumn(content, available, availableViewport.x(), availableViewport.y() - availableScroll,
                             availableViewport.width() - (maxAvailableScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
                             mouseX, mouseY, true, availableViewport);
                 });
                 PanelLayout.Rect localSelectedViewport = selectedViewport.relativeTo(animatedBounds);
                 popup.viewport(selectedBuffer, localSelectedViewport, guiGraphics.guiHeight(), selectedScroll,
-                        maxSelectedScroll, selectedContentHeight, content -> {
+                        maxSelectedScroll, selectedContentHeight, mouseX, mouseY, content -> {
                     buildColumn(content, selected, selectedViewport.x(), selectedViewport.y() - selectedScroll,
                             selectedViewport.width() - (maxSelectedScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
                             mouseX, mouseY, false, selectedViewport);

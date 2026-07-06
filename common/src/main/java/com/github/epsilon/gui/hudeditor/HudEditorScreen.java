@@ -569,12 +569,9 @@ public class HudEditorScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
-        if (renderTarget != null) {
-            renderTarget.close();
-            renderTarget = null;
-        }
-        scene.close();
-        textMetrics.close();
+        draggingElement = null;
+        movedDuringDrag = false;
+        currentSnap = SnapInfo.none();
     }
 
     @Override

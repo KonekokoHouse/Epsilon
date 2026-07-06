@@ -54,10 +54,11 @@ public class CategoryPanel extends AbstractDropdownPanel {
         List<ModuleButton> buttons = visibleButtons();
         float expand = openAnim.getValue();
         int frameId = getRenderFrameId();
+        float buttonWidth = maxScroll > 0.0f ? width - DropdownScrollBar.HOVER_WIDTH + 1f : width;
         var stack = renderer.scope().stack(new PanelLayout.Rect(
                 x,
                 y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
-                width,
+                buttonWidth,
                 computeContentHeight()
         ));
         for (ModuleButton button : buttons) {

@@ -341,15 +341,12 @@ public class PanelScreen extends Screen {
     public void removed() {
         super.removed();
         popupHost.close();
-        moduleListPanel.close();
-        moduleDetailPanel.close();
-        clientSettingPanel.close();
-        scene.close();
-        textRenderer.close();
-        if (renderTarget != null) {
-            renderTarget.close();
-            renderTarget = null;
-        }
+        moduleListPanel.resetTransientState();
+        moduleDetailPanel.resetTransientState();
+        clientSettingPanel.resetTransientState();
+        state.setListeningKeyBindModule(null);
+        state.setListeningKeybindSetting(null);
+        IMEFocusHelper.forceDeactivate();
         preeditOverlay = null;
     }
 
