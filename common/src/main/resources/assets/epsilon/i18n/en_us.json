@@ -1385,7 +1385,7 @@
   "epsilon.modules.entity control.in-water": "In Water",
   "epsilon.modules.entity control.fly": "Flight",
   "epsilon.modules.entity control.vertical-speed": "Vertical Speed",
-  "epsilon.modules.entity control.fall-speed": "Fall Speed",
+  "epsilon.modules.entity control.fall-speed": "Natural Fall Speed",
   "epsilon.modules.entity control.anti-fly-kick": "Anti Fly Kick",
   "epsilon.modules.entity control.delay": "Delay",
   "epsilon.modules.entity control.scale-mount": "Scale Mount",
