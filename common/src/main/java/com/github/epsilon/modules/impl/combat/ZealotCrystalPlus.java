@@ -15,6 +15,7 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.combat.DamageUtils;
+import com.github.epsilon.utils.combat.WeaponUtils;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
@@ -524,7 +525,7 @@ public class ZealotCrystalPlus extends Module {
                 getTotalHealth(player),
                 player.hasEffect(MobEffects.WEAKNESS)
                         && (!player.hasEffect(MobEffects.STRENGTH) || player.getEffect(MobEffects.STRENGTH) == null || player.getEffect(MobEffects.STRENGTH).getAmplifier() <= 0),
-                isToolLike(player.getMainHandItem()),
+                WeaponUtils.isToolLike(player.getMainHandItem()),
                 player.getMainHandItem().is(ItemTags.SWORDS),
                 DamageReductionData.fromEntity(player, armorMode),
                 mc.level.getDifficulty(),
@@ -1497,22 +1498,14 @@ public class ZealotCrystalPlus extends Module {
     }
 
     private boolean isHoldingTool() {
-        return mc.player != null && isToolLike(mc.player.getMainHandItem());
-    }
-
-    private boolean isToolLike(ItemStack stack) {
-        return stack.is(ItemTags.SWORDS)
-                || stack.is(ItemTags.AXES)
-                || stack.is(ItemTags.PICKAXES)
-                || stack.is(ItemTags.SHOVELS)
-                || stack.is(ItemTags.HOES);
+        return mc.player != null && WeaponUtils.isToolLike(mc.player.getMainHandItem());
     }
 
     private int findWeaponSlot() {
         if (mc.player == null) return -1;
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getItem(i);
-            if (isToolLike(stack)) return i;
+            if (WeaponUtils.isToolLike(stack)) return i;
         }
         return -1;
     }

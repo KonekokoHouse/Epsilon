@@ -9,6 +9,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
+import com.github.epsilon.utils.combat.WeaponUtils;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
@@ -220,17 +221,9 @@ public class CrystalAura extends Module {
 
         return weakness != null
                 && (strength == null || strength.getAmplifier() <= weakness.getAmplifier())
-                && !isToolLike(mc.player.getMainHandItem());
+                && !WeaponUtils.isToolLike(mc.player.getMainHandItem());
     }
 
-
-    private boolean isToolLike(ItemStack stack) {
-        return stack.is(ItemTags.SWORDS)
-                || stack.is(ItemTags.AXES)
-                || stack.is(ItemTags.PICKAXES)
-                || stack.is(ItemTags.SHOVELS)
-                || stack.is(ItemTags.HOES);
-    }
 
     private boolean isDeadBodyNearby() {
         for (Player player : mc.level.players()) {
