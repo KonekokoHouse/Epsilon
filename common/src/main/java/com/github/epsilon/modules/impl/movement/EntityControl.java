@@ -13,6 +13,8 @@ import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.player.ChatUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -299,7 +301,7 @@ public class EntityControl extends Module {
         if (speed.getValue()
                 && (!onlyOnGround.getValue() || entity.onGround() || entity.isFlyingVehicle())
                 && (inWater.getValue() || !entity.isInWater())) {
-            Vec3 vel = getHorizontalVelocity(horizontalSpeed.getValue());
+            Vec3 vel = PlayerUtils.getHorizontalVelocity(horizontalSpeed.getValue());
             velX = vel.x;
             velZ = vel.z;
         }
@@ -375,8 +377,8 @@ public class EntityControl extends Module {
                     if (persistentUntilDismount.getValue()) persistentActive = doubleTapActive;
                     if (activationMessage.getValue()) {
                         String msg = doubleTapActive
-                                ? com.github.epsilon.assets.i18n.EpsilonTranslations.EntityControl.ACTIVATED.getTranslatedName()
-                                : com.github.epsilon.assets.i18n.EpsilonTranslations.EntityControl.DEACTIVATED.getTranslatedName();
+                                ? EpsilonTranslations.EntityControl.ACTIVATED.getTranslatedName()
+                                : EpsilonTranslations.EntityControl.DEACTIVATED.getTranslatedName();
                         sendActivationAlert(msg, doubleTapActive);
                     }
                 }
@@ -394,7 +396,7 @@ public class EntityControl extends Module {
                 persistentActive = false;
                 if (activationMessage.getValue()) {
                     sendActivationAlert(
-                            com.github.epsilon.assets.i18n.EpsilonTranslations.EntityControl.DEACTIVATED_DISMOUNT.getTranslatedName(),
+                            EpsilonTranslations.EntityControl.DEACTIVATED_DISMOUNT.getTranslatedName(),
                             false);
                 }
             }
@@ -463,24 +465,6 @@ public class EntityControl extends Module {
                     isActivation ? NotificationMode.Success : NotificationMode.Error,
                     msg.hashCode());
         }
-    }
-
-    private Vec3 getHorizontalVelocity(double hSpeed) {
-        float yaw = mc.player.getYHeadRot();
-        double rad = Math.toRadians(yaw + 90);
-        float forward = 0, sideways = 0;
-        if (mc.options.keyUp.isDown()) forward += 1;
-        if (mc.options.keyDown.isDown()) forward -= 1;
-        if (mc.options.keyLeft.isDown()) sideways += 1;
-        if (mc.options.keyRight.isDown()) sideways -= 1;
-        if (forward == 0 && sideways == 0) return Vec3.ZERO;
-        double h = hSpeed / 20.0;
-        double f = forward, s = sideways;
-        double len = Math.sqrt(f * f + s * s);
-        f /= len; s /= len;
-        double sin = Math.sin(rad);
-        double cos = Math.cos(rad);
-        return new Vec3((f * cos + s * sin) * h, 0, (f * sin - s * cos) * h);
     }
 
     private static Set<EntityType<?>> getAllRideableEntities() {

@@ -5,6 +5,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.WebBlock;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -62,6 +63,24 @@ public class PlayerUtils {
         }
 
         return false;
+    }
+
+    public static Vec3 getHorizontalVelocity(double hSpeed) {
+        float yaw = mc.player.getYHeadRot();
+        double rad = Math.toRadians(yaw + 90);
+        float forward = 0, sideways = 0;
+        if (mc.options.keyUp.isDown()) forward += 1;
+        if (mc.options.keyDown.isDown()) forward -= 1;
+        if (mc.options.keyLeft.isDown()) sideways += 1;
+        if (mc.options.keyRight.isDown()) sideways -= 1;
+        if (forward == 0 && sideways == 0) return Vec3.ZERO;
+        double h = hSpeed / 20.0;
+        double f = forward, s = sideways;
+        double len = Math.sqrt(f * f + s * s);
+        f /= len; s /= len;
+        double sin = Math.sin(rad);
+        double cos = Math.cos(rad);
+        return new Vec3((f * cos + s * sin) * h, 0, (f * sin - s * cos) * h);
     }
 
 }
