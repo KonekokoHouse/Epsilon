@@ -14,9 +14,9 @@ import java.util.Objects;
 public class StaticFontLoader {
 
     private static final Identifier DEFAULT_FONT_ID = ResourceLocationUtils.getIdentifier("fonts/font.ttf");
-    private static final TtfFontLoader BUILTIN_DEFAULT = new TtfFontLoader(DEFAULT_FONT_ID);
+    private static TtfFontLoader builtinDefault = new TtfFontLoader(DEFAULT_FONT_ID);
 
-    public static volatile TtfFontLoader DEFAULT = BUILTIN_DEFAULT;
+    public static volatile TtfFontLoader DEFAULT = builtinDefault;
 
     public static final TtfFontLoader ICONS = new TtfFontLoader(ResourceLocationUtils.getIdentifier("fonts/icons.ttf"));
 
@@ -38,7 +38,7 @@ public class StaticFontLoader {
         ClientSetting settings = ClientSetting.INSTANCE;
         ClientSetting.FontMode mode = settings.font.getValue();
         String fontPath = settings.customFont.getValue();
-        if (mode == appliedMode && Objects.equals(fontPath, appliedCustomFont)) {
+        if (isApplied(mode, fontPath)) {
             return DEFAULT;
         }
         return applyDefaultFont(mode, fontPath);
@@ -49,7 +49,13 @@ public class StaticFontLoader {
             return DEFAULT;
         }
 
-        if (mode == appliedMode && Objects.equals(fontPath, appliedCustomFont)) {
+        if (isApplied(mode, fontPath)) {
+            return DEFAULT;
+        }
+
+        if (appliedMode == null && mode == ClientSetting.FontMode.Default && DEFAULT == builtinDefault && customDefault == null) {
+            appliedMode = ClientSetting.FontMode.Default;
+            appliedCustomFont = null;
             return DEFAULT;
         }
 
@@ -63,29 +69,46 @@ public class StaticFontLoader {
         return DEFAULT;
     }
 
+    private static boolean isApplied(ClientSetting.FontMode mode, String fontPath) {
+        return mode == appliedMode
+                && (mode != ClientSetting.FontMode.Custom || Objects.equals(fontPath, appliedCustomFont));
+    }
+
     public static synchronized void destroyDefault() {
         if (destroyed) {
             return;
         }
 
-        TtfFontLoader previous = customDefault;
+        TtfFontLoader current = DEFAULT;
+        TtfFontLoader builtin = builtinDefault;
+        TtfFontLoader custom = customDefault;
+
         customDefault = null;
         customDefaultPath = null;
+        builtinDefault = null;
         appliedMode = null;
         appliedCustomFont = null;
-        DEFAULT = BUILTIN_DEFAULT;
 
-        destroyLoader(previous);
-        BUILTIN_DEFAULT.destroy();
+        destroyLoader(current);
+        destroyLoaderIfDifferent(builtin, current);
+        destroyLoaderIfDifferent(custom, current, builtin);
         destroyed = true;
     }
 
     private static void applyBuiltinDefault() {
-        TtfFontLoader previous = customDefault;
+        TtfFontLoader previous = DEFAULT;
+        TtfFontLoader previousBuiltin = builtinDefault;
+        TtfFontLoader previousCustom = customDefault;
+        TtfFontLoader next = new TtfFontLoader(DEFAULT_FONT_ID);
+
+        builtinDefault = next;
         customDefault = null;
         customDefaultPath = null;
-        DEFAULT = BUILTIN_DEFAULT;
+        DEFAULT = next;
+
         destroyLoader(previous);
+        destroyLoaderIfDifferent(previousBuiltin, previous);
+        destroyLoaderIfDifferent(previousCustom, previous, previousBuiltin);
     }
 
     private static void applyCustomDefault(String fontPath) {
@@ -100,6 +123,9 @@ public class StaticFontLoader {
             return;
         }
 
+        TtfFontLoader previous = DEFAULT;
+        TtfFontLoader previousBuiltin = builtinDefault;
+        TtfFontLoader previousCustom = customDefault;
         TtfFontLoader next;
         try {
             next = new TtfFontLoader(path);
@@ -109,11 +135,14 @@ public class StaticFontLoader {
             return;
         }
 
-        TtfFontLoader previous = customDefault;
+        builtinDefault = null;
         customDefault = next;
         customDefaultPath = path;
         DEFAULT = next;
+
         destroyLoader(previous);
+        destroyLoaderIfDifferent(previousBuiltin, previous);
+        destroyLoaderIfDifferent(previousCustom, previous, previousBuiltin);
     }
 
     private static Path resolveCustomFont(String fontPath) {
@@ -155,6 +184,19 @@ public class StaticFontLoader {
         if (fontLoader != null) {
             fontLoader.destroy();
         }
+    }
+
+    private static void destroyLoaderIfDifferent(TtfFontLoader fontLoader, TtfFontLoader... existing) {
+        if (fontLoader == null) {
+            return;
+        }
+
+        for (TtfFontLoader other : existing) {
+            if (fontLoader == other) {
+                return;
+            }
+        }
+        fontLoader.destroy();
     }
 
 }
