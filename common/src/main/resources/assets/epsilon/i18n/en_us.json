@@ -1411,7 +1411,7 @@
   "epsilon.modules.entity control.autoplane-y": "AutoPilot Y",
   "epsilon.modules.entity control.destination-x": "Destination X",
   "epsilon.modules.entity control.destination-z": "Destination Z",
-  "epsilon.modules.entity control.auto-toggle-autoplane": "Auto Toggle Off",
+  "epsilon.modules.entity control.auto-toggle-autoplane": "Toggle Off On Arrival",
   "epsilon.modules.entity control.auto-pause-autoplane": "Pause In Unloaded Chunks",
   "epsilon.modules.entity control.player-dodge": "Player Dodge",
   "epsilon.modules.entity control.reset-destination": "Reset Destination",

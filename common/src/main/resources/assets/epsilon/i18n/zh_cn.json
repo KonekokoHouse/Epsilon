@@ -1411,7 +1411,7 @@
   "epsilon.modules.entity control.autoplane-y": "巡航高度",
   "epsilon.modules.entity control.destination-x": "目标X坐标",
   "epsilon.modules.entity control.destination-z": "目标Z坐标",
-  "epsilon.modules.entity control.auto-toggle-autoplane": "接近自动关闭",
+  "epsilon.modules.entity control.auto-toggle-autoplane": "到达目的地自动关闭",
   "epsilon.modules.entity control.auto-pause-autoplane": "区块未加载暂停",
   "epsilon.modules.entity control.player-dodge": "规避玩家",
   "epsilon.modules.entity control.reset-destination": "重置坐标",
