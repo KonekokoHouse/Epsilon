@@ -89,6 +89,10 @@ public class ClientSettingPanel implements AutoCloseable {
         return tabsAnimating || getCurrentTabView().hasActiveAnimations();
     }
 
+    public void resetTransientState() {
+        tabViews.values().forEach(ClientSettingTabView::onDeactivated);
+    }
+
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (bounds == null || event.button() != 0) {
             return false;

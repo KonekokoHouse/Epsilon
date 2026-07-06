@@ -429,7 +429,6 @@ public class DropdownScreen extends Screen {
     @Override
     public void onClose() {
         IMEFocusHelper.forceDeactivate();
-        popupHost.close();
         DropdownLayoutState.save(panels);
         super.onClose();
     }
@@ -443,13 +442,9 @@ public class DropdownScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
-        if (renderTarget != null) {
-            renderTarget.close();
-            renderTarget = null;
-        }
         popupHost.close();
-        scene.close();
-        textMetrics.close();
+        searchField.blur();
+        IMEFocusHelper.forceDeactivate();
         preeditOverlay = null;
     }
 
