@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
@@ -51,12 +52,14 @@ public class MixinEntity {
         }
     }
 
-    @Inject(method = "move", at = @At("HEAD"))
-    private void onMove(MoverType moverType, Vec3 delta, CallbackInfo ci) {
-        if (mc.player == null) return;
+    @ModifyVariable(method = "move", at = @At("HEAD"), argsOnly = true)
+    private Vec3 onMoveModifyVariable(Vec3 delta) {
         Entity self = (Entity) (Object) this;
-        if (self == mc.player) return;
-        EventBus.INSTANCE.post(EntityMoveEvent.get(self, delta));
+        if (net.minecraft.client.Minecraft.getInstance().player == null) return delta;
+        if (self == net.minecraft.client.Minecraft.getInstance().player) return delta;
+        EntityMoveEvent event = new EntityMoveEvent(self, delta);
+        EventBus.INSTANCE.post(event);
+        return event.movement;
     }
 
 }
