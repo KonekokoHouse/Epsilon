@@ -70,25 +70,11 @@ public class ModuleButton extends Component {
         if (setting instanceof DoubleSetting s) return new DoubleSliderWidget(s);
         if (setting instanceof EnumSetting<?> s) return new EnumWidget(s);
         if (setting instanceof ColorSetting s) return new ColorWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.BLOCK) return new BlockListWidget(s);
+        if (setting instanceof RegistryListSetting<?> s) return new RegistryListSettingWidget(s);
         if (setting instanceof KeybindSetting s) return new KeybindWidget(s);
         if (setting instanceof StringSetting s) return new StringWidget(s);
         if (setting instanceof ButtonSetting s) return new ButtonWidget(s);
-        // --- List settings (Row + Widget) ---
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.STRING) return new StringListSettingWidget((StringListSetting) s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT) return new SoundEventListSettingWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ITEM) return new ItemListSettingWidget(s);
-
-        if (setting instanceof EntityTypeListSetting s) return new EntityTypeListSettingWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT) return new StatusEffectListSettingWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ENCHANTMENT) return new EnchantmentListSettingWidget((EnchantmentListSetting) s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.PACKET) return new PacketListSettingWidget((PacketListSetting) s);
-        // --- Simple & Map settings (no Widget) ---
-        if (setting instanceof BlockSetting) return null;
-        if (setting instanceof ItemSetting) return null;
-        if (setting instanceof BlockPosSetting) return null;
-        if (setting instanceof Vector3dSetting) return null;
-        if (setting instanceof StatusEffectAmplifierMapSetting) return null;
+        if (setting instanceof StringListSetting s) return new StringListSettingWidget(s);
         return null;
     }
 

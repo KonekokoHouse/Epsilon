@@ -63,47 +63,11 @@ public class SettingsContent {
         if (setting instanceof DoubleSetting s) return new DoubleSliderWidget(s);
         if (setting instanceof EnumSetting<?> s) return new EnumWidget(s);
         if (setting instanceof ColorSetting s) return new ColorWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.BLOCK) return new BlockListWidget(s);
+        if (setting instanceof RegistryListSetting<?> s) return new RegistryListSettingWidget(s);
         if (setting instanceof KeybindSetting s) return new KeybindWidget(s);
         if (setting instanceof StringSetting s) return new StringWidget(s);
         if (setting instanceof ButtonSetting s) return new ButtonWidget(s);
-        // --- List settings (Row + Widget) ---
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.STRING) return new StringListSettingWidget((StringListSetting) s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.SOUND_EVENT) return new SoundEventListSettingWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ITEM) return new ItemListSettingWidget(s);
-
-        if (setting instanceof EntityTypeListSetting s) return new EntityTypeListSettingWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.MOB_EFFECT) return new StatusEffectListSettingWidget(s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.ENCHANTMENT) return new EnchantmentListSettingWidget((EnchantmentListSetting) s);
-        if (setting instanceof RegistryListSetting<?> s && s.getRegistryType() == RegistryListSetting.Type.PACKET) return new PacketListSettingWidget((PacketListSetting) s);
-        // --- Simple & Map settings ---
-        if (setting instanceof BlockSetting s) {
-            return new SimpleValueWidget(s, st -> {
-                var id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(((BlockSetting) st).getValue());
-                return id != null ? id.toString() : "Air";
-            });
-        }
-        if (setting instanceof ItemSetting s) {
-            return new SimpleValueWidget(s, st -> {
-                var id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(((ItemSetting) st).getValue());
-                return id != null ? id.toString() : "Air";
-            });
-        }
-        if (setting instanceof BlockPosSetting s) {
-            return new SimpleValueWidget(s, st -> {
-                var pos = ((BlockPosSetting) st).getValue();
-                return pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
-            });
-        }
-        if (setting instanceof Vector3dSetting s) {
-            return new SimpleValueWidget(s, st -> {
-                var vec = ((Vector3dSetting) st).getValue();
-                return String.format("%.1f, %.1f, %.1f", vec.x, vec.y, vec.z);
-            });
-        }
-        if (setting instanceof StatusEffectAmplifierMapSetting s) {
-            return new SimpleValueWidget(s, st -> String.valueOf(((StatusEffectAmplifierMapSetting) st).getValue().size()));
-        }
+        if (setting instanceof StringListSetting s) return new StringListSettingWidget(s);
         return null;
     }
 

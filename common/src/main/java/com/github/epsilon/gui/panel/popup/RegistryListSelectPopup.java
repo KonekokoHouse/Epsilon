@@ -12,19 +12,30 @@ import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.settings.Setting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
+import com.github.epsilon.utils.world.BlockRegistryUtils;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -55,7 +66,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     private final PanelLayout.Rect bounds;
     private final Setting<List<T>> setting;
-    private final Registry<T> registry;
     private final Function<T, String> displayNameFn;
     private final Function<T, ItemStack> iconProvider;
     private final Consumer<T> addFn;
@@ -92,26 +102,179 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                                    Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
                                    List<Category<T>> categories,
                                    Consumer<T> addFn, Consumer<T> removeFn) {
+        this(bounds, setting, collectRegistryEntries(registry, setting), displayNameFn, iconProvider, categories, addFn, removeFn);
+    }
+
+    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Collection<T> entries,
+                                   Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
+                                   List<Category<T>> categories,
+                                   Consumer<T> addFn, Consumer<T> removeFn) {
         this.bounds = bounds;
         this.setting = setting;
-        this.registry = registry;
         this.displayNameFn = displayNameFn;
         this.iconProvider = iconProvider;
         this.categories = categories;
         this.addFn = addFn;
         this.removeFn = removeFn;
         this.openAnimation.setStartValue(0.0f);
-        this.allEntries = collectAllEntries();
+        this.allEntries = new ArrayList<>(entries);
     }
 
-    private List<T> collectAllEntries() {
+    private static <T> List<T> collectRegistryEntries(Registry<T> registry, Setting<List<T>> setting) {
         List<T> entries = new ArrayList<>();
-        for (T entry : registry) entries.add(entry);
+        Predicate<T> filter = filterFor(setting);
+        for (T entry : registry) {
+            if (filter == null || filter.test(entry)) {
+                entries.add(entry);
+            }
+        }
         entries.sort(Comparator.comparing(e -> {
             Identifier key = registry.getKey(e);
             return key != null ? key.toString() : "";
         }));
         return entries;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Predicate<T> filterFor(Setting<List<T>> setting) {
+        if (setting instanceof RegistryListSetting<?> registryListSetting) {
+            return (Predicate<T>) registryListSetting.getFilter();
+        }
+        return null;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static PanelPopupHost.Popup create(PanelLayout.Rect bounds, RegistryListSetting<?> setting) {
+        return switch (setting.getRegistryType()) {
+            case BLOCK -> blockPopup(bounds, (RegistryListSetting) setting);
+            case ITEM -> itemPopup(bounds, (RegistryListSetting) setting);
+            case ENTITY_TYPE -> entityTypePopup(bounds, (RegistryListSetting) setting);
+            case SOUND_EVENT -> soundEventPopup(bounds, (RegistryListSetting) setting);
+            case ENCHANTMENT -> enchantmentPopup(bounds, (RegistryListSetting) setting);
+        };
+    }
+
+    private static RegistryListSelectPopup<Block> blockPopup(PanelLayout.Rect bounds, RegistryListSetting<Block> setting) {
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK,
+                BlockRegistryUtils::displayName, RegistryListSelectPopup::blockPreviewStack,
+                setting::add, setting::remove);
+    }
+
+    private static RegistryListSelectPopup<Item> itemPopup(PanelLayout.Rect bounds, RegistryListSetting<Item> setting) {
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
+                RegistryListSelectPopup::itemDisplayName, RegistryListSelectPopup::itemPreviewStack,
+                setting::add, setting::remove);
+    }
+
+    private static RegistryListSelectPopup<EntityType<?>> entityTypePopup(PanelLayout.Rect bounds,
+                                                                         RegistryListSetting<EntityType<?>> setting) {
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
+                entityType -> entityType.getDescription().getString(), RegistryListSelectPopup::entityTypePreviewStack,
+                setting::add, setting::remove);
+    }
+
+    private static RegistryListSelectPopup<SoundEvent> soundEventPopup(PanelLayout.Rect bounds,
+                                                                       RegistryListSetting<SoundEvent> setting) {
+        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
+                sound -> {
+                    Identifier key = BuiltInRegistries.SOUND_EVENT.getKey(sound);
+                    return key != null ? key.getPath() : "";
+                },
+                setting::add, setting::remove);
+    }
+
+    private static RegistryListSelectPopup<String> enchantmentPopup(PanelLayout.Rect bounds,
+                                                                    RegistryListSetting<String> setting) {
+        return new RegistryListSelectPopup<>(bounds, setting, collectEnchantments(),
+                RegistryListSelectPopup::enchantmentDisplayName, null, List.of(), setting::add, setting::remove);
+    }
+
+    private static List<String> collectEnchantments() {
+        List<String> ids = new ArrayList<>();
+        if (mc.level != null) {
+            mc.level.registryAccess().lookup(Registries.ENCHANTMENT).ifPresent(registry ->
+                    registry.listElementIds()
+                            .map(ResourceKey::identifier)
+                            .map(Identifier::toString)
+                            .forEach(ids::add)
+            );
+        }
+        ids.sort(String.CASE_INSENSITIVE_ORDER);
+        return ids;
+    }
+
+    private static String enchantmentDisplayName(String id) {
+        Identifier identifier = Identifier.tryParse(id);
+        if (identifier == null || mc.level == null) {
+            return formatPath(id);
+        }
+        return mc.level.registryAccess().lookup(Registries.ENCHANTMENT)
+                .flatMap(registry -> registry.get(ResourceKey.create(Registries.ENCHANTMENT, identifier)))
+                .map(holder -> holder.value().description().getString())
+                .orElseGet(() -> formatPath(identifier.getPath()));
+    }
+
+    private static String itemDisplayName(Item item) {
+        if (item == null) {
+            return "";
+        }
+        if (item.builtInRegistryHolder().areComponentsBound()) {
+            return item.getDefaultInstance().getHoverName().getString();
+        }
+        Identifier key = BuiltInRegistries.ITEM.getKey(item);
+        return key != null ? formatPath(key.getPath()) : "";
+    }
+
+    private static ItemStack blockPreviewStack(Block block) {
+        if (block == null) {
+            return ItemStack.EMPTY;
+        }
+        return itemPreviewStack(block.asItem());
+    }
+
+    private static ItemStack itemPreviewStack(Item item) {
+        if (item == null || item == Items.AIR || !item.builtInRegistryHolder().areComponentsBound()) {
+            return ItemStack.EMPTY;
+        }
+        return item.getDefaultInstance();
+    }
+
+    private static ItemStack entityTypePreviewStack(EntityType<?> entityType) {
+        Identifier key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+        if (key == null) {
+            return ItemStack.EMPTY;
+        }
+        Identifier eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
+        if (eggId != null) {
+            Item egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
+            ItemStack eggStack = itemPreviewStack(egg);
+            if (!eggStack.isEmpty()) {
+                return eggStack;
+            }
+        }
+        return itemPreviewStack(BuiltInRegistries.ITEM.getOptional(key).orElse(null));
+    }
+
+    private static String formatPath(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String path = value.contains(":") ? value.substring(value.indexOf(':') + 1) : value;
+        String[] parts = path.split("_");
+        StringBuilder builder = new StringBuilder();
+        for (String part : parts) {
+            if (part.isEmpty()) {
+                continue;
+            }
+            if (!builder.isEmpty()) {
+                builder.append(' ');
+            }
+            builder.append(Character.toUpperCase(part.charAt(0)));
+            if (part.length() > 1) {
+                builder.append(part.substring(1));
+            }
+        }
+        return builder.toString();
     }
 
     @Override public PanelLayout.Rect getBounds() { return bounds; }
@@ -410,6 +573,13 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     private int toMinecraftGuiYInt(float epsilonY) {
         return (int) Math.round(toMinecraftGuiY(epsilonY));
+    }
+
+    @Override
+    public void close() {
+        contentBuffer.close();
+        textRenderer.close();
+        itemPreviews.clear();
     }
 
     private record ItemPreview(ItemStack stack, float x, float y, float size) {}

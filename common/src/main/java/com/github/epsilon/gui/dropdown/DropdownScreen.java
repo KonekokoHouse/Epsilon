@@ -10,7 +10,6 @@ import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
@@ -28,9 +27,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.PreeditEvent;
@@ -134,7 +130,7 @@ public class DropdownScreen extends Screen {
         int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
         int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
-        // 找出鼠标位置处最上层的可见 panel，被遮挡的 panel 不响应悬浮。
+        // 找出鼠标位置处最上层的可�?panel，被遮挡�?panel 不响应悬浮�?
         DropdownPanel topmostHovered = null;
         if (!popupHovered) {
             for (int i = panels.size() - 1; i >= 0; i--) {
@@ -349,7 +345,7 @@ public class DropdownScreen extends Screen {
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             return true;
         }
-        // 浠庨《灞傚悜搴曞眰閬嶅巻锛岀‘淇濇渶涓婂眰 panel 浼樺厛澶勭悊婊氳疆浜嬩欢
+        // 浠庨《灞傚悜搴曞眰閬嶅巻锛岀‘淇濇渶涓婂�?panel 浼樺厛澶勭悊婊氳疆浜嬩欢
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
@@ -580,12 +576,12 @@ public class DropdownScreen extends Screen {
         return sessionId;
     }
 
-    public void openBlockListPopup(RegistryListSetting setting) {
+    public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
-        popupHost.open(new BlockListSelectPopup(bounds, setting));
+        popupHost.open(RegistryListSelectPopup.create(bounds, setting));
     }
 
     // --- List setting popup methods ---
@@ -597,108 +593,5 @@ public class DropdownScreen extends Screen {
         );
         popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
     }
-
-    @SuppressWarnings({"rawtypes","unchecked"})
-    public void openSoundEventListSettingPopup(RegistryListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey(s); return k != null ? k.getPath() : ""; },
-                setting::add, setting::remove));
-    }
-
-    @SuppressWarnings({"rawtypes","unchecked"})
-    public void openItemListSettingPopup(RegistryListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
-                i -> i.getDefaultInstance().getHoverName().getString(),
-                i -> i.getDefaultInstance(),
-                setting::add, setting::remove));
-    }
-
-    @SuppressWarnings({"rawtypes","unchecked"})
-    public void openStatusEffectListSettingPopup(RegistryListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.MOB_EFFECT,
-                e -> e.getDisplayName().getString(),
-                null,
-                java.util.List.of(
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_POSITIVE.getTranslatedName(), e -> e.isBeneficial()),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_NEGATIVE.getTranslatedName(), e -> !e.isBeneficial())
-                ),
-                setting::add, setting::remove));
-    }
-
-    public void openEntityTypeListSettingPopup(EntityTypeListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
-                e -> e.getDescription().getString(),
-                e -> {
-                    var key = BuiltInRegistries.ENTITY_TYPE.getKey(e);
-                    if (key == null) return net.minecraft.world.item.ItemStack.EMPTY;
-                    // 优先查找刷怪蛋
-                    Identifier eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
-                    if (eggId != null) {
-                        var egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
-                        if (egg != null) return egg.getDefaultInstance();
-                    }
-                    // 没有刷怪蛋时，查找与实体同名的物品（如船、矿车、画、物品展示框等）
-                    var item = BuiltInRegistries.ITEM.getOptional(key).orElse(null);
-                    return item != null ? item.getDefaultInstance() : net.minecraft.world.item.ItemStack.EMPTY;
-                },
-                java.util.List.of(
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_FRIENDLY.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.FRIENDLY_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_HOSTILE.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.HOSTILE_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_NEUTRAL.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.NEUTRAL_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_RIDEABLE.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.RIDEABLE_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_TECHNICAL.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.TECHNICAL_IDS.contains(k.toString()); })
-                ),
-                setting::add, setting::remove));
-    }
-
-
-    public void openEnchantmentListSettingPopup(EnchantmentListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting,
-                EnchantmentListSetting.getEnchantmentRegistry(),
-                id -> EnchantmentListSetting.getEnchantmentDisplayName(id),
-                setting::add, setting::remove));
-    }
-
-    public void openPacketListSettingPopup(PacketListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
-                Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
-        );
-        popupHost.open(new RegistryListSelectPopup<>(bounds, setting, PacketListSetting.PACKET_REGISTRY,
-                PacketListSetting::formatPacketName,
-                null,
-                java.util.List.of(
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_PACKET_S2C.getTranslatedName(), PacketListSetting::isS2C),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_PACKET_C2S.getTranslatedName(), PacketListSetting::isC2S)
-                ),
-                setting::add, setting::remove));
-    }
-
-
 
 }

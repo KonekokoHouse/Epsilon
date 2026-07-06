@@ -79,31 +79,17 @@ public final class EpsilonTranslations {
             Gui.INSPECTOR,
             Gui.INSPECTOR_SELECT,
             Gui.LIST_ENTRIES,
+            Gui.LIST_BLOCKS,
+            Gui.LIST_ITEMS,
+            Gui.LIST_ENTITIES,
             Gui.LIST_SOUNDS,
+            Gui.LIST_ENCHANTMENTS,
             Gui.LIST_SELECTED,
             Gui.LIST_TYPE_TO_ADD,
             Gui.LIST_SEARCH,
             Gui.LIST_ALL,
             Gui.LIST_AVAILABLE,
             Gui.LIST_SELECTED_HEADER,
-            Gui.LIST_EFFECT_POSITIVE,
-            Gui.LIST_EFFECT_NEGATIVE,
-            Gui.LIST_ITEMS,
-            Gui.LIST_PARTICLES,
-            Gui.LIST_EFFECTS,
-            Gui.LIST_ENTITIES,
-            Gui.LIST_SCREENS,
-            Gui.LIST_STORAGE,
-            Gui.LIST_ENCHANTMENTS,
-            Gui.LIST_PACKETS,
-            Gui.LIST_MODULES,
-            Gui.LIST_ENTITY_FRIENDLY,
-            Gui.LIST_ENTITY_HOSTILE,
-            Gui.LIST_ENTITY_NEUTRAL,
-            Gui.LIST_ENTITY_RIDEABLE,
-            Gui.LIST_ENTITY_TECHNICAL,
-            Gui.LIST_PACKET_S2C,
-            Gui.LIST_PACKET_C2S,
             Notifications.ENABLED,
             Notifications.DISABLED,
             ElytraFly.PITCH40_TAKEOFF_COMPLETE,
@@ -118,14 +104,7 @@ public final class EpsilonTranslations {
             PlayerAlarms.GAMEMODE_CREATIVE,
             PlayerAlarms.GAMEMODE_ADVENTURE,
             PlayerAlarms.GAMEMODE_SPECTATOR,
-            PlayerAlarms.UNKNOWN_GAMEMODE,
-            Gui.LIST_ENTRIES,
-            Gui.LIST_SOUNDS,
-            Gui.LIST_SELECTED,
-            Gui.LIST_TYPE_TO_ADD,
-            Gui.LIST_SEARCH,
-            Gui.LIST_AVAILABLE,
-            Gui.LIST_SELECTED_HEADER
+            PlayerAlarms.UNKNOWN_GAMEMODE
     );
 
     private EpsilonTranslations() {
@@ -224,31 +203,17 @@ public final class EpsilonTranslations {
         public static final TranslateComponent INSPECTOR_SELECT = create("gui", "inspector.select");
 
         public static final TranslateComponent LIST_ENTRIES = create("gui", "list.entries");
+        public static final TranslateComponent LIST_BLOCKS = create("gui", "list.blocks");
+        public static final TranslateComponent LIST_ITEMS = create("gui", "list.items");
+        public static final TranslateComponent LIST_ENTITIES = create("gui", "list.entities");
         public static final TranslateComponent LIST_SOUNDS = create("gui", "list.sounds");
+        public static final TranslateComponent LIST_ENCHANTMENTS = create("gui", "list.enchantments");
         public static final TranslateComponent LIST_SELECTED = create("gui", "list.selected");
         public static final TranslateComponent LIST_TYPE_TO_ADD = create("gui", "list.type_to_add");
         public static final TranslateComponent LIST_SEARCH = create("gui", "list.search");
         public static final TranslateComponent LIST_ALL = create("gui", "list.all");
         public static final TranslateComponent LIST_AVAILABLE = create("gui", "list.available");
         public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
-        public static final TranslateComponent LIST_EFFECT_POSITIVE = create("gui", "list.effect_positive");
-        public static final TranslateComponent LIST_EFFECT_NEGATIVE = create("gui", "list.effect_negative");
-        public static final TranslateComponent LIST_ITEMS = create("gui", "list.items");
-        public static final TranslateComponent LIST_PARTICLES = create("gui", "list.particles");
-        public static final TranslateComponent LIST_EFFECTS = create("gui", "list.effects");
-        public static final TranslateComponent LIST_ENTITIES = create("gui", "list.entities");
-        public static final TranslateComponent LIST_SCREENS = create("gui", "list.screens");
-        public static final TranslateComponent LIST_STORAGE = create("gui", "list.storage");
-        public static final TranslateComponent LIST_ENCHANTMENTS = create("gui", "list.enchantments");
-        public static final TranslateComponent LIST_PACKETS = create("gui", "list.packets");
-        public static final TranslateComponent LIST_MODULES = create("gui", "list.modules");
-        public static final TranslateComponent LIST_ENTITY_FRIENDLY = create("gui", "list.entity_friendly");
-        public static final TranslateComponent LIST_ENTITY_HOSTILE = create("gui", "list.entity_hostile");
-        public static final TranslateComponent LIST_ENTITY_NEUTRAL = create("gui", "list.entity_neutral");
-        public static final TranslateComponent LIST_ENTITY_RIDEABLE = create("gui", "list.entity_rideable");
-        public static final TranslateComponent LIST_ENTITY_TECHNICAL = create("gui", "list.entity_technical");
-        public static final TranslateComponent LIST_PACKET_S2C = create("gui", "list.packet_s2c");
-        public static final TranslateComponent LIST_PACKET_C2S = create("gui", "list.packet_c2s");
 
         private Gui() {
         }

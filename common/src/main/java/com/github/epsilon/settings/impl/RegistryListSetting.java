@@ -5,19 +5,17 @@ import com.github.epsilon.utils.world.BlockRegistryUtils;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Predicate;
 
-/**
- * 统一的注册表列表 Setting，通过 {@link Type} 枚举区分不同注册表类型。
- * 替代了原先分散的 BlockListSetting、ItemListSetting、EntityTypeListSetting 等。
- */
 public class RegistryListSetting<T> extends Setting<List<T>> {
 
     public enum Type {
@@ -25,39 +23,17 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
         ITEM,
         ENTITY_TYPE,
         SOUND_EVENT,
-        MOB_EFFECT,
-        STRING,
-        PACKET,
         ENCHANTMENT;
 
         @SuppressWarnings("unchecked")
         <T> Registry<T> registry() {
-            if (this == STRING || this == ENCHANTMENT) return null;
-            if (this == PACKET) return (Registry<T>) PacketListSetting.PACKET_REGISTRY;
             return (Registry<T>) switch (this) {
                 case BLOCK -> BuiltInRegistries.BLOCK;
                 case ITEM -> BuiltInRegistries.ITEM;
                 case ENTITY_TYPE -> BuiltInRegistries.ENTITY_TYPE;
                 case SOUND_EVENT -> BuiltInRegistries.SOUND_EVENT;
-                case MOB_EFFECT -> BuiltInRegistries.MOB_EFFECT;
-                default -> null;
+                case ENCHANTMENT -> null;
             };
-        }
-
-        String toId(Object entry) {
-            if (this == STRING || this == ENCHANTMENT) return (String) entry;
-            if (this == PACKET) return ((Class<?>) entry).getName();
-            Identifier key = registry().getKey(entry);
-            return key != null ? key.toString() : "";
-        }
-
-        @SuppressWarnings("unchecked")
-        <T> T fromId(String id) {
-            if (this == STRING || this == ENCHANTMENT) return (T) id;
-            if (this == PACKET) { try { return (T) Class.forName(id); } catch (ClassNotFoundException _) { return null; } }
-            Identifier loc = Identifier.tryParse(id);
-            if (loc == null) return null;
-            return (T) registry().getOptional(loc).orElse(null);
         }
 
         @SuppressWarnings("unchecked")
@@ -65,21 +41,50 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
             return (Predicate<T>) switch (this) {
                 case BLOCK -> (Predicate<Block>) BlockRegistryUtils::isSelectable;
                 case ITEM -> (Predicate<Item>) item -> item != null && item != Items.AIR;
-                case ENTITY_TYPE -> (Predicate<EntityType<?>>) e -> e != null;
-                case STRING, ENCHANTMENT -> (Predicate<String>) s -> s != null && !s.isBlank();
-                default -> null;
+                case ENTITY_TYPE -> (Predicate<EntityType<?>>) entityType -> entityType != null;
+                case SOUND_EVENT -> (Predicate<SoundEvent>) sound -> sound != null;
+                case ENCHANTMENT -> (Predicate<String>) id -> id != null && Identifier.tryParse(id) != null;
             };
+        }
+
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        String toId(Object entry) {
+            if (this == ENCHANTMENT) {
+                return entry instanceof String id ? id : "";
+            }
+            Registry registry = registry();
+            if (registry == null) {
+                return "";
+            }
+            Identifier key = registry.getKey(entry);
+            return key != null ? key.toString() : "";
+        }
+
+        @SuppressWarnings("unchecked")
+        <T> T fromId(String id) {
+            Identifier loc = Identifier.tryParse(id);
+            if (loc == null) {
+                return null;
+            }
+            if (this == ENCHANTMENT) {
+                return (T) loc.toString();
+            }
+            Registry<T> registry = registry();
+            return registry == null ? null : registry.getOptional(loc).orElse(null);
         }
     }
 
     private final Type registryType;
+    private final Registry<T> registry;
     private final Predicate<T> filter;
 
     public RegistryListSetting(String name, Collection<T> defaultValue, Type registryType,
                                Predicate<T> filter, Dependency dependency) {
         super(name, dependency, null);
         this.registryType = registryType;
-        this.filter = filter;
+        this.registry = registryType.registry();
+        Predicate<T> defaultFilter = registryType.defaultFilter();
+        this.filter = filter != null ? filter : defaultFilter;
         this.defaultValue = normalize(defaultValue);
         this.value = new ArrayList<>(this.defaultValue);
     }
@@ -104,8 +109,7 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
     }
 
     public void add(T entry) {
-        if (entry == null || value.contains(entry)) return;
-        if (filter != null && !filter.test(entry)) return;
+        if (!canUse(entry) || value.contains(entry)) return;
         List<T> next = new ArrayList<>(value);
         next.add(entry);
         setValue(next);
@@ -129,7 +133,10 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
     public List<String> getIds() {
         List<String> ids = new ArrayList<>();
         for (T entry : value) {
-            ids.add(registryType.toId(entry));
+            String id = registryType.toId(entry);
+            if (!id.isBlank()) {
+                ids.add(id);
+            }
         }
         return ids;
     }
@@ -139,8 +146,8 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
         if (ids != null) {
             for (String id : ids) {
                 T entry = registryType.fromId(id);
-                if (entry != null && (filter == null || filter.test(entry))) {
-                    if (!entries.contains(entry)) entries.add(entry);
+                if (canUse(entry) && !entries.contains(entry)) {
+                    entries.add(entry);
                 }
             }
         }
@@ -159,28 +166,26 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
         return registryType;
     }
 
+    public Registry<T> getRegistry() {
+        return registry;
+    }
+
     public Predicate<T> getFilter() {
         return filter;
     }
 
-    @SuppressWarnings("unchecked")
     private List<T> normalize(Collection<T> source) {
         if (source == null) return new ArrayList<>();
-        // 为 BLOCK 类型使用 BlockRegistryUtils 的筛选逻辑
-        if (registryType == Type.BLOCK) {
-            List<Block> blocks = new ArrayList<>();
-            for (Object o : source) {
-                Block block = (Block) o;
-                if (BlockRegistryUtils.isSelectable(block) && !blocks.contains(block)) {
-                    blocks.add(block);
-                }
-            }
-            return (List<T>) blocks;
-        }
         List<T> result = new ArrayList<>();
-        for (T e : source) {
-            if (e != null && !result.contains(e)) result.add(e);
+        for (T entry : source) {
+            if (canUse(entry) && !result.contains(entry)) {
+                result.add(entry);
+            }
         }
         return result;
+    }
+
+    private boolean canUse(T entry) {
+        return entry != null && (filter == null || filter.test(entry));
     }
 }

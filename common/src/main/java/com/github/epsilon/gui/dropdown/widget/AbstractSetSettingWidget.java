@@ -1,6 +1,5 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
@@ -31,7 +30,7 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
     protected abstract int elementCount();
 
     /** 按钮标签翻译组件（如 "3 items" 中的 "items"） */
-    protected abstract TranslateComponent labelComponent();
+    protected abstract String labelText();
 
     /** 点击按钮时执行的弹窗打开动作 */
     protected abstract void openPopup();
@@ -56,7 +55,7 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         float hover = hoverAnim.getValue();
         Color background = MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, hover * 0.6f);
         Color outline = MD3Theme.lerp(MD3Theme.withAlpha(MD3Theme.OUTLINE, 90), MD3Theme.PRIMARY, hover);
-        String label = elementCount() + labelComponent().getTranslatedName();
+        String label = elementCount() + labelText();
         float labelScale = 0.50f;
         float iconScale = 0.54f;
         float labelY = centeredTextY(renderer, fieldY, FIELD_HEIGHT, labelScale);
@@ -81,7 +80,7 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         return isHovered(mouseX, mouseY, getFieldX(), getFieldY(), getFieldWidth(), FIELD_HEIGHT);
     }
 
-    /** hit-test 用绝对坐标（与 BlockListWidget 一致） */
+    /** hit-test uses absolute coordinates. */
     protected float getFieldX() { return absoluteX(DropdownTheme.SETTING_PADDING_X); }
     protected float getFieldY() { return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f); }
     protected float getFieldWidth() { return width - DropdownTheme.SETTING_PADDING_X * 2.0f; }

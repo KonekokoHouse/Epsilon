@@ -1,27 +1,16 @@
 package com.github.epsilon.gui.panel.adapter;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.panel.component.setting.*;
-import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.ColorPickerPopup;
 import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
-import com.github.epsilon.settings.impl.EnchantmentListSetting;
-import com.github.epsilon.settings.impl.EntityTypeListSetting;
-import com.github.epsilon.settings.impl.PacketListSetting;
-import com.github.epsilon.settings.impl.RegistryListSetting;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.resources.Identifier;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
@@ -226,48 +215,14 @@ public class SettingListController implements AutoCloseable {
                 draggingSliderEntry = null;
                 return true;
             }
-            if (entry.row instanceof BlockListSettingRow blockListRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createBlockListPopup(blockListRow, popupBounds));
-                draggingSliderEntry = null;
-                return true;
-            }
-            // --- List setting popup handlers ---
             if (entry.row instanceof StringListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
                 PanelPopupHost.Popup popup = createStringListSettingPopup(listRow, popupBounds);
                 if (popup != null) popupHost.open(popup);
                 draggingSliderEntry = null;
                 return true;
             }
-            if (entry.row instanceof SoundEventListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createSoundEventListSettingPopup(listRow, popupBounds));
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof ItemListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createItemListSettingPopup(listRow, popupBounds));
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof EntityTypeListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                PanelPopupHost.Popup popup = createEntityTypeListSettingPopup(listRow, popupBounds);
-                if (popup != null) popupHost.open(popup);
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof StatusEffectListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createStatusEffectListSettingPopup(listRow, popupBounds));
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof EnchantmentListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                PanelPopupHost.Popup popup = createEnchantmentListSettingPopup(listRow, popupBounds);
-                if (popup != null) popupHost.open(popup);
-                draggingSliderEntry = null;
-                return true;
-            }
-            if (entry.row instanceof PacketListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                PanelPopupHost.Popup popup = createPacketListSettingPopup(listRow, popupBounds);
-                if (popup != null) popupHost.open(popup);
+            if (entry.row instanceof RegistryListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createRegistryListSettingPopup(listRow, popupBounds));
                 draggingSliderEntry = null;
                 return true;
             }
@@ -505,11 +460,6 @@ public class SettingListController implements AutoCloseable {
         return new ColorPickerPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), swatchBounds, colorRow.getSetting());
     }
 
-    private BlockListSelectPopup createBlockListPopup(BlockListSettingRow blockListRow, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        return new BlockListSelectPopup(bounds, blockListRow.getSetting());
-    }
-
     // --- List setting popup factories ---
 
     private PanelPopupHost.Popup createStringListSettingPopup(StringListSettingRow row, PanelLayout.Rect popupBounds) {
@@ -518,92 +468,9 @@ public class SettingListController implements AutoCloseable {
         return new StringListSelectPopup(bounds, setting, setting::add, setting::remove);
     }
 
-    @SuppressWarnings({"rawtypes","unchecked"})
-    private PanelPopupHost.Popup createSoundEventListSettingPopup(SoundEventListSettingRow row, PanelLayout.Rect popupBounds) {
+    private PanelPopupHost.Popup createRegistryListSettingPopup(RegistryListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        RegistryListSetting setting = row.getSetting();
-        return new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.SOUND_EVENT,
-                (java.util.function.Function) (s -> { var k = BuiltInRegistries.SOUND_EVENT.getKey((SoundEvent) s); return k != null ? k.getPath() : ""; }),
-                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove);
-    }
-
-    @SuppressWarnings({"rawtypes","unchecked"})
-    private PanelPopupHost.Popup createItemListSettingPopup(ItemListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        RegistryListSetting setting = row.getSetting();
-        return new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.ITEM,
-                (java.util.function.Function) (i -> ((Item) i).getDefaultInstance().getHoverName().getString()),
-                (java.util.function.Function) (i -> ((Item) i).getDefaultInstance()),
-                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove);
-    }
-
-    @SuppressWarnings({"rawtypes","unchecked"})
-    private PanelPopupHost.Popup createStatusEffectListSettingPopup(StatusEffectListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        RegistryListSetting setting = row.getSetting();
-        return new RegistryListSelectPopup(bounds, setting, BuiltInRegistries.MOB_EFFECT,
-                (java.util.function.Function) (e -> ((MobEffect) e).getDisplayName().getString()),
-                null,
-                java.util.List.of(
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_POSITIVE.getTranslatedName(), e -> ((MobEffect) e).isBeneficial()),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_EFFECT_NEGATIVE.getTranslatedName(), e -> !((MobEffect) e).isBeneficial())
-                ),
-                (java.util.function.Consumer) setting::add, (java.util.function.Consumer) setting::remove);
-    }
-
-    private PanelPopupHost.Popup createEntityTypeListSettingPopup(EntityTypeListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
-                e -> e.getDescription().getString(),
-                e -> {
-                    var key = BuiltInRegistries.ENTITY_TYPE.getKey(e);
-                    if (key == null) return net.minecraft.world.item.ItemStack.EMPTY;
-                    // 优先查找刷怪蛋
-                    Identifier eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
-                    if (eggId != null) {
-                        net.minecraft.world.item.Item egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
-                        if (egg != null) return egg.getDefaultInstance();
-                    }
-                    // 没有刷怪蛋时，查找与实体同名的物品（如船、矿车、画、物品展示框等）
-                    net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.getOptional(key).orElse(null);
-                    return item != null ? item.getDefaultInstance() : net.minecraft.world.item.ItemStack.EMPTY;
-                },
-                java.util.List.of(
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_FRIENDLY.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.FRIENDLY_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_HOSTILE.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.HOSTILE_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_NEUTRAL.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.NEUTRAL_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_RIDEABLE.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.RIDEABLE_IDS.contains(k.toString()); }),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_ENTITY_TECHNICAL.getTranslatedName(),
-                                e -> { var k = BuiltInRegistries.ENTITY_TYPE.getKey(e); return k != null && EntityTypeListSetting.TECHNICAL_IDS.contains(k.toString()); })
-                ),
-                setting::add, setting::remove);
-    }
-
-    private PanelPopupHost.Popup createEnchantmentListSettingPopup(EnchantmentListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting,
-                EnchantmentListSetting.getEnchantmentRegistry(),
-                id -> EnchantmentListSetting.getEnchantmentDisplayName(id),
-                setting::add, setting::remove);
-    }
-
-    private PanelPopupHost.Popup createPacketListSettingPopup(PacketListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        var setting = row.getSetting();
-        return new RegistryListSelectPopup<>(bounds, setting, PacketListSetting.PACKET_REGISTRY,
-                PacketListSetting::formatPacketName,
-                null,
-                java.util.List.of(
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_PACKET_S2C.getTranslatedName(), PacketListSetting::isS2C),
-                        new RegistryListSelectPopup.Category<>(EpsilonTranslations.Gui.LIST_PACKET_C2S.getTranslatedName(), PacketListSetting::isC2S)
-                ),
-                setting::add, setting::remove);
+        return RegistryListSelectPopup.create(bounds, row.getSetting());
     }
 
     @FunctionalInterface
