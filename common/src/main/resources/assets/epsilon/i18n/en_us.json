@@ -91,7 +91,7 @@
   "epsilon.modules.client setting.module sort.addon": "Addon",
   "epsilon.modules.client setting.language": "Language",
   "epsilon.modules.client setting.language.english": "English",
-  "epsilon.modules.client setting.language.chinese simplified": "Simplified Chinese",
+  "epsilon.modules.client setting.language.chinese simplified": "简体中文",
   "epsilon.modules.client setting.language.custom": "Custom",
   "epsilon.modules.client setting.custom language": "Custom Language",
   "epsilon.modules.client setting.render scale": "Render Scale",

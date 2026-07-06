@@ -15,7 +15,7 @@ public class DoubleSliderWidget extends AbstractSliderWidget<DoubleSetting, Doub
 
     @Override
     protected float getRatio() {
-        return (float) ((setting.getValue() - setting.getMin()) / (setting.getMax() - setting.getMin()));
+        return (float) ((getVisibleValue() - setting.getMin()) / (setting.getMax() - setting.getMin()));
     }
 
     @Override
@@ -23,7 +23,7 @@ public class DoubleSliderWidget extends AbstractSliderWidget<DoubleSetting, Doub
         double range = setting.getMax() - setting.getMin();
         double step = setting.getStep();
         double value = setting.getMin() + Math.round(rawRatio * range / step) * step;
-        setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+        previewValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
     }
 
     @Override
@@ -33,19 +33,20 @@ public class DoubleSliderWidget extends AbstractSliderWidget<DoubleSetting, Doub
 
     @Override
     protected String formatPlainValue() {
-        return FORMAT.format(setting.getValue());
+        return FORMAT.format(getVisibleValue());
     }
 
     @Override
     protected void commitInput() {
         String text = inputField.getText();
         if (text == null || text.isBlank() || "-".equals(text) || ".".equals(text)) {
+            commitPendingValue();
             inputField.setText(formatPlainValue());
             return;
         }
         try {
             double value = Double.parseDouble(text);
-            setting.setUnboundedValue(value);
+            applyValueNow(value);
         } catch (NumberFormatException ignored) {
         }
         inputField.setText(formatPlainValue());
@@ -58,9 +59,14 @@ public class DoubleSliderWidget extends AbstractSliderWidget<DoubleSetting, Doub
         if (text == null || text.isBlank() || "-".equals(text) || ".".equals(text)) return;
         try {
             double value = Double.parseDouble(text);
-            setting.setUnboundedValue(value);
+            previewValue(value);
         } catch (NumberFormatException ignored) {
         }
+    }
+
+    @Override
+    protected void applyValue(Double value) {
+        setting.setUnboundedValue(value);
     }
 
     @Override

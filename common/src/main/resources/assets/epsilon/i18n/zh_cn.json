@@ -90,7 +90,7 @@
   "epsilon.modules.client setting.module sort.enabledfirst": "已启用优先",
   "epsilon.modules.client setting.module sort.addon": "附加组件",
   "epsilon.modules.client setting.language": "语言",
-  "epsilon.modules.client setting.language.english": "英语",
+  "epsilon.modules.client setting.language.english": "English",
   "epsilon.modules.client setting.language.chinese simplified": "简体中文",
   "epsilon.modules.client setting.language.custom": "自定义",
   "epsilon.modules.client setting.custom language": "自定义语言",

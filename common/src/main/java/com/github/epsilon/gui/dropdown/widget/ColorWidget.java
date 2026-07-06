@@ -40,6 +40,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
     private boolean pickingSB;
     private boolean pickingHue;
     private Channel pickingChannel;
+    private Color pendingValue;
 
     public ColorWidget(ColorSetting setting) {
         super(setting);
@@ -68,11 +69,11 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
         float previewX = width - DropdownTheme.SETTING_PADDING_X - DropdownTheme.COLOR_PREVIEW_SIZE;
         float previewY = (DropdownTheme.SETTING_HEIGHT - DropdownTheme.COLOR_PREVIEW_SIZE) * 0.5f;
-        renderer.roundRect(previewX, previewY, DropdownTheme.COLOR_PREVIEW_SIZE, DropdownTheme.COLOR_PREVIEW_SIZE, 2.0f, setting.getValue());
+        renderer.roundRect(previewX, previewY, DropdownTheme.COLOR_PREVIEW_SIZE, DropdownTheme.COLOR_PREVIEW_SIZE, 2.0f, getVisibleColor());
 
         if (t < 0.01f) return;
 
-        Color color = setting.getValue();
+        Color color = getVisibleColor();
         float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
 
         float padX = DropdownTheme.SETTING_PADDING_X;
@@ -97,21 +98,21 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             float newBri = 1.0f - Mth.clamp((mouseY - absoluteY(gradY)) / (PICKER_HEIGHT * t), 0.0f, 1.0f);
             Color newColor = Color.getHSBColor(hsb[0], newSat, newBri);
             newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
-            setting.setValue(newColor);
+            previewColor(newColor);
         }
 
         if (pickingHue) {
             float newHue = Mth.clamp((mouseX - absoluteX(gradX)) / gradW, 0.0f, 1.0f);
             Color newColor = Color.getHSBColor(newHue, hsb[1], hsb[2]);
             newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue(), color.getAlpha());
-            setting.setValue(newColor);
+            previewColor(newColor);
         }
 
         if (pickingChannel != null) {
             updateChannelFromMouse(pickingChannel, mouseX);
         }
 
-        color = setting.getValue();
+        color = getVisibleColor();
         hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
 
         float pickerCx = gradX + gradW * hsb[1];
@@ -167,7 +168,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
     }
 
     private void drawChannelTrack(DropdownDrawContext renderer, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
-        Color current = setting.getValue();
+        Color current = getVisibleColor();
         Color start = switch (channel) {
             case RED -> new Color(0, current.getGreen(), current.getBlue());
             case GREEN -> new Color(current.getRed(), 0, current.getBlue());
@@ -188,6 +189,10 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float previewX = absoluteX(width - DropdownTheme.SETTING_PADDING_X - DropdownTheme.COLOR_PREVIEW_SIZE);
         float previewY = absoluteY((DropdownTheme.SETTING_HEIGHT - DropdownTheme.COLOR_PREVIEW_SIZE) * 0.5f);
         if ((button == 0 || button == 1) && isHovered(mouseX, mouseY, previewX - 2, previewY - 2, DropdownTheme.COLOR_PREVIEW_SIZE + 4, DropdownTheme.COLOR_PREVIEW_SIZE + 4)) {
+            if (hasFocusedInput()) {
+                commitFocusedInput();
+                blurFields();
+            }
             opened = !opened;
             return true;
         }
@@ -243,6 +248,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 0 && (pickingSB || pickingHue || pickingChannel != null)) {
+            commitPendingColor();
             pickingSB = false;
             pickingHue = false;
             pickingChannel = null;
@@ -261,6 +267,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            clearPendingColor();
             syncFieldsFromColor(true);
             focused.blur();
             return true;
@@ -325,11 +332,11 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float trackX = getTrackX();
         float trackW = getTrackWidth();
         int value = Mth.clamp(Math.round(Mth.clamp((float) (mouseX - trackX) / trackW, 0.0f, 1.0f) * 255.0f), 0, 255);
-        setChannelValue(channel, value);
+        setChannelValue(channel, value, true);
     }
 
     private int getChannelValue(Channel channel) {
-        Color color = setting.getValue();
+        Color color = getVisibleColor();
         return switch (channel) {
             case RED -> color.getRed();
             case GREEN -> color.getGreen();
@@ -338,8 +345,8 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         };
     }
 
-    private void setChannelValue(Channel channel, int value) {
-        Color current = setting.getValue();
+    private void setChannelValue(Channel channel, int value, boolean defer) {
+        Color current = getVisibleColor();
         int clamped = Mth.clamp(value, 0, 255);
         Color updated = switch (channel) {
             case RED -> new Color(clamped, current.getGreen(), current.getBlue(), current.getAlpha());
@@ -347,7 +354,11 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             case BLUE -> new Color(current.getRed(), current.getGreen(), clamped, current.getAlpha());
             case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), clamped);
         };
-        setting.setValue(updated);
+        if (defer) {
+            previewColor(updated);
+        } else {
+            applyColorNow(updated);
+        }
         syncFieldsFromColor();
     }
 
@@ -380,7 +391,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         if (channel == null) return;
         String value = getField(channel).getText();
         if (value.isEmpty()) return;
-        setChannelValue(channel, parseChannel(value));
+        setChannelValue(channel, parseChannel(value), true);
     }
 
     private void commitFocusedInput() {
@@ -388,7 +399,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         if (channel == null) return;
         DropdownTextField field = getField(channel);
         int value = field.getText().isEmpty() ? getChannelValue(channel) : parseChannel(field.getText());
-        setChannelValue(channel, value);
+        setChannelValue(channel, value, false);
         field.setText(Integer.toString(getChannelValue(channel)));
         field.setCursorToEnd();
     }
@@ -441,6 +452,35 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             pickingChannel = null;
         }
         alphaField.blur();
+    }
+
+    private Color getVisibleColor() {
+        return pendingValue != null ? pendingValue : setting.getValue();
+    }
+
+    private void previewColor(Color color) {
+        if (setting.isApplyWhenRelease()) {
+            pendingValue = color;
+        } else {
+            setting.setValue(color);
+        }
+    }
+
+    private void applyColorNow(Color color) {
+        pendingValue = null;
+        setting.setValue(color);
+    }
+
+    private void commitPendingColor() {
+        if (pendingValue == null) {
+            return;
+        }
+        Color color = pendingValue;
+        applyColorNow(color);
+    }
+
+    private void clearPendingColor() {
+        pendingValue = null;
     }
 
     private enum Channel {

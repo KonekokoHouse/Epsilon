@@ -17,6 +17,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
 
     protected final DropdownTextField inputField;
     protected boolean dragging;
+    protected T pendingValue;
     private int sessionId = -1;
 
     public AbstractSliderWidget(S setting, int maxInputLength, Predicate<String> inputFilter) {
@@ -82,6 +83,37 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
 
     protected abstract void syncInputValue();
 
+    protected abstract void applyValue(T value);
+
+    protected T getVisibleValue() {
+        return pendingValue != null ? pendingValue : setting.getValue();
+    }
+
+    protected void previewValue(T value) {
+        if (setting.isApplyWhenRelease()) {
+            pendingValue = value;
+        } else {
+            applyValue(value);
+        }
+    }
+
+    protected void applyValueNow(T value) {
+        pendingValue = null;
+        applyValue(value);
+    }
+
+    protected void commitPendingValue() {
+        if (pendingValue == null) {
+            return;
+        }
+        T value = pendingValue;
+        applyValueNow(value);
+    }
+
+    protected void clearPendingValue() {
+        pendingValue = null;
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         syncSessionState();
@@ -114,6 +146,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         syncSessionState();
         if (button == 0 && dragging) {
+            commitPendingValue();
             dragging = false;
             return true;
         }
@@ -138,6 +171,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            clearPendingValue();
             inputField.setText(formatPlainValue());
             inputField.blur();
             return true;
@@ -170,12 +204,13 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         }
         sessionId = currentSessionId;
         dragging = false;
+        clearPendingValue();
         inputField.blur();
     }
 
     protected void drawValueLabels(DropdownDrawContext renderer, float trackX, float trackY, float trackW) {
         String minValue = formatValue(getMin());
-        String currentValue = formatValue(setting.getValue());
+        String currentValue = formatValue(getVisibleValue());
         String maxValue = formatValue(getMax());
         float textY = trackY + DropdownTheme.SLIDER_HEIGHT + VALUE_TEXT_Y_OFFSET;
 

@@ -135,6 +135,13 @@ public final class SettingLayoutPlanner {
             return new Section(key, "", List.copyOf(settings), false, null);
         }
 
+        public String title() {
+            if (hasHeader && group != null) {
+                return group.getDisplayName();
+            }
+            return title;
+        }
+
         public boolean isCollapsed() {
             return hasHeader && group != null && group.isCollapsed();
         }
