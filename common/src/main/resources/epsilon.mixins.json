@@ -58,7 +58,7 @@
     "MixinWalkAnimationState",
     "MixinWebBlock",
     "MixinWindow",
-    "Vec3Mixin",
+    "MixinVec3",
     "MixinMob",
     "MixinPig",
     "MixinStrider"

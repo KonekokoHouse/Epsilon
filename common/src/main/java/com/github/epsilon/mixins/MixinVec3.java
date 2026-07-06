@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Final;
 
 @Mixin(Vec3.class)
-public class Vec3Mixin implements IVec3 {
+public class MixinVec3 implements IVec3 {
 
     @Shadow @Final @Mutable
     public double x;
