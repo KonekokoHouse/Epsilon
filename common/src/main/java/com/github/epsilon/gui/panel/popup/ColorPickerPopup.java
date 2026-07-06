@@ -227,7 +227,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if (focusedChannel == null || !event.isAllowedChatCharacter()) {
+        if (focusedChannel == null) {
             return false;
         }
         String typed = event.codepointAsString();

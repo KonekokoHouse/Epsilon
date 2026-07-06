@@ -294,6 +294,14 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         return getFocusedField() != null;
     }
 
+    public void blurAllInputs() {
+        DropdownTextField focused = getFocusedField();
+        if (focused != null) {
+            syncFocusedInput();
+            focused.blur();
+        }
+    }
+
     private float getChannelY(Channel channel) {
         float expanded = openAnim.getValue();
         float baseY = absoluteY(DropdownTheme.SETTING_HEIGHT + 2.0f

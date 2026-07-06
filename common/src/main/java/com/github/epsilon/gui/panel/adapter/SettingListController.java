@@ -6,10 +6,11 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.panel.component.setting.*;
-import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.ColorPickerPopup;
 import com.github.epsilon.gui.panel.popup.EnumSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
+import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
+import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
@@ -214,8 +215,14 @@ public class SettingListController implements AutoCloseable {
                 draggingSliderEntry = null;
                 return true;
             }
-            if (entry.row instanceof BlockListSettingRow blockListRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
-                popupHost.open(createBlockListPopup(blockListRow, popupBounds));
+            if (entry.row instanceof StringListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                PanelPopupHost.Popup popup = createStringListSettingPopup(listRow, popupBounds);
+                if (popup != null) popupHost.open(popup);
+                draggingSliderEntry = null;
+                return true;
+            }
+            if (entry.row instanceof RegistryListSettingRow listRow && entry.row.mouseClicked(entry.bounds, event, isDoubleClick)) {
+                popupHost.open(createRegistryListSettingPopup(listRow, popupBounds));
                 draggingSliderEntry = null;
                 return true;
             }
@@ -453,9 +460,17 @@ public class SettingListController implements AutoCloseable {
         return new ColorPickerPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), swatchBounds, colorRow.getSetting());
     }
 
-    private BlockListSelectPopup createBlockListPopup(BlockListSettingRow blockListRow, PanelLayout.Rect popupBounds) {
+    // --- List setting popup factories ---
+
+    private PanelPopupHost.Popup createStringListSettingPopup(StringListSettingRow row, PanelLayout.Rect popupBounds) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(300.0f, popupBounds.width() - 24.0f), Math.min(220.0f, popupBounds.height() - 24.0f));
+        var setting = row.getSetting();
+        return new StringListSelectPopup(bounds, setting, setting::add, setting::remove);
+    }
+
+    private PanelPopupHost.Popup createRegistryListSettingPopup(RegistryListSettingRow row, PanelLayout.Rect popupBounds) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
-        return new BlockListSelectPopup(bounds, blockListRow.getSetting());
+        return RegistryListSelectPopup.create(bounds, row.getSetting());
     }
 
     @FunctionalInterface

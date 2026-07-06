@@ -515,11 +515,14 @@ public class ConfigHolder {
         if (setting instanceof IntSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof DoubleSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof StringSetting s) return new JsonPrimitive(s.getValue());
-        if (setting instanceof BlockListSetting s) {
+        if (setting instanceof StringListSetting s) {
             JsonArray array = new JsonArray();
-            for (String id : s.getIds()) {
-                array.add(id);
-            }
+            for (String str : s.getValue()) array.add(str);
+            return array;
+        }
+        if (setting instanceof RegistryListSetting<?> s) {
+            JsonArray array = new JsonArray();
+            for (String id : s.getIds()) array.add(id);
             return array;
         }
         if (setting instanceof EnumSetting s) return new JsonPrimitive(s.getValue().toString());
@@ -533,14 +536,13 @@ public class ConfigHolder {
     private static void applySetting(Setting<?> setting, JsonElement value) {
         if (value == null) return;
         try {
-            if (setting instanceof BlockListSetting s && value.isJsonArray()) {
+            if (value.isJsonArray()) {
                 List<String> ids = new java.util.ArrayList<>();
                 for (JsonElement element : value.getAsJsonArray()) {
-                    if (element != null && element.isJsonPrimitive()) {
-                        ids.add(element.getAsString());
-                    }
+                    if (element != null && element.isJsonPrimitive()) ids.add(element.getAsString());
                 }
-                s.setIds(ids);
+                if (setting instanceof StringListSetting s) { s.setValue(ids); return; }
+                if (setting instanceof RegistryListSetting<?> s) { s.setIds(ids); return; }
                 return;
             }
             if (!value.isJsonPrimitive()) return;

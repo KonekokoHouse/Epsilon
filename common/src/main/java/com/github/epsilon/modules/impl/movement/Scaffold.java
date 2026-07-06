@@ -10,6 +10,7 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
@@ -142,7 +143,7 @@ public class Scaffold extends Module {
 
     private final List<RenderInfo> renderBoxes = new ArrayList<>();
 
-    private static final List<Block> BLACKLISTED_BLOCKS = List.of(
+    private final RegistryListSetting<Block> blacklistedBlocks = blockListSetting("Blacklisted Blocks", List.of(
             Blocks.AIR,
             Blocks.WATER,
             Blocks.LAVA,
@@ -190,7 +191,7 @@ public class Scaffold extends Module {
             Blocks.OAK_FENCE,
             Blocks.REDSTONE_TORCH,
             Blocks.FLOWER_POT
-    );
+    ));
 
     @Override
     protected void onEnable() {
@@ -581,7 +582,7 @@ public class Scaffold extends Module {
             return false;
         }
 
-        return !(block instanceof SlabBlock) && !BLACKLISTED_BLOCKS.contains(block);
+        return !(block instanceof SlabBlock) && !blacklistedBlocks.contains(block);
     }
 
 

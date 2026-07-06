@@ -10,15 +10,16 @@ import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.popup.BlockListSelectPopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
+import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
+import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.scene.GuiLayer;
 import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -129,7 +130,7 @@ public class DropdownScreen extends Screen {
         int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
         int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
-        // 找出鼠标位置处最上层的可见 panel，被遮挡的 panel 不响应悬浮。
+        // 找出鼠标位置处最上层的可�?panel，被遮挡�?panel 不响应悬浮�?
         DropdownPanel topmostHovered = null;
         if (!popupHovered) {
             for (int i = panels.size() - 1; i >= 0; i--) {
@@ -344,7 +345,7 @@ public class DropdownScreen extends Screen {
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             return true;
         }
-        // 浠庨《灞傚悜搴曞眰閬嶅巻锛岀‘淇濇渶涓婂眰 panel 浼樺厛澶勭悊婊氳疆浜嬩欢
+        // 浠庨《灞傚悜搴曞眰閬嶅巻锛岀‘淇濇渶涓婂�?panel 浼樺厛澶勭悊婊氳疆浜嬩欢
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
@@ -421,7 +422,7 @@ public class DropdownScreen extends Screen {
 
     @Override
     public void onClose() {
-        IMEFocusHelper.deactivate();
+        IMEFocusHelper.forceDeactivate();
         popupHost.close();
         DropdownLayoutState.save(panels);
         super.onClose();
@@ -575,12 +576,22 @@ public class DropdownScreen extends Screen {
         return sessionId;
     }
 
-    public void openBlockListPopup(BlockListSetting setting) {
+    public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
-        popupHost.open(new BlockListSelectPopup(bounds, setting));
+        popupHost.open(RegistryListSelectPopup.create(bounds, setting));
+    }
+
+    // --- List setting popup methods ---
+
+    public void openStringListSettingPopup(StringListSetting setting) {
+        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+                Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
+                Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
+        );
+        popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
     }
 
 }

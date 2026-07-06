@@ -80,6 +80,7 @@ public class ModuleHolder {
         addModule(MultiTask.INSTANCE);
         addModule(NoRotate.INSTANCE);
         addModule(PacketEat.INSTANCE);
+        addModule(PlayerAlarms.INSTANCE);
         addModule(SoundFX.INSTANCE);
         addModule(Stealer.INSTANCE);
         addModule(UseCooldown.INSTANCE);
@@ -129,6 +130,7 @@ public class ModuleHolder {
         addModule(Shaders.INSTANCE);
         addModule(SneakTweak.INSTANCE);
         addModule(Xray.INSTANCE);
+
     }
 
     private void addModule(Module module) {

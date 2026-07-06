@@ -78,11 +78,33 @@ public final class EpsilonTranslations {
             Gui.ADDON_INFO_MODULES,
             Gui.INSPECTOR,
             Gui.INSPECTOR_SELECT,
+            Gui.LIST_ENTRIES,
+            Gui.LIST_BLOCKS,
+            Gui.LIST_ITEMS,
+            Gui.LIST_ENTITIES,
+            Gui.LIST_SOUNDS,
+            Gui.LIST_ENCHANTMENTS,
+            Gui.LIST_SELECTED,
+            Gui.LIST_TYPE_TO_ADD,
+            Gui.LIST_SEARCH,
+            Gui.LIST_ALL,
+            Gui.LIST_AVAILABLE,
+            Gui.LIST_SELECTED_HEADER,
             Notifications.ENABLED,
             Notifications.DISABLED,
             ElytraFly.PITCH40_TAKEOFF_COMPLETE,
             ElytraFly.PITCH40_TOO_CLOSE_TO_LOWER_BOUNDS,
-            ElytraFly.PITCH40_NO_USABLE_ELYTRA
+            ElytraFly.PITCH40_NO_USABLE_ELYTRA,
+            PlayerAlarms.JOIN_ALERT_TEXT,
+            PlayerAlarms.LEAVE_ALERT_TEXT,
+            PlayerAlarms.ENTER_RD_ALERT_TEXT,
+            PlayerAlarms.LEAVE_RD_ALERT_TEXT,
+            PlayerAlarms.GAMEMODE_ALERT_TEXT,
+            PlayerAlarms.GAMEMODE_SURVIVAL,
+            PlayerAlarms.GAMEMODE_CREATIVE,
+            PlayerAlarms.GAMEMODE_ADVENTURE,
+            PlayerAlarms.GAMEMODE_SPECTATOR,
+            PlayerAlarms.UNKNOWN_GAMEMODE
     );
 
     private EpsilonTranslations() {
@@ -180,6 +202,19 @@ public final class EpsilonTranslations {
         public static final TranslateComponent INSPECTOR = create("gui", "inspector");
         public static final TranslateComponent INSPECTOR_SELECT = create("gui", "inspector.select");
 
+        public static final TranslateComponent LIST_ENTRIES = create("gui", "list.entries");
+        public static final TranslateComponent LIST_BLOCKS = create("gui", "list.blocks");
+        public static final TranslateComponent LIST_ITEMS = create("gui", "list.items");
+        public static final TranslateComponent LIST_ENTITIES = create("gui", "list.entities");
+        public static final TranslateComponent LIST_SOUNDS = create("gui", "list.sounds");
+        public static final TranslateComponent LIST_ENCHANTMENTS = create("gui", "list.enchantments");
+        public static final TranslateComponent LIST_SELECTED = create("gui", "list.selected");
+        public static final TranslateComponent LIST_TYPE_TO_ADD = create("gui", "list.type_to_add");
+        public static final TranslateComponent LIST_SEARCH = create("gui", "list.search");
+        public static final TranslateComponent LIST_ALL = create("gui", "list.all");
+        public static final TranslateComponent LIST_AVAILABLE = create("gui", "list.available");
+        public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
+
         private Gui() {
         }
     }
@@ -198,6 +233,22 @@ public final class EpsilonTranslations {
         public static final TranslateComponent PITCH40_NO_USABLE_ELYTRA = create("modules.elytra fly", "pitch40_no_usable_elytra");
 
         private ElytraFly() {
+        }
+    }
+
+    public static final class PlayerAlarms {
+        public static final TranslateComponent JOIN_ALERT_TEXT = create("modules.player alarms", "join_alert_text");
+        public static final TranslateComponent LEAVE_ALERT_TEXT = create("modules.player alarms", "leave_alert_text");
+        public static final TranslateComponent ENTER_RD_ALERT_TEXT = create("modules.player alarms", "enter_rd_alert_text");
+        public static final TranslateComponent LEAVE_RD_ALERT_TEXT = create("modules.player alarms", "leave_rd_alert_text");
+        public static final TranslateComponent GAMEMODE_ALERT_TEXT = create("modules.player alarms", "gamemode_alert_text");
+        public static final TranslateComponent GAMEMODE_SURVIVAL = create("modules.player alarms", "gamemode.survival");
+        public static final TranslateComponent GAMEMODE_CREATIVE = create("modules.player alarms", "gamemode.creative");
+        public static final TranslateComponent GAMEMODE_ADVENTURE = create("modules.player alarms", "gamemode.adventure");
+        public static final TranslateComponent GAMEMODE_SPECTATOR = create("modules.player alarms", "gamemode.spectator");
+        public static final TranslateComponent UNKNOWN_GAMEMODE = create("modules.player alarms", "unknown_gamemode");
+
+        private PlayerAlarms() {
         }
     }
 

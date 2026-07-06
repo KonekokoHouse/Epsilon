@@ -333,7 +333,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public void onClose() {
-        IMEFocusHelper.deactivate();
+        IMEFocusHelper.forceDeactivate();
         super.onClose();
     }
 

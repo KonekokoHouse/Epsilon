@@ -6,14 +6,12 @@ import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -41,20 +39,39 @@ public class ESP extends Module {
         super("ESP", Category.RENDER);
     }
 
-    private final Supplier<List<Block>> defaultBlockList = Suppliers.memoize(() -> {
-        final var list = new ArrayList<>(List.of(
-                Blocks.CHEST,
-                Blocks.TRAPPED_CHEST,
-                Blocks.ENDER_CHEST,
-                Blocks.BARREL,
-                Blocks.SHULKER_BOX
-        ));
-        list.addAll(Blocks.DYED_SHULKER_BOX.asList());
-        return list;
-    });
-
     private final BoolSetting blocksValue = boolSetting("Blocks", true);
-    private final BlockListSetting blockList = blockListSetting("Block List", defaultBlockList.get(), blocksValue::getValue);
+    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List",
+            List.of(
+                    Blocks.CHEST,
+                    Blocks.TRAPPED_CHEST,
+                    Blocks.COPPER_CHEST,
+                    Blocks.EXPOSED_COPPER_CHEST,
+                    Blocks.WEATHERED_COPPER_CHEST,
+                    Blocks.OXIDIZED_COPPER_CHEST,
+                    Blocks.WAXED_COPPER_CHEST,
+                    Blocks.WAXED_EXPOSED_COPPER_CHEST,
+                    Blocks.WAXED_WEATHERED_COPPER_CHEST,
+                    Blocks.WAXED_OXIDIZED_COPPER_CHEST,
+                    Blocks.ENDER_CHEST,
+                    Blocks.BARREL,
+                    Blocks.SHULKER_BOX,
+                    Blocks.WHITE_SHULKER_BOX,
+                    Blocks.ORANGE_SHULKER_BOX,
+                    Blocks.MAGENTA_SHULKER_BOX,
+                    Blocks.LIGHT_BLUE_SHULKER_BOX,
+                    Blocks.YELLOW_SHULKER_BOX,
+                    Blocks.LIME_SHULKER_BOX,
+                    Blocks.PINK_SHULKER_BOX,
+                    Blocks.GRAY_SHULKER_BOX,
+                    Blocks.LIGHT_GRAY_SHULKER_BOX,
+                    Blocks.CYAN_SHULKER_BOX,
+                    Blocks.PURPLE_SHULKER_BOX,
+                    Blocks.BLUE_SHULKER_BOX,
+                    Blocks.BROWN_SHULKER_BOX,
+                    Blocks.GREEN_SHULKER_BOX,
+                    Blocks.RED_SHULKER_BOX,
+                    Blocks.BLACK_SHULKER_BOX
+            ), blocksValue::getValue);
     private final BoolSetting illegals = boolSetting("Illegals", true);
     private final DoubleSetting range = doubleSetting("Range", 64.0, 1.0, 128.0, 1.0);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
@@ -131,7 +148,7 @@ public class ESP extends Module {
 
     private boolean shouldAdd(Block block, BlockPos pos) {
         if (block instanceof AirBlock) return false;
-        if (blockList.getValue().contains(block)) return true;
+        if (blockListValue.getValue().contains(block)) return true;
         if (illegals.getValue()) return isIllegal(block, pos);
         return false;
     }

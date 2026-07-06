@@ -5,18 +5,14 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
-import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.settings.SettingHost;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.level.block.Block;
 
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
-public class Module {
+public class Module implements SettingHost {
 
     private final String name;
 
@@ -138,27 +134,21 @@ public class Module {
         }
     }
 
-    protected <T extends Setting<?>> T addSetting(T setting) {
-        settings.add(setting);
-        return setting;
-    }
-
-    protected SettingGroup settingGroup(String name) {
-        for (SettingGroup group : settingGroups) {
-            if (group.getName().equalsIgnoreCase(name)) {
-                return group;
-            }
-        }
-        SettingGroup group = new SettingGroup(name);
-        settingGroups.add(group);
-        return group;
-    }
-
     public List<Setting<?>> getSettings() {
         return settings;
     }
 
     public List<SettingGroup> getSettingGroups() {
+        return settingGroups;
+    }
+
+    @Override
+    public List<Setting<?>> mutableSettings() {
+        return settings;
+    }
+
+    @Override
+    public List<SettingGroup> mutableSettingGroups() {
         return settingGroups;
     }
 
@@ -201,122 +191,6 @@ public class Module {
 
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
-    }
-
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step) {
-        return addSetting(new IntSetting(name, defaultValue, min, max, step, () -> true, null));
-    }
-
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Consumer<Integer> onChanged) {
-        return addSetting(new IntSetting(name, defaultValue, min, max, step, () -> true, onChanged));
-    }
-
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency) {
-        return addSetting(new IntSetting(name, defaultValue, min, max, step, dependency, null));
-    }
-
-    protected IntSetting intSetting(String name, int defaultValue, int min, int max, int step, Setting.Dependency dependency, Consumer<Integer> onChanged) {
-        return addSetting(new IntSetting(name, defaultValue, min, max, step, dependency, onChanged));
-    }
-
-    protected BoolSetting boolSetting(String name, boolean defaultValue, Setting.Dependency dependency) {
-        return addSetting(new BoolSetting(name, defaultValue, dependency, null));
-    }
-
-    protected BoolSetting boolSetting(String name, boolean defaultValue) {
-        return addSetting(new BoolSetting(name, defaultValue, () -> true, null));
-    }
-
-    protected BoolSetting boolSetting(String name, boolean defaultValue, Setting.Dependency dependency, Consumer<Boolean> onChanged) {
-        return addSetting(new BoolSetting(name, defaultValue, dependency, onChanged));
-    }
-
-    protected BoolSetting boolSetting(String name, boolean defaultValue, Consumer<Boolean> onChanged) {
-        return addSetting(new BoolSetting(name, defaultValue, () -> true, onChanged));
-    }
-
-    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step) {
-        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, () -> true, null));
-    }
-
-    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency) {
-        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, dependency, null));
-    }
-
-    protected DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step, Setting.Dependency dependency, Consumer<Double> onChanged) {
-        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, dependency, onChanged));
-    }
-
-    protected StringSetting stringSetting(String name, String defaultValue, Setting.Dependency dependency) {
-        return addSetting(new StringSetting(name, defaultValue, dependency));
-    }
-
-    protected StringSetting stringSetting(String name, String defaultValue, Setting.Dependency dependency, Consumer<String> onChanged) {
-        return addSetting(new StringSetting(name, defaultValue, dependency, onChanged));
-    }
-
-    protected StringSetting stringSetting(String name, String defaultValue) {
-        return addSetting(new StringSetting(name, defaultValue, () -> true));
-    }
-
-    protected StringSetting stringSetting(String name, String defaultValue, Consumer<String> onChanged) {
-        return addSetting(new StringSetting(name, defaultValue, () -> true, onChanged));
-    }
-
-    protected BlockListSetting blockListSetting(String name, Collection<Block> defaultValue, Setting.Dependency dependency) {
-        return addSetting(new BlockListSetting(name, defaultValue, dependency));
-    }
-
-    protected BlockListSetting blockListSetting(String name, Collection<Block> defaultValue) {
-        return addSetting(new BlockListSetting(name, defaultValue, () -> true));
-    }
-
-    protected <E extends Enum<E>> EnumSetting<E> enumSetting(String name, E defaultValue, Setting.Dependency dependency, Consumer<E> onChanged) {
-        return addSetting(new EnumSetting<>(name, defaultValue, dependency, onChanged));
-    }
-
-    protected <E extends Enum<E>> EnumSetting<E> enumSetting(String name, E defaultValue, Consumer<E> onChanged) {
-        return addSetting(new EnumSetting<>(name, defaultValue, () -> true, onChanged));
-    }
-
-    protected <E extends Enum<E>> EnumSetting<E> enumSetting(String name, E defaultValue, Setting.Dependency dependency) {
-        return addSetting(new EnumSetting<>(name, defaultValue, dependency, null));
-    }
-
-    protected <E extends Enum<E>> EnumSetting<E> enumSetting(String name, E defaultValue) {
-        return addSetting(new EnumSetting<>(name, defaultValue, () -> true, null));
-    }
-
-    protected ColorSetting colorSetting(String name, Color defaultValue, boolean allowAlpha, Setting.Dependency dependency) {
-        return addSetting(new ColorSetting(name, defaultValue, allowAlpha, dependency));
-    }
-
-    protected ColorSetting colorSetting(String name, Color defaultValue, Setting.Dependency dependency) {
-        return addSetting(new ColorSetting(name, defaultValue, true, dependency));
-    }
-
-    protected ColorSetting colorSetting(String name, Color defaultValue, boolean allowAlpha) {
-        return addSetting(new ColorSetting(name, defaultValue, allowAlpha, () -> true));
-    }
-
-    protected ColorSetting colorSetting(String name, Color defaultValue) {
-        return addSetting(new ColorSetting(name, defaultValue, true, () -> true));
-    }
-
-    protected KeybindSetting keybindSetting(String name, int defaultValue, Setting.Dependency dependency) {
-        return addSetting(new KeybindSetting(name, defaultValue, dependency));
-    }
-
-    protected KeybindSetting keybindSetting(String name, int defaultValue) {
-        return addSetting(new KeybindSetting(name, defaultValue, () -> true));
-    }
-
-    protected ButtonSetting buttonSetting(String name, Runnable func, Setting.Dependency dependency) {
-        return addSetting(new ButtonSetting(name, func, dependency));
-    }
-
-    protected ButtonSetting buttonSetting(String name, Runnable func) {
-        return addSetting(new ButtonSetting(name, func, () -> true));
     }
 
     protected void resetCustomState() {

@@ -4,10 +4,21 @@ import net.minecraft.client.gui.screens.Screen;
 
 import static com.github.epsilon.Constants.mc;
 
+/**
+ * 管理 OS 级别文本/IME 输入焦点的工具类。
+ * <p>
+ * 同一时间可能有多个自定义文本框同时存在（例如 Panel GUI 中的多个搜索框），
+ * 但 OS 级别的 IME 输入只能全局开启或关闭一次。
+ * 通过引用计数来确保：仅第一个获取焦点的文本框开启 IME 输入，
+ * 仅最后一个失去焦点的文本框关闭 IME 输入。
+ */
 public class IMEFocusHelper {
 
     public static float activeCursorX = 0.0f;
     public static float activeCursorY = 0.0f;
+
+    /** 引用计数：记录当前有多少个文本框正在请求 IME 输入焦点 */
+    private static int refCount = 0;
 
     private IMEFocusHelper() {
     }
@@ -17,9 +28,13 @@ public class IMEFocusHelper {
      * Call this whenever a custom text field gains focus.
      */
     public static void activate() {
-        Screen screen = mc.gui.screen();
-        if (screen != null) {
-            mc.onTextInputFocusChange(screen, true);
+        // 增加引用计数；仅第一个获取焦点的文本框真正开启 IME 输入
+        refCount++;
+        if (refCount == 1) {
+            Screen screen = mc.gui.screen();
+            if (screen != null) {
+                mc.onTextInputFocusChange(screen, true);
+            }
         }
     }
 
@@ -33,6 +48,22 @@ public class IMEFocusHelper {
      * releasing the IME composition lock.</p>
      */
     public static void deactivate() {
+        // 减少引用计数；仅最后一个失去焦点的文本框真正关闭 IME 输入
+        refCount = Math.max(0, refCount - 1);
+        if (refCount == 0) {
+            Screen screen = mc.gui.screen();
+            if (screen != null) {
+                mc.onTextInputFocusChange(screen, false);
+            }
+        }
+    }
+
+    /**
+     * 强制关闭 IME 输入，忽略引用计数。
+     * 在 GUI 关闭或切换屏幕时使用，确保 IME 不会保持开启状态。
+     */
+    public static void forceDeactivate() {
+        refCount = 0;
         Screen screen = mc.gui.screen();
         if (screen != null) {
             mc.onTextInputFocusChange(screen, false);

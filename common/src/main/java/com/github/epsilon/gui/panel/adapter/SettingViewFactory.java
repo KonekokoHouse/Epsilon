@@ -18,9 +18,10 @@ public class SettingViewFactory {
             case IntSetting intSetting -> new IntSettingRow(intSetting);
             case DoubleSetting doubleSetting -> new DoubleSettingRow(doubleSetting);
             case ColorSetting colorSetting -> new ColorSettingRow(colorSetting);
-            case BlockListSetting blockListSetting -> new BlockListSettingRow(blockListSetting);
+            case RegistryListSetting<?> r -> new RegistryListSettingRow(r);
             case StringSetting stringSetting -> new StringSettingRow(stringSetting);
             case ButtonSetting buttonSetting -> new ButtonSettingRow(buttonSetting);
+            case StringListSetting stringListSetting -> new StringListSettingRow(stringListSetting);
             case null, default -> null;
         };
     }

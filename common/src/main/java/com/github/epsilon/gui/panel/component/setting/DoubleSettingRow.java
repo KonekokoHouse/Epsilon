@@ -175,7 +175,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if (!focused || !event.isAllowedChatCharacter()) {
+        if (!focused) {
             return false;
         }
         String value = event.codepointAsString();

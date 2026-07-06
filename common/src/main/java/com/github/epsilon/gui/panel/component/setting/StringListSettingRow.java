@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel.component.setting;
 
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
@@ -8,22 +9,22 @@ import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
-import com.github.epsilon.settings.impl.BlockListSetting;
+import com.github.epsilon.settings.impl.StringListSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 
-public class BlockListSettingRow extends SettingRow<BlockListSetting> {
+public class StringListSettingRow extends SettingRow<StringListSetting> {
 
-    public BlockListSettingRow(BlockListSetting setting) {
+    public StringListSettingRow(StringListSetting setting) {
         super(setting);
     }
 
     @Override
     public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer,
-                        PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+        PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
-        String summary = setting.size() + " blocks";
+        String summary = setting.size() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName();
         float chipTextScale = 0.58f;
 
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));

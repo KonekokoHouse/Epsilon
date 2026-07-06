@@ -151,7 +151,6 @@ public class DropdownTextField {
 
     public boolean charTyped(CharacterEvent event) {
         if (!focused) return false;
-        if (!event.isAllowedChatCharacter()) return true;
         insertText(event.codepointAsString());
         return true;
     }

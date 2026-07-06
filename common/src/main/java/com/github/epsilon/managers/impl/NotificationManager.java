@@ -34,12 +34,28 @@ public class NotificationManager {
         notify(title, subTitle, NotificationMode.Info, ChatFormatting.WHITE, hash);
     }
 
+    public void info(String title, String subTitle, int hash, ChatFormatting color) {
+        notify(title, subTitle, NotificationMode.Info, color, hash);
+    }
+
     public void error(String title, String subTitle) {
         notify(title, subTitle, NotificationMode.Error, ChatFormatting.RED);
     }
 
     public void error(String title, String subTitle, int hash) {
         notify(title, subTitle, NotificationMode.Error, ChatFormatting.RED, hash);
+    }
+
+    public void notifyHud(String title, String subTitle, NotificationMode mode, int hash) {
+        Notification existing = hashCodeMap.get(hash);
+        if (existing != null && !existing.isExiting()) {
+            existing.refresh(title, subTitle, mode);
+            return;
+        }
+        remove(existing);
+        Notification notification = new Notification(hash, title, subTitle, mode, true);
+        enqueue(notification);
+        hashCodeMap.put(hash, notification);
     }
 
     public void moduleState(String moduleName, boolean enabled) {

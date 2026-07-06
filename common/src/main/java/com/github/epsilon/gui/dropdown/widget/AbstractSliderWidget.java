@@ -197,6 +197,11 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         return inputField.isFocused();
     }
 
+    public void blurInput() {
+        commitInput();
+        inputField.blur();
+    }
+
     private void syncSessionState() {
         int currentSessionId = DropdownScreen.INSTANCE.getSessionId();
         if (sessionId == currentSessionId) {
