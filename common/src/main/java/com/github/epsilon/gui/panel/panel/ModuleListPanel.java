@@ -162,6 +162,15 @@ public class ModuleListPanel implements AutoCloseable {
         return contentState.hasActiveAnimations();
     }
 
+    public void resetTransientState() {
+        scrollBarDrag.reset();
+        scrollVelocity = 0;
+        if (searchFocused) {
+            searchFocused = false;
+            markDirty();
+        }
+    }
+
     /**
      * 处理列表区域中的点击事件。
      * <p>

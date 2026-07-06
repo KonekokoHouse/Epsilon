@@ -834,15 +834,14 @@ public final class Render2DScheduler implements AutoCloseable {
     }
 
     private static final class RendererPool implements AutoCloseable {
-        private final Map<RendererKey, Deque<RendererBundle>> available = new Object2ObjectOpenHashMap<>();
+        private final Map<Render2DCommandKind, Deque<RendererBundle>> available = new Object2ObjectOpenHashMap<>();
         private final List<RendererBundle> used = new ArrayList<>();
 
         private RendererBundle acquire(Render2DCommandKind kind, Render2DScissor scissor) {
-            RendererKey key = new RendererKey(kind, scissor);
-            Deque<RendererBundle> bundles = available.computeIfAbsent(key, ignored -> new ArrayDeque<>());
+            Deque<RendererBundle> bundles = available.computeIfAbsent(kind, ignored -> new ArrayDeque<>());
             RendererBundle bundle = bundles.pollFirst();
             if (bundle == null) {
-                // renderer 延迟创建并按 kind/scissor 回收到池中，避免每帧重建 GPU buffer。
+                // renderer 延迟创建并按 kind 回收到池中，scissor 每次取出时重新应用，避免按历史裁剪矩形增长。
                 bundle = RendererBundle.create(kind);
             }
             bundle.applyScissor(scissor);
@@ -853,7 +852,7 @@ public final class Render2DScheduler implements AutoCloseable {
         private void clear() {
             for (RendererBundle bundle : used) {
                 bundle.clear();
-                available.computeIfAbsent(new RendererKey(bundle.kind(), bundle.scissor()), ignored -> new ArrayDeque<>()).addLast(bundle);
+                available.computeIfAbsent(bundle.kind(), ignored -> new ArrayDeque<>()).addLast(bundle);
             }
             used.clear();
         }
@@ -868,9 +867,6 @@ public final class Render2DScheduler implements AutoCloseable {
             }
             available.clear();
         }
-    }
-
-    private record RendererKey(Render2DCommandKind kind, Render2DScissor scissor) {
     }
 
     private record PreparedBatch(RenderPipeline pipeline, RendererBundle renderers) {

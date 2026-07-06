@@ -503,6 +503,19 @@ public class ModuleDetailPanel implements AutoCloseable {
                 || !hiddenHoverAnimation.isFinished();
     }
 
+    public void resetTransientState() {
+        scrollBarDrag.reset();
+        scrollVelocity = 0;
+        settingListController.resetTransientState();
+        if (state.getListeningKeyBindModule() != null) {
+            state.setListeningKeyBindModule(null);
+        }
+        if (state.getListeningKeybindSetting() != null) {
+            state.setListeningKeybindSetting(null);
+        }
+        markDirty();
+    }
+
     private boolean shouldRebuildContent(PanelLayout.Rect bounds, int mouseX, int mouseY, Module module, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
         if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
             return true;

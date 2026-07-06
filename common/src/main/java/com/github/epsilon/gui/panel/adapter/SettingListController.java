@@ -308,6 +308,14 @@ public class SettingListController implements AutoCloseable {
         }
     }
 
+    public void resetTransientState() {
+        clearFocus();
+        if (activeEnumRow != null) {
+            activeEnumRow.setDropdownOpen(false);
+            activeEnumRow = null;
+        }
+    }
+
     @Override
     public void close() {
         clearAll();
