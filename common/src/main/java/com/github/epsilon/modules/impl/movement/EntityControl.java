@@ -229,7 +229,6 @@ public class EntityControl extends Module {
                     pendingTpTarget.x - currentPos.x,
                     pendingTpTarget.y - currentPos.y,
                     pendingTpTarget.z - currentPos.z);
-            //((IVec3) (Object) event.movement).epsilon$set(delta.x, delta.y, delta.z);
             event.movement = new Vec3(delta.x, delta.y, delta.z);
             entity.hurtMarked = true;
             isTeleporting = false;
@@ -240,7 +239,6 @@ public class EntityControl extends Module {
         // Force pause for external control
         if (forcePause) {
             if (customMotion != null) {
-                //((IVec3) (Object) event.movement).epsilon$set(customMotion.x, customMotion.y, customMotion.z);
                 event.movement = new Vec3(customMotion.x, customMotion.y, customMotion.z);
             }
             return;
@@ -282,7 +280,6 @@ public class EntityControl extends Module {
                 velZ = motionZ;
             }
             velY = 0;
-            //((IVec3) (Object) event.movement).epsilon$set(velX, velY, velZ);
             event.movement = new Vec3(velX, velY, velZ);
             return;
         }
@@ -350,7 +347,6 @@ public class EntityControl extends Module {
             }
         }
 
-        //((IVec3) (Object) event.movement).epsilon$set(velX, velY, velZ);
         event.movement = new Vec3(velX, velY, velZ);
     }
 
