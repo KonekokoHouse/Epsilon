@@ -13,8 +13,10 @@ import java.util.Objects;
 
 public class StaticFontLoader {
 
+    private static final String SIZE_REFERENCE_SAMPLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789简体中文字体设置默认自定义战斗移动玩家渲染";
     private static final Identifier DEFAULT_FONT_ID = ResourceLocationUtils.getIdentifier("fonts/font.ttf");
     private static TtfFontLoader builtinDefault = new TtfFontLoader(DEFAULT_FONT_ID);
+    private static final float DEFAULT_VISUAL_HEIGHT = builtinDefault.fontFile.getVisualHeight(SIZE_REFERENCE_SAMPLE);
 
     public static volatile TtfFontLoader DEFAULT = builtinDefault;
 
@@ -129,6 +131,7 @@ public class StaticFontLoader {
         TtfFontLoader next;
         try {
             next = new TtfFontLoader(path);
+            next.setRenderScale(customRenderScale(next));
         } catch (RuntimeException e) {
             Constants.LOGGER.warn("Failed to load custom default font: {}", path, e);
             applyBuiltinDefault();
@@ -178,6 +181,14 @@ public class StaticFontLoader {
             return value.substring(1, value.length() - 1).trim();
         }
         return value;
+    }
+
+    private static float customRenderScale(TtfFontLoader fontLoader) {
+        float customHeight = fontLoader.fontFile.getVisualHeight(SIZE_REFERENCE_SAMPLE);
+        if (!Float.isFinite(customHeight) || customHeight <= 0.0f) {
+            return 1.0f;
+        }
+        return DEFAULT_VISUAL_HEIGHT / customHeight;
     }
 
     private static void destroyLoader(TtfFontLoader fontLoader) {
