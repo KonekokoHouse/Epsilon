@@ -26,6 +26,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
     private boolean focused;
     private String inputBuffer;
     private int cursorIndex;
+    private Integer pendingValue;
 
     public IntSettingRow(IntSetting setting) {
         super(setting);
@@ -122,6 +123,11 @@ public class IntSettingRow extends SettingRow<IntSetting> {
 
     @Override
     public boolean mouseReleased(PanelLayout.Rect bounds, MouseButtonEvent event) {
+        if (event.button() == 0 && dragging) {
+            commitPendingValue();
+            dragging = false;
+            return true;
+        }
         dragging = false;
         return false;
     }
@@ -212,7 +218,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
         double rawValue = setting.getMin() + (setting.getMax() - setting.getMin()) * progress;
         int step = Math.max(1, setting.getStep());
         int snapped = setting.getMin() + (int) Math.round((rawValue - setting.getMin()) / step) * step;
-        setting.setValue(snapped);
+        previewValue(snapped);
     }
 
     public boolean isDragging() {
@@ -228,15 +234,15 @@ public class IntSettingRow extends SettingRow<IntSetting> {
         if (setting.getMax() <= setting.getMin()) {
             return 0.0f;
         }
-        return (float) ((setting.getValue() - setting.getMin()) / (double) (setting.getMax() - setting.getMin()));
+        return (float) ((getVisibleValue() - setting.getMin()) / (double) (setting.getMax() - setting.getMin()));
     }
 
     private String formatValue() {
-        return Integer.toString(setting.getValue());
+        return Integer.toString(getVisibleValue());
     }
 
     private String formatPlainValue() {
-        return Integer.toString(setting.getValue());
+        return Integer.toString(getVisibleValue());
     }
 
     private String getDisplayBuffer() {
@@ -245,16 +251,42 @@ public class IntSettingRow extends SettingRow<IntSetting> {
 
     private void commitInput() {
         if (inputBuffer == null || inputBuffer.isBlank() || "-".equals(inputBuffer)) {
+            commitPendingValue();
             inputBuffer = formatPlainValue();
             cursorIndex = inputBuffer.length();
             return;
         }
         try {
-            setting.setUnboundedValue(Integer.parseInt(inputBuffer));
+            applyValueNow(Integer.parseInt(inputBuffer));
         } catch (NumberFormatException ignored) {
         }
         inputBuffer = formatPlainValue();
         cursorIndex = inputBuffer.length();
+    }
+
+    private int getVisibleValue() {
+        return pendingValue != null ? pendingValue : setting.getValue();
+    }
+
+    private void previewValue(int value) {
+        if (setting.isApplyWhenRelease()) {
+            pendingValue = value;
+        } else {
+            setting.setValue(value);
+        }
+    }
+
+    private void applyValueNow(int value) {
+        pendingValue = null;
+        setting.setUnboundedValue(value);
+    }
+
+    private void commitPendingValue() {
+        if (pendingValue == null) {
+            return;
+        }
+        int value = pendingValue;
+        applyValueNow(value);
     }
 
     private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds) {

@@ -11,7 +11,7 @@ public class IntSliderWidget extends AbstractSliderWidget<IntSetting, Integer> {
 
     @Override
     protected float getRatio() {
-        return (float) (setting.getValue() - setting.getMin()) / (float) (setting.getMax() - setting.getMin());
+        return (float) (getVisibleValue() - setting.getMin()) / (float) (setting.getMax() - setting.getMin());
     }
 
     @Override
@@ -19,7 +19,7 @@ public class IntSliderWidget extends AbstractSliderWidget<IntSetting, Integer> {
         int range = setting.getMax() - setting.getMin();
         int step = setting.getStep();
         int value = setting.getMin() + Math.round(rawRatio * range / step) * step;
-        setting.setValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
+        previewValue(Mth.clamp(value, setting.getMin(), setting.getMax()));
     }
 
     @Override
@@ -29,19 +29,20 @@ public class IntSliderWidget extends AbstractSliderWidget<IntSetting, Integer> {
 
     @Override
     protected String formatPlainValue() {
-        return Integer.toString(setting.getValue());
+        return Integer.toString(getVisibleValue());
     }
 
     @Override
     protected void commitInput() {
         String text = inputField.getText();
         if (text == null || text.isBlank() || "-".equals(text)) {
+            commitPendingValue();
             inputField.setText(formatPlainValue());
             return;
         }
         try {
             int value = Integer.parseInt(text);
-            setting.setUnboundedValue(value);
+            applyValueNow(value);
         } catch (NumberFormatException ignored) {
         }
         inputField.setText(formatPlainValue());
@@ -54,9 +55,14 @@ public class IntSliderWidget extends AbstractSliderWidget<IntSetting, Integer> {
         if (text == null || text.isBlank() || "-".equals(text)) return;
         try {
             int value = Integer.parseInt(text);
-            setting.setUnboundedValue(value);
+            previewValue(value);
         } catch (NumberFormatException ignored) {
         }
+    }
+
+    @Override
+    protected void applyValue(Integer value) {
+        setting.setUnboundedValue(value);
     }
 
     @Override

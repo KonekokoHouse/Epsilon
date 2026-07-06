@@ -48,6 +48,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
     private Channel focusedChannel;
     private String inputBuffer;
     private int cursorIndex;
+    private Color pendingValue;
 
     public ColorPickerPopup(PanelLayout.Rect bounds, PanelLayout.Rect anchorBounds, ColorSetting setting) {
         this.bounds = bounds;
@@ -90,9 +91,9 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
                 if (setting.isAllowAlpha()) {
                     buildCheckerboard(popup, localSwatchBounds, 255);
                 }
-                popup.roundRect(localSwatchBounds.x(), localSwatchBounds.y(), localSwatchBounds.width(), localSwatchBounds.height(), 8.0f, setting.getValue());
+                popup.roundRect(localSwatchBounds.x(), localSwatchBounds.y(), localSwatchBounds.width(), localSwatchBounds.height(), 8.0f, getVisibleColor());
                 popup.roundRect(localSwatchBounds.x(), localSwatchBounds.y(), localSwatchBounds.width(), localSwatchBounds.height(), 8.0f, MD3Theme.withAlpha(MD3Theme.OUTLINE_SOFT, (int) (72 * progress)));
-                popup.text(formatHex(setting.getValue()), localPreviewBounds.x() + 40.0f, localPreviewBounds.y() + 8.0f, 0.64f, MD3Theme.TEXT_PRIMARY);
+                popup.text(formatHex(getVisibleColor()), localPreviewBounds.x() + 40.0f, localPreviewBounds.y() + 8.0f, 0.64f, MD3Theme.TEXT_PRIMARY);
                 popup.text(setting.isAllowAlpha() ? "RGBA" : "RGB", localPreviewBounds.x() + 40.0f, localPreviewBounds.y() + 19.0f, 0.52f, MD3Theme.TEXT_SECONDARY);
 
                 Channel[] channels = getChannels();
@@ -164,6 +165,9 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 0 && draggingChannel != null) {
+            commitPendingColor();
+        }
         draggingChannel = null;
         return true;
     }
@@ -277,11 +281,12 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
     }
 
     private int getChannelValue(Channel channel) {
+        Color color = getVisibleColor();
         return switch (channel) {
-            case RED -> setting.getValue().getRed();
-            case GREEN -> setting.getValue().getGreen();
-            case BLUE -> setting.getValue().getBlue();
-            case ALPHA -> setting.getValue().getAlpha();
+            case RED -> color.getRed();
+            case GREEN -> color.getGreen();
+            case BLUE -> color.getBlue();
+            case ALPHA -> color.getAlpha();
         };
     }
 
@@ -289,14 +294,14 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         double progress = (mouseX - trackBounds.x()) / trackBounds.width();
         progress = Mth.clamp(progress, 0.0, 1.0);
         int value = Mth.clamp((int) Math.round(progress * 255.0), 0, 255);
-        Color current = setting.getValue();
+        Color current = getVisibleColor();
         Color updated = switch (channel) {
             case RED -> new Color(value, current.getGreen(), current.getBlue(), current.getAlpha());
             case GREEN -> new Color(current.getRed(), value, current.getBlue(), current.getAlpha());
             case BLUE -> new Color(current.getRed(), current.getGreen(), value, current.getAlpha());
             case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), value);
         };
-        setting.setValue(updated);
+        previewColor(updated);
     }
 
     private String formatHex(Color color) {
@@ -365,14 +370,14 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         } catch (NumberFormatException ignored) {
             value = getChannelValue(focusedChannel);
         }
-        Color current = setting.getValue();
+        Color current = getVisibleColor();
         Color updated = switch (focusedChannel) {
             case RED -> new Color(value, current.getGreen(), current.getBlue(), current.getAlpha());
             case GREEN -> new Color(current.getRed(), value, current.getBlue(), current.getAlpha());
             case BLUE -> new Color(current.getRed(), current.getGreen(), value, current.getAlpha());
             case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), value);
         };
-        setting.setValue(updated);
+        applyColorNow(updated);
         inputBuffer = Integer.toString(value);
         cursorIndex = inputBuffer.length();
     }
@@ -392,6 +397,31 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
             }
         }
         return text.length();
+    }
+
+    private Color getVisibleColor() {
+        return pendingValue != null ? pendingValue : setting.getValue();
+    }
+
+    private void previewColor(Color color) {
+        if (setting.isApplyWhenRelease()) {
+            pendingValue = color;
+        } else {
+            setting.setValue(color);
+        }
+    }
+
+    private void applyColorNow(Color color) {
+        pendingValue = null;
+        setting.setValue(color);
+    }
+
+    private void commitPendingColor() {
+        if (pendingValue == null) {
+            return;
+        }
+        Color color = pendingValue;
+        applyColorNow(color);
     }
 
     @Override

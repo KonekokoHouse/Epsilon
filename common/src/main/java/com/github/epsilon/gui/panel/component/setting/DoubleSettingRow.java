@@ -26,6 +26,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     private boolean focused;
     private String inputBuffer;
     private int cursorIndex;
+    private Double pendingValue;
 
     public DoubleSettingRow(DoubleSetting setting) {
         super(setting);
@@ -122,6 +123,11 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
 
     @Override
     public boolean mouseReleased(PanelLayout.Rect bounds, MouseButtonEvent event) {
+        if (event.button() == 0 && dragging) {
+            commitPendingValue();
+            dragging = false;
+            return true;
+        }
         dragging = false;
         return false;
     }
@@ -212,7 +218,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         double rawValue = setting.getMin() + (setting.getMax() - setting.getMin()) * progress;
         double step = setting.getStep() <= 0.0 ? 0.01 : setting.getStep();
         double snapped = setting.getMin() + Math.round((rawValue - setting.getMin()) / step) * step;
-        setting.setValue(snapped);
+        previewValue(snapped);
     }
 
     public boolean isDragging() {
@@ -228,15 +234,17 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         if (setting.getMax() <= setting.getMin()) {
             return 0.0f;
         }
-        return (float) ((setting.getValue() - setting.getMin()) / (setting.getMax() - setting.getMin()));
+        return (float) ((getVisibleValue() - setting.getMin()) / (setting.getMax() - setting.getMin()));
     }
 
     private String formatValue() {
-        return Math.abs(setting.getValue() - Math.round(setting.getValue())) < 0.0001 ? Integer.toString((int) Math.round(setting.getValue())) : String.format("%.2f", setting.getValue());
+        double value = getVisibleValue();
+        return Math.abs(value - Math.round(value)) < 0.0001 ? Integer.toString((int) Math.round(value)) : String.format("%.2f", value);
     }
 
     private String formatPlainValue() {
-        return Math.abs(setting.getValue() - Math.round(setting.getValue())) < 0.0001 ? Integer.toString((int) Math.round(setting.getValue())) : String.format("%.2f", setting.getValue());
+        double value = getVisibleValue();
+        return Math.abs(value - Math.round(value)) < 0.0001 ? Integer.toString((int) Math.round(value)) : String.format("%.2f", value);
     }
 
     private String getDisplayBuffer() {
@@ -245,16 +253,42 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
 
     private void commitInput() {
         if (inputBuffer == null || inputBuffer.isBlank() || "-".equals(inputBuffer) || ".".equals(inputBuffer)) {
+            commitPendingValue();
             inputBuffer = formatPlainValue();
             cursorIndex = inputBuffer.length();
             return;
         }
         try {
-            setting.setUnboundedValue(Double.parseDouble(inputBuffer));
+            applyValueNow(Double.parseDouble(inputBuffer));
         } catch (NumberFormatException ignored) {
         }
         inputBuffer = formatPlainValue();
         cursorIndex = inputBuffer.length();
+    }
+
+    private double getVisibleValue() {
+        return pendingValue != null ? pendingValue : setting.getValue();
+    }
+
+    private void previewValue(double value) {
+        if (setting.isApplyWhenRelease()) {
+            pendingValue = value;
+        } else {
+            setting.setValue(value);
+        }
+    }
+
+    private void applyValueNow(double value) {
+        pendingValue = null;
+        setting.setUnboundedValue(value);
+    }
+
+    private void commitPendingValue() {
+        if (pendingValue == null) {
+            return;
+        }
+        double value = pendingValue;
+        applyValueNow(value);
     }
 
     private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds) {

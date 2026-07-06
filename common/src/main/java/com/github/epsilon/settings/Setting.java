@@ -12,6 +12,7 @@ public abstract class Setting<V> {
     protected final Dependency dependency;
     protected Consumer<V> onChanged;
     protected boolean rootSetting;
+    protected boolean applyWhenRelease;
     protected SettingGroup group;
 
     protected TranslateComponent translateComponent;
@@ -71,6 +72,16 @@ public abstract class Setting<V> {
 
     public boolean isRootSetting() {
         return rootSetting;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <S extends Setting<V>> S applyWhenRelease() {
+        this.applyWhenRelease = true;
+        return (S) this;
+    }
+
+    public boolean isApplyWhenRelease() {
+        return applyWhenRelease;
     }
 
     public SettingGroup getGroup() {
