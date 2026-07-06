@@ -1374,7 +1374,7 @@
   "epsilon.modules.entity control.control-mode.happy ghast": "快乐恶魂模式",
   "epsilon.modules.entity control.activation-mode": "激活模式",
   "epsilon.modules.entity control.activation-mode.immediate": "立即生效",
-  "epsilon.modules.entity control.activation-mode.double tap space": "双击空格",
+  "epsilon.modules.entity control.activation-mode.doubletapspace": "双击空格",
   "epsilon.modules.entity control.activation-message": "激活提示消息",
   "epsilon.modules.entity control.dismount-reset-delay": "下马重置延迟",
   "epsilon.modules.entity control.persistent-until-dismount": "持续直至主动下马",
@@ -1394,7 +1394,7 @@
   "epsilon.modules.entity control.activated": "(双击空格模式)实体控制已激活",
   "epsilon.modules.entity control.deactivated": "(双击空格模式)实体控制已关闭",
   "epsilon.modules.entity control.deactivated_dismount": "(双击空格模式)实体控制因下马关闭",
-  "epsilon.modules.entity control.auto-pilot": "自动巡航",
+  "epsilon.modules.entity control.autopilot": "自动巡航",
   "epsilon.modules.entity control.autoplane": "启用自动巡航",
   "epsilon.modules.entity control.autoplane-y": "巡航高度",
   "epsilon.modules.entity control.destination-x": "目标X坐标",
@@ -1402,6 +1402,8 @@
   "epsilon.modules.entity control.auto-toggle-autoplane": "接近自动关闭",
   "epsilon.modules.entity control.auto-pause-autoplane": "区块未加载暂停",
   "epsilon.modules.entity control.player-dodge": "规避玩家",
+  "epsilon.modules.entity control.reset-destination": "重置坐标",
+  "epsilon.modules.entity control.paste-coords": "粘贴坐标",
   "epsilon.modules.entity control.flight": "飞行",
   "epsilon.modules.entity control.misc": "杂项"
 }

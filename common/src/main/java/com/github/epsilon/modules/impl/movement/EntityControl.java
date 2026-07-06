@@ -100,6 +100,20 @@ public class EntityControl extends Module {
     private final BoolSetting toggleAutoPlane = boolSetting("auto-toggle-autoplane", true).group(sgAutoPilot);
     private final BoolSetting autoPauseAutoPlane = boolSetting("auto-pause-autoplane", false).group(sgAutoPilot);
     private final BoolSetting playerDodge = boolSetting("player-dodge", false).group(sgAutoPilot);
+    private final ButtonSetting resetDestBtn = buttonSetting("reset-destination", () -> {
+        destinationX.setValue("0");
+        destinationZ.setValue("0");
+    }).group(sgAutoPilot);
+    private final ButtonSetting pasteCoordsBtn = buttonSetting("paste-coords", () -> {
+        String clip = AutoPilotUtil.getClipboardText();
+        if (clip != null && !clip.isEmpty()) {
+            double[] coords = AutoPilotUtil.parseCoordinates(clip);
+            if (coords != null) {
+                destinationX.setValue(String.valueOf((int) coords[0]));
+                destinationZ.setValue(String.valueOf((int) coords[1]));
+            }
+        }
+    }).group(sgAutoPilot);
 
     // ==================== State ====================
     private int delayLeft;

@@ -1374,7 +1374,7 @@
   "epsilon.modules.entity control.control-mode.happy ghast": "Happy Ghast",
   "epsilon.modules.entity control.activation-mode": "Activation Mode",
   "epsilon.modules.entity control.activation-mode.immediate": "Immediate",
-  "epsilon.modules.entity control.activation-mode.double tap space": "Double Tap Space",
+  "epsilon.modules.entity control.activation-mode.doubletapspace": "Double Tap Space",
   "epsilon.modules.entity control.activation-message": "Activation Message",
   "epsilon.modules.entity control.dismount-reset-delay": "Dismount Reset Delay",
   "epsilon.modules.entity control.persistent-until-dismount": "Persistent Until Dismount",
@@ -1394,7 +1394,7 @@
   "epsilon.modules.entity control.activated": "(Double tap space Mode)EntityControl ACTIVATED",
   "epsilon.modules.entity control.deactivated": "(Double tap space Mode)EntityControl DEACTIVATED",
   "epsilon.modules.entity control.deactivated_dismount": "(Double tap space Mode)EntityControl DEACTIVATED due to dismount",
-  "epsilon.modules.entity control.auto-pilot": "AutoPilot",
+  "epsilon.modules.entity control.autopilot": "AutoPilot",
   "epsilon.modules.entity control.autoplane": "Enable AutoPilot",
   "epsilon.modules.entity control.autoplane-y": "AutoPilot Y",
   "epsilon.modules.entity control.destination-x": "Destination X",
@@ -1402,6 +1402,8 @@
   "epsilon.modules.entity control.auto-toggle-autoplane": "Auto Toggle Off",
   "epsilon.modules.entity control.auto-pause-autoplane": "Pause In Unloaded Chunks",
   "epsilon.modules.entity control.player-dodge": "Player Dodge",
+  "epsilon.modules.entity control.reset-destination": "Reset Destination",
+  "epsilon.modules.entity control.paste-coords": "Paste Coords",
   "epsilon.modules.entity control.flight": "Flight",
   "epsilon.modules.entity control.misc": "Misc"
 }
