@@ -143,7 +143,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> Predicate<T> filterFor(Setting<List<T>> setting) {
+    private static <T> Predicate<T> filterFor(Object setting) {
         if (setting instanceof RegistryListSetting<?> registryListSetting) {
             return (Predicate<T>) registryListSetting.getFilter();
         }
@@ -371,13 +371,15 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 popup.viewport(availableBuffer, localAvailableViewport, guiGraphics.guiHeight(), availableScroll,
                         maxAvailableScroll, availableContentHeight, content -> {
                     buildColumn(content, available, availableViewport.x(), availableViewport.y() - availableScroll,
-                            availableViewport.width() - SCROLLBAR_GUTTER, mouseX, mouseY, true, availableViewport);
+                            availableViewport.width() - (maxAvailableScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
+                            mouseX, mouseY, true, availableViewport);
                 });
                 PanelLayout.Rect localSelectedViewport = selectedViewport.relativeTo(animatedBounds);
                 popup.viewport(selectedBuffer, localSelectedViewport, guiGraphics.guiHeight(), selectedScroll,
                         maxSelectedScroll, selectedContentHeight, content -> {
                     buildColumn(content, selected, selectedViewport.x(), selectedViewport.y() - selectedScroll,
-                            selectedViewport.width() - SCROLLBAR_GUTTER, mouseX, mouseY, false, selectedViewport);
+                            selectedViewport.width() - (maxSelectedScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
+                            mouseX, mouseY, false, selectedViewport);
                 });
             });
         });

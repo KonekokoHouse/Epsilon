@@ -22,7 +22,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 
 public class StringListSelectPopup implements PanelPopupHost.Popup {
@@ -32,6 +31,8 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private static final float INPUT_HEIGHT = 18.0f;
     private static final float ROW_HEIGHT = 18.0f;
     private static final float ROW_GAP = 2.0f;
+    private static final float ACTION_WIDTH = 14.0f;
+    private static final float ACTION_GAP = 3.0f;
     private static final float SCROLLBAR_GUTTER = ScrollBarUtils.TOTAL_WIDTH + 1.0f;
     private static final float SCROLL_STEP = 24.0f;
     private static final float SCROLL_DECAY = 0.86f;
@@ -52,6 +53,8 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private float scrollVelocity;
     private float maxScroll;
     private String hoveredRemove;
+    private String hoveredMoveUp;
+    private String hoveredMoveDown;
     private PanelLayout.Rect lastViewport;
 
     public StringListSelectPopup(PanelLayout.Rect bounds, Setting<List<String>> setting, Consumer<String> addFn, Consumer<String> removeFn) {
@@ -67,7 +70,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         contentBuffer.clear();
-        List<String> entries = filteredEntries();
+        List<String> entries = entries();
         float contentHeight = entries.size() * (ROW_HEIGHT + ROW_GAP);
         PanelLayout.Rect viewport = getViewport();
         maxScroll = Math.max(0.0f, contentHeight - viewport.height());
@@ -101,6 +104,8 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
                 IMEFocusHelper.updateCursorPos(inputBounds.x() + 8.0f, inputBounds.y() + 4.0f);
 
                 hoveredRemove = null;
+                hoveredMoveUp = null;
+                hoveredMoveDown = null;
                 PanelLayout.Rect localViewport = animatedViewport.relativeTo(animatedBounds);
                 popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, contentHeight, content -> {
                     buildEntryList(content, entries, animatedViewport.x(), animatedViewport.y() - scroll,
@@ -121,6 +126,8 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             applyDraggedScroll(event.y(), viewport);
             return true;
         }
+        if (hoveredMoveUp != null) { moveEntry(hoveredMoveUp, -1); return true; }
+        if (hoveredMoveDown != null) { moveEntry(hoveredMoveDown, 1); return true; }
         if (hoveredRemove != null) { removeFn.accept(hoveredRemove); return true; }
         return true;
     }
@@ -158,19 +165,14 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         return true;
     }
 
-    private List<String> filteredEntries() {
-        String needle = input.toLowerCase(Locale.ROOT).trim();
-        List<String> result = new ArrayList<>();
-        for (String entry : setting.getValue()) {
-            if (needle.isEmpty() || entry.toLowerCase(Locale.ROOT).contains(needle)) result.add(entry);
-        }
-        return result;
+    private List<String> entries() {
+        return new ArrayList<>(setting.getValue());
     }
 
     private void buildEntryList(PanelUiTree.Scope scope, List<String> entries, float startX, float startY,
                                  PanelLayout.Rect localViewport, int mouseX, int mouseY, PanelLayout.Rect viewport) {
         PanelLayout.Rect origin = scope.bound();
-        float width = localViewport.width() - SCROLLBAR_GUTTER;
+        float width = localViewport.width() - (maxScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f);
         for (int i = 0; i < entries.size(); i++) {
             String entry = entries.get(i);
             float rowY = startY + i * (ROW_HEIGHT + ROW_GAP);
@@ -178,18 +180,61 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
 
             PanelLayout.Rect rowBounds = new PanelLayout.Rect(startX, rowY, width, ROW_HEIGHT);
             boolean hovered = rowBounds.contains(mouseX, mouseY) && viewport.contains(mouseX, mouseY);
-            if (hovered) hoveredRemove = entry;
+            boolean canMoveUp = i > 0;
+            boolean canMoveDown = i < entries.size() - 1;
+            PanelLayout.Rect removeBounds = actionBounds(rowBounds, 0);
+            PanelLayout.Rect downBounds = actionBounds(rowBounds, 1);
+            PanelLayout.Rect upBounds = actionBounds(rowBounds, 2);
+            boolean removeHovered = hovered && removeBounds.contains(mouseX, mouseY);
+            boolean downHovered = hovered && canMoveDown && downBounds.contains(mouseX, mouseY);
+            boolean upHovered = hovered && canMoveUp && upBounds.contains(mouseX, mouseY);
+            if (removeHovered) hoveredRemove = entry;
+            if (downHovered) hoveredMoveDown = entry;
+            if (upHovered) hoveredMoveUp = entry;
 
             float bgHover = hovered ? 0.45f : 0.0f;
-            final String display = trim(entry, 0.50f, rowBounds.width() - 22.0f);
+            float actionAreaWidth = ACTION_WIDTH * 3.0f + ACTION_GAP * 2.0f;
+            final String display = trim(entry, 0.50f, rowBounds.width() - actionAreaWidth - 14.0f);
             PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
             scope.pushRelative(localRowBounds, row -> {
                 row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
                         MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover));
                 row.text(display, 6.0f, centeredTextY(0.0f, rowBounds.height(), 0.50f), 0.50f, MD3Theme.ON_SECONDARY_CONTAINER);
-                row.text("-", rowBounds.width() - 12.0f, centeredTextY(0.0f, rowBounds.height(), 0.54f), 0.54f, MD3Theme.ON_SECONDARY_CONTAINER);
+                drawAction(row, upBounds.relativeTo(rowBounds), "↑", canMoveUp, upHovered);
+                drawAction(row, downBounds.relativeTo(rowBounds), "↓", canMoveDown, downHovered);
+                drawAction(row, removeBounds.relativeTo(rowBounds), "-", true, removeHovered);
             });
         }
+    }
+
+    private PanelLayout.Rect actionBounds(PanelLayout.Rect rowBounds, int indexFromRight) {
+        float x = rowBounds.right() - 6.0f - ACTION_WIDTH - indexFromRight * (ACTION_WIDTH + ACTION_GAP);
+        return new PanelLayout.Rect(x, rowBounds.y() + 2.0f, ACTION_WIDTH, rowBounds.height() - 4.0f);
+    }
+
+    private void drawAction(PanelUiTree.Scope scope, PanelLayout.Rect bounds, String label, boolean enabled, boolean hovered) {
+        float textScale = 0.50f;
+        if (enabled && hovered) {
+            scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), 4.0f,
+                    MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 34));
+        }
+        scope.text(label,
+                bounds.x() + (bounds.width() - textRenderer.getWidth(label, textScale)) / 2.0f,
+                centeredTextY(bounds.y(), bounds.height(), textScale),
+                textScale,
+                enabled ? MD3Theme.ON_SECONDARY_CONTAINER : MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 80));
+    }
+
+    private void moveEntry(String entry, int offset) {
+        List<String> next = new ArrayList<>(setting.getValue());
+        int index = next.indexOf(entry);
+        int target = index + offset;
+        if (index < 0 || target < 0 || target >= next.size()) {
+            return;
+        }
+        String value = next.remove(index);
+        next.add(target, value);
+        setting.setValue(next);
     }
 
     private PanelLayout.Rect getInputBounds(float popupY) {

@@ -3,6 +3,7 @@ package com.github.epsilon.fabric;
 import com.github.epsilon.Constants;
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.settings.impl.RegistryListSetting;
+import com.github.epsilon.settings.impl.StringListSetting;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.List;
@@ -41,7 +42,5 @@ public class FabricPlatformAddon extends EpsilonAddon {
         return List.of("Sakura");
     }
 
-    private final RegistryListSetting<EntityType<?>> entityTypeRegistryListSetting =
-            entityTypeListSetting("Test Setting", List.of());
 
 }
