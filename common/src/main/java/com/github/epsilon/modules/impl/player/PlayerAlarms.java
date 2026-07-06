@@ -34,7 +34,6 @@ public class PlayerAlarms extends Module {
         super("Player Alarms", Category.PLAYER);
     }
 
-    // ==================== Setting Groups ====================
     private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgJoin = settingGroup("Join");
     private final SettingGroup sgLeave = settingGroup("Leave");
@@ -48,66 +47,64 @@ public class PlayerAlarms extends Module {
         Both
     }
 
-    // ==================== General ====================
+    // General
     private final EnumSetting<AlertMode> alertMode = enumSetting("Alert Mode", AlertMode.Chat).group(sgGeneral);
-    private final BoolSetting showGamemodeInChat = boolSetting("show-gamemode-in-chat", false).group(sgGeneral);
+    private final BoolSetting showGamemodeInChat = boolSetting("Show Gamemode In Chat", false).group(sgGeneral);
 
-    private final StringListSetting names = stringListSetting("names",
+    private final StringListSetting names = stringListSetting("Names",
         List.of("ssy_", "e_2", "山水圆")).group(sgGeneral);
 
-    // ==================== Join Settings ====================
-    private final IntSetting joinRings = intSetting("join-rings", 5, 1, 10, 1).group(sgJoin);
-    private final IntSetting joinRingDelay = intSetting("join-ring-delay", 20, 1, 100, 1).group(sgJoin);
-    private final DoubleSetting joinVolume = doubleSetting("join-volume", 1.0, 0.0, 1.0, 0.05).group(sgJoin);
-    private final DoubleSetting joinPitch = doubleSetting("join-pitch", 1.0, 0.5, 2.0, 0.05).group(sgJoin);
-    private final RegistryListSetting<SoundEvent> joinSound = soundEventListSetting("join-sound",
+    // Join Settings
+    private final IntSetting joinRings = intSetting("Join Rings", 5, 1, 10, 1).group(sgJoin);
+    private final IntSetting joinRingDelay = intSetting("Join Ring Delay", 20, 1, 100, 1).group(sgJoin);
+    private final DoubleSetting joinVolume = doubleSetting("Join Volume", 1.0, 0.0, 1.0, 0.05).group(sgJoin);
+    private final DoubleSetting joinPitch = doubleSetting("Join Pitch", 1.0, 0.5, 2.0, 0.05).group(sgJoin);
+    private final RegistryListSetting<SoundEvent> joinSound = soundEventListSetting("Join Sound",
         List.of(SoundEvents.BELL_BLOCK)).group(sgJoin);
-    private final BoolSetting joinChatMessage = boolSetting("join-chat-message", true).group(sgJoin);
+    private final BoolSetting joinChatMessage = boolSetting("Join Chat Message", true).group(sgJoin);
 
-    // ==================== Leave Settings ====================
-    private final IntSetting leaveRings = intSetting("leave-rings", 3, 1, 10, 1).group(sgLeave);
-    private final IntSetting leaveRingDelay = intSetting("leave-ring-delay", 20, 1, 100, 1).group(sgLeave);
-    private final DoubleSetting leaveVolume = doubleSetting("leave-volume", 1.0, 0.0, 1.0, 0.05).group(sgLeave);
-    private final DoubleSetting leavePitch = doubleSetting("leave-pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeave);
-    private final RegistryListSetting<SoundEvent> leaveSound = soundEventListSetting("leave-sound",
+    // Leave Settings
+    private final IntSetting leaveRings = intSetting("Leave Rings", 3, 1, 10, 1).group(sgLeave);
+    private final IntSetting leaveRingDelay = intSetting("Leave Ring Delay", 20, 1, 100, 1).group(sgLeave);
+    private final DoubleSetting leaveVolume = doubleSetting("Leave Volume", 1.0, 0.0, 1.0, 0.05).group(sgLeave);
+    private final DoubleSetting leavePitch = doubleSetting("Leave Pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeave);
+    private final RegistryListSetting<SoundEvent> leaveSound = soundEventListSetting("Leave Sound",
         List.of(SoundEvents.ANVIL_LAND)).group(sgLeave);
-    private final BoolSetting leaveChatMessage = boolSetting("leave-chat-message", true).group(sgLeave);
+    private final BoolSetting leaveChatMessage = boolSetting("Leave Chat Message", true).group(sgLeave);
 
-    // ==================== Enter RD Settings ====================
-    private final IntSetting enterRDRings = intSetting("enter-rd-rings", 2, 1, 10, 1).group(sgEnterRD);
-    private final IntSetting enterRDRingDelay = intSetting("enter-rd-ring-delay", 20, 1, 100, 1).group(sgEnterRD);
-    private final DoubleSetting enterRDVolume = doubleSetting("enter-rd-volume", 1.0, 0.0, 1.0, 0.05).group(sgEnterRD);
-    private final DoubleSetting enterRDPitch = doubleSetting("enter-rd-pitch", 1.0, 0.5, 2.0, 0.05).group(sgEnterRD);
-    private final RegistryListSetting<SoundEvent> enterRDSound = soundEventListSetting("enter-rd-sound",
+    // Enter RD Settings
+    private final IntSetting enterRDRings = intSetting("Enter Render Distance Rings", 2, 1, 10, 1).group(sgEnterRD);
+    private final IntSetting enterRDRingDelay = intSetting("Enter Render Distance Ring Delay", 20, 1, 100, 1).group(sgEnterRD);
+    private final DoubleSetting enterRDVolume = doubleSetting("Enter Render Distance Volume", 1.0, 0.0, 1.0, 0.05).group(sgEnterRD);
+    private final DoubleSetting enterRDPitch = doubleSetting("Enter Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).group(sgEnterRD);
+    private final RegistryListSetting<SoundEvent> enterRDSound = soundEventListSetting("Enter Render Distance Sound",
         List.of(SoundEvents.ANVIL_DESTROY)).group(sgEnterRD);
-    private final BoolSetting enterRDChatMessage = boolSetting("enter-rd-chat-message", true).group(sgEnterRD);
+    private final BoolSetting enterRDChatMessage = boolSetting("Enter Render Distance Chat Message", true).group(sgEnterRD);
 
-    // ==================== Leave RD Settings ====================
-    private final IntSetting leaveRDRings = intSetting("leave-rd-rings", 2, 1, 10, 1).group(sgLeaveRD);
-    private final IntSetting leaveRDRingDelay = intSetting("leave-rd-ring-delay", 20, 1, 100, 1).group(sgLeaveRD);
-    private final DoubleSetting leaveRDVolume = doubleSetting("leave-rd-volume", 1.0, 0.0, 1.0, 0.05).group(sgLeaveRD);
-    private final DoubleSetting leaveRDPitch = doubleSetting("leave-rd-pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeaveRD);
-    private final RegistryListSetting<SoundEvent> leaveRDSound = soundEventListSetting("leave-rd-sound",
+    // Leave RD Settings
+    private final IntSetting leaveRDRings = intSetting("Leave Render Distance Rings", 2, 1, 10, 1).group(sgLeaveRD);
+    private final IntSetting leaveRDRingDelay = intSetting("Leave Render Distance Ring Delay", 20, 1, 100, 1).group(sgLeaveRD);
+    private final DoubleSetting leaveRDVolume = doubleSetting("Leave Render Distance Volume", 1.0, 0.0, 1.0, 0.05).group(sgLeaveRD);
+    private final DoubleSetting leaveRDPitch = doubleSetting("Leave Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeaveRD);
+    private final RegistryListSetting<SoundEvent> leaveRDSound = soundEventListSetting("Leave Render Distance Sound",
         List.of(SoundEvents.BELL_BLOCK)).group(sgLeaveRD);
-    private final BoolSetting leaveRDChatMessage = boolSetting("leave-rd-chat-message", true).group(sgLeaveRD);
+    private final BoolSetting leaveRDChatMessage = boolSetting("Leave Render Distance Chat Message", true).group(sgLeaveRD);
 
-    // ==================== Gamemode Change Settings ====================
-    private final IntSetting gamemodeRings = intSetting("gamemode-rings", 3, 1, 10, 1).group(sgGamemode);
-    private final IntSetting gamemodeRingDelay = intSetting("gamemode-ring-delay", 20, 1, 100, 1).group(sgGamemode);
-    private final DoubleSetting gamemodeVolume = doubleSetting("gamemode-volume", 1.0, 0.0, 1.0, 0.05).group(sgGamemode);
-    private final DoubleSetting gamemodePitch = doubleSetting("gamemode-pitch", 1.0, 0.5, 2.0, 0.05).group(sgGamemode);
-    private final RegistryListSetting<SoundEvent> gamemodeSound = soundEventListSetting("gamemode-sound",
+    // Gamemode Change Settings
+    private final IntSetting gamemodeRings = intSetting("Gamemode Rings", 3, 1, 10, 1).group(sgGamemode);
+    private final IntSetting gamemodeRingDelay = intSetting("Gamemode Ring Delay", 20, 1, 100, 1).group(sgGamemode);
+    private final DoubleSetting gamemodeVolume = doubleSetting("Gamemode Volume", 1.0, 0.0, 1.0, 0.05).group(sgGamemode);
+    private final DoubleSetting gamemodePitch = doubleSetting("Gamemode Pitch", 1.0, 0.5, 2.0, 0.05).group(sgGamemode);
+    private final RegistryListSetting<SoundEvent> gamemodeSound = soundEventListSetting("Gamemode Sound",
         List.of(SoundEvents.ARROW_HIT_PLAYER)).group(sgGamemode);
-    private final BoolSetting gamemodeChatMessage = boolSetting("gamemode-chat-message", true).group(sgGamemode);
+    private final BoolSetting gamemodeChatMessage = boolSetting("Gamemode Chat Message", true).group(sgGamemode);
 
-    // ==================== State ====================
     private final Set<UUID> playersInRender = new HashSet<>();
     private final Map<UUID, GameType> gamemodeCache = new HashMap<>();
     private final Set<UUID> alarmedJoinPlayers = new HashSet<>();
-    private Object lastConnection = null; // Track connection changes for world/server switches
-    private Object lastLevel = null;      // Track level changes for multi-world servers
+    private Object lastConnection = null;
+    private Object lastLevel = null;
 
-    // Ring state
     private static class RingState {
         int ticks;
         int ringsLeft;
@@ -212,7 +209,7 @@ public class PlayerAlarms extends Module {
     private void onReceivePacket(PacketEvent.Receive event) {
         if (nullCheck()) return;
 
-        // --- Player Join ---
+        // Player Join
         if (event.getPacket() instanceof ClientboundPlayerInfoUpdatePacket packet) {
             if (packet.actions().contains(Action.ADD_PLAYER)) {
                 for (Entry entry : packet.entries()) {
@@ -226,7 +223,7 @@ public class PlayerAlarms extends Module {
                 }
             }
 
-            // --- Gamemode Change ---
+            // Gamemode Change
             if (packet.actions().contains(Action.UPDATE_GAME_MODE)) {
                 for (Entry entry : packet.entries()) {
                     UUID id = entry.profileId();
@@ -260,7 +257,7 @@ public class PlayerAlarms extends Module {
             }
         }
 
-        // --- Player Leave ---
+        // Player Leave
         if (event.getPacket() instanceof ClientboundPlayerInfoRemovePacket removePacket) {
             for (UUID id : removePacket.profileIds()) {
                 String playerName = getPlayerName(id);
@@ -275,8 +272,6 @@ public class PlayerAlarms extends Module {
             }
         }
     }
-
-    // ==================== Helpers ====================
 
     private boolean shouldAlarm(String playerName) {
         if (playerName == null) return false;
