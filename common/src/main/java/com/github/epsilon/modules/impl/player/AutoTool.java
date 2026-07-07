@@ -30,7 +30,7 @@ public class AutoTool extends Module {
     private final BoolSetting silent = boolSetting("Silent", false);
     private final BoolSetting echestSilk = boolSetting("Ender Chest Silk Touch", true);
 
-    public static int itemIndex;
+    private static int itemIndex;
     private boolean swap;
     private long swapDelay;
     private final List<Integer> lastItem = new ArrayList<>();

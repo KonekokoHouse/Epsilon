@@ -247,7 +247,7 @@ public class Scaffold extends Module {
                 event.setCancelled(true);
 
                 rotateCount++;
-                Managers.ROTATION.rotations = rotation;
+                Managers.ROTATION.setRotationsDirect(rotation);
                 Managers.ROTATION.setActive(true);
                 mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
 

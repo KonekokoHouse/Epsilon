@@ -132,7 +132,7 @@ public class CrystalBlocker extends Module {
         } else if (rotate.is(RotateMode.Silent)) {
             Managers.ROTATION.setRotations(rot, rotationSpeed.getValue(), Priority.Highest);
 
-            if (Managers.ROTATION.rotations != null) {
+            if (Managers.ROTATION.isActive()) {
                 double yawDiff = Math.abs(Mth.wrapDegrees(Managers.ROTATION.getYaw() - rot.getYaw()));
                 double pitchDiff = Math.abs(Managers.ROTATION.getPitch() - rot.getPitch());
                 if (yawDiff > 15 || pitchDiff > 15) {

@@ -228,7 +228,7 @@ public class RotationUtils {
     }
 
     public static Rot2f move(Rot2f targetRotation, double speed) {
-        return move(Managers.ROTATION.lastRotations, targetRotation, speed);
+        return move(Managers.ROTATION.getLastRotation(), targetRotation, speed);
     }
 
     public static Rot2f move(Rot2f lastRotation, Rot2f targetRotation, double speed) {
@@ -253,7 +253,7 @@ public class RotationUtils {
     }
 
     public static Rot2f smooth(final Rot2f targetRotation, final double speed) {
-        return smooth(Managers.ROTATION.lastRotations, targetRotation, speed);
+        return smooth(Managers.ROTATION.getLastRotation(), targetRotation, speed);
     }
 
     public static Rot2f smooth(final Rot2f lastRotation, final Rot2f targetRotation, final double speed) {

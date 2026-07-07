@@ -23,11 +23,11 @@ public abstract class RotationManager {
     }
 
     private final Rot2f offset = new Rot2f(0, 0);
-    public Rot2f rotations = new Rot2f(0, 0);
-    public Rot2f lastRotations = new Rot2f(0, 0);
-    public Rot2f targetRotations;
-    public Rot2f animationRotation = null;
-    public Rot2f lastAnimationRotation = null;
+    protected Rot2f rotations = new Rot2f(0, 0);
+    protected Rot2f lastRotations = new Rot2f(0, 0);
+    protected Rot2f targetRotations;
+    protected Rot2f animationRotation = null;
+    protected Rot2f lastAnimationRotation = null;
 
     protected boolean active;
     protected boolean smoothed;
@@ -158,6 +158,14 @@ public abstract class RotationManager {
 
     public Rot2f getLastRotation() {
         return lastRotations != null ? lastRotations : new Rot2f(mc.player.yRotO, mc.player.xRotO);
+    }
+
+    /**
+     * 直接设置当前旋转角度，绕过平滑插值和优先级队列。
+     * 仅供需要立即生效旋转（如 Scaffold 模块）的少数场景使用。
+     */
+    public void setRotationsDirect(Rot2f rotations) {
+        this.rotations = rotations;
     }
 
     public boolean isActive() {

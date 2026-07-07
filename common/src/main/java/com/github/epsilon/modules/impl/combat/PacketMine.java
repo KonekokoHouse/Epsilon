@@ -106,7 +106,7 @@ public class PacketMine extends Module {
     private final TimerUtils bypassTimer = new TimerUtils();
     private final TimerUtils timer = new TimerUtils();
     private final TimerUtils secondTimer = new TimerUtils();
-    public final TimerUtils mineTimer = new TimerUtils();
+    private final TimerUtils mineTimer = new TimerUtils();
     private final TimerUtils instantTimer = new TimerUtils();
 
     @Override

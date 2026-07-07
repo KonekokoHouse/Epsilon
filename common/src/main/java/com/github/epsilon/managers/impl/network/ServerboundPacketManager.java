@@ -17,10 +17,10 @@ public class ServerboundPacketManager {
         EventBus.INSTANCE.subscribe(this);
     }
 
-    public final LinkedBlockingQueue<Packet<?>> packets = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<Packet<?>> packets = new LinkedBlockingQueue<>();
 
-    public boolean blinking = false;
-    static boolean forceFlush;
+    private volatile boolean blinking = false;
+    static volatile boolean forceFlush;
 
     @EventHandler
     private void onLevelUpdate(LevelUpdateEvent event) {
