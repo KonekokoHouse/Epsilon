@@ -69,6 +69,7 @@ public class AimBot extends Module {
 
     @EventHandler
     private void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (nullCheck()) return;
         switch (mode.getValue()) {
             case AimAssist -> updateAimAssist();
             case BowAim -> updateBowAim();
@@ -93,6 +94,7 @@ public class AimBot extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
+        if (nullCheck()) return;
         if (mode.is(Mode.AimAssist)) {
             if (!Float.isNaN(rotationYaw)) {
                 mc.player.setYRot(Mth.lerp(assistAcceleration, mc.player.getYRot(), rotationYaw));

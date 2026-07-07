@@ -104,6 +104,7 @@ public class ESP extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
+        if (nullCheck()) return;
         if (boxes.isEmpty()) return;
 
         if (mc.getFps() < 8 && mc.player.tickCount > 150) {
