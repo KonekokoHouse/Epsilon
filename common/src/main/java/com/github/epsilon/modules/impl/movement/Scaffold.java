@@ -1,12 +1,8 @@
 package com.github.epsilon.modules.impl.movement;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -20,7 +16,7 @@ import com.github.epsilon.utils.player.FallingPlayer;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.MoveUtils;
-import com.github.epsilon.utils.render.animation.Easing;
+import com.github.epsilon.utils.render.FadeBoxRenderer;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -42,7 +38,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,42 +47,6 @@ public class Scaffold extends Module {
 
     private Scaffold() {
         super("Scaffold", Category.MOVEMENT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class,
-                event -> {
-                    if (!render.getValue() || renderBoxes.isEmpty()) return;
-
-                    long time = System.currentTimeMillis();
-                    long fadeTime = this.fadeTime.getValue().longValue();
-
-                    renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
-
-                    for (RenderInfo box : renderBoxes) {
-                        float progress = Mth.clamp((float) (time - box.startTime()) / fadeTime, 0.0f, 1.0f);
-
-                        double scale = 1.0;
-                        if (box.shrink()) {
-                            scale = 1.0 - Easing.EASE_IN_OUT_EXPO.getFunction().apply(progress);
-                            if (scale < 0) scale = 0;
-                        }
-
-                        float alphaFactor = box.fade() ? Mth.clamp(1.0f - progress, 0.0f, 1.0f) : 1.0f;
-
-                        Color sideColor = box.sideColor();
-                        Color lineColor = box.lineColor();
-
-                        Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
-                        Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
-
-                        AABB renderBox = box.aabb;
-                        if (box.shrink()) {
-                            renderBox = AABB.ofSize(renderBox.getCenter(), renderBox.getXsize() * scale, renderBox.getYsize() * scale, renderBox.getZsize() * scale);
-                        }
-
-                        Render3DScheduler.INSTANCE.addFilledBox(renderBox, side);
-                        Render3DScheduler.INSTANCE.addOutlineBox(renderBox, line);
-                    }
-                }
-        ));
     }
 
     private enum Mode {
@@ -141,7 +100,14 @@ public class Scaffold extends Module {
     private FindItemResult blockResult;
     private boolean shouldSwapBack;
 
-    private final List<RenderInfo> renderBoxes = new ArrayList<>();
+    private final FadeBoxRenderer fadeRenderer = new FadeBoxRenderer(
+            render::getValue,
+            () -> fadeTime.getValue().longValue(),
+            sideColor::getValue,
+            lineColor::getValue,
+            fade::getValue,
+            shrink::getValue
+    );
 
     private final RegistryListSetting<Block> blacklistedBlocks = blockListSetting("Blacklisted Blocks", List.of(
             Blocks.AIR,
@@ -260,7 +226,7 @@ public class Scaffold extends Module {
                     else mc.getConnection().send(new ServerboundSwingPacket(hand));
 
                     if (render.getValue()) {
-                        renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                        fadeRenderer.addBox(new AABB(blockPos.relative(direction)));
                     }
                 }
 
@@ -361,7 +327,7 @@ public class Scaffold extends Module {
             }
 
             if (render.getValue()) {
-                renderBoxes.add(new RenderInfo(new AABB(blockPos.relative(direction)), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis(), fade.getValue(), shrink.getValue()));
+                fadeRenderer.addBox(new AABB(blockPos.relative(direction)));
             }
         }
 
@@ -585,9 +551,5 @@ public class Scaffold extends Module {
         return !(block instanceof SlabBlock) && !blacklistedBlocks.contains(block);
     }
 
-
-    private record RenderInfo(AABB aabb, Color lineColor, Color sideColor, long startTime, boolean fade,
-                              boolean shrink) {
-    }
 
 }

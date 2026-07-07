@@ -1,12 +1,9 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -14,6 +11,7 @@ import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.combat.DamageUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.render.FadeBoxRenderer;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -35,7 +33,6 @@ import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class SafeAnchor extends Module {
@@ -44,31 +41,6 @@ public class SafeAnchor extends Module {
 
     private SafeAnchor() {
         super("Safe Anchor", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class,
-                event -> {
-                    if (!render.getValue() || renderBoxes.isEmpty()) return;
-
-                    long time = System.currentTimeMillis();
-                    long fadeTime = this.fadeTime.getValue().longValue();
-
-                    renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
-
-                    for (RenderBox box : renderBoxes) {
-                        long age = time - box.startTime();
-                        float progress = Mth.clamp((float) age / fadeTime, 0.0f, 1.0f);
-                        float alphaFactor = Mth.clamp(1.0f - progress, 0.0f, 1.0f);
-
-                        Color sideColor = box.sideColor();
-                        Color lineColor = box.lineColor();
-
-                        Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
-                        Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
-
-                        Render3DScheduler.INSTANCE.addFilledBox(box.aabb, side);
-                        Render3DScheduler.INSTANCE.addOutlineBox(box.aabb, line);
-                    }
-                }
-        ));
     }
 
     private enum PlaceMode {
@@ -106,7 +78,12 @@ public class SafeAnchor extends Module {
     private final ColorSetting glowStoneLine = colorSetting("GlowStone Line", new Color(70, 165, 255), render::getValue);
 
     private final Set<BlockPos> ownAnchors = Collections.synchronizedSet(new LinkedHashSet<>());
-    private final List<RenderBox> renderBoxes = new ArrayList<>();
+    private final FadeBoxRenderer fadeRenderer = new FadeBoxRenderer(
+            render::getValue,
+            () -> fadeTime.getValue().longValue(),
+            glowStoneSide::getValue,
+            glowStoneLine::getValue
+    );
 
     private BlockPos currentAnchorPos;
     private Rot2f targetRotation;
@@ -745,7 +722,7 @@ public class SafeAnchor extends Module {
     }
 
     private void addRenderBox(BlockPos pos) {
-        renderBoxes.add(new RenderBox(new AABB(pos), glowStoneLine.getValue(), glowStoneSide.getValue(), System.currentTimeMillis()));
+        fadeRenderer.addBox(pos);
     }
 
     private void resetState() {
@@ -772,9 +749,6 @@ public class SafeAnchor extends Module {
         double jitter = baseMs * 0.25 * ThreadLocalRandom.current().nextGaussian();
         long delayMs = (long) Mth.clamp(baseMs + jitter, 50.0, 250.0);
         nextActionTimeMs = System.currentTimeMillis() + delayMs;
-    }
-
-    private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime) {
     }
 
 }

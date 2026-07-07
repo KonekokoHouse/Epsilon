@@ -1,12 +1,8 @@
 package com.github.epsilon.modules.impl.combat;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.Render3DEvent;
-import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -14,10 +10,10 @@ import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.render.FadeBoxRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Items;
@@ -30,8 +26,6 @@ import net.minecraft.world.phys.HitResult;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AutoHitCrystal extends Module {
 
@@ -39,31 +33,6 @@ public class AutoHitCrystal extends Module {
 
     private AutoHitCrystal() {
         super("Auto Hit Crystal", Category.COMBAT);
-        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class,
-                event -> {
-                    if (!render.getValue() || renderBoxes.isEmpty()) return;
-
-                    long time = System.currentTimeMillis();
-                    long fadeTime = this.fadeTime.getValue().longValue();
-
-                    renderBoxes.removeIf(box -> time - box.startTime() > fadeTime);
-
-                    for (RenderBox box : renderBoxes) {
-                        long age = time - box.startTime();
-                        float progress = Mth.clamp((float) age / fadeTime, 0.0f, 1.0f);
-                        float alphaFactor = Mth.clamp(1.0f - progress, 0.0f, 1.0f);
-
-                        Color sideColor = box.sideColor();
-                        Color lineColor = box.lineColor();
-
-                        Color side = new Color(sideColor.getRed(), sideColor.getGreen(), sideColor.getBlue(), (int) (sideColor.getAlpha() * alphaFactor));
-                        Color line = new Color(lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), (int) (lineColor.getAlpha() * alphaFactor));
-
-                        Render3DScheduler.INSTANCE.addFilledBox(box.aabb, side);
-                        Render3DScheduler.INSTANCE.addOutlineBox(box.aabb, line);
-                    }
-                }
-        ));
     }
 
     private final KeybindSetting activateKey = keybindSetting("Activate Key", GLFW.GLFW_KEY_UNKNOWN);
@@ -88,7 +57,12 @@ public class AutoHitCrystal extends Module {
     private boolean active;
     private boolean crystalling;
 
-    private final List<RenderBox> renderBoxes = new ArrayList<>();
+    private final FadeBoxRenderer fadeRenderer = new FadeBoxRenderer(
+            render::getValue,
+            () -> fadeTime.getValue().longValue(),
+            sideColor::getValue,
+            lineColor::getValue
+    );
 
     @Override
     protected void onEnable() {
@@ -233,7 +207,7 @@ public class AutoHitCrystal extends Module {
             } else {
                 mc.getConnection().send(new ServerboundSwingPacket(hand));
             }
-            renderBoxes.add(new RenderBox(new AABB(renderPos), lineColor.getValue(), sideColor.getValue(), System.currentTimeMillis()));
+            fadeRenderer.addBox(new AABB(renderPos));
         }
     }
 
@@ -244,9 +218,6 @@ public class AutoHitCrystal extends Module {
         this.placeClock = 0;
         this.active = false;
         this.crystalling = false;
-    }
-
-    private record RenderBox(AABB aabb, Color lineColor, Color sideColor, long startTime) {
     }
 
 }
