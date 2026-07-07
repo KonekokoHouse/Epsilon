@@ -173,20 +173,12 @@ public class AutoKouZi extends Module {
     }
 
     private void loadFromDefaultPath() {
-        try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(
-                    "assets/epsilon/kouzi.txt"
-            );
-
-            if (is == null) {
-                sendMessage("无法找到默认文件");
-                return;
-            }
-
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(is, StandardCharsets.UTF_8)
-            );
-
+        InputStream is = getClass().getClassLoader().getResourceAsStream("assets/epsilon/kouzi.txt");
+        if (is == null) {
+            sendMessage("无法找到默认文件");
+            return;
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -194,18 +186,15 @@ public class AutoKouZi extends Module {
                     allSentences.add(line);
                 }
             }
-
-            reader.close();
         } catch (Exception e) {
             sendMessage("加载默认文件失败: " + e.getMessage());
         }
     }
 
     private void loadFromCustomPath(String path) {
-        try {
-            java.nio.file.Path filePath = java.nio.file.Paths.get(path);
-            BufferedReader reader = java.nio.file.Files.newBufferedReader(filePath, StandardCharsets.UTF_8);
-
+        try (BufferedReader reader = java.nio.file.Files.newBufferedReader(
+                java.nio.file.Paths.get(path), StandardCharsets.UTF_8
+        )) {
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -213,8 +202,6 @@ public class AutoKouZi extends Module {
                     allSentences.add(line);
                 }
             }
-
-            reader.close();
         } catch (Exception e) {
             sendMessage("加载自定义文件失败: " + e.getMessage());
             loadFromDefaultPath();
