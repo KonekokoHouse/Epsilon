@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
@@ -139,7 +140,8 @@ public class ClientSetting extends Module {
     public final EnumSetting<IconMode> customIcon = enumSetting("Custom Icon", IconMode.Epsilon, _ -> {
         try {
             mc.getWindow().setIcon(mc.getVanillaPackResources(), SharedConstants.getCurrentVersion().stable() ? IconSet.RELEASE : IconSet.SNAPSHOT);
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            Constants.LOGGER.warn("Failed to set window icon", e);
         }
     }).group(sgAppearance);
 

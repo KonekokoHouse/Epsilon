@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.text;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.LuminTexture;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -172,7 +173,8 @@ public final class SystemEmojiAtlas implements AutoCloseable {
             if (Files.isRegularFile(path)) {
                 return Font.createFont(Font.TRUETYPE_FONT, path.toFile());
             }
-        } catch (FontFormatException | IOException ignored) {
+        } catch (FontFormatException | IOException e) {
+            Constants.LOGGER.warn("Failed to load emoji font: {}", path, e);
         }
         return new Font(systemEmojiFamily(), Font.PLAIN, FONT_SIZE);
     }

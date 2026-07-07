@@ -1,5 +1,6 @@
 package com.github.epsilon.graphics.renderers;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.LuminRenderPipelines;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.LuminTexture;
@@ -325,7 +326,8 @@ public class TextureRenderer implements IRenderer {
             GpuTextureView view = abstractTexture.getTextureView();
             GpuSampler sampler = abstractTexture.getSampler();
             return new LuminTexture(texture, view, sampler, false, false);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Constants.LOGGER.warn("Failed to load texture from GPU handle: {}", identifier, e);
         }
 
         NativeImage image;
