@@ -1,5 +1,6 @@
 package com.github.epsilon.events.bus.listeners;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventHandler;
 
 import java.lang.invoke.LambdaMetafactory;
@@ -108,7 +109,7 @@ public class LambdaListener implements IListener {
                 privateLookupInMethod = MethodHandles.class.getDeclaredMethod("privateLookupIn", Class.class, MethodHandles.Lookup.class);
             }
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            Constants.LOGGER.warn("Failed to initialize LambdaListener reflection", e);
         }
     }
 
