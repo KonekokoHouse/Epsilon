@@ -7,7 +7,6 @@ import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -22,8 +21,6 @@ public class LambdaListener implements IListener {
         MethodHandles.Lookup create(Method lookupInMethod, Class<?> klass) throws InvocationTargetException, IllegalAccessException;
     }
 
-    private static boolean isJava1dot8;
-    private static Constructor<MethodHandles.Lookup> lookupConstructor;
     private static Method privateLookupInMethod;
 
     private final Class<?> target;
@@ -46,16 +43,7 @@ public class LambdaListener implements IListener {
 
         try {
             String name = method.getName();
-            MethodHandles.Lookup lookup;
-
-            if (isJava1dot8) {
-                boolean a = lookupConstructor.isAccessible();
-                lookupConstructor.setAccessible(true);
-                lookup = lookupConstructor.newInstance(klass);
-                lookupConstructor.setAccessible(a);
-            } else {
-                lookup = factory.create(privateLookupInMethod, klass);
-            }
+            MethodHandles.Lookup lookup = factory.create(privateLookupInMethod, klass);
 
             MethodType methodType = MethodType.methodType(void.class, method.getParameters()[0].getType());
 
@@ -101,13 +89,7 @@ public class LambdaListener implements IListener {
 
     static {
         try {
-            isJava1dot8 = System.getProperty("java.version").startsWith("1.8");
-
-            if (isJava1dot8) {
-                lookupConstructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
-            } else {
-                privateLookupInMethod = MethodHandles.class.getDeclaredMethod("privateLookupIn", Class.class, MethodHandles.Lookup.class);
-            }
+            privateLookupInMethod = MethodHandles.class.getDeclaredMethod("privateLookupIn", Class.class, MethodHandles.Lookup.class);
         } catch (NoSuchMethodException e) {
             Constants.LOGGER.warn("Failed to initialize LambdaListener reflection", e);
         }
