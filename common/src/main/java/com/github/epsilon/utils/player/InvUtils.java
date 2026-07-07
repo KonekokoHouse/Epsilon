@@ -10,8 +10,8 @@ import static com.github.epsilon.Constants.mc;
 
 public class InvUtils {
 
-    public static int[] invSlots;
-    public static int previousSlot = -1;
+    public static volatile int[] invSlots;
+    public static volatile int previousSlot = -1;
 
     public static boolean testInMainHand(Predicate<ItemStack> predicate) {
         return predicate.test(mc.player.getMainHandItem());

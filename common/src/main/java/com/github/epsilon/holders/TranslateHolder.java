@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class TranslateHolder {
 
-    public static TranslateHolder INSTANCE = new TranslateHolder();
+    public static final TranslateHolder INSTANCE = new TranslateHolder();
 
     private final List<TranslateComponent> components = new CopyOnWriteArrayList<>();
     private final AtomicLong revision = new AtomicLong();

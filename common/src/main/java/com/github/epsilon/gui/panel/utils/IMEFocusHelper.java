@@ -2,6 +2,8 @@ package com.github.epsilon.gui.panel.utils;
 
 import net.minecraft.client.gui.screens.Screen;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static com.github.epsilon.Constants.mc;
 
 /**
@@ -14,11 +16,11 @@ import static com.github.epsilon.Constants.mc;
  */
 public class IMEFocusHelper {
 
-    public static float activeCursorX = 0.0f;
-    public static float activeCursorY = 0.0f;
+    public static volatile float activeCursorX = 0.0f;
+    public static volatile float activeCursorY = 0.0f;
 
     /** 引用计数：记录当前有多少个文本框正在请求 IME 输入焦点 */
-    private static int refCount = 0;
+    private static final AtomicInteger refCount = new AtomicInteger(0);
 
     private IMEFocusHelper() {
     }
@@ -29,8 +31,7 @@ public class IMEFocusHelper {
      */
     public static void activate() {
         // 增加引用计数；仅第一个获取焦点的文本框真正开启 IME 输入
-        refCount++;
-        if (refCount == 1) {
+        if (refCount.incrementAndGet() == 1) {
             Screen screen = mc.screen;
             if (screen != null) {
                 mc.onTextInputFocusChange(screen, true);
@@ -49,8 +50,7 @@ public class IMEFocusHelper {
      */
     public static void deactivate() {
         // 减少引用计数；仅最后一个失去焦点的文本框真正关闭 IME 输入
-        refCount = Math.max(0, refCount - 1);
-        if (refCount == 0) {
+        if (refCount.updateAndGet(c -> Math.max(0, c - 1)) == 0) {
             Screen screen = mc.screen;
             if (screen != null) {
                 mc.onTextInputFocusChange(screen, false);
@@ -63,7 +63,7 @@ public class IMEFocusHelper {
      * 在 GUI 关闭或切换屏幕时使用，确保 IME 不会保持开启状态。
      */
     public static void forceDeactivate() {
-        refCount = 0;
+        refCount.set(0);
         Screen screen = mc.screen;
         if (screen != null) {
             mc.onTextInputFocusChange(screen, false);

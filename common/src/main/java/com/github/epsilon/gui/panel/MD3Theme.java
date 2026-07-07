@@ -7,43 +7,43 @@ import java.awt.*;
 
 public class MD3Theme {
 
-    public static Color SHADOW = new Color(0, 0, 0, 56);
+    public static volatile Color SHADOW = new Color(0, 0, 0, 56);
 
-    public static Color SURFACE = new Color(20, 18, 24, 238);
-    public static Color SURFACE_DIM = new Color(15, 13, 19, 232);
-    public static Color SURFACE_CONTAINER_LOW = new Color(29, 27, 32, 240);
-    public static Color SURFACE_CONTAINER = new Color(33, 31, 38, 244);
-    public static Color SURFACE_CONTAINER_HIGH = new Color(43, 41, 48, 248);
-    public static Color SURFACE_CONTAINER_HIGHEST = new Color(54, 52, 59, 252);
+    public static volatile Color SURFACE = new Color(20, 18, 24, 238);
+    public static volatile Color SURFACE_DIM = new Color(15, 13, 19, 232);
+    public static volatile Color SURFACE_CONTAINER_LOW = new Color(29, 27, 32, 240);
+    public static volatile Color SURFACE_CONTAINER = new Color(33, 31, 38, 244);
+    public static volatile Color SURFACE_CONTAINER_HIGH = new Color(43, 41, 48, 248);
+    public static volatile Color SURFACE_CONTAINER_HIGHEST = new Color(54, 52, 59, 252);
 
-    public static Color OUTLINE = new Color(147, 143, 153, 180);
-    public static Color OUTLINE_SOFT = new Color(147, 143, 153, 96);
+    public static volatile Color OUTLINE = new Color(147, 143, 153, 180);
+    public static volatile Color OUTLINE_SOFT = new Color(147, 143, 153, 96);
 
-    public static Color PRIMARY = new Color(208, 188, 255);
-    public static Color ON_PRIMARY = new Color(56, 30, 114);
-    public static Color PRIMARY_CONTAINER = new Color(79, 55, 139, 236);
-    public static Color ON_PRIMARY_CONTAINER = new Color(234, 221, 255);
+    public static volatile Color PRIMARY = new Color(208, 188, 255);
+    public static volatile Color ON_PRIMARY = new Color(56, 30, 114);
+    public static volatile Color PRIMARY_CONTAINER = new Color(79, 55, 139, 236);
+    public static volatile Color ON_PRIMARY_CONTAINER = new Color(234, 221, 255);
 
-    public static Color SECONDARY = new Color(204, 194, 220);
-    public static Color ON_SECONDARY = new Color(51, 45, 65);
-    public static Color SECONDARY_CONTAINER = new Color(74, 68, 88, 236);
-    public static Color ON_SECONDARY_CONTAINER = new Color(232, 222, 248);
+    public static volatile Color SECONDARY = new Color(204, 194, 220);
+    public static volatile Color ON_SECONDARY = new Color(51, 45, 65);
+    public static volatile Color SECONDARY_CONTAINER = new Color(74, 68, 88, 236);
+    public static volatile Color ON_SECONDARY_CONTAINER = new Color(232, 222, 248);
 
-    public static Color TERTIARY = new Color(239, 184, 200);
-    public static Color ON_TERTIARY = new Color(73, 37, 50);
-    public static Color TERTIARY_CONTAINER = new Color(99, 59, 72, 236);
-    public static Color ON_TERTIARY_CONTAINER = new Color(255, 216, 228);
-    public static Color INVERSE_SURFACE = new Color(230, 224, 233);
-    public static Color INVERSE_ON_SURFACE = new Color(49, 48, 51);
+    public static volatile Color TERTIARY = new Color(239, 184, 200);
+    public static volatile Color ON_TERTIARY = new Color(73, 37, 50);
+    public static volatile Color TERTIARY_CONTAINER = new Color(99, 59, 72, 236);
+    public static volatile Color ON_TERTIARY_CONTAINER = new Color(255, 216, 228);
+    public static volatile Color INVERSE_SURFACE = new Color(230, 224, 233);
+    public static volatile Color INVERSE_ON_SURFACE = new Color(49, 48, 51);
 
-    public static Color TEXT_PRIMARY = new Color(230, 224, 233);
-    public static Color TEXT_SECONDARY = new Color(202, 196, 208);
-    public static Color TEXT_MUTED = new Color(147, 143, 153);
-    public static Color SUCCESS = new Color(204, 194, 220);
-    public static Color ERROR = new Color(242, 184, 181);
+    public static volatile Color TEXT_PRIMARY = new Color(230, 224, 233);
+    public static volatile Color TEXT_SECONDARY = new Color(202, 196, 208);
+    public static volatile Color TEXT_MUTED = new Color(147, 143, 153);
+    public static volatile Color SUCCESS = new Color(204, 194, 220);
+    public static volatile Color ERROR = new Color(242, 184, 181);
 
-    private static ClientSetting.ThemePreset appliedPreset = null;
-    private static ClientSetting.ThemeMode appliedMode = null;
+    private static volatile ClientSetting.ThemePreset appliedPreset = null;
+    private static volatile ClientSetting.ThemeMode appliedMode = null;
 
     public static final int PANEL_RADIUS = 17;
     public static final int SECTION_RADIUS = 13;
