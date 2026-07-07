@@ -1414,7 +1414,7 @@
   "epsilon.modules.entity control.auto toggle autoplane": "Toggle Off On Arrival",
   "epsilon.modules.entity control.auto pause autoplane": "Pause In Unloaded Chunks",
   "epsilon.modules.entity control.player dodge": "Player Dodge",
-  "epsilon.modules.entity control.reset destination": "Reset Destination",
+  "epsilon.modules.entity control.reset destination": "Reset Coords",
   "epsilon.modules.entity control.paste coords": "Paste Coords",
   "epsilon.modules.entity control.flight": "Flight",
   "epsilon.modules.entity control.misc": "Misc"
