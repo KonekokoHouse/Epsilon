@@ -89,15 +89,15 @@ public class PacketMine extends Module {
     private final ColorSetting secondLineStartColor = colorSetting("Second Line Start", new Color(255, 0, 0, 233));
     private final ColorSetting secondLineEndColor = colorSetting("Second Line End", new Color(5, 160, 0, 233));
 
-    public static BlockPos selfClickPos = null;
-    public static int maxBreaksCount;
-    public static int mainProgressPercent = 0, secondProgressPercent = 0;
-    public static boolean completed = false;
-    public static BlockPos targetPos, secondPos;
-    private static float progress, secondProgress;
+    private static volatile BlockPos selfClickPos = null;
+    private static volatile int maxBreaksCount;
+    private static volatile int mainProgressPercent = 0, secondProgressPercent = 0;
+    private static volatile boolean completed = false;
+    private static volatile BlockPos targetPos, secondPos;
+    private static volatile float progress, secondProgress;
     private long lastTime, secondLastTime;
     private long fadeLastTime;
-    private static boolean started, secondStarted;
+    private static volatile boolean started, secondStarted;
     private BlockPos renderPos, secondRenderPos;
     private double renderProgress, secondRenderProgress;
     private int oldSlot = -1;

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.player;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.modules.Category;
@@ -42,13 +43,14 @@ public class AutoQueue extends Module {
             String content = reader.lines().collect(Collectors.joining("\n"));
             return JsonParser.parseString(content).getAsJsonObject();
         } catch (Exception e) {
-            e.printStackTrace();
+            Constants.LOGGER.warn("Failed to load xinqueue questions", e);
             return new JsonObject();
         }
     }
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
+        if (nullCheck()) return;
         if (mode.getValue() != Mode.XIN_2B2T) return;
         if (!(event.getPacket() instanceof ClientboundSystemChatPacket packet)) return;
 

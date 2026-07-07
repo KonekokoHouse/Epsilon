@@ -1,5 +1,6 @@
 package com.github.epsilon.assets.i18n;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
@@ -45,15 +46,15 @@ public class I18NFileGenerator {
             try {
                 file.createNewFile();
             } catch (IOException e) {
-                e.printStackTrace();
+                Constants.LOGGER.warn("Failed to create i18n file: {}", filePath, e);
             }
         }
 
         try (FileWriter writer = new FileWriter(filePath)) {
             gson.toJson(root, writer);
-            System.out.println("I18N file generated successfully at: " + filePath);
+            Constants.LOGGER.info("I18N file generated successfully at: {}", filePath);
         } catch (IOException e) {
-            e.printStackTrace();
+            Constants.LOGGER.warn("Failed to write i18n file: {}", filePath, e);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.github.epsilon.modules.impl.combat;
 
+import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
@@ -414,7 +415,7 @@ public class ZealotCrystalPlus extends Module {
                 Thread.currentThread().interrupt();
                 return;
             } catch (Throwable t) {
-                t.printStackTrace();
+                Constants.LOGGER.warn("Error in ZealotCrystalPlus worker loop", t);
                 try {
                     waitForSignal(100L, 0);
                 } catch (InterruptedException e) {
