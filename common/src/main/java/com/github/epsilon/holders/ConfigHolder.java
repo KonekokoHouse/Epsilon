@@ -298,21 +298,24 @@ public class ConfigHolder {
         if (moduleObj.has("keyBind") && moduleObj.get("keyBind").isJsonPrimitive()) {
             try {
                 module.setKeyBind(moduleObj.get("keyBind").getAsInt());
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Constants.LOGGER.warn("读取模块 {} 的 keyBind 失败", module.getName(), e);
             }
         }
 
         if (moduleObj.has("bindMode") && moduleObj.get("bindMode").isJsonPrimitive()) {
             try {
                 module.setBindMode(Module.BindMode.valueOf(moduleObj.get("bindMode").getAsString()));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Constants.LOGGER.warn("读取模块 {} 的 bindMode 失败", module.getName(), e);
             }
         }
 
         if (moduleObj.has("hidden") && moduleObj.get("hidden").isJsonPrimitive()) {
             try {
                 module.setHidden(moduleObj.get("hidden").getAsBoolean());
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Constants.LOGGER.warn("读取模块 {} 的 hidden 失败", module.getName(), e);
             }
         }
 
@@ -560,7 +563,8 @@ public class ConfigHolder {
                 if (!s.isAllowAlpha()) c = new Color(c.getRed(), c.getGreen(), c.getBlue());
                 s.setValue(c);
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Constants.LOGGER.warn("应用设置 {} 的值失败", setting.getName(), e);
         }
     }
 
@@ -942,7 +946,8 @@ public class ConfigHolder {
                         requestedName = nameElement.getAsString();
                     }
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Constants.LOGGER.warn("读取导入配置元数据 {} 失败", metadataFile, e);
             }
         }
 
