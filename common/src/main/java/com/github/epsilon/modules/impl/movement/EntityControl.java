@@ -35,75 +35,75 @@ public class EntityControl extends Module {
         super("Entity Control", Category.MOVEMENT);
     }
 
-    // ==================== Enums ====================
+    //Enums
     private enum ControlMode { Tradition, HappyGhast }
     private enum ActivationMode { Immediate, DoubleTapSpace }
     private enum AlertDisplayMode { Chat, Notification, Both }
 
-    // ==================== Setting Groups ====================
+    //Setting Groups
     private final SettingGroup sgControl = settingGroup("Control");
     private final SettingGroup sgSpeed = settingGroup("Speed");
     private final SettingGroup sgFlight = settingGroup("Flight");
     private final SettingGroup sgMisc = settingGroup("Misc");
 
-    // ==================== Control ====================
+    //Control
     private final RegistryListSetting<EntityType<?>> entities = entityTypeListSetting("entities",
             getAllRideableEntities()).group(sgControl);
 
-    private final BoolSetting spoofSaddle = boolSetting("spoof-saddle", false).group(sgControl);
-    private final BoolSetting maxJump = boolSetting("max-jump", true).group(sgControl);
-    private final BoolSetting cancelServerPackets = boolSetting("cancel-server-packets", false).group(sgControl);
-    private final EnumSetting<ControlMode> controlMode = enumSetting("control-mode", ControlMode.Tradition).group(sgControl);
-    private final EnumSetting<ActivationMode> activationMode = enumSetting("activation-mode", ActivationMode.Immediate).group(sgControl);
-    private final BoolSetting activationMessage = boolSetting("activation-message", true,
+    private final BoolSetting spoofSaddle = boolSetting("spoof saddle", false).group(sgControl);
+    private final BoolSetting maxJump = boolSetting("max jump", true).group(sgControl);
+    private final BoolSetting cancelServerPackets = boolSetting("cancel server packets", false).group(sgControl);
+    private final EnumSetting<ControlMode> controlMode = enumSetting("control mode", ControlMode.Tradition).group(sgControl);
+    private final EnumSetting<ActivationMode> activationMode = enumSetting("activation mode", ActivationMode.Immediate).group(sgControl);
+    private final BoolSetting activationMessage = boolSetting("activation message", true,
             () -> activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgControl);
-    private final EnumSetting<AlertDisplayMode> alertDisplayMode = enumSetting("alert-display-mode", AlertDisplayMode.Chat,
+    private final EnumSetting<AlertDisplayMode> alertDisplayMode = enumSetting("alert display mode", AlertDisplayMode.Chat,
             () -> activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgControl);
-    private final IntSetting dismountResetDelay = intSetting("dismount-reset-delay", 10, 1, 50, 1,
+    private final IntSetting dismountResetDelay = intSetting("dismount reset delay", 10, 1, 50, 1,
             () -> activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgControl);
-    private final BoolSetting persistentUntilDismount = boolSetting("persistent-until-dismount", true,
+    private final BoolSetting persistentUntilDismount = boolSetting("persistent until dismount", true,
             () -> activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgControl);
-    private final KeybindSetting descendKey = keybindSetting("descend-key", GLFW.GLFW_KEY_LEFT_CONTROL,
+    private final KeybindSetting descendKey = keybindSetting("descend key", GLFW.GLFW_KEY_LEFT_CONTROL,
             () -> controlMode.getValue() == ControlMode.Tradition).group(sgControl);
 
-    // ==================== Speed ====================
+    //Speed
     private final BoolSetting speed = boolSetting("speed", false).group(sgSpeed);
-    private final DoubleSetting horizontalSpeed = doubleSetting("horizontal-speed", 100, 0, 400, 0.1,
+    private final DoubleSetting horizontalSpeed = doubleSetting("horizontal speed", 100, 0, 400, 0.1,
             () -> speed.getValue()).group(sgSpeed);
-    private final BoolSetting onlyOnGround = boolSetting("only-on-ground", false,
+    private final BoolSetting onlyOnGround = boolSetting("only on ground", false,
             () -> speed.getValue()).group(sgSpeed);
-    private final BoolSetting inWater = boolSetting("in-water", true,
+    private final BoolSetting inWater = boolSetting("in water", true,
             () -> speed.getValue()).group(sgSpeed);
 
-    // ==================== Flight ====================
+    //Flight
     private final BoolSetting flight = boolSetting("fly", false).group(sgFlight);
-    private final DoubleSetting verticalSpeed = doubleSetting("vertical-speed", 20, 0, 50, 0.1,
+    private final DoubleSetting verticalSpeed = doubleSetting("vertical speed", 20, 0, 50, 0.1,
             () -> flight.getValue()).group(sgFlight);
-    private final DoubleSetting fallSpeed = doubleSetting("fall-speed", 0, 0, 50, 0.1,
+    private final DoubleSetting fallSpeed = doubleSetting("fall speed", 0, 0, 50, 0.1,
             () -> flight.getValue()).group(sgFlight);
-    private final BoolSetting antiKick = boolSetting("anti-fly-kick", true,
+    private final BoolSetting antiKick = boolSetting("anti fly kick", true,
             () -> flight.getValue()).group(sgFlight);
     private final IntSetting delay = intSetting("delay", 40, 1, 80, 1,
             () -> flight.getValue() && antiKick.getValue()).group(sgFlight);
 
-    // ==================== Misc ====================
-    private final BoolSetting scaleMount = boolSetting("scale-mount", false).group(sgMisc);
-    private final DoubleSetting mountScale = doubleSetting("mount-scale", 0.5, 0.0, 1.0, 0.05,
+    //Misc
+    private final BoolSetting scaleMount = boolSetting("scale mount", false).group(sgMisc);
+    private final DoubleSetting mountScale = doubleSetting("mount scale", 0.5, 0.0, 1.0, 0.05,
             () -> scaleMount.getValue()).group(sgMisc);
-    private final BoolSetting scaleMountWithoutActivation = boolSetting("always-scale-mount", false,
+    private final BoolSetting scaleMountWithoutActivation = boolSetting("always scale mount", false,
             () -> scaleMount.getValue() && activationMode.getValue() == ActivationMode.DoubleTapSpace).group(sgMisc);
 
-    // ==================== AutoPilot ====================
+    //AutoPilot
     private final SettingGroup sgAutoPilot = settingGroup("AutoPilot");
     private final BoolSetting autoPlane = boolSetting("autoplane", false).group(sgAutoPilot);
-    private final IntSetting autoPlaneY = intSetting("autoplane-y", 320, -1000, 4000, 1).group(sgAutoPilot);
-    private final StringSetting destinationX = stringSetting("destination-x", "0").group(sgAutoPilot);
-    private final StringSetting destinationZ = stringSetting("destination-z", "0").group(sgAutoPilot);
-    private final ButtonSetting resetDestBtn = buttonSetting("reset-destination", () -> {
+    private final IntSetting autoPlaneY = intSetting("autoplane y", 320, -1000, 4000, 1).group(sgAutoPilot);
+    private final StringSetting destinationX = stringSetting("destination x", "0").group(sgAutoPilot);
+    private final StringSetting destinationZ = stringSetting("destination z", "0").group(sgAutoPilot);
+    private final ButtonSetting resetDestBtn = buttonSetting("reset destination", () -> {
         destinationX.setValue("0");
         destinationZ.setValue("0");
     }).group(sgAutoPilot);
-    private final ButtonSetting pasteCoordsBtn = buttonSetting("paste-coords", () -> {
+    private final ButtonSetting pasteCoordsBtn = buttonSetting("paste coords", () -> {
         String clip = AutoPilotUtil.getClipboardText();
         if (clip != null && !clip.isEmpty()) {
             double[] coords = AutoPilotUtil.parseCoordinates(clip);
@@ -113,12 +113,12 @@ public class EntityControl extends Module {
             }
         }
     }).group(sgAutoPilot);
-    private final BoolSetting toggleAutoPlane = boolSetting("auto-toggle-autoplane", true).group(sgAutoPilot);
-    private final BoolSetting autoPauseAutoPlane = boolSetting("auto-pause-autoplane", false).group(sgAutoPilot);
-    private final BoolSetting playerDodge = boolSetting("player-dodge", false).group(sgAutoPilot);
+    private final BoolSetting toggleAutoPlane = boolSetting("auto toggle autoplane", true).group(sgAutoPilot);
+    private final BoolSetting autoPauseAutoPlane = boolSetting("auto pause autoplane", false).group(sgAutoPilot);
+    private final BoolSetting playerDodge = boolSetting("player dodge", false).group(sgAutoPilot);
     
 
-    // ==================== State ====================
+    //State
     private int delayLeft;
     private double lastPacketY = Double.MAX_VALUE;
     private boolean sentPacket;
@@ -139,7 +139,7 @@ public class EntityControl extends Module {
     public Vec3 pendingTpTarget;
     public boolean isTeleporting;
 
-    // ==================== Lifecycle ====================
+    //Lifecycle
     @Override
     protected void onEnable() {
         delayLeft = delay.getValue();
@@ -160,7 +160,7 @@ public class EntityControl extends Module {
         customMotion = null;
     }
 
-    // ==================== Public API (for mixins/other modules) ====================
+    //Public API (for mixins/other modules)
     public boolean spoofSaddle() { return isEnabled() && spoofSaddle.getValue(); }
     public boolean maxJump() { return isEnabled() && maxJump.getValue(); }
 
@@ -197,7 +197,7 @@ public class EntityControl extends Module {
         return doubleTapActive;
     }
 
-    // ==================== Events ====================
+    // Events
     @EventHandler
     private void onMove(MoveEvent event) {
         if (nullCheck()) return;
@@ -448,7 +448,7 @@ public class EntityControl extends Module {
         }
     }
 
-    // ==================== Helpers ====================
+    // Helpers
     private boolean shouldFlyDown(double currentY) {
         if (currentY >= lastPacketY) return true;
         return lastPacketY - currentY < 0.03130D;
