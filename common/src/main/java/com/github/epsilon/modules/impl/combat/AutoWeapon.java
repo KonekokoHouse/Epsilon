@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.AttackEntityEvent;
+import com.github.epsilon.events.impl.AttackEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -97,7 +97,7 @@ public class AutoWeapon extends Module {
     }
 
     @EventHandler
-    private void onAttack(AttackEntityEvent event) {
+    private void onAttack(AttackEvent event) {
         if (!canSwapByWeapon()) return;
         performSwap(event.getEntity());
     }

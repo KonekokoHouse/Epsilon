@@ -3,9 +3,9 @@ package com.github.epsilon.modules.impl.combat;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.listeners.ConsumerListener;
-import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.events.impl.RightClickEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -190,7 +190,7 @@ public class AutoHitCrystal extends Module {
     }
 
     @EventHandler
-    private void onClick(ClickEvent event) {
+    private void onClick(RightClickEvent event) {
         if (nullCheck() || !this.active) return;
 
         var mainHandStack = mc.player.getMainHandItem();

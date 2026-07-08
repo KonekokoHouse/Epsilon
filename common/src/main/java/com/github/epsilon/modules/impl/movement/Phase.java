@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.CollisionEvent;
+import com.github.epsilon.events.impl.BlockCollisionEvent;
 import com.github.epsilon.events.impl.DestroyBlockEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
@@ -122,7 +122,7 @@ public class Phase extends Module {
     }
 
     @EventHandler
-    private void onCollide(CollisionEvent event) {
+    private void onCollide(BlockCollisionEvent event) {
         if (nullCheck()) return;
 
         BlockPos playerPos = BlockPos.containing(mc.player.position());

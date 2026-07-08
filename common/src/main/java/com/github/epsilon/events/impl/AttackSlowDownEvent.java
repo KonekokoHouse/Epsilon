@@ -5,8 +5,8 @@ import net.minecraft.world.entity.Entity;
 
 public class AttackSlowDownEvent extends Cancellable {
 
-    private Entity entity;
-    private float knockbackAmount;
+    private final Entity entity;
+    private final float knockbackAmount;
 
     public AttackSlowDownEvent(Entity entity, float knockbackAmount) {
         this.entity = entity;

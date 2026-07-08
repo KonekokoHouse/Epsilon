@@ -1,9 +1,9 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.AttackBlockEvent;
-import com.github.epsilon.events.impl.AttackEntityEvent;
+import com.github.epsilon.events.impl.AttackEvent;
 import com.github.epsilon.events.impl.DestroyBlockEvent;
+import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.events.impl.UseItemEvent;
 import com.github.epsilon.modules.impl.player.BreakCooldown;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -34,7 +34,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void onAttackEntity(Player player, Entity entity, CallbackInfo ci) {
-        AttackEntityEvent event = EventBus.INSTANCE.post(new AttackEntityEvent(player, entity));
+        AttackEvent event = EventBus.INSTANCE.post(new AttackEvent(player, entity));
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -42,7 +42,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void onStartDestroyBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
-        AttackBlockEvent event = EventBus.INSTANCE.post(new AttackBlockEvent(pos, direction));
+        StartDestroyBlockEvent event = EventBus.INSTANCE.post(new StartDestroyBlockEvent(pos, direction));
         if (event.isCancelled()) {
             cir.setReturnValue(false);
         }

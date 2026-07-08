@@ -3,7 +3,7 @@ package com.github.epsilon.modules.impl.movement.elytrafly;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.events.impl.FallFlyingEvent;
-import com.github.epsilon.events.impl.FireworkUpdateEvent;
+import com.github.epsilon.events.impl.FireworkRotationEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.player.FindItemResult;
@@ -134,7 +134,7 @@ public class Pitch40ElytraFlightMode extends ElytraFlightMode {
     }
 
     @Override
-    public void onFireworkUpdate(FireworkUpdateEvent event) {
+    public void onFireworkUpdate(FireworkRotationEvent event) {
         event.setYaw(elytraFly.getPitch40Yaw(mc.player.getYRot()));
         event.setPitch(pitch);
     }

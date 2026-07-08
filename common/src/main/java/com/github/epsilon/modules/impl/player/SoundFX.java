@@ -1,7 +1,7 @@
 package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.AttackEntityEvent;
+import com.github.epsilon.events.impl.AttackEvent;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Category;
@@ -33,7 +33,7 @@ public class SoundFX extends Module {
     private final TimerUtils timer = new TimerUtils();
 
     @EventHandler
-    private void onAttackEntity(AttackEntityEvent event) {
+    private void onAttackEntity(AttackEvent event) {
         if (timer.hasDelayed(delay.getValue())) {
             playHitSound(hitSound.getValue());
             timer.reset();

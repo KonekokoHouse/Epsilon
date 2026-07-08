@@ -1,6 +1,5 @@
 package com.github.epsilon.managers.impl.rotations;
 
-import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
@@ -218,7 +217,6 @@ public abstract class RotationManager {
 
         if (active) {
             smooth();
-            EventBus.INSTANCE.post(new AfterRotationEvent());
             runCallback();
             afterPlayerTick();
         }

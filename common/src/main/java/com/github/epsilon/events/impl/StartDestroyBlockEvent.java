@@ -4,12 +4,12 @@ import com.github.epsilon.events.bus.Cancellable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
-public class AttackBlockEvent extends Cancellable {
+public class StartDestroyBlockEvent extends Cancellable {
 
     private BlockPos blockPos;
     private Direction direction;
 
-    public AttackBlockEvent(BlockPos blockPos, Direction direction) {
+    public StartDestroyBlockEvent(BlockPos blockPos, Direction direction) {
         this.blockPos = blockPos;
         this.direction = direction;
     }

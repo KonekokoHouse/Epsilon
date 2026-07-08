@@ -1,11 +1,11 @@
 package com.github.epsilon.events.impl;
 
-public class FireworkUpdateEvent {
+public class FireworkRotationEvent {
 
     private float yaw;
     private float pitch;
 
-    public FireworkUpdateEvent(float yaw, float pitch) {
+    public FireworkRotationEvent(float yaw, float pitch) {
         this.yaw = yaw;
         this.pitch = pitch;
     }

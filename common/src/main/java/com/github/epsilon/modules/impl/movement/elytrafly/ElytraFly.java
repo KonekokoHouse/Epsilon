@@ -162,7 +162,7 @@ public class ElytraFly extends Module {
     }
 
     @EventHandler
-    private void onFireworkUpdate(FireworkUpdateEvent event) {
+    private void onFireworkRotationUpdate(FireworkRotationEvent event) {
         if (nullCheck()) return;
         getActiveMode().onFireworkUpdate(event);
     }

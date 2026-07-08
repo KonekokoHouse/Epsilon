@@ -76,7 +76,7 @@ public class SilentRotationManager extends RotationManager {
     }
 
     @EventHandler
-    private void onFireworkUpdate(FireworkUpdateEvent event) {
+    private void onFireworkUpdate(FireworkRotationEvent event) {
         if (active && rotations != null) {
             event.setYaw(rotations.getYaw());
             event.setPitch(rotations.getPitch());

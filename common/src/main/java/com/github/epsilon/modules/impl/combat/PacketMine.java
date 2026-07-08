@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.AttackBlockEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -149,7 +149,7 @@ public class PacketMine extends Module {
     }
 
     @EventHandler
-    private void onStartBreakingBlock(AttackBlockEvent event) {
+    private void onStartBreakingBlock(StartDestroyBlockEvent event) {
         if (!canBreak(event.getBlockPos())) return;
         event.setCancelled(true);
         if (!mineTimer.passedMillise(mineDelay.getValue())) return;

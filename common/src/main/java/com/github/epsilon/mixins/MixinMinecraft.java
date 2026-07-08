@@ -2,9 +2,9 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.ClientTickEvent;
 import com.github.epsilon.events.impl.LevelUpdateEvent;
+import com.github.epsilon.events.impl.RightClickEvent;
 import com.github.epsilon.events.impl.StartUseItemEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -54,7 +54,7 @@ public class MixinMinecraft {
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
     private void onHandleKeybinds(CallbackInfo ci) {
-        ClickEvent event = EventBus.INSTANCE.post(new ClickEvent());
+        RightClickEvent event = EventBus.INSTANCE.post(new RightClickEvent());
         if (event.isCancelled()) {
             ci.cancel();
         }
@@ -62,7 +62,8 @@ public class MixinMinecraft {
 
     @Inject(method = "startUseItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/InteractionHand;values()[Lnet/minecraft/world/InteractionHand;"), cancellable = true)
     private void onStartUseItemBeforeHands(CallbackInfo ci) {
-        if (EventBus.INSTANCE.post(new StartUseItemEvent()).isCancelled()) {
+        StartUseItemEvent event = EventBus.INSTANCE.post(new StartUseItemEvent());
+        if (event.isCancelled()) {
             ci.cancel();
         }
     }

@@ -1,8 +1,8 @@
 package com.github.epsilon.modules.impl.combat;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
+import com.github.epsilon.events.impl.RightClickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -182,7 +182,7 @@ public class CrystalAura extends Module {
     }
 
     @EventHandler
-    public void onClick(ClickEvent event) {
+    public void onClick(RightClickEvent event) {
         if (nullCheck()) return;
         if (!mc.mouseHandler.isRightPressed()) return;
         if (!mc.player.getMainHandItem().is(Items.END_CRYSTAL)) return;

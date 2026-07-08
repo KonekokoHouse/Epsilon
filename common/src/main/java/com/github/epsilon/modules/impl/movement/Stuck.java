@@ -1,9 +1,9 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.ClickEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PacketEvent;
+import com.github.epsilon.events.impl.RightClickEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -64,7 +64,7 @@ public class Stuck extends Module {
     }
 
     @EventHandler
-    private void onInteract(ClickEvent event) {
+    private void onInteract(RightClickEvent event) {
         if (mode.is(Mode.NoPacket)) {
             if (mc.player.getYRot() != lastYaw || mc.player.getXRot() != lastPitch) {
                 PacketUtils.sendSilently(new ServerboundMovePlayerPacket.Rot(mc.player.getYRot(), mc.player.getXRot(), mc.player.onGround(), mc.player.horizontalCollision));
