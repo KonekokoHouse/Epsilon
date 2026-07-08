@@ -104,7 +104,6 @@ public class ModuleHolder {
         addModule(SafeWalk.INSTANCE);
         addModule(Scaffold.INSTANCE);
         addModule(Stuck.INSTANCE);
-        addModule(VClip.INSTANCE);
         addModule(Velocity.INSTANCE);
 
         // Render
