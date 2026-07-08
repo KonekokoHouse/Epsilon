@@ -1,10 +1,13 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
+import com.github.epsilon.events.impl.GameJoinedEvent;
+import com.github.epsilon.events.impl.GameLeftEvent;
 import com.github.epsilon.events.impl.RespawnEvent;
 import com.github.epsilon.modules.impl.player.NoRotate;
 import com.github.epsilon.modules.impl.render.SneakTweak;
 import com.llamalad7.mixinextras.sugar.Share;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
@@ -12,9 +15,7 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.CommonListenerCookie;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketUtils;
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
-import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
@@ -31,6 +32,20 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     protected MixinClientPacketListener(Minecraft minecraft, Connection connection, CommonListenerCookie commonListenerCookie) {
         super(minecraft, connection, commonListenerCookie);
+    }
+
+    @Inject(method = "handleLogin", at = @At("TAIL"))
+    private void onHandleLoginTail(ClientboundLoginPacket packet, CallbackInfo ci, @Share("worldNotNull") LocalBooleanRef worldNotNull) {
+        if (worldNotNull.get()) {
+            EventBus.INSTANCE.post(new GameLeftEvent());
+        }
+        EventBus.INSTANCE.post(new GameJoinedEvent());
+    }
+
+    // the server sends a GameJoin packet after the reconfiguration phase
+    @Inject(method = "handleConfigurationStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    private void onHandleConfigurationStart(ClientboundStartConfigurationPacket packet, CallbackInfo ci) {
+        EventBus.INSTANCE.post(new GameLeftEvent());
     }
 
     @Inject(method = "handleRespawn", at = @At("RETURN"))

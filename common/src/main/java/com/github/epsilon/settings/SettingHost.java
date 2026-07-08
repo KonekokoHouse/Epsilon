@@ -77,6 +77,11 @@ public interface SettingHost {
     }
 
     default DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step,
+                                        Consumer<Double> onChanged) {
+        return addSetting(new DoubleSetting(name, defaultValue, min, max, step, () -> true, onChanged));
+    }
+
+    default DoubleSetting doubleSetting(String name, double defaultValue, double min, double max, double step,
                                         Setting.Dependency dependency, Consumer<Double> onChanged) {
         return addSetting(new DoubleSetting(name, defaultValue, min, max, step, dependency, onChanged));
     }

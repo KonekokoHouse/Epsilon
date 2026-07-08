@@ -4,6 +4,10 @@ accessible method net/minecraft/client/Minecraft pick (F)V
 
 accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode destroyProgress F
 
+mutable field net/minecraft/world/phys/Vec3 x D
+mutable field net/minecraft/world/phys/Vec3 y D
+mutable field net/minecraft/world/phys/Vec3 z D
+
 accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
 mutable field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket yRot F
 accessible field net/minecraft/network/protocol/game/ServerboundMovePlayerPacket xRot F
@@ -48,3 +52,5 @@ mutable field net/minecraft/client/player/LocalPlayer wasSprinting Z
 accessible field net/minecraft/client/renderer/LevelRenderer entityOutlineTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
 
 accessible method net/minecraft/world/entity/player/Player canPlayerFitWithinBlocksAndEntitiesWhen (Lnet/minecraft/world/entity/Pose;)Z
+
+accessible field net/minecraft/client/KeyMapping key Lcom/mojang/blaze3d/platform/InputConstants$Key;

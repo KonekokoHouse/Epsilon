@@ -3,21 +3,11 @@ package com.github.epsilon.utils.client;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
+import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
 
 import static com.github.epsilon.Constants.mc;
 
-/**
- * Encoding/formatting helpers for module keybinds stored as a single int.
- * <p>
- * Encoding scheme:
- * <ul>
- *   <li>{@code -1} — unbound (no key)</li>
- *   <li>{@code >= 0} — keyboard GLFW key code (matches {@link InputConstants.Type#KEYSYM})</li>
- *   <li>{@code <= -2} — mouse button, where {@code button = MOUSE_OFFSET - keyBind}
- *       (so {@code -2} = mouse 0 / LMB, {@code -3} = mouse 1 / RMB, ...)</li>
- * </ul>
- */
 public class KeybindUtils {
 
     public static final int NONE = -1;
@@ -38,11 +28,14 @@ public class KeybindUtils {
         return MOUSE_OFFSET - keyBind;
     }
 
-    /**
-     * Tests whether the encoded keybind is currently held down.
-     * Mirrors {@link InputConstants#isKeyDown(Window, int)} for keyboard keys
-     * and uses {@link GLFW#glfwGetMouseButton(long, int)} for mouse buttons.
-     */
+    public static int getKey(KeyMapping keyMapping) {
+        return keyMapping.key.getValue();
+    }
+
+    public static boolean isPressed(KeyMapping keyMapping) {
+        return isPressed(getKey(keyMapping));
+    }
+
     public static boolean isPressed(int keyBind) {
         if (keyBind == NONE) {
             return false;

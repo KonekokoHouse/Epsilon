@@ -116,6 +116,7 @@ public class ModuleHolder {
         addModule(ESP.INSTANCE);
         addModule(ESP2D.INSTANCE);
         addModule(Filter.INSTANCE);
+        addModule(FreeCamera.INSTANCE);
         addModule(Fullbright.INSTANCE);
         addModule(GameAnimation.INSTANCE);
         addModule(HandsView.INSTANCE);

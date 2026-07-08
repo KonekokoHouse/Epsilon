@@ -1,7 +1,9 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.GameAnimation;
 import com.github.epsilon.modules.impl.render.NoRender;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
@@ -22,17 +24,14 @@ public class MixinGui {
         }
     }
 
-    @ModifyArg(
-            method = "extractItemHotbar",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V",
-                    ordinal = 1
-            ),
-            index = 2
-    )
+    @ModifyArg(method = "extractItemHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V", ordinal = 1), index = 2)
     private int modifyHotbarSelectionX(int x) {
         return GameAnimation.INSTANCE.getHotbarSelectionX(x);
+    }
+
+    @ModifyExpressionValue(method = "extractCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/CameraType;isFirstPerson()Z"))
+    private boolean alwaysRenderCrosshairInFreecam(boolean firstPerson) {
+        return FreeCamera.INSTANCE.isEnabled() || firstPerson;
     }
 
 }

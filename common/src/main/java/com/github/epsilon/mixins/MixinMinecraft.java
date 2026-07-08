@@ -2,36 +2,49 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.ClientTickEvent;
-import com.github.epsilon.events.impl.LevelUpdateEvent;
-import com.github.epsilon.events.impl.RightClickEvent;
-import com.github.epsilon.events.impl.StartUseItemEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
+import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.HandsView;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.HitResult;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
-public class MixinMinecraft {
+public abstract class MixinMinecraft {
+
+    @Unique
+    private boolean epsilon$freeCameraSet = false;
 
     @Shadow
     private int rightClickDelay;
+
+    @Shadow
+    public ClientLevel level;
+
+    @Shadow
+    public abstract Entity getCameraEntity();
+
+    @Shadow
+    public abstract void pick(float partialTicks);
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onPreTick(CallbackInfo info) {
@@ -50,6 +63,21 @@ public class MixinMinecraft {
             case Minecraft_1_8_9 -> "Minecraft 1.8.9";
             case Epsilon -> Constants.NAME + " " + Constants.VERSION + " for " + title;
         };
+    }
+
+    @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
+    private void onSetScreen(Screen screen, CallbackInfo ci) {
+        OpenScreenEvent event = EventBus.INSTANCE.post(new OpenScreenEvent(screen));
+        if (event.isCancelled()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
+    private void onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
+        if (level != null) {
+            EventBus.INSTANCE.post(new GameLeftEvent());
+        }
     }
 
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
@@ -107,6 +135,53 @@ public class MixinMinecraft {
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
         LuminRenderSystem.destroyAll();
+    }
+
+    @Inject(method = "pick", at = @At("HEAD"), cancellable = true)
+    private void updateTargetedEntityInvoke(float partialTicks, CallbackInfo ci) {
+        FreeCamera freeCamera = FreeCamera.INSTANCE;
+
+        if (freeCamera.isEnabled() && this.getCameraEntity() != null && !epsilon$freeCameraSet) {
+            ci.cancel();
+            Entity cameraEntity = this.getCameraEntity();
+
+            double x = cameraEntity.getX();
+            double y = cameraEntity.getY();
+            double z = cameraEntity.getZ();
+            double lastX = cameraEntity.xo;
+            double lastY = cameraEntity.yo;
+            double lastZ = cameraEntity.zo;
+            float yaw = cameraEntity.getYRot();
+            float pitch = cameraEntity.getXRot();
+            float lastYaw = cameraEntity.yRotO;
+            float lastPitch = cameraEntity.xRotO;
+
+            cameraEntity.position().x = freeCamera.pos.x;
+            cameraEntity.position().y = freeCamera.pos.y - cameraEntity.getEyeHeight(cameraEntity.getPose());
+            cameraEntity.position().z = freeCamera.pos.z;
+            cameraEntity.xo = freeCamera.prevPos.x;
+            cameraEntity.yo = freeCamera.prevPos.y - cameraEntity.getEyeHeight(cameraEntity.getPose());
+            cameraEntity.zo = freeCamera.prevPos.z;
+            cameraEntity.setYRot(freeCamera.yaw);
+            cameraEntity.setXRot(freeCamera.pitch);
+            cameraEntity.yRotO = freeCamera.lastYaw;
+            cameraEntity.xRotO = freeCamera.lastPitch;
+
+            epsilon$freeCameraSet = true;
+            pick(partialTicks);
+            epsilon$freeCameraSet = false;
+
+            cameraEntity.position().x = x;
+            cameraEntity.position().y = y;
+            cameraEntity.position().z = z;
+            cameraEntity.xo = lastX;
+            cameraEntity.yo = lastY;
+            cameraEntity.zo = lastZ;
+            cameraEntity.setYRot(yaw);
+            cameraEntity.setXRot(pitch);
+            cameraEntity.yRotO = lastYaw;
+            cameraEntity.xRotO = lastPitch;
+        }
     }
 
 }
