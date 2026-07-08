@@ -2,7 +2,9 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
+import com.github.epsilon.modules.impl.movement.EntityControl;
 import com.github.epsilon.modules.impl.movement.Velocity;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
@@ -111,6 +113,25 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
         MoveEvent event = EventBus.INSTANCE.post(new MoveEvent(delta.x, delta.y, delta.z));
         if (event.isCancelled()) {
             super.move(moverType, new Vec3(event.getX(), event.getY(), event.getZ()));
+            ci.cancel();
+        }
+    }
+
+    // EntityControl - max jump riding scale
+    @ModifyReturnValue(method = "getJumpRidingScale", at = @At("RETURN"))
+    private float modifyJumpRidingScale(float original) {
+        EntityControl ec = EntityControl.INSTANCE;
+        if (ec.isEnabled() && ec.maxJump()) {
+            return 1.0F;
+        }
+        return original;
+    }
+
+    // EntityControl - cancel riding jump in flight mode
+    @Inject(method = "sendRidingJump", at = @At("HEAD"), cancellable = true)
+    private void onSendRidingJump(CallbackInfo ci) {
+        EntityControl ec = EntityControl.INSTANCE;
+        if (ec.isEnabled() && ec.cancelJump()) {
             ci.cancel();
         }
     }
