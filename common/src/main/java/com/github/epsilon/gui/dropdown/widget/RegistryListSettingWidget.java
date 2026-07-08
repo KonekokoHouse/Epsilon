@@ -24,4 +24,5 @@ public class RegistryListSettingWidget extends AbstractSetSettingWidget<Registry
     protected void openPopup() {
         DropdownScreen.INSTANCE.openRegistryListSettingPopup(setting);
     }
+
 }

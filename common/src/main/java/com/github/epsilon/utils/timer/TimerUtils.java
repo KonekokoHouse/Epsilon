@@ -15,7 +15,7 @@ public class TimerUtils {
     public long getMs() {
         return System.currentTimeMillis() - startTime;
     }
-    
+
     public void setMs(long ms) {
         startTime = System.currentTimeMillis() - ms;
     }

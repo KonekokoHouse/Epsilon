@@ -17,7 +17,9 @@ public class IMEFocusHelper {
     public static float activeCursorX = 0.0f;
     public static float activeCursorY = 0.0f;
 
-    /** 引用计数：记录当前有多少个文本框正在请求 IME 输入焦点 */
+    /**
+     * 引用计数：记录当前有多少个文本框正在请求 IME 输入焦点
+     */
     private static int refCount = 0;
 
     private IMEFocusHelper() {

@@ -19,7 +19,8 @@ import com.github.epsilon.gui.scene.GuiScene;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.settings.impl.RegistryListSetting;
+import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -130,7 +131,6 @@ public class DropdownScreen extends Screen {
         int backgroundMouseX = popupHovered ? Integer.MIN_VALUE : mouseX;
         int backgroundMouseY = popupHovered ? Integer.MIN_VALUE : mouseY;
 
-        // 找出鼠标位置处最上层的可�?panel，被遮挡�?panel 不响应悬浮�?
         DropdownPanel topmostHovered = null;
         if (!popupHovered) {
             for (int i = panels.size() - 1; i >= 0; i--) {
@@ -351,7 +351,6 @@ public class DropdownScreen extends Screen {
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             return true;
         }
-        // 浠庨《灞傚悜搴曞眰閬嶅巻锛岀‘淇濇渶涓婂�?panel 浼樺厛澶勭悊婊氳疆浜嬩欢
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
@@ -584,8 +583,6 @@ public class DropdownScreen extends Screen {
         );
         popupHost.open(RegistryListSelectPopup.create(bounds, setting));
     }
-
-    // --- List setting popup methods ---
 
     public void openStringListSettingPopup(StringListSetting setting) {
         PanelLayout.Rect bounds = popupHost.getCenteredBounds(

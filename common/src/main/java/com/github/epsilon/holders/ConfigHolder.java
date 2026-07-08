@@ -541,8 +541,14 @@ public class ConfigHolder {
                 for (JsonElement element : value.getAsJsonArray()) {
                     if (element != null && element.isJsonPrimitive()) ids.add(element.getAsString());
                 }
-                if (setting instanceof StringListSetting s) { s.setValue(ids); return; }
-                if (setting instanceof RegistryListSetting<?> s) { s.setIds(ids); return; }
+                if (setting instanceof StringListSetting s) {
+                    s.setValue(ids);
+                    return;
+                }
+                if (setting instanceof RegistryListSetting<?> s) {
+                    s.setIds(ids);
+                    return;
+                }
                 return;
             }
             if (!value.isJsonPrimitive()) return;

@@ -52,7 +52,7 @@ public class PlayerAlarms extends Module {
     private final BoolSetting showGamemodeInChat = boolSetting("Show Gamemode In Chat", false).group(sgGeneral);
 
     private final StringListSetting names = stringListSetting("Names",
-        List.of("ssy_", "e_2", "山水圆")).group(sgGeneral);
+            List.of("ssy_", "e_2", "山水圆")).group(sgGeneral);
 
     // Join Settings
     private final IntSetting joinRings = intSetting("Join Rings", 5, 1, 10, 1).group(sgJoin);
@@ -60,7 +60,7 @@ public class PlayerAlarms extends Module {
     private final DoubleSetting joinVolume = doubleSetting("Join Volume", 1.0, 0.0, 1.0, 0.05).group(sgJoin);
     private final DoubleSetting joinPitch = doubleSetting("Join Pitch", 1.0, 0.5, 2.0, 0.05).group(sgJoin);
     private final RegistryListSetting<SoundEvent> joinSound = soundEventListSetting("Join Sound",
-        List.of(SoundEvents.BELL_BLOCK)).group(sgJoin);
+            List.of(SoundEvents.BELL_BLOCK)).group(sgJoin);
     private final BoolSetting joinChatMessage = boolSetting("Join Chat Message", true).group(sgJoin);
 
     // Leave Settings
@@ -69,7 +69,7 @@ public class PlayerAlarms extends Module {
     private final DoubleSetting leaveVolume = doubleSetting("Leave Volume", 1.0, 0.0, 1.0, 0.05).group(sgLeave);
     private final DoubleSetting leavePitch = doubleSetting("Leave Pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeave);
     private final RegistryListSetting<SoundEvent> leaveSound = soundEventListSetting("Leave Sound",
-        List.of(SoundEvents.ANVIL_LAND)).group(sgLeave);
+            List.of(SoundEvents.ANVIL_LAND)).group(sgLeave);
     private final BoolSetting leaveChatMessage = boolSetting("Leave Chat Message", true).group(sgLeave);
 
     // Enter RD Settings
@@ -78,7 +78,7 @@ public class PlayerAlarms extends Module {
     private final DoubleSetting enterRDVolume = doubleSetting("Enter Render Distance Volume", 1.0, 0.0, 1.0, 0.05).group(sgEnterRD);
     private final DoubleSetting enterRDPitch = doubleSetting("Enter Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).group(sgEnterRD);
     private final RegistryListSetting<SoundEvent> enterRDSound = soundEventListSetting("Enter Render Distance Sound",
-        List.of(SoundEvents.ANVIL_DESTROY)).group(sgEnterRD);
+            List.of(SoundEvents.ANVIL_DESTROY)).group(sgEnterRD);
     private final BoolSetting enterRDChatMessage = boolSetting("Enter Render Distance Chat Message", true).group(sgEnterRD);
 
     // Leave RD Settings
@@ -87,7 +87,7 @@ public class PlayerAlarms extends Module {
     private final DoubleSetting leaveRDVolume = doubleSetting("Leave Render Distance Volume", 1.0, 0.0, 1.0, 0.05).group(sgLeaveRD);
     private final DoubleSetting leaveRDPitch = doubleSetting("Leave Render Distance Pitch", 1.0, 0.5, 2.0, 0.05).group(sgLeaveRD);
     private final RegistryListSetting<SoundEvent> leaveRDSound = soundEventListSetting("Leave Render Distance Sound",
-        List.of(SoundEvents.BELL_BLOCK)).group(sgLeaveRD);
+            List.of(SoundEvents.BELL_BLOCK)).group(sgLeaveRD);
     private final BoolSetting leaveRDChatMessage = boolSetting("Leave Render Distance Chat Message", true).group(sgLeaveRD);
 
     // Gamemode Change Settings
@@ -96,7 +96,7 @@ public class PlayerAlarms extends Module {
     private final DoubleSetting gamemodeVolume = doubleSetting("Gamemode Volume", 1.0, 0.0, 1.0, 0.05).group(sgGamemode);
     private final DoubleSetting gamemodePitch = doubleSetting("Gamemode Pitch", 1.0, 0.5, 2.0, 0.05).group(sgGamemode);
     private final RegistryListSetting<SoundEvent> gamemodeSound = soundEventListSetting("Gamemode Sound",
-        List.of(SoundEvents.ARROW_HIT_PLAYER)).group(sgGamemode);
+            List.of(SoundEvents.ARROW_HIT_PLAYER)).group(sgGamemode);
     private final BoolSetting gamemodeChatMessage = boolSetting("Gamemode Chat Message", true).group(sgGamemode);
 
     private final Set<UUID> playersInRender = new HashSet<>();
@@ -239,9 +239,9 @@ public class PlayerAlarms extends Module {
                             startRing(gamemodeRing, gamemodeRings.getValue(), gamemodeRingDelay.getValue());
                             if (gamemodeChatMessage.getValue()) {
                                 String msg = EpsilonTranslations.PlayerAlarms.GAMEMODE_ALERT_TEXT.getTranslatedName()
-                                    .replace("{name}", playerName)
-                                    .replace("{old_gamemode}", translateGamemode(oldMode))
-                                    .replace("{new_gamemode}", translateGamemode(newMode));
+                                        .replace("{name}", playerName)
+                                        .replace("{old_gamemode}", translateGamemode(oldMode))
+                                        .replace("{new_gamemode}", translateGamemode(newMode));
                                 AlertMode mode = alertMode.getValue();
                                 if (mode == AlertMode.Chat || mode == AlertMode.Both) {
                                     ChatUtils.addChatMessage(Component.literal(msg).withStyle(ChatFormatting.YELLOW));
@@ -367,10 +367,15 @@ public class PlayerAlarms extends Module {
     }
 
     private static String translateGamemode(GameType gameType) {
-        if (gameType == GameType.SURVIVAL) return EpsilonTranslations.PlayerAlarms.GAMEMODE_SURVIVAL.getTranslatedName();
-        if (gameType == GameType.CREATIVE) return EpsilonTranslations.PlayerAlarms.GAMEMODE_CREATIVE.getTranslatedName();
-        if (gameType == GameType.ADVENTURE) return EpsilonTranslations.PlayerAlarms.GAMEMODE_ADVENTURE.getTranslatedName();
-        if (gameType == GameType.SPECTATOR) return EpsilonTranslations.PlayerAlarms.GAMEMODE_SPECTATOR.getTranslatedName();
+        if (gameType == GameType.SURVIVAL)
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_SURVIVAL.getTranslatedName();
+        if (gameType == GameType.CREATIVE)
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_CREATIVE.getTranslatedName();
+        if (gameType == GameType.ADVENTURE)
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_ADVENTURE.getTranslatedName();
+        if (gameType == GameType.SPECTATOR)
+            return EpsilonTranslations.PlayerAlarms.GAMEMODE_SPECTATOR.getTranslatedName();
         return gameType.getName();
     }
+
 }

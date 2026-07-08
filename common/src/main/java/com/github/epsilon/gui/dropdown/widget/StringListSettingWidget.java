@@ -11,11 +11,18 @@ public class StringListSettingWidget extends AbstractSetSettingWidget<StringList
     }
 
     @Override
-    protected int elementCount() { return setting.size(); }
+    protected int elementCount() {
+        return setting.size();
+    }
 
     @Override
-    protected String labelText() { return EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName(); }
+    protected String labelText() {
+        return EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName();
+    }
 
     @Override
-    protected void openPopup() { DropdownScreen.INSTANCE.openStringListSettingPopup(setting); }
+    protected void openPopup() {
+        DropdownScreen.INSTANCE.openStringListSettingPopup(setting);
+    }
+
 }

@@ -34,11 +34,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -174,7 +170,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private static RegistryListSelectPopup<EntityType<?>> entityTypePopup(PanelLayout.Rect bounds,
-                                                                         RegistryListSetting<EntityType<?>> setting) {
+                                                                          RegistryListSetting<EntityType<?>> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
                 entityType -> entityType.getDescription().getString(), RegistryListSelectPopup::entityTypePreviewStack,
                 setting::add, setting::remove);
@@ -284,7 +280,10 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         return builder.toString();
     }
 
-    @Override public PanelLayout.Rect getBounds() { return bounds; }
+    @Override
+    public PanelLayout.Rect getBounds() {
+        return bounds;
+    }
 
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
@@ -370,17 +369,17 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 PanelLayout.Rect localAvailableViewport = availableViewport.relativeTo(animatedBounds);
                 popup.viewport(availableBuffer, localAvailableViewport, guiGraphics.guiHeight(), availableScroll,
                         maxAvailableScroll, availableContentHeight, mouseX, mouseY, content -> {
-                    buildColumn(content, available, availableViewport.x(), availableViewport.y() - availableScroll,
-                            availableViewport.width() - (maxAvailableScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
-                            mouseX, mouseY, true, availableViewport);
-                });
+                            buildColumn(content, available, availableViewport.x(), availableViewport.y() - availableScroll,
+                                    availableViewport.width() - (maxAvailableScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
+                                    mouseX, mouseY, true, availableViewport);
+                        });
                 PanelLayout.Rect localSelectedViewport = selectedViewport.relativeTo(animatedBounds);
                 popup.viewport(selectedBuffer, localSelectedViewport, guiGraphics.guiHeight(), selectedScroll,
                         maxSelectedScroll, selectedContentHeight, mouseX, mouseY, content -> {
-                    buildColumn(content, selected, selectedViewport.x(), selectedViewport.y() - selectedScroll,
-                            selectedViewport.width() - (maxSelectedScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
-                            mouseX, mouseY, false, selectedViewport);
-                });
+                            buildColumn(content, selected, selectedViewport.x(), selectedViewport.y() - selectedScroll,
+                                    selectedViewport.width() - (maxSelectedScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
+                                    mouseX, mouseY, false, selectedViewport);
+                        });
             });
         });
         renderBatch.render(tree);
@@ -442,8 +441,14 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             applyDraggedSelectedScroll(event.y(), selectedViewport);
             return true;
         }
-        if (hoveredAdd != null) { addFn.accept(hoveredAdd); return true; }
-        if (hoveredRemove != null) { removeFn.accept(hoveredRemove); return true; }
+        if (hoveredAdd != null) {
+            addFn.accept(hoveredAdd);
+            return true;
+        }
+        if (hoveredRemove != null) {
+            removeFn.accept(hoveredRemove);
+            return true;
+        }
         return true;
     }
 
@@ -466,10 +471,21 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         return handled;
     }
 
-    @Override public boolean keyPressed(KeyEvent event) {
+    @Override
+    public boolean keyPressed(KeyEvent event) {
         return switch (event.key()) {
-            case GLFW.GLFW_KEY_BACKSPACE -> { if (!query.isEmpty()) { query = query.substring(0, query.length() - 1); resetScroll(); } yield true; }
-            case GLFW.GLFW_KEY_DELETE -> { query = ""; resetScroll(); yield true; }
+            case GLFW.GLFW_KEY_BACKSPACE -> {
+                if (!query.isEmpty()) {
+                    query = query.substring(0, query.length() - 1);
+                    resetScroll();
+                }
+                yield true;
+            }
+            case GLFW.GLFW_KEY_DELETE -> {
+                query = "";
+                resetScroll();
+                yield true;
+            }
             default -> false;
         };
     }
@@ -522,7 +538,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private void buildColumn(PanelUiTree.Scope scope, List<T> entries, float columnX, float startY,
-                              float columnWidth, int mouseX, int mouseY, boolean addColumn, PanelLayout.Rect viewport) {
+                             float columnWidth, int mouseX, int mouseY, boolean addColumn, PanelLayout.Rect viewport) {
         PanelLayout.Rect origin = scope.bound();
         final boolean hasIcons = iconProvider != null;
         for (int i = 0; i < entries.size(); i++) {
@@ -532,7 +548,10 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
             PanelLayout.Rect rowBounds = new PanelLayout.Rect(columnX, rowY, columnWidth, ROW_HEIGHT);
             boolean hovered = rowBounds.contains(mouseX, mouseY) && viewport.contains(mouseX, mouseY);
-            if (hovered) { if (addColumn) hoveredAdd = entry; else hoveredRemove = entry; }
+            if (hovered) {
+                if (addColumn) hoveredAdd = entry;
+                else hoveredRemove = entry;
+            }
 
             float bgHover = addColumn ? (hovered ? 1.0f : 0.0f) : (hovered ? 0.45f : 0.0f);
             String rawName = displayNameFn.apply(entry);
@@ -570,7 +589,11 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private PanelLayout.Rect getSearchBounds(float popupY) {
         return new PanelLayout.Rect(bounds.x() + PADDING, popupY + TITLE_HEIGHT + 10.0f, bounds.width() - PADDING * 2.0f, SEARCH_HEIGHT);
     }
-    private PanelLayout.Rect getViewport() { return getViewport(bounds.y()); }
+
+    private PanelLayout.Rect getViewport() {
+        return getViewport(bounds.y());
+    }
+
     private PanelLayout.Rect getViewport(float popupY) {
         float y = popupY + TITLE_HEIGHT + SEARCH_HEIGHT + HEADER_HEIGHT + 18.0f;
         return new PanelLayout.Rect(bounds.x() + PADDING, y, bounds.width() - PADDING * 2.0f, bounds.bottom() - y - PADDING);
@@ -593,20 +616,32 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private void updateAvailableSmoothScroll(float partialTick) {
-        if (maxAvailableScroll <= 0.0f) { resetAvailableScroll(); return; }
+        if (maxAvailableScroll <= 0.0f) {
+            resetAvailableScroll();
+            return;
+        }
         if (Math.abs(availableScrollVelocity) <= 0.01f || partialTick <= 0.0f) return;
         float nextScroll = Mth.clamp(availableScroll + availableScrollVelocity * partialTick, 0.0f, maxAvailableScroll);
-        if (Float.compare(nextScroll, availableScroll) == 0) { availableScrollVelocity = 0.0f; return; }
+        if (Float.compare(nextScroll, availableScroll) == 0) {
+            availableScrollVelocity = 0.0f;
+            return;
+        }
         availableScroll = nextScroll;
         availableScrollVelocity *= SCROLL_DECAY;
         if (Math.abs(availableScrollVelocity) < MIN_SCROLL_VELOCITY) availableScrollVelocity = 0.0f;
     }
 
     private void updateSelectedSmoothScroll(float partialTick) {
-        if (maxSelectedScroll <= 0.0f) { resetSelectedScroll(); return; }
+        if (maxSelectedScroll <= 0.0f) {
+            resetSelectedScroll();
+            return;
+        }
         if (Math.abs(selectedScrollVelocity) <= 0.01f || partialTick <= 0.0f) return;
         float nextScroll = Mth.clamp(selectedScroll + selectedScrollVelocity * partialTick, 0.0f, maxSelectedScroll);
-        if (Float.compare(nextScroll, selectedScroll) == 0) { selectedScrollVelocity = 0.0f; return; }
+        if (Float.compare(nextScroll, selectedScroll) == 0) {
+            selectedScrollVelocity = 0.0f;
+            return;
+        }
         selectedScroll = nextScroll;
         selectedScrollVelocity *= SCROLL_DECAY;
         if (Math.abs(selectedScrollVelocity) < MIN_SCROLL_VELOCITY) selectedScrollVelocity = 0.0f;
@@ -642,11 +677,13 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             selectedScrollVelocity = 0.0f;
         }
     }
+
     private String trim(String value, float scale, float maxWidth) {
         if (value == null || value.isEmpty()) return "";
         int maxChars = Math.max(3, (int) (maxWidth / (5.0f * scale)));
         return value.length() <= maxChars ? value : value.substring(0, Math.max(0, maxChars - 3)) + "...";
     }
+
     private float centeredTextY(float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f;
     }
@@ -688,6 +725,9 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         itemPreviews.clear();
     }
 
-    private record ItemPreview(ItemStack stack, float x, float y, float size) {}
-    public record Category<T>(String name, Predicate<T> predicate) {}
+    private record ItemPreview(ItemStack stack, float x, float y, float size) {
+    }
+
+    public record Category<T>(String name, Predicate<T> predicate) {
+    }
 }

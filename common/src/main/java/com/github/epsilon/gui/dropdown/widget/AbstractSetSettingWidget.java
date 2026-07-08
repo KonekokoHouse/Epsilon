@@ -26,13 +26,19 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         super(setting);
     }
 
-    /** 集合当前元素数量 */
+    /**
+     * 集合当前元素数量
+     */
     protected abstract int elementCount();
 
-    /** 按钮标签翻译组件（如 "3 items" 中的 "items"） */
+    /**
+     * 按钮标签翻译组件（如 "3 items" 中的 "items"）
+     */
     protected abstract String labelText();
 
-    /** 点击按钮时执行的弹窗打开动作 */
+    /**
+     * 点击按钮时执行的弹窗打开动作
+     */
     protected abstract void openPopup();
 
     @Override
@@ -75,15 +81,27 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         return true;
     }
 
-    /** hit-test 使用绝对坐标 */
+    /**
+     * hit-test 使用绝对坐标
+     */
     protected boolean isFieldHovered(double mouseX, double mouseY) {
         return isHovered(mouseX, mouseY, getFieldX(), getFieldY(), getFieldWidth(), FIELD_HEIGHT);
     }
 
-    /** hit-test uses absolute coordinates. */
-    protected float getFieldX() { return absoluteX(DropdownTheme.SETTING_PADDING_X); }
-    protected float getFieldY() { return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f); }
-    protected float getFieldWidth() { return width - DropdownTheme.SETTING_PADDING_X * 2.0f; }
+    /**
+     * hit-test uses absolute coordinates.
+     */
+    protected float getFieldX() {
+        return absoluteX(DropdownTheme.SETTING_PADDING_X);
+    }
+
+    protected float getFieldY() {
+        return absoluteY(DropdownTheme.SETTING_HEIGHT - 1.0f);
+    }
+
+    protected float getFieldWidth() {
+        return width - DropdownTheme.SETTING_PADDING_X * 2.0f;
+    }
 
     private float centeredTextY(DropdownDrawContext renderer, float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - renderer.textHeight(scale)) * 0.5f;
