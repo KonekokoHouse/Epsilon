@@ -157,7 +157,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         String current = getDisplayBuffer();
         int selectionLength = hasSelection() ? getSelectionEnd() - getSelectionStart() : 0;
         if (current.length() - selectionLength >= MAX_LENGTH) {
-            return false;
+            return true;
         }
         replaceSelection(value);
         return true;
@@ -229,40 +229,18 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         int start = 0;
         int end = safeValue.length();
         TextRenderer metrics = textMetrics();
-
-        if (metrics.getWidth(safeValue, FIELD_SCALE) <= availableWidth) {
-            return new DisplaySlice(safeValue, fieldBounds.x() + horizontalInset, safeCursor, 0, safeValue.length());
-        }
-
-        int low = 0;
-        int high = safeCursor;
-        int bestStart = safeCursor;
-        while (low <= high) {
-            int mid = (low + high) / 2;
-            String beforeCaret = safeValue.substring(mid, safeCursor);
-            if (metrics.getWidth(beforeCaret, FIELD_SCALE) <= availableWidth - 2.0f) {
-                bestStart = mid;
-                high = mid - 1;
-            } else {
-                low = mid + 1;
+        while (start < safeCursor) {
+            String candidate = safeValue.substring(start, end);
+            float width = metrics.getWidth(candidate, FIELD_SCALE);
+            float caretWidth = metrics.getWidth(safeValue.substring(start, safeCursor), FIELD_SCALE);
+            if (width <= availableWidth && caretWidth <= availableWidth - 2.0f) {
+                break;
             }
+            start++;
         }
-        start = bestStart;
-
-        low = safeCursor;
-        high = safeValue.length();
-        int bestEnd = safeCursor;
-        while (low <= high) {
-            int mid = (low + high) / 2;
-            String candidate = safeValue.substring(start, mid);
-            if (metrics.getWidth(candidate, FIELD_SCALE) <= availableWidth) {
-                bestEnd = mid;
-                low = mid + 1;
-            } else {
-                high = mid - 1;
-            }
+        while (end > safeCursor && metrics.getWidth(safeValue.substring(start, end), FIELD_SCALE) > availableWidth) {
+            end--;
         }
-        end = bestEnd;
         String shown = safeValue.substring(start, end);
         return new DisplaySlice(shown, fieldBounds.x() + horizontalInset, safeCursor - start, start, end);
     }
@@ -277,18 +255,15 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         if (ellipsisWidth >= availableWidth) {
             return "";
         }
-        int low = 0;
-        int high = value.length();
-        while (low < high) {
-            int mid = (low + high + 1) / 2;
-            String candidate = value.substring(0, mid) + ellipsis;
+        int length = value.length();
+        while (length > 0) {
+            String candidate = value.substring(0, length) + ellipsis;
             if (metrics.getWidth(candidate, FIELD_SCALE) <= availableWidth) {
-                low = mid;
-            } else {
-                high = mid - 1;
+                return candidate;
             }
+            length--;
         }
-        return value.substring(0, low) + ellipsis;
+        return ellipsis;
     }
 
     private String normalize(String value) {

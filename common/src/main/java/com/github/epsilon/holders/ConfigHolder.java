@@ -39,7 +39,6 @@ public class ConfigHolder {
     private static final String ROOT_SETTINGS_FILE_NAME = "client-settings.json";
     private static final String EXPORT_METADATA_FILE_NAME = "config-info.json";
     private static final Pattern INVALID_CONFIG_NAME_PATTERN = Pattern.compile("[\\\\/:*?\"<>|\\p{Cntrl}]");
-    private static final long SAVE_DEBOUNCE_MS = 500L;
 
     private static final Path configDir = Paths.get(System.getProperty("user.home"), ".epsilon");
     private static final Path configsDir = configDir.resolve(CONFIGS_FOLDER);
@@ -59,8 +58,6 @@ public class ConfigHolder {
     private List<String> cachedConfigNames = List.of();
     private long configListCacheExpiresAt;
     private boolean configListCacheDirty = true;
-    private boolean pendingSave;
-    private long pendingSaveAt;
 
     private ConfigHolder() {
     }
@@ -132,26 +129,8 @@ public class ConfigHolder {
     public synchronized void saveNow() {
         try {
             saveActiveConfigSnapshot();
-            pendingSave = false;
         } catch (Exception e) {
             Constants.LOGGER.error("保存配置失败", e);
-        }
-    }
-
-    public synchronized void requestSave() {
-        pendingSave = true;
-        pendingSaveAt = System.currentTimeMillis() + SAVE_DEBOUNCE_MS;
-    }
-
-    public synchronized void savePendingIfDue() {
-        if (pendingSave && System.currentTimeMillis() >= pendingSaveAt) {
-            saveNow();
-        }
-    }
-
-    public synchronized void flushPendingSave() {
-        if (pendingSave) {
-            saveNow();
         }
     }
 
@@ -725,7 +704,6 @@ public class ConfigHolder {
         saveAddonsToDisk(AddonHolder.INSTANCE.getAddons(), configStorageDir);
         saveFriends(configStorageDir);
         saveRootClientSettings();
-        pendingSave = false;
     }
 
     private void loadRootClientSettings() {
