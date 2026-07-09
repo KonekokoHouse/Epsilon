@@ -26,15 +26,14 @@ public class AutoPilotUtil {
      *
      * @param destinationX destination X coordinate string (parsed as double)
      * @param destinationZ destination Z coordinate string (parsed as double)
-     * @param autoPlaneY    minimum Y level to engage autopilot
-     * @param autoPlane     whether autopilot is enabled
+     * @param cruiseHeight  minimum Y level to engage autopilot
      * @param playerDodge   whether to dodge nearby non-friend players
      * @return yaw angle in degrees, or -999.F if inactive
      */
-    public static float calcAutoMoveYaw(String destinationX, String destinationZ, int autoPlaneY,
-                                         boolean autoPlane, boolean playerDodge) {
+    public static float calcAutoMoveYaw(String destinationX, String destinationZ, int cruiseHeight,
+                                         boolean playerDodge) {
         float yaw = -999.0F;
-        if (autoPlane && mc.player.getY() > autoPlaneY && !isMoveBindPress() && !mc.options.keyJump.isDown()) {
+        if (mc.player.getY() > cruiseHeight && !isMoveBindPress() && !mc.options.keyJump.isDown()) {
             Double x = null;
             Double z = null;
             try {
@@ -47,7 +46,6 @@ public class AutoPilotUtil {
                 yaw = getLegitRotations(destination)[0];
             }
         }
-        if (!autoPlane) return -999.0F;
         if (playerDodge && yaw == -999.0F && !isMoveBindPress() && !mc.options.keyJump.isDown()) {
             List<AbstractClientPlayer> players = mc.level.players().stream()
                     .filter(p -> mc.player.distanceTo(p) <= 16.0F && !mc.player.equals(p))
