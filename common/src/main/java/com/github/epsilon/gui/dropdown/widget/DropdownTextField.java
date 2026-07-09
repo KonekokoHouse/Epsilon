@@ -151,14 +151,12 @@ public class DropdownTextField {
 
     public boolean charTyped(CharacterEvent event) {
         if (!focused) return false;
-        insertText(event.codepointAsString());
-        return true;
+        return insertText(event.codepointAsString());
     }
 
     public boolean charTyped(String typedText) {
         if (!focused) return false;
-        insertText(typedText);
-        return true;
+        return insertText(typedText);
     }
 
     public boolean isFocused() {
@@ -183,19 +181,21 @@ public class DropdownTextField {
         cursor = text.length();
     }
 
-    private void insertText(String inserted) {
-        if (inserted == null || inserted.isEmpty()) return;
+    private boolean insertText(String inserted) {
+        if (inserted == null || inserted.isEmpty()) return false;
         StringBuilder accepted = new StringBuilder();
         inserted.codePoints().forEach(codePoint -> {
             String candidate = new String(Character.toChars(codePoint));
             if (inputFilter.test(candidate)) accepted.append(candidate);
         });
-        if (accepted.isEmpty()) return;
+        if (accepted.isEmpty()) return false;
         int available = maxLength - text.length();
-        if (available <= 0) return;
+        if (available <= 0) return false;
         String safe = accepted.length() > available ? accepted.substring(0, available) : accepted.toString();
+        if (safe.isEmpty()) return false;
         text = text.substring(0, cursor) + safe + text.substring(cursor);
         cursor += safe.length();
+        return true;
     }
 
     private boolean handleControlShortcut(int keyCode) {
@@ -204,10 +204,7 @@ public class DropdownTextField {
                 cursor = text.length();
                 yield true;
             }
-            case GLFW.GLFW_KEY_V -> {
-                insertText(mc.keyboardHandler.getClipboard());
-                yield true;
-            }
+            case GLFW.GLFW_KEY_V -> insertText(mc.keyboardHandler.getClipboard());
             default -> false;
         };
     }
@@ -229,10 +226,11 @@ public class DropdownTextField {
         if (cursorMidpoints.length != text.length()) {
             cursorMidpoints = new float[text.length()];
         }
+        float left = 0.0f;
         for (int i = 0; i < text.length(); i++) {
-            float left = renderer.textWidth(text.substring(0, i), textScale);
             float right = renderer.textWidth(text.substring(0, i + 1), textScale);
             cursorMidpoints[i] = textX + (left + right) * 0.5f;
+            left = right;
         }
     }
 
@@ -257,11 +255,18 @@ public class DropdownTextField {
         String ellipsis = "...";
         float ellipsisWidth = renderer.textWidth(ellipsis, scale);
         if (ellipsisWidth >= maxWidth) return ellipsis;
-        for (int len = value.length() - 1; len >= 0; len--) {
-            String candidate = value.substring(0, len) + ellipsis;
-            if (renderer.textWidth(candidate, scale) <= maxWidth) return candidate;
+        int low = 0;
+        int high = value.length();
+        while (low < high) {
+            int mid = (low + high + 1) / 2;
+            String candidate = value.substring(0, mid) + ellipsis;
+            if (renderer.textWidth(candidate, scale) <= maxWidth) {
+                low = mid;
+            } else {
+                high = mid - 1;
+            }
         }
-        return ellipsis;
+        return value.substring(0, low) + ellipsis;
     }
 
 }

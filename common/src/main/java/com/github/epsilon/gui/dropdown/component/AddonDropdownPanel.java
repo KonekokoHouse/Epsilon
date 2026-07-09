@@ -143,7 +143,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.keyPressed(keyCode, scanCode, modifiers)) {
-                ConfigHolder.INSTANCE.saveNow();
+                ConfigHolder.INSTANCE.requestSave();
                 return true;
             }
         }
@@ -155,7 +155,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.charTyped(typedText)) {
-                ConfigHolder.INSTANCE.saveNow();
+                ConfigHolder.INSTANCE.requestSave();
                 return true;
             }
         }

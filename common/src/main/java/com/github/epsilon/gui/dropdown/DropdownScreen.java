@@ -88,6 +88,7 @@ public class DropdownScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        ConfigHolder.INSTANCE.savePendingIfDue();
         final var window = minecraft.getWindow();
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("dropdown-gui", window.getWidth(), window.getHeight());
@@ -429,6 +430,7 @@ public class DropdownScreen extends Screen {
     public void onClose() {
         IMEFocusHelper.forceDeactivate();
         DropdownLayoutState.save(panels);
+        ConfigHolder.INSTANCE.flushPendingSave();
         super.onClose();
     }
 
@@ -444,6 +446,7 @@ public class DropdownScreen extends Screen {
         popupHost.close();
         searchField.blur();
         IMEFocusHelper.forceDeactivate();
+        ConfigHolder.INSTANCE.flushPendingSave();
         preeditOverlay = null;
     }
 
