@@ -54,14 +54,15 @@ public class BetterDeathScreen extends Module {
             return;
         }
 
-        // 按 T 或 / 打开聊天栏
+        // 按聊天或命令键打开聊天栏
         if ((mc.screen instanceof DeathScreen || freecamActive) && !(mc.screen instanceof ChatScreen)) {
-            if (event.getKey() == GLFW.GLFW_KEY_T) {
+            if (mc.options.keyChat.matches(event.getKeyEvent())) {
                 pendingChat = true;
                 chatPrefix = "";
                 event.setCancelled(true);
-            } else if (event.getKey() == GLFW.GLFW_KEY_SLASH) {
+            } else if (mc.options.keyCommand.matches(event.getKeyEvent())) {
                 mc.setScreen(new ChatScreen("", false));
+                event.setCancelled(true);
             }
         }
     }

@@ -66,8 +66,6 @@ public class MixinCamera {
     private void onAlignWithEntityTail(float partialTicks, CallbackInfo ci) {
         FreeCamera freeCamera = FreeCamera.INSTANCE;
         if (freeCamera.isEnabled()) {
-            // 兜底：直接用方法参数设置旋转/位置，避免依赖 @ModifyArgs 的局部变量捕获
-            // （某些构建会剥离局部变量表，导致 onAlignSetRotationArgs / onAlignSetPosArgs 被跳过）
             this.detached = true;
             this.setRotation((float) freeCamera.getYaw(partialTicks), (float) freeCamera.getPitch(partialTicks));
             this.setPosition(freeCamera.getX(partialTicks), freeCamera.getY(partialTicks), freeCamera.getZ(partialTicks));
