@@ -45,15 +45,13 @@ public class FreeCamera extends Module {
     private CameraType perspective;
     private double speedValue;
 
-    public float yaw, pitch;
-    public float lastYaw, lastPitch;
+    private final Rot2f rotation = new Rot2f(0f, 0f);
+    private final Rot2f lastRotation = new Rot2f(0f, 0f);
 
     private double fovScale;
     private boolean bobView;
 
     private boolean forward, backward, right, left, up, down, isSneaking;
-
-    private Rot2f rotation;
 
     @Override
     protected void onEnable() {
@@ -63,8 +61,7 @@ public class FreeCamera extends Module {
             mc.options.fovEffectScale().set((double) 0);
             mc.options.bobView().set(false);
         }
-        yaw = mc.player.getYRot();
-        pitch = mc.player.getXRot();
+        rotation.set(mc.player.getYRot(), mc.player.getXRot());
 
         perspective = mc.options.getCameraType();
         speedValue = speed.getValue();
@@ -74,12 +71,11 @@ public class FreeCamera extends Module {
         prevPos.set(pos);
 
         if (mc.options.getCameraType() == CameraType.THIRD_PERSON_FRONT) {
-            yaw += 180;
-            pitch *= -1;
+            rotation.setYaw(rotation.getYaw() + 180);
+            rotation.setPitch(rotation.getPitch() * -1);
         }
 
-        lastYaw = yaw;
-        lastPitch = pitch;
+        lastRotation.set(rotation);
 
         isSneaking = mc.options.keyShift.isDown();
 
@@ -118,8 +114,7 @@ public class FreeCamera extends Module {
         unpress();
 
         prevPos.set(pos);
-        lastYaw = yaw;
-        lastPitch = pitch;
+        lastRotation.set(rotation);
     }
 
     private void unpress() {
@@ -138,8 +133,8 @@ public class FreeCamera extends Module {
         if (mc.getCameraEntity().isInWall()) mc.getCameraEntity().noPhysics = true;
         if (!perspective.isFirstPerson()) mc.options.setCameraType(CameraType.FIRST_PERSON);
 
-        Vec3 forward = Vec3.directionFromRotation(0, yaw);
-        Vec3 right = Vec3.directionFromRotation(0, yaw + 90);
+        Vec3 forward = Vec3.directionFromRotation(0, rotation.getYaw());
+        Vec3 right = Vec3.directionFromRotation(0, rotation.getYaw() + 90);
         double velX = 0;
         double velY = 0;
         double velZ = 0;
@@ -293,13 +288,9 @@ public class FreeCamera extends Module {
     }
 
     public void changeLookDirection(double deltaX, double deltaY) {
-        lastYaw = yaw;
-        lastPitch = pitch;
-
-        yaw += (float) deltaX;
-        pitch += (float) deltaY;
-
-        pitch = Mth.clamp(pitch, -90, 90);
+        lastRotation.set(rotation);
+        rotation.setYaw(rotation.getYaw() + (float) deltaX);
+        rotation.setPitch(Mth.clamp(rotation.getPitch() + (float) deltaY, -90, 90));
     }
 
     public void sendChatInfo(String text) {
@@ -323,11 +314,19 @@ public class FreeCamera extends Module {
     }
 
     public double getYaw(float tickDelta) {
-        return Mth.lerp(tickDelta, lastYaw, yaw);
+        return Mth.lerp(tickDelta, lastRotation.getYaw(), rotation.getYaw());
     }
 
     public double getPitch(float tickDelta) {
-        return Mth.lerp(tickDelta, lastPitch, pitch);
+        return Mth.lerp(tickDelta, lastRotation.getPitch(), rotation.getPitch());
+    }
+
+    public Rot2f getRotation() {
+        return rotation;
+    }
+
+    public Rot2f getLastRotation() {
+        return lastRotation;
     }
 
 }

@@ -29,6 +29,14 @@ public class MixinCamera {
     private boolean detached;
 
     @Shadow
+    protected void setRotation(float yRot, float xRot) {
+    }
+
+    @Shadow
+    protected void setPosition(double x, double y, double z) {
+    }
+
+    @Shadow
     private float eyeHeight;
 
     @Shadow
@@ -56,8 +64,11 @@ public class MixinCamera {
 
     @Inject(method = "alignWithEntity", at = @At("TAIL"))
     private void onAlignWithEntityTail(float partialTicks, CallbackInfo ci) {
-        if (FreeCamera.INSTANCE.isEnabled()) {
+        FreeCamera freeCamera = FreeCamera.INSTANCE;
+        if (freeCamera.isEnabled()) {
             this.detached = true;
+            this.setRotation((float) freeCamera.getYaw(partialTicks), (float) freeCamera.getPitch(partialTicks));
+            this.setPosition(freeCamera.getX(partialTicks), freeCamera.getY(partialTicks), freeCamera.getZ(partialTicks));
         }
     }
 

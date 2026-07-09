@@ -162,10 +162,10 @@ public abstract class MixinMinecraft {
             cameraEntity.xo = freeCamera.prevPos.x;
             cameraEntity.yo = freeCamera.prevPos.y - cameraEntity.getEyeHeight(cameraEntity.getPose());
             cameraEntity.zo = freeCamera.prevPos.z;
-            cameraEntity.setYRot(freeCamera.yaw);
-            cameraEntity.setXRot(freeCamera.pitch);
-            cameraEntity.yRotO = freeCamera.lastYaw;
-            cameraEntity.xRotO = freeCamera.lastPitch;
+            cameraEntity.setYRot(freeCamera.getRotation().getYaw());
+            cameraEntity.setXRot(freeCamera.getRotation().getPitch());
+            cameraEntity.yRotO = freeCamera.getLastRotation().getYaw();
+            cameraEntity.xRotO = freeCamera.getLastRotation().getPitch();
 
             epsilon$freeCameraSet = true;
             pick(partialTicks);
