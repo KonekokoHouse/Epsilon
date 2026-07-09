@@ -7,6 +7,7 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ButtonSetting;
+import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.settings.impl.StringSetting;
 import com.github.epsilon.utils.movement.AutoPilotUtil;
@@ -20,6 +21,9 @@ public class AutoPilot extends Module {
         super("AutoPilot", Category.MOVEMENT);
     }
 
+    private enum Mode { Simple }
+
+    private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Simple);
     private final IntSetting cruiseHeight = intSetting("Cruise Height", 320, -1000, 4000, 1);
     private final StringSetting destinationX = stringSetting("Destination X", "0");
     private final StringSetting destinationZ = stringSetting("Destination Z", "0");
@@ -48,6 +52,12 @@ public class AutoPilot extends Module {
         EntityControl entityControl = EntityControl.INSTANCE;
         if (!entityControl.canControl(event.entity)) return;
 
+        switch (mode.getValue()) {
+            case Simple -> runSimpleMode(event, entityControl);
+        }
+    }
+
+    private void runSimpleMode(EntityMoveEvent event, EntityControl entityControl) {
         float autoYaw = AutoPilotUtil.calcAutoMoveYaw(
                 destinationX.getValue(), destinationZ.getValue(),
                 cruiseHeight.getValue(), playerDodge.getValue());
