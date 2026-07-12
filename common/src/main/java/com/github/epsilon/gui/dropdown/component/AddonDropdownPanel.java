@@ -118,7 +118,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.mouseClicked(mouseX, mouseY, button)) {
-                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
             currentY += widget.getHeight() + DropdownTheme.SETTING_GAP;
@@ -131,7 +130,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.mouseReleased(mouseX, mouseY, button)) {
-                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
         }
@@ -143,7 +141,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.keyPressed(keyCode, scanCode, modifiers)) {
-                ConfigHolder.INSTANCE.requestSave();
                 return true;
             }
         }
@@ -155,7 +152,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.charTyped(typedText)) {
-                ConfigHolder.INSTANCE.requestSave();
+                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
         }

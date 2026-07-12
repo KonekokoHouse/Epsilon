@@ -159,14 +159,12 @@ public class SettingsContent {
                 if (isHovered(mouseX, mouseY, headerX, currentY, headerW, DropdownTheme.GROUP_HEADER_HEIGHT)) {
                     section.toggleCollapsed();
                     Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
-                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
                 if (!section.isCollapsed()) {
                     for (SettingWidget<?> widget : section.widgets()) {
                         if (!widget.isVisible()) continue;
                         if (widget.mouseClicked(mouseX, mouseY, button)) {
-                            ConfigHolder.INSTANCE.saveNow();
                             return true;
                         }
                     }
@@ -175,7 +173,6 @@ public class SettingsContent {
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
                     if (widget.mouseClicked(mouseX, mouseY, button)) {
-                        ConfigHolder.INSTANCE.saveNow();
                         return true;
                     }
                 }
@@ -207,7 +204,6 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.mouseReleased(mouseX, mouseY, button)) {
-                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }
@@ -220,7 +216,6 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.keyPressed(keyCode, scanCode, modifiers)) {
-                    ConfigHolder.INSTANCE.requestSave();
                     return true;
                 }
             }
@@ -233,7 +228,7 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.charTyped(typedText)) {
-                    ConfigHolder.INSTANCE.requestSave();
+                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }
