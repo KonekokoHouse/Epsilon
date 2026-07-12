@@ -275,7 +275,6 @@ public class DropdownScreen extends Screen {
         int button = epsilonEvent.button();
 
         if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
-            ConfigHolder.INSTANCE.saveNow();
             return true;
         }
 
@@ -308,7 +307,6 @@ public class DropdownScreen extends Screen {
         int button = epsilonEvent.button();
 
         if (popupHost.mouseReleased(epsilonEvent)) {
-            ConfigHolder.INSTANCE.saveNow();
             return true;
         }
 

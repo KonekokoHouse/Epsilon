@@ -204,7 +204,6 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.mouseReleased(mouseX, mouseY, button)) {
-                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }
@@ -217,7 +216,6 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.keyPressed(keyCode, scanCode, modifiers)) {
-                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }
