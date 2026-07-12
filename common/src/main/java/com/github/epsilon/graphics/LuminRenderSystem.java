@@ -2,7 +2,6 @@ package com.github.epsilon.graphics;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-<<<<<<< HEAD
 import com.github.epsilon.graphics.vulkan.LuminVulkanContext;
 import com.github.epsilon.holders.RenderTargetHolder;
 import com.github.epsilon.holders.RendererHolder;

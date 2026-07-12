@@ -34,6 +34,7 @@
     "MixinGlDebug",
     "MixinGlyphRenderState",
     "MixinGui",
+    "MixinGuiManager",
     "MixinGuiRenderer",
     "MixinHumanoidMobRenderer",
     "MixinItem",

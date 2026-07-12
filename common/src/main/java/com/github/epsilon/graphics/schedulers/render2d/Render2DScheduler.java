@@ -16,7 +16,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-<<<<<<< HEAD
 import java.util.Optional;
 import java.util.OptionalDouble;
 

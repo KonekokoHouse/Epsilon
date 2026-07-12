@@ -47,7 +47,7 @@ public class BetterDeathScreen extends Module {
 
         // 可配置键位切换 freecam
         if (event.getKey() == freecamKey.getValue()) {
-            if ((mc.screen instanceof DeathScreen || freecamActive) && !(mc.screen instanceof ChatScreen)) {
+            if ((mc.gui.screen() instanceof DeathScreen || freecamActive) && !(mc.gui.screen() instanceof ChatScreen)) {
                 toggleFreecam();
                 event.setCancelled(true);
             }
@@ -55,13 +55,13 @@ public class BetterDeathScreen extends Module {
         }
 
         // 按聊天或命令键打开聊天栏
-        if ((mc.screen instanceof DeathScreen || freecamActive) && !(mc.screen instanceof ChatScreen)) {
+        if ((mc.gui.screen() instanceof DeathScreen || freecamActive) && !(mc.gui.screen() instanceof ChatScreen)) {
             if (mc.options.keyChat.matches(event.getKeyEvent())) {
                 pendingChat = true;
                 chatPrefix = "";
                 event.setCancelled(true);
             } else if (mc.options.keyCommand.matches(event.getKeyEvent())) {
-                mc.setScreen(new ChatScreen("", false));
+                mc.gui.setScreen(new ChatScreen("", false));
                 event.setCancelled(true);
             }
         }
@@ -86,10 +86,10 @@ public class BetterDeathScreen extends Module {
         if (freeCamera.isEnabled()) return;
 
         // 保存死亡界面，然后清空屏幕
-        if (mc.screen instanceof DeathScreen) {
-            savedDeathScreen = (DeathScreen) mc.screen;
+        if (mc.gui.screen() instanceof DeathScreen) {
+            savedDeathScreen = (DeathScreen) mc.gui.screen();
         }
-        mc.setScreen(null);
+        mc.gui.setScreen(null);
 
         // 强制锁定鼠标并隐藏指针
         hideCursor();
@@ -121,7 +121,7 @@ public class BetterDeathScreen extends Module {
 
         // 恢复死亡界面
         if (savedDeathScreen != null && mc.player != null && mc.player.isDeadOrDying()) {
-            mc.setScreen(savedDeathScreen);
+            mc.gui.setScreen(savedDeathScreen);
             savedDeathScreen = null;
         }
 
@@ -132,13 +132,13 @@ public class BetterDeathScreen extends Module {
     private void onRender(Render2DEvent.HUD event) {
         if (!freecamActive || !mouseInitialized) return;
         // 动态切换鼠标显示状态
-        if (mc.screen instanceof ChatScreen) {
+        if (mc.gui.screen() instanceof ChatScreen) {
             showCursor();
         } else {
             hideCursor();
         }
         // 打开聊天栏时不转动视角
-        if (mc.screen instanceof ChatScreen) return;
+        if (mc.gui.screen() instanceof ChatScreen) return;
         FreeCamera freeCamera = FreeCamera.INSTANCE;
         if (!freeCamera.isEnabled()) return;
 
@@ -164,13 +164,13 @@ public class BetterDeathScreen extends Module {
         if (pendingChat) {
             pendingChat = false;
             if (mc.player.isDeadOrDying()) {
-                mc.setScreen(new ChatScreen(chatPrefix, false));
+                mc.gui.setScreen(new ChatScreen(chatPrefix, false));
             }
         }
         if (!freecamActive) return;
         if (!mc.player.isDeadOrDying()) {
             exitFreecam();
-            if (mc.screen instanceof DeathScreen) mc.setScreen(null);
+            if (mc.gui.screen() instanceof DeathScreen) mc.gui.setScreen(null);
         }
     }
 

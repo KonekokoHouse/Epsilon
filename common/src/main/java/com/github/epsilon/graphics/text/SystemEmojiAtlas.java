@@ -1,6 +1,7 @@
 package com.github.epsilon.graphics.text;
 
 import com.github.epsilon.graphics.LuminTexture;
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.*;
@@ -140,7 +141,7 @@ public final class SystemEmojiAtlas implements AutoCloseable {
                 GpuTexture gpuTexture = device.createTexture(
                         "epsilon/system_emoji_atlas",
                         GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING,
-                        TextureFormat.RGBA8,
+                        GpuFormat.RGBA8_UNORM,
                         ATLAS_SIZE,
                         ATLAS_SIZE,
                         1,
