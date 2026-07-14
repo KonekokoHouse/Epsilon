@@ -12,7 +12,6 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.InvHelper;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -51,7 +50,6 @@ public class AutoArmor extends Module {
 
     private final EnumSetting<ChestMode> chestMode = enumSetting("Chest Mode", ChestMode.ChestPrior).group(sgGeneral);
     private final IntSetting delay = intSetting("Delay", 2, 0, 20, 1).group(sgGeneral);
-    private final BoolSetting inventoryOnly = boolSetting("Inventory Only", true).group(sgGeneral);
 
     private final BoolSetting helmet = boolSetting("Helmet", true).group(sgArmor);
     private final BoolSetting chest = boolSetting("Chest", true).group(sgArmor);
@@ -63,8 +61,6 @@ public class AutoArmor extends Module {
     private final IntSetting minimumDurability = intSetting("Minimum Durability", 2, 1, 432, 1).group(sgElytra);
     private final BoolSetting autoReplaceElytra = boolSetting("Auto Replace Elytra", true).group(sgElytra);
     private final IntSetting replaceDurabilityThreshold = intSetting("Replace Durability Threshold", 32, 1, 432, 1).group(sgElytra);
-    private final BoolSetting preferMending = boolSetting("Prefer Mending", true).group(sgElytra);
-    private final BoolSetting preferUnbreaking = boolSetting("Prefer Unbreaking", true).group(sgElytra);
 
     private int cooldown;
 
@@ -119,7 +115,6 @@ public class AutoArmor extends Module {
     }
 
     private boolean isInventoryAvailable() {
-        if (inventoryOnly.getValue() && !(mc.screen instanceof InventoryScreen)) return false;
         if (mc.screen instanceof AbstractContainerScreen<?> screen
                 && screen.getMenu().containerId != mc.player.inventoryMenu.containerId) return false;
         return true;
@@ -275,10 +270,7 @@ public class AutoArmor extends Module {
     }
 
     private long elytraScore(ItemStack stack) {
-        long score = remainingDurability(stack);
-        if (preferMending.getValue() && getEnchantmentLevel(stack, Enchantments.MENDING) > 0) score += 500;
-        if (preferUnbreaking.getValue() && getEnchantmentLevel(stack, Enchantments.UNBREAKING) > 0) score += 200;
-        return score;
+        return remainingDurability(stack);
     }
 
     private int remainingDurability(ItemStack stack) {
