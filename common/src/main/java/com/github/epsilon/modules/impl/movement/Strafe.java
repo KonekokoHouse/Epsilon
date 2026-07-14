@@ -1,6 +1,7 @@
 package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.MoveEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -18,6 +19,7 @@ public class Strafe extends Module {
     }
 
     private final BoolSetting airStop = boolSetting("Air Stop", true);
+    private final BoolSetting autoJump = boolSetting("Auto Jump", true);
 
     @EventHandler
     private void onMove(MoveEvent event) {
@@ -44,6 +46,11 @@ public class Strafe extends Module {
         event.setX(strafe[0]);
         event.setZ(strafe[1]);
         event.cancel();
+    }
+
+    @EventHandler
+    private void onKeyboardInput(KeyboardInputEvent event) {
+        if (autoJump.getValue()) event.setJump(true);
     }
 
 }
