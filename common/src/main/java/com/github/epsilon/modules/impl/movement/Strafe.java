@@ -50,7 +50,7 @@ public class Strafe extends Module {
 
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (autoJump.getValue()) event.setJump(true);
+        if (autoJump.getValue() && MoveUtils.isMoving()) event.setJump(true);
     }
 
 }
