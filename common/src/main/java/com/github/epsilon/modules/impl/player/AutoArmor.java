@@ -44,17 +44,12 @@ public class AutoArmor extends Module {
         ProjectileProtection
     }
 
-    private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgArmor = settingGroup("Armor");
     private final SettingGroup sgElytra = settingGroup("Elytra");
 
-    private final EnumSetting<ChestMode> chestMode = enumSetting("Chest Mode", ChestMode.ChestPrior).group(sgGeneral);
-    private final IntSetting delay = intSetting("Delay", 2, 0, 20, 1).group(sgGeneral);
+    private final EnumSetting<ChestMode> chestMode = enumSetting("Chest Mode", ChestMode.ChestPrior);
+    private final IntSetting delay = intSetting("Delay", 2, 0, 20, 1);
 
-    private final BoolSetting helmet = boolSetting("Helmet", true).group(sgArmor);
-    private final BoolSetting chest = boolSetting("Chest", true).group(sgArmor);
-    private final BoolSetting leggings = boolSetting("Leggings", true).group(sgArmor);
-    private final BoolSetting boots = boolSetting("Boots", true).group(sgArmor);
     private final EnumSetting<ProtectionPriority> protectionPriority = enumSetting("Protection Priority", ProtectionPriority.Protection).group(sgArmor);
 
     private final EnumSetting<ElytraPriority> elytraPriority = enumSetting("Elytra Priority", ElytraPriority.HighestQuality).group(sgElytra);
@@ -97,7 +92,6 @@ public class AutoArmor extends Module {
 
         EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
         for (EquipmentSlot slot : slots) {
-            if (!isSlotEnabled(slot)) continue;
             if (slot == EquipmentSlot.CHEST
                     && (ElytraSwap.INSTANCE.isBusy() || ElytraFly.INSTANCE.isManagingChestSlot())) continue;
 
@@ -118,16 +112,6 @@ public class AutoArmor extends Module {
         if (mc.screen instanceof AbstractContainerScreen<?> screen
                 && screen.getMenu().containerId != mc.player.inventoryMenu.containerId) return false;
         return true;
-    }
-
-    private boolean isSlotEnabled(EquipmentSlot slot) {
-        return switch (slot) {
-            case HEAD -> helmet.getValue();
-            case CHEST -> chest.getValue();
-            case LEGS -> leggings.getValue();
-            case FEET -> boots.getValue();
-            default -> false;
-        };
     }
 
     private int findCandidate(EquipmentSlot slot, ItemStack current) {
