@@ -15,6 +15,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
@@ -53,7 +54,6 @@ public class AutoArmor extends Module {
     private final EnumSetting<ProtectionPriority> protectionPriority = enumSetting("Protection Priority", ProtectionPriority.Protection).group(sgArmor);
 
     private final EnumSetting<ElytraPriority> elytraPriority = enumSetting("Elytra Priority", ElytraPriority.HighestQuality).group(sgElytra);
-    private final IntSetting minimumDurability = intSetting("Minimum Durability", 2, 1, 432, 1).group(sgElytra);
     private final BoolSetting autoReplaceElytra = boolSetting("Auto Replace Elytra", true).group(sgElytra);
     private final IntSetting replaceDurabilityThreshold = intSetting("Replace Durability Threshold", 32, 1, 432, 1).group(sgElytra);
 
@@ -181,10 +181,8 @@ public class AutoArmor extends Module {
     }
 
     private boolean isElytraCandidate(ItemStack stack) {
-        if (stack.isEmpty() || !isElytra(stack) || hasBindingCurse(stack)
-                || remainingDurability(stack) < minimumDurability.getValue()) return false;
-        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
-        return equippable != null && equippable.slot() == EquipmentSlot.CHEST;
+        return !stack.isEmpty() && !hasBindingCurse(stack)
+                && LivingEntity.canGlideUsing(stack, EquipmentSlot.CHEST);
     }
 
     private boolean shouldEquip(EquipmentSlot slot, ItemStack current, ItemStack candidate) {
@@ -194,7 +192,8 @@ public class AutoArmor extends Module {
             if (!isElytra(current)) return true;
             if (!autoReplaceElytra.getValue()) return false;
             if (remainingDurability(current) > replaceDurabilityThreshold.getValue()) return false;
-            return remainingDurability(current) < remainingDurability(candidate);
+            return remainingDurability(candidate) > replaceDurabilityThreshold.getValue()
+                    && remainingDurability(current) < remainingDurability(candidate);
         }
 
         if (current.isEmpty()) return true;
@@ -254,7 +253,10 @@ public class AutoArmor extends Module {
     }
 
     private long elytraScore(ItemStack stack) {
-        return remainingDurability(stack);
+        long score = remainingDurability(stack);
+        if (getEnchantmentLevel(stack, Enchantments.MENDING) > 0) score += 500;
+        if (getEnchantmentLevel(stack, Enchantments.UNBREAKING) > 0) score += 200;
+        return score;
     }
 
     private int remainingDurability(ItemStack stack) {
