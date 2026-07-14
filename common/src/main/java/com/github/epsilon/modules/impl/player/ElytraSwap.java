@@ -8,11 +8,11 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
+import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvUtils;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
@@ -98,7 +98,7 @@ public class ElytraSwap extends Module {
 
                         int targetHotbarSlot = elytraSlotSetting.getValue() - 1;
 
-                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, containerSlot, targetHotbarSlot, ContainerInput.SWAP, mc.player);
+                        ClickSlotUtils.swap(mc.player.containerMenu.containerId, containerSlot, targetHotbarSlot);
                         this.swapCounter = 0;
                         return;
                     } else {

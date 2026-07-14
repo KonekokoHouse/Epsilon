@@ -11,7 +11,7 @@ import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.player.ContainerInputUtils;
+import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -74,12 +74,14 @@ public class AutoArmor extends Module {
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
 
-        if (mc.screen != null
-                && pauseInventory.getValue()
-                && !(mc.screen instanceof ChatScreen)
-                && !(mc.screen instanceof PanelScreen)
-                && !(mc.screen instanceof DropdownScreen)
-                && !(mc.screen instanceof HudEditorScreen)) {
+        if (
+                mc.screen != null
+                        && pauseInventory.getValue()
+                        && !(mc.screen instanceof ChatScreen)
+                        && !(mc.screen instanceof PanelScreen)
+                        && !(mc.screen instanceof DropdownScreen)
+                        && !(mc.screen instanceof HudEditorScreen)
+        ) {
             return;
         }
 
@@ -129,10 +131,10 @@ public class AutoArmor extends Module {
                     ));
                 }
 
-                ContainerInputUtils.click(inventorySlot);
-                ContainerInputUtils.click(armorSlot);
+                ClickSlotUtils.click(inventorySlot);
+                ClickSlotUtils.click(armorSlot);
                 if (armorPiece.getPrevProtection() != -1) {
-                    ContainerInputUtils.click(inventorySlot);
+                    ClickSlotUtils.click(inventorySlot);
                 }
 
                 mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
