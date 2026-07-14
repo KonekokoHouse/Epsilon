@@ -44,8 +44,8 @@ public class ElytraFly extends Module {
     public final EnumSetting<ElytraFlightModes> mode = enumSetting("Mode", ElytraFlightModes.Control, this::onModeChanged);
     public final EnumSetting<SwapMode> swapMode = enumSetting("Swap Mode", SwapMode.InvSwitch);
 
-    public final BoolSetting armored = boolSetting("Armored", false);
-    public final BoolSetting unbreaking = boolSetting("Unbreaking", true);
+    public final BoolSetting armored = boolSetting("Armored", false,() -> mode.is(ElytraFlightModes.Control)||mode.is(ElytraFlightModes.Pitch40));
+    public final BoolSetting unbreaking = boolSetting("Unbreaking", true,() -> mode.is(ElytraFlightModes.Control)||mode.is(ElytraFlightModes.Pitch40));
     public final IntSetting unbreakingDelay = intSetting("Unbreaking Delay", 800, 100, 2000, 50, () -> unbreaking.getValue());
     public final BoolSetting noSprint = boolSetting("No Sprint", true, () -> mode.is(ElytraFlightModes.Control) && armored.getValue());
     public final BoolSetting useFireworks = boolSetting("Use Fireworks", true, () -> mode.is(ElytraFlightModes.Control));

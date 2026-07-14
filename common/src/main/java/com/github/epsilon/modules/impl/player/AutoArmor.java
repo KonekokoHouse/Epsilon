@@ -28,11 +28,6 @@ public class AutoArmor extends Module {
 
     public static final AutoArmor INSTANCE = new AutoArmor();
 
-    public enum ChestSwapMode {
-        PriorManualElytraSwap,
-        Automatic
-    }
-
     public enum ChestMode {
         ChestPrior,
         ElytraPrior
@@ -54,7 +49,6 @@ public class AutoArmor extends Module {
     private final SettingGroup sgArmor = settingGroup("Armor");
     private final SettingGroup sgElytra = settingGroup("Elytra");
 
-    private final EnumSetting<ChestSwapMode> chestSwapMode = enumSetting("Chest Swap Mode", ChestSwapMode.Automatic).group(sgGeneral);
     private final EnumSetting<ChestMode> chestMode = enumSetting("Chest Mode", ChestMode.ChestPrior).group(sgGeneral);
     private final IntSetting delay = intSetting("Delay", 2, 0, 20, 1).group(sgGeneral);
     private final BoolSetting inventoryOnly = boolSetting("Inventory Only", true).group(sgGeneral);
@@ -76,14 +70,6 @@ public class AutoArmor extends Module {
 
     private AutoArmor() {
         super("Auto Armor", Category.PLAYER);
-    }
-
-    public ChestSwapMode getChestSwapMode() {
-        return chestSwapMode.getValue();
-    }
-
-    public void setChestSwapMode(ChestSwapMode chestSwapMode) {
-        if (chestSwapMode != null) this.chestSwapMode.setValue(chestSwapMode);
     }
 
     public ChestMode getChestMode() {
@@ -170,8 +156,7 @@ public class AutoArmor extends Module {
     }
 
     private ElytraSwap.SwapTarget getManualTarget() {
-        if (!chestSwapMode.is(ChestSwapMode.PriorManualElytraSwap) || !ElytraSwap.INSTANCE.isEnabled()) return null;
-        return ElytraSwap.INSTANCE.getLastSwapTarget();
+        return ElytraSwap.INSTANCE.isEnabled() ? ElytraSwap.INSTANCE.getLastSwapTarget() : null;
     }
 
     private int findBestArmor(EquipmentSlot slot) {
