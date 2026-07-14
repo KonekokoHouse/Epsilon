@@ -50,6 +50,7 @@ public class ModuleHolder {
         addModule(AutoMend.INSTANCE);
         addModule(AutoTotem.INSTANCE);
         addModule(AutoWeapon.INSTANCE);
+        addModule(Criticals.INSTANCE);
         addModule(ZealotCrystalPlus.INSTANCE);
         addModule(CrystalAura.INSTANCE);
         addModule(CrystalBlocker.INSTANCE);
@@ -95,6 +96,7 @@ public class ModuleHolder {
         addModule(Eagle.INSTANCE);
         addModule(AutoMap.INSTANCE);
         addModule(FastWeb.INSTANCE);
+        addModule(Flight.INSTANCE);
         addModule(GUIMove.INSTANCE);
         addModule(JumpReset.INSTANCE);
         addModule(KeepSprint.INSTANCE);
@@ -104,6 +106,8 @@ public class ModuleHolder {
         addModule(Phase.INSTANCE);
         addModule(SafeWalk.INSTANCE);
         addModule(Scaffold.INSTANCE);
+        addModule(Speed.INSTANCE);
+        addModule(Strafe.INSTANCE);
         addModule(Stuck.INSTANCE);
         addModule(Velocity.INSTANCE);
 

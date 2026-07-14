@@ -127,7 +127,7 @@ public class NoSlow extends Module {
         Packet<?> packet = event.getPacket();
 
         if (packet instanceof ServerboundPongPacket && step != Step.NONE) {
-            event.setCancelled(true);
+            event.cancel();
             packets.add(packet);
 
             if (step == Step.CANCEL_C0F) {

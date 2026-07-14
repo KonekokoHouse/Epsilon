@@ -210,14 +210,14 @@ public class FreeCamera extends Module {
     @EventHandler(priority = EventPriority.HIGH)
     public void onKey(KeyPressEvent event) {
         if (onInput(event.getKey(), event.getAction()) && !KeybindUtils.isPressed(GLFW.GLFW_KEY_F3)) {
-            event.setCancelled(true);
+            event.cancel();
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onMouseClick(MousePressEvent event) {
         if (onInput(event.getButton(), event.getAction())) {
-            event.setCancelled(true);
+            event.cancel();
         }
     }
 
@@ -252,13 +252,13 @@ public class FreeCamera extends Module {
         if (speedScrollSensitivity.getValue() > 0 && mc.screen == null) {
             speedValue += event.getValue() * 0.25 * (speedScrollSensitivity.getValue() * speedValue);
             if (speedValue < 0.1) speedValue = 0.1;
-            event.setCancelled(true);
+            event.cancel();
         }
     }
 
     @EventHandler
     private void onChunkOcclusion(ChunkOcclusionEvent event) {
-        event.setCancelled(true);
+        event.cancel();
     }
 
     @EventHandler

@@ -52,8 +52,7 @@ public class KillAura extends Module {
 
     private final EnumSetting<TargetMode> targetMode = enumSetting("Target Mode", TargetMode.Single);
 
-    private final DoubleSetting range = doubleSetting("Range", 4.0, 1.0, 6.0, 0.01);
-    private final DoubleSetting aimRange = doubleSetting("Aim Range", 4.0, 1.0, 6.0, 0.1);
+    public final DoubleSetting aimRange = doubleSetting("Aim Range", 4.0, 1.0, 6.0, 0.1);
 
     private final IntSetting fov = intSetting("FOV", 360, 10, 360, 1);
 
@@ -162,13 +161,13 @@ public class KillAura extends Module {
     private void clickTargets(List<LivingEntity> targets) {
         if (targetMode.is(TargetMode.Multiple)) {
             for (LivingEntity target : targets) {
-                if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && (throughWalls.getValue() || mc.hitResult.getType() == HitResult.Type.ENTITY)) {
+                if (throughWalls.getValue() || mc.hitResult.getType() == HitResult.Type.ENTITY) {
                     doAttack(target);
                 }
             }
             switchIndex++;
         } else {
-            if (RotationUtils.getEyeDistanceToEntity(target) <= range.getValue() && (throughWalls.getValue() || (mc.hitResult.getType() == HitResult.Type.ENTITY && mc.crosshairPickEntity.is(target)))) {
+            if (throughWalls.getValue() || (mc.hitResult.getType() == HitResult.Type.ENTITY && mc.crosshairPickEntity.is(target))) {
                 doAttack(target);
             }
             if (targetMode.is(TargetMode.Switch)) {

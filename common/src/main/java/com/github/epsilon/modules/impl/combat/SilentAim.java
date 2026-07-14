@@ -89,7 +89,7 @@ public class SilentAim extends Module {
 
         if (target == null) return;
 
-        event.setCancelled(true);
+        event.cancel();
 
         redirecting = true;
     }

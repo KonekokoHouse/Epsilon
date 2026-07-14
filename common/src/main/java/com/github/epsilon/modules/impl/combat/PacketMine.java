@@ -151,7 +151,7 @@ public class PacketMine extends Module {
     @EventHandler
     private void onStartBreakingBlock(StartDestroyBlockEvent event) {
         if (!canBreak(event.getBlockPos())) return;
-        event.setCancelled(true);
+        event.cancel();
         if (!mineTimer.passedMillise(mineDelay.getValue())) return;
         selfClickPos = event.getBlockPos();
         mine(event.getBlockPos());
