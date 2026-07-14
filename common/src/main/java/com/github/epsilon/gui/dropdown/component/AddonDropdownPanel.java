@@ -11,7 +11,6 @@ import com.github.epsilon.gui.dropdown.widget.StringWidget;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.holders.AddonHolder;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.settings.Setting;
 
 import java.util.ArrayList;
@@ -118,7 +117,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.mouseClicked(mouseX, mouseY, button)) {
-                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
             currentY += widget.getHeight() + DropdownTheme.SETTING_GAP;
@@ -131,7 +129,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.mouseReleased(mouseX, mouseY, button)) {
-                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
         }
@@ -143,7 +140,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.keyPressed(keyCode, scanCode, modifiers)) {
-                ConfigHolder.INSTANCE.requestSave();
                 return true;
             }
         }
@@ -155,7 +151,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.charTyped(typedText)) {
-                ConfigHolder.INSTANCE.requestSave();
                 return true;
             }
         }

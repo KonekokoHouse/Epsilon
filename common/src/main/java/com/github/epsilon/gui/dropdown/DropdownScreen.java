@@ -16,7 +16,6 @@ import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.scene.GuiLayer;
 import com.github.epsilon.gui.scene.GuiScene;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
@@ -88,7 +87,6 @@ public class DropdownScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        ConfigHolder.INSTANCE.savePendingIfDue();
         final var window = minecraft.getWindow();
         if (renderTarget == null) {
             renderTarget = LuminRenderSystem.LuminRenderTarget.create("dropdown-gui", window.getWidth(), window.getHeight());
@@ -276,7 +274,6 @@ public class DropdownScreen extends Screen {
         int button = epsilonEvent.button();
 
         if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
-            ConfigHolder.INSTANCE.saveNow();
             return true;
         }
 
@@ -309,7 +306,6 @@ public class DropdownScreen extends Screen {
         int button = epsilonEvent.button();
 
         if (popupHost.mouseReleased(epsilonEvent)) {
-            ConfigHolder.INSTANCE.saveNow();
             return true;
         }
 
@@ -430,7 +426,6 @@ public class DropdownScreen extends Screen {
     public void onClose() {
         IMEFocusHelper.forceDeactivate();
         DropdownLayoutState.save(panels);
-        ConfigHolder.INSTANCE.flushPendingSave();
         super.onClose();
     }
 
@@ -446,7 +441,6 @@ public class DropdownScreen extends Screen {
         popupHost.close();
         searchField.blur();
         IMEFocusHelper.forceDeactivate();
-        ConfigHolder.INSTANCE.flushPendingSave();
         preeditOverlay = null;
     }
 

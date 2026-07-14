@@ -12,7 +12,6 @@ import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -173,7 +172,6 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         for (FriendRowEntry entry : rowEntries) {
             if (entry.removeBounds().contains(event.x(), event.y())) {
                 Managers.FRIEND.removeFriend(entry.name());
-                ConfigHolder.INSTANCE.saveNow();
                 markDirty();
                 return true;
             }
@@ -266,7 +264,6 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         String name = inputField.getText().trim();
         if (!name.isEmpty() && !Managers.FRIEND.isFriend(name)) {
             Managers.FRIEND.addFriend(name);
-            ConfigHolder.INSTANCE.saveNow();
         }
         inputField.clear();
         markDirty();

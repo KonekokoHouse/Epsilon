@@ -2,7 +2,10 @@ package com.github.epsilon.modules.impl.render;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
-import com.github.epsilon.events.impl.*;
+import com.github.epsilon.events.impl.ClientTickEvent;
+import com.github.epsilon.events.impl.KeyPressEvent;
+import com.github.epsilon.events.impl.OpenScreenEvent;
+import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.KeybindSetting;
