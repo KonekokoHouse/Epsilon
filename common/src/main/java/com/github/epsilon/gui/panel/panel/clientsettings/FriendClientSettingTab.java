@@ -12,7 +12,6 @@ import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.render.animation.Animation;

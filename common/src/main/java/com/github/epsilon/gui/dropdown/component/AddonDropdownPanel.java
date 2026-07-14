@@ -11,7 +11,6 @@ import com.github.epsilon.gui.dropdown.widget.StringWidget;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.holders.AddonHolder;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.settings.Setting;
 
 import java.util.ArrayList;

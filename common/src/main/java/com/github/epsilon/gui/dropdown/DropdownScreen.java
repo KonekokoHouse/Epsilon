@@ -16,7 +16,6 @@ import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.scene.GuiLayer;
 import com.github.epsilon.gui.scene.GuiScene;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;

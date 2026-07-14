@@ -16,7 +16,6 @@ import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.scene.GuiLayer;
 import com.github.epsilon.gui.scene.GuiScene;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
