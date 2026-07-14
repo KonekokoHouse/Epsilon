@@ -185,7 +185,6 @@ public class Speed extends Module {
             return;
         }
         if (mode.is(Mode.Strafe)) {
-
             if (this.stop) {
                 this.stop = false;
                 return;
@@ -201,6 +200,7 @@ public class Speed extends Module {
                 double yMotion = 0.3999 + getJumpSpeed();
                 mc.player.setDeltaMovement(0.0, yMotion, 0.0);
                 event.setY(yMotion);
+                event.setCancelled(true);
                 this.speed = this.speed * (this.boost ? 1.6835 : 1.395);
             } else if (this.stage == 3) {
                 this.speed = this.distance - 0.66
@@ -228,12 +228,14 @@ public class Speed extends Module {
             if (n == 0.0 && n2 == 0.0) {
                 event.setX(0.0);
                 event.setZ(0.0);
+                event.setCancelled(true);
             } else if (n != 0.0 && n2 != 0.0) {
                 n *= Math.sin(0.7853981633974483);
                 n2 *= Math.cos(0.7853981633974483);
             }
             event.setX((n * this.speed * -Math.sin(Math.toRadians(n3)) + n2 * this.speed * Math.cos(Math.toRadians(n3))) * 0.99);
             event.setZ((n * this.speed * Math.cos(Math.toRadians(n3)) - n2 * this.speed * -Math.sin(Math.toRadians(n3))) * 0.99);
+            event.setCancelled(true);
 
             this.stage++;
             return;
@@ -266,6 +268,7 @@ public class Speed extends Module {
                 }
                 float jump = 0.3999999463558197f + jumpEffect;
                 event.setY(jump);
+                event.setCancelled(true);
                 mc.player.setDeltaMovement(mc.player.getDeltaMovement().x, jump, mc.player.getDeltaMovement().z);
                 speed *= 2.149;
             } else if (strafe == 3) {
@@ -289,6 +292,7 @@ public class Speed extends Module {
             final Vec2 motion = handleStrafeMotion((float) speed);
             event.setX(motion.x);
             event.setZ(motion.y);
+            event.setCancelled(true);
             strafe++;
         }
     }
