@@ -2,13 +2,31 @@ package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.ClientTickEvent;
+import com.github.epsilon.gui.dropdown.DropdownScreen;
+import com.github.epsilon.gui.hudeditor.HudEditorScreen;
+import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
+import com.github.epsilon.settings.impl.BoolSetting;
+import com.github.epsilon.settings.impl.EnumSetting;
+import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.ContainerInputUtils;
+import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.equipment.Equippable;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class AutoArmor extends Module {
@@ -19,202 +37,234 @@ public class AutoArmor extends Module {
         super("Auto Armor", Category.PLAYER);
     }
 
-    private final Setting<EnchantPriority> head = new Setting<>("Head", EnchantPriority.Protection);
-    private final Setting<EnchantPriority> body = new Setting<>("Body", EnchantPriority.Protection);
-    private final Setting<EnchantPriority> tights = new Setting<>("Tights", EnchantPriority.Protection);
-    private final Setting<EnchantPriority> feet = new Setting<>("Feet", EnchantPriority.Protection);
-    private final Setting<ElytraPriority> elytraPriority = new Setting<>("ElytraPriority", ElytraPriority.Ignore);
-    private final Setting<Integer> delay = new Setting<>("Delay", 5, 0, 10);
-    private final Setting<Boolean> oldVersion = new Setting<>("OldVersion", false);
-    private final Setting<Boolean> pauseInventory = new Setting<>("PauseInventory", false);
-    private final Setting<Boolean> noMove = new Setting<>("NoMove", false);
-    private final Setting<Boolean> ignoreCurse = new Setting<>("IgnoreCurse", true);
-    private final Setting<Boolean> strict = new Setting<>("Strict", false);
+    private enum ElytraPriority {
+        None,
+        Always,
+        ElytraPlus,
+        Ignore
+    }
 
-    private int tickDelay = 0;
+    private enum EnchantPriority {
+        Blast,
+        Protection
+    }
 
-    private final List<ArmorData> armorList = Arrays.asList(
-            new ArmorData(EquipmentSlot.FEET, 36, -1, -1, -1),
-            new ArmorData(EquipmentSlot.LEGS, 37, -1, -1, -1),
-            new ArmorData(EquipmentSlot.CHEST, 38, -1, -1, -1),
-            new ArmorData(EquipmentSlot.HEAD, 39, -1, -1, -1)
+    private final EnumSetting<EnchantPriority> head = enumSetting("Head", EnchantPriority.Protection);
+    private final EnumSetting<EnchantPriority> body = enumSetting("Body", EnchantPriority.Protection);
+    private final EnumSetting<EnchantPriority> tights = enumSetting("Tights", EnchantPriority.Protection);
+    private final EnumSetting<EnchantPriority> feet = enumSetting("Feet", EnchantPriority.Protection);
+    private final EnumSetting<ElytraPriority> elytraPriority = enumSetting("ElytraPriority", ElytraPriority.Ignore);
+    private final IntSetting delay = intSetting("Delay", 5, 0, 10, 1);
+    private final BoolSetting oldVersion = boolSetting("OldVersion", false);
+    private final BoolSetting pauseInventory = boolSetting("PauseInventory", false);
+    private final BoolSetting noMove = boolSetting("NoMove", false);
+    private final BoolSetting ignoreCurse = boolSetting("IgnoreCurse", true);
+    private final BoolSetting strict = boolSetting("Strict", false);
+
+    private int tickDelay;
+
+    private final List<ArmorData> armorList = List.of(
+            new ArmorData(EquipmentSlot.FEET, 36),
+            new ArmorData(EquipmentSlot.LEGS, 37),
+            new ArmorData(EquipmentSlot.CHEST, 38),
+            new ArmorData(EquipmentSlot.HEAD, 39)
     );
 
     @EventHandler
-    private void onClientTick(ClientTickEvent event) {
+    private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
 
-        if (mc.currentScreen != null && pauseInventory.getValue() && !(mc.currentScreen instanceof ChatScreen) && !(mc.currentScreen instanceof ClickGUI) && !(mc.currentScreen instanceof HudEditorGui)) {
+        if (mc.screen != null
+                && pauseInventory.getValue()
+                && !(mc.screen instanceof ChatScreen)
+                && !(mc.screen instanceof PanelScreen)
+                && !(mc.screen instanceof DropdownScreen)
+                && !(mc.screen instanceof HudEditorScreen)) {
             return;
         }
 
-        if (tickDelay-- > 0) {
-            return;
-        }
+        if (tickDelay-- > 0) return;
 
         armorList.forEach(ArmorData::reset);
 
-        for (int i = 0; i < 36; i++) {
-            ItemStack stack = mc.player.getInventory().getStack(i);
-            int prot = getProtection(stack);
-            if (prot > 0)
-                for (ArmorData e : armorList) {
-                    if (e.getEquipmentSlot() == (stack.getItem() instanceof ArmorItem ai ? ai.getSlotType() : EquipmentSlot.CHEST))
-                        if (prot > e.getPrevProt() && prot > e.getNewProtection()) {
-                            e.setNewSlot(i);
-                            e.setNewProtection(prot);
-                        }
+        for (int slot = 0; slot < 36; slot++) {
+            ItemStack stack = mc.player.getInventory().getItem(slot);
+            int protection = getProtection(stack);
+            if (protection <= 0) continue;
+
+            EquipmentSlot equipmentSlot = getEquipmentSlot(stack);
+            if (equipmentSlot == null) continue;
+
+            for (ArmorData armorData : armorList) {
+                if (armorData.getEquipmentSlot() == equipmentSlot
+                        && protection > armorData.getPrevProtection()
+                        && protection > armorData.getNewProtection()) {
+                    armorData.setNewSlot(slot);
+                    armorData.setNewProtection(protection);
                 }
+            }
         }
 
         for (ArmorData armorPiece : armorList) {
             int slot = armorPiece.getNewSlot();
-            if (slot != -1) {
-                if ((armorPiece.getPrevProt() == -1 || !oldVersion.getValue()) && slot < 9) {
-                    InvUtils.swap(slot, true);
-                    mc.getConnection().send(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence(), mc.player.getYaw(), mc.player.getPitch()));
+            if (slot == -1) continue;
+
+            if ((armorPiece.getPrevProtection() == -1 || !oldVersion.getValue()) && slot < 9) {
+                InvUtils.swap(slot, true);
+                try {
+                    mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+                } finally {
                     InvUtils.swapBack();
-                } else {
-                    if (mc.player.isMoving() && noMove.getValue()) {
-                        return;
-                    }
+                }
+            } else {
+                if (mc.player.isMoving() && noMove.getValue()) return;
 
-                    int newArmorSlot = slot < 9 ? 36 + slot : slot;
+                int inventorySlot = slot < 9 ? 36 + slot : slot;
+                int armorSlot = 8 - armorPiece.getEquipmentSlot().getIndex();
 
-                    if (strict.getValue()) {
-                        mc.getConnection().send(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-                    }
-
-                    ContainerInputUtils.click(newArmorSlot);
-                    ContainerInputUtils.click((armorPiece.getArmorSlot() - 34) + (39 - armorPiece.getArmorSlot()) * 2);
-                    if (armorPiece.getPrevProt() != -1) ContainerInputUtils.click(newArmorSlot);
-
-                    mc.getConnection().send(new CloseHandledScreenC2SPacket(mc.player.currentScreenHandler.syncId));
+                if (strict.getValue()) {
+                    mc.getConnection().send(new ServerboundPlayerCommandPacket(
+                            mc.player,
+                            ServerboundPlayerCommandPacket.Action.STOP_SPRINTING
+                    ));
                 }
 
-                tickDelay = delay.getValue();
-                return;
+                ContainerInputUtils.click(inventorySlot);
+                ContainerInputUtils.click(armorSlot);
+                if (armorPiece.getPrevProtection() != -1) {
+                    ContainerInputUtils.click(inventorySlot);
+                }
+
+                mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
             }
+
+            tickDelay = delay.getValue();
+            return;
         }
+    }
+
+    private EquipmentSlot getEquipmentSlot(ItemStack stack) {
+        if (stack.isEmpty()) return null;
+
+        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
+        if (equippable == null || equippable.slot().getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
+            return null;
+        }
+
+        return equippable.slot();
     }
 
     private int getProtection(ItemStack stack) {
-        if (stack.getItem() instanceof ArmorItem || stack.getItem() instanceof ElytraItem) {
-            int prot = 0;
+        if (stack.isEmpty()) return -1;
 
-            EquipmentSlot slot = stack.getItem() instanceof ArmorItem ai ? ai.getSlotType() : EquipmentSlot.BODY;
+        EquipmentSlot slot = getEquipmentSlot(stack);
+        if (slot == null) return 0;
 
-            if (stack.getItem() instanceof ElytraItem) {
-                if (!ElytraItem.isUsable(stack))
-                    return 0;
+        boolean elytra = stack.is(Items.ELYTRA);
+        int enchantmentScore = 0;
 
-                boolean ePlus = elytraPriority.is(ElytraPriority.ElytraPlus) && (ModuleManager.elytraRecast.isEnabled() || ModuleManager.elytraPlus.isEnabled());
-                boolean ignore = elytraPriority.is(ElytraPriority.Ignore) && mc.player.getInventory().getStack(38).getItem() instanceof ElytraItem;
+        if (elytra) {
+            if (!LivingEntity.canGlideUsing(stack, slot)) return 0;
 
-                if (ePlus || ignore || elytraPriority.is(ElytraPriority.Always))
-                    prot = 999;
+            boolean elytraFlyActive = elytraPriority.is(ElytraPriority.ElytraPlus)
+                    && ElytraFly.INSTANCE.isEnabled()
+                    && !ElytraFly.INSTANCE.isArmorMode();
+            boolean preserveEquippedElytra = elytraPriority.is(ElytraPriority.Ignore)
+                    && mc.player.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA);
+
+            if (elytraFlyActive || preserveEquippedElytra || elytraPriority.is(ElytraPriority.Always)) {
+                enchantmentScore = 999;
             }
+        }
 
-            int blastMultiplier = 1;
-            int protectionMultiplier = 1;
+        int blastMultiplier = 1;
+        int protectionMultiplier = 1;
 
-            switch (slot) {
-                case HEAD -> {
-                    if (head.is(EnchantPriority.Protection)) protectionMultiplier *= 2;
-                    else blastMultiplier *= 2;
-                }
-                case BODY -> {
-                    if (body.is(EnchantPriority.Protection)) protectionMultiplier *= 2;
-                    else blastMultiplier *= 2;
-                }
-                case LEGS -> {
-                    if (tights.is(EnchantPriority.Protection)) protectionMultiplier *= 2;
-                    else blastMultiplier *= 2;
-                }
-                case FEET -> {
-                    if (feet.is(EnchantPriority.Protection)) protectionMultiplier *= 2;
-                    else blastMultiplier *= 2;
-                }
+        switch (slot) {
+            case HEAD -> {
+                if (head.is(EnchantPriority.Protection)) protectionMultiplier = 2;
+                else blastMultiplier = 2;
             }
-
-            if (stack.hasEnchantments()) {
-                ItemEnchantmentsComponent enchants = EnchantmentHelper.getEnchantments(stack);
-
-                if (enchants.getEnchantments().contains(mc.world.getRegistryManager().get(Enchantments.PROTECTION.getRegistryRef()).getEntry(Enchantments.PROTECTION).get())) {
-                    prot += enchants.getLevel(mc.world.getRegistryManager().get(Enchantments.PROTECTION.getRegistryRef()).getEntry(Enchantments.PROTECTION).get()) * protectionMultiplier;
-                }
-
-                if (enchants.getEnchantments().contains(mc.world.getRegistryManager().get(Enchantments.BLAST_PROTECTION.getRegistryRef()).getEntry(Enchantments.BLAST_PROTECTION).get())) {
-                    prot += enchants.getLevel(mc.world.getRegistryManager().get(Enchantments.BLAST_PROTECTION.getRegistryRef()).getEntry(Enchantments.BLAST_PROTECTION).get()) * blastMultiplier;
-                }
-
-                if (enchants.getEnchantments().contains(mc.world.getRegistryManager().get(Enchantments.BLAST_PROTECTION.getRegistryRef()).getEntry(Enchantments.BINDING_CURSE).get()) && ignoreCurse.getValue()) {
-                    prot = -999;
-                }
+            case CHEST -> {
+                if (body.is(EnchantPriority.Protection)) protectionMultiplier = 2;
+                else blastMultiplier = 2;
             }
+            case LEGS -> {
+                if (tights.is(EnchantPriority.Protection)) protectionMultiplier = 2;
+                else blastMultiplier = 2;
+            }
+            case FEET -> {
+                if (feet.is(EnchantPriority.Protection)) protectionMultiplier = 2;
+                else blastMultiplier = 2;
+            }
+            default -> {
+                return 0;
+            }
+        }
 
-            return (stack.getItem() instanceof ArmorItem armorItem ? (armorItem.getProtection() + (int) Math.ceil(armorItem.getToughness())) * 10 : 0) + prot;
-        } else if (!stack.isEmpty()) return 0;
-        return -1;
+        enchantmentScore += EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.PROTECTION) * protectionMultiplier;
+        enchantmentScore += EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.BLAST_PROTECTION) * blastMultiplier;
+
+        if (ignoreCurse.getValue() && EnchantmentUtils.hasEnchantment(stack, Enchantments.BINDING_CURSE)) {
+            return -999;
+        }
+
+        double[] armor = {0.0};
+        double[] toughness = {0.0};
+        stack.forEachModifier(slot, (attribute, modifier) -> {
+            if (attribute.equals(Attributes.ARMOR)) {
+                armor[0] += modifier.amount();
+            } else if (attribute.equals(Attributes.ARMOR_TOUGHNESS)) {
+                toughness[0] += modifier.amount();
+            }
+        });
+
+        if (!elytra && armor[0] <= 0.0 && toughness[0] <= 0.0) return 0;
+
+        return (int) ((armor[0] + Math.ceil(toughness[0])) * 10.0) + enchantmentScore;
     }
 
-    public class ArmorData {
-        private EquipmentSlot equipmentSlot;
-        private int armorSlot, prevProtection, newSlot, newProtection;
+    private final class ArmorData {
+        private final EquipmentSlot equipmentSlot;
+        private final int inventorySlot;
+        private int prevProtection;
+        private int newSlot;
+        private int newProtection;
 
-        public ArmorData(EquipmentSlot equipmentSlot, int armorSlot, int prevProtection, int newSlot, int newProtection) {
+        private ArmorData(EquipmentSlot equipmentSlot, int inventorySlot) {
             this.equipmentSlot = equipmentSlot;
-            this.armorSlot = armorSlot;
-            this.prevProtection = prevProtection;
-            this.newSlot = newSlot;
-            this.newProtection = newProtection;
+            this.inventorySlot = inventorySlot;
+            reset();
         }
 
-        public int getArmorSlot() {
-            return armorSlot;
-        }
-
-        public int getPrevProt() {
-            return prevProtection;
-        }
-
-        public void setPrevProt(int prevProtection) {
-            this.prevProtection = prevProtection;
-        }
-
-        public int getNewSlot() {
-            return newSlot;
-        }
-
-        public void setNewSlot(int newSlot) {
-            this.newSlot = newSlot;
-        }
-
-        public int getNewProtection() {
-            return newProtection;
-        }
-
-        public void setNewProtection(int newProtection) {
-            this.newProtection = newProtection;
-        }
-
-        public EquipmentSlot getEquipmentSlot() {
+        private EquipmentSlot getEquipmentSlot() {
             return equipmentSlot;
         }
 
-        public void reset() {
-            setPrevProt(getProtection(mc.player.getInventory().getStack(getArmorSlot())));
-            setNewSlot(-1);
-            setNewProtection(-1);
+        private int getPrevProtection() {
+            return prevProtection;
+        }
+
+        private int getNewSlot() {
+            return newSlot;
+        }
+
+        private void setNewSlot(int newSlot) {
+            this.newSlot = newSlot;
+        }
+
+        private int getNewProtection() {
+            return newProtection;
+        }
+
+        private void setNewProtection(int newProtection) {
+            this.newProtection = newProtection;
+        }
+
+        private void reset() {
+            prevProtection = nullCheck() ? -1 : getProtection(mc.player.getInventory().getItem(inventorySlot));
+            newSlot = -1;
+            newProtection = -1;
         }
     }
-
-    private enum ElytraPriority {
-        None, Always, ElytraPlus, Ignore
-    }
-
-    private enum EnchantPriority {
-        Blast, Protection
-    }
-
 }
