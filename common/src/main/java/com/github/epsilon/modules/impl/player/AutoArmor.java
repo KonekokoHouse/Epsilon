@@ -53,12 +53,12 @@ public class AutoArmor extends Module {
     private final EnumSetting<EnchantPriority> body = enumSetting("Body", EnchantPriority.Protection);
     private final EnumSetting<EnchantPriority> tights = enumSetting("Tights", EnchantPriority.Protection);
     private final EnumSetting<EnchantPriority> feet = enumSetting("Feet", EnchantPriority.Protection);
-    private final EnumSetting<ElytraPriority> elytraPriority = enumSetting("ElytraPriority", ElytraPriority.Ignore);
+    private final EnumSetting<ElytraPriority> elytraPriority = enumSetting("Elytra Priority", ElytraPriority.Ignore);
     private final IntSetting delay = intSetting("Delay", 5, 0, 10, 1);
-    private final BoolSetting oldVersion = boolSetting("OldVersion", false);
-    private final BoolSetting pauseInventory = boolSetting("PauseInventory", false);
-    private final BoolSetting noMove = boolSetting("NoMove", false);
-    private final BoolSetting ignoreCurse = boolSetting("IgnoreCurse", true);
+    private final BoolSetting oldVersion = boolSetting("Old Version", false);
+    private final BoolSetting pauseInventory = boolSetting("Pause Inventory", false);
+    private final BoolSetting noMove = boolSetting("No Move", false);
+    private final BoolSetting ignoreCurse = boolSetting("Ignore Curse", true);
     private final BoolSetting strict = boolSetting("Strict", false);
 
     private int tickDelay;
