@@ -105,6 +105,8 @@ public class ModuleHolder {
         addModule(Phase.INSTANCE);
         addModule(SafeWalk.INSTANCE);
         addModule(Scaffold.INSTANCE);
+        addModule(Speed.INSTANCE);
+        addModule(Strafe.INSTANCE);
         addModule(Stuck.INSTANCE);
         addModule(Velocity.INSTANCE);
 
