@@ -49,7 +49,7 @@ public class EventBus {
         List<IListener> listeners = listenerMap.get(event.getClass());
 
         if (listeners != null) {
-            event.setCancelled(false);
+            event.cancel();
 
             for (IListener listener : listeners) {
                 listener.call(event);

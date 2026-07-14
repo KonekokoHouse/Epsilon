@@ -30,7 +30,7 @@ public class PacketEat extends Module {
         if (event.getPacket() instanceof ServerboundPlayerActionPacket packet && packet.getAction() == ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM) {
             FoodProperties food = item.get(DataComponents.FOOD);
             if (food != null && food.canAlwaysEat()) {
-                event.setCancelled(true);
+                event.cancel();
             }
         }
     }

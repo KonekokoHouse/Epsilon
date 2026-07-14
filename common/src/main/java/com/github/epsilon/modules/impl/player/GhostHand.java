@@ -51,7 +51,7 @@ public class GhostHand extends Module {
                     InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(pos.getCenter(), RotationUtils.getDirection(pos), pos, true));
                     if (result instanceof InteractionResult.Success || result instanceof InteractionResult.Fail) {
                         mc.player.swing(hand);
-                        event.setCancelled(true);
+                        event.cancel();
                         return;
                     }
                 }

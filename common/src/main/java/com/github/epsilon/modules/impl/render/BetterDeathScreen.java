@@ -52,7 +52,7 @@ public class BetterDeathScreen extends Module {
         if (event.getKey() == freecamKey.getValue()) {
             if ((mc.screen instanceof DeathScreen || freecamActive) && !(mc.screen instanceof ChatScreen)) {
                 toggleFreecam();
-                event.setCancelled(true);
+                event.cancel();
             }
             return;
         }
@@ -62,10 +62,10 @@ public class BetterDeathScreen extends Module {
             if (mc.options.keyChat.matches(event.getKeyEvent())) {
                 pendingChat = true;
                 chatPrefix = "";
-                event.setCancelled(true);
+                event.cancel();
             } else if (mc.options.keyCommand.matches(event.getKeyEvent())) {
                 mc.setScreen(new ChatScreen("", false));
-                event.setCancelled(true);
+                event.cancel();
             }
         }
     }
@@ -74,7 +74,7 @@ public class BetterDeathScreen extends Module {
     @EventHandler
     private void onOpenScreen(OpenScreenEvent event) {
         if (freecamActive && event.getScreen() instanceof DeathScreen) {
-            event.setCancelled(true);
+            event.cancel();
         }
     }
 

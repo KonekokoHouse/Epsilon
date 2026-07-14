@@ -113,7 +113,7 @@ public class Xray extends Module {
             if (all != done) {
                 event.setZ(0);
                 event.setX(0);
-                event.setCancelled(true);
+                event.cancel();
                 if (mc.player.tickCount % 8 == 0 && MoveUtils.isMoving()) {
                     log("Don't move while deobf!");
                 }
