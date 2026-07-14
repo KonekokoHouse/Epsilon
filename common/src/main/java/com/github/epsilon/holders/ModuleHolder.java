@@ -95,6 +95,7 @@ public class ModuleHolder {
         addModule(Eagle.INSTANCE);
         addModule(AutoMap.INSTANCE);
         addModule(FastWeb.INSTANCE);
+        addModule(Flight.INSTANCE);
         addModule(GUIMove.INSTANCE);
         addModule(JumpReset.INSTANCE);
         addModule(KeepSprint.INSTANCE);
