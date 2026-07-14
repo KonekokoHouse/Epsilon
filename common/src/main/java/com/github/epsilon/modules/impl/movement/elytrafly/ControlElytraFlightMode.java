@@ -9,7 +9,6 @@ import com.github.epsilon.modules.impl.movement.follower.Follower;
 import com.github.epsilon.modules.impl.movement.follower.FollowerInput;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -157,7 +156,7 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
 
         boolean jump = mc.options.keyJump.isDown();
         boolean sneak = mc.options.keyShift.isDown();
-        boolean moving = MoveUtils.isMoving();
+        boolean moving = mc.player.isMoving();
 
         if (sneak && jump) {
             pitch = -3f;

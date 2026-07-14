@@ -31,7 +31,7 @@ public class Strafe extends Module {
             return;
         }
 
-        if (airStop.getValue() && !MoveUtils.isMoving()) {
+        if (airStop.getValue() && !mc.player.isMoving()) {
             mc.player.setDeltaMovement(0.0, mc.player.getDeltaMovement().y, 0.0);
             return;
         }
@@ -50,7 +50,7 @@ public class Strafe extends Module {
 
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (autoJump.getValue() && MoveUtils.isMoving()) event.setJump(true);
+        if (autoJump.getValue() && mc.player.isMoving()) event.setJump(true);
     }
 
 }

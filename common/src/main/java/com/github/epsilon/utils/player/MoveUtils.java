@@ -6,11 +6,6 @@ import static com.github.epsilon.Constants.mc;
 
 public class MoveUtils {
 
-    public static boolean isMoving() {
-        Vec2 moveVector = mc.player.input.getMoveVector();
-        return moveVector.x != 0 || moveVector.y != 0;
-    }
-
     public static double[] forwardWithoutStrafe(double speed) {
         float yaw = mc.player.getYRot();
 

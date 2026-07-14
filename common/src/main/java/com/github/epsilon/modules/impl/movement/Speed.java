@@ -11,7 +11,6 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
@@ -141,7 +140,7 @@ public class Speed extends Module {
     @EventHandler
     private void onPlayerTickPre(PlayerTickEvent.Pre event) {
         if (mode.is(Mode.Grim)) {
-            if (!MoveUtils.isMoving()) {
+            if (!mc.player.isMoving()) {
                 return;
             }
 
@@ -173,7 +172,7 @@ public class Speed extends Module {
 
     @EventHandler
     private void onMove(MoveEvent event) {
-        if (!MoveUtils.isMoving() && airStop.getValue() && !mode.is(Mode.Grim)) {
+        if (!mc.player.isMoving() && airStop.getValue() && !mode.is(Mode.Grim)) {
             mc.player.setDeltaMovement(0.0, mc.player.getDeltaMovement().y, 0.0);
         }
         if (!this.inWater.getValue() && (mc.player.isUnderWater() || mc.player.isInWater() || mc.player.isInLava())
@@ -182,7 +181,7 @@ public class Speed extends Module {
                 || !inBlock.getValue() && PlayerUtils.isInBlock()
                 || mc.player.getAbilities().flying
                 || mc.player.isFallFlying()
-                || !MoveUtils.isMoving()) {
+                || !mc.player.isMoving()) {
             resetStrafe();
             this.stop = true;
             return;

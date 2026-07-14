@@ -56,3 +56,5 @@ accessible field net/minecraft/client/renderer/LevelRenderer entityOutlineTarget
 accessible method net/minecraft/world/entity/player/Player canPlayerFitWithinBlocksAndEntitiesWhen (Lnet/minecraft/world/entity/Pose;)Z
 
 accessible field net/minecraft/client/KeyMapping key Lcom/mojang/blaze3d/platform/InputConstants$Key;
+
+accessible method net/minecraft/client/player/LocalPlayer isMoving ()Z

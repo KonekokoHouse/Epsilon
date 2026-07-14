@@ -161,7 +161,7 @@ public class Phase extends Module {
                 blockToBreak = BlockPos.containing(mc.player.getX() + dir[0], mc.player.getY() + 2, mc.player.getZ() + dir[1]);
             } else if (mc.options.keyShift.isDown()) {
                 blockToBreak = BlockPos.containing(mc.player.getX() + dir[0], mc.player.getY() - 1, mc.player.getZ() + dir[1]);
-            } else if (MoveUtils.isMoving()) {
+            } else if (mc.player.isMoving()) {
                 blockToBreak = BlockPos.containing(mc.player.getX() + dir[0], mc.player.getY(), mc.player.getZ() + dir[1]);
             }
 

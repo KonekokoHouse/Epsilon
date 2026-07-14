@@ -9,7 +9,6 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.player.InvHelper;
-import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -126,7 +125,7 @@ public class InvManager extends Module {
         if (event.getPacket() instanceof ServerboundContainerClosePacket) this.inventoryOpen = false;
         if (this.inventoryOpen && !this.inventoryOnly.getValue()) {
             if (event.getPacket() instanceof ServerboundMovePlayerPacket) {
-                if (MoveUtils.isMoving()) {
+                if (mc.player.isMoving()) {
                     mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.inventoryMenu.containerId));
                 }
             } else if (event.getPacket() instanceof ServerboundUseItemOnPacket || event.getPacket() instanceof ServerboundUseItemPacket || event.getPacket() instanceof ServerboundInteractPacket || event.getPacket() instanceof ServerboundPlayerActionPacket) {
@@ -165,7 +164,7 @@ public class InvManager extends Module {
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (InvHelper.shouldDisableFeatures()) return;
-        if (MoveUtils.isMoving()) this.noMoveTicks = 0;
+        if (mc.player.isMoving()) this.noMoveTicks = 0;
         else this.noMoveTicks++;
         boolean allowMove = !this.inventoryOnly.getValue();
         if (Stealer.INSTANCE.isWorking() || (this.inventoryOnly.getValue() ? !(mc.gui.screen() instanceof InventoryScreen) : (!allowMove && this.noMoveTicks <= 1))) {

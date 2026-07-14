@@ -15,7 +15,6 @@ import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.player.FallingPlayer;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
-import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
@@ -275,7 +274,7 @@ public class Scaffold extends Module {
 
     @EventHandler
     private void onMoveInput(KeyboardInputEvent event) {
-        if (mc.player.onGround() && !mc.options.keyJump.isDown() && MoveUtils.isMoving() && mode.is(Mode.TellyBridge)) {
+        if (mc.player.onGround() && !mc.options.keyJump.isDown() && mc.player.isMoving() && mode.is(Mode.TellyBridge)) {
             event.setJump(true);
         }
     }
@@ -365,7 +364,7 @@ public class Scaffold extends Module {
     }
 
     private int getYLevel() {
-        if (!mc.options.keyJump.isDown() && MoveUtils.isMoving() && mc.player.fallDistance <= 0.25f && mode.is(Mode.TellyBridge)) {
+        if (!mc.options.keyJump.isDown() && mc.player.isMoving() && mc.player.fallDistance <= 0.25f && mode.is(Mode.TellyBridge)) {
             return yLevel;
         }
         return Mth.floor(mc.player.getY()) - 1;
@@ -430,7 +429,7 @@ public class Scaffold extends Module {
                 continue;
             }
 
-            if (face == Direction.UP && MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
+            if (face == Direction.UP && mc.player.isMoving() && !mc.options.keyJump.isDown()) {
                 continue;
             }
 

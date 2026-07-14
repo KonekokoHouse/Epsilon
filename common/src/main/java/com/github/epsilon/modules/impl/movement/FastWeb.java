@@ -35,7 +35,7 @@ public class FastWeb extends Module {
             return;
         }
 
-        if (!MoveUtils.isMoving()) {
+        if (!mc.player.isMoving()) {
             return;
         }
 

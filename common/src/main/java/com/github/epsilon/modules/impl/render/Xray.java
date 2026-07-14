@@ -12,7 +12,6 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.BlockPos;
@@ -114,7 +113,7 @@ public class Xray extends Module {
                 event.setZ(0);
                 event.setX(0);
                 event.cancel();
-                if (mc.player.tickCount % 8 == 0 && MoveUtils.isMoving()) {
+                if (mc.player.tickCount % 8 == 0 && mc.player.isMoving()) {
                     log("Don't move while deobf!");
                 }
             } else {

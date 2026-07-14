@@ -9,7 +9,6 @@ import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.player.EnchantmentUtils;
-import com.github.epsilon.utils.player.MoveUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.core.component.DataComponents;
@@ -119,7 +118,7 @@ public class Velocity extends Module {
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
         if (jump) {
-            if (mc.player.onGround() && MoveUtils.isMoving()) {
+            if (mc.player.onGround() && mc.player.isMoving()) {
                 mc.player.input.makeJump();
             }
             jump = false;
