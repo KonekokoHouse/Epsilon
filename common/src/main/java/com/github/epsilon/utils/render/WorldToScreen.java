@@ -103,4 +103,5 @@ public class WorldToScreen {
     private static int[] getViewport() {
         return new int[]{0, 0, mc.getWindow().getWidth(), mc.getWindow().getHeight()};
     }
+
 }
