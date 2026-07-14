@@ -90,6 +90,11 @@ public final class EpsilonTranslations {
             Gui.LIST_ALL,
             Gui.LIST_AVAILABLE,
             Gui.LIST_SELECTED_HEADER,
+            Gui.ENTITY_CATEGORY_FRIENDLY,
+            Gui.ENTITY_CATEGORY_NEUTRAL,
+            Gui.ENTITY_CATEGORY_HOSTILE,
+            Gui.ENTITY_CATEGORY_RIDEABLE,
+            Gui.ENTITY_CATEGORY_MISC,
             Notifications.ENABLED,
             Notifications.DISABLED,
             ElytraFly.PITCH40_TAKEOFF_COMPLETE,
@@ -217,6 +222,11 @@ public final class EpsilonTranslations {
         public static final TranslateComponent LIST_ALL = create("gui", "list.all");
         public static final TranslateComponent LIST_AVAILABLE = create("gui", "list.available");
         public static final TranslateComponent LIST_SELECTED_HEADER = create("gui", "list.selected_header");
+        public static final TranslateComponent ENTITY_CATEGORY_FRIENDLY = create("gui", "entity_category.friendly");
+        public static final TranslateComponent ENTITY_CATEGORY_NEUTRAL = create("gui", "entity_category.neutral");
+        public static final TranslateComponent ENTITY_CATEGORY_HOSTILE = create("gui", "entity_category.hostile");
+        public static final TranslateComponent ENTITY_CATEGORY_RIDEABLE = create("gui", "entity_category.rideable");
+        public static final TranslateComponent ENTITY_CATEGORY_MISC = create("gui", "entity_category.misc");
 
         private Gui() {
         }

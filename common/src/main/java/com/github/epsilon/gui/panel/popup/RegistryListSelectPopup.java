@@ -16,6 +16,7 @@ import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.world.BlockRegistryUtils;
+import com.github.epsilon.utils.world.EntityTypeCategories;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -116,7 +117,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         this.setting = setting;
         this.displayNameFn = displayNameFn;
         this.iconProvider = iconProvider;
-        this.categories = categories;
+        this.categories = List.copyOf(categories);
         this.addFn = addFn;
         this.removeFn = removeFn;
         this.openAnimation.setStartValue(0.0f);
@@ -173,7 +174,23 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                                                                           RegistryListSetting<EntityType<?>> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
                 entityType -> entityType.getDescription().getString(), RegistryListSelectPopup::entityTypePreviewStack,
+                entityTypeCategories(),
                 setting::add, setting::remove);
+    }
+
+    private static List<Category<EntityType<?>>> entityTypeCategories() {
+        return List.of(
+                new Category<>(EpsilonTranslations.Gui.ENTITY_CATEGORY_FRIENDLY.getTranslatedName(),
+                        EntityTypeCategories::isFriendly),
+                new Category<>(EpsilonTranslations.Gui.ENTITY_CATEGORY_NEUTRAL.getTranslatedName(),
+                        EntityTypeCategories::isNeutral),
+                new Category<>(EpsilonTranslations.Gui.ENTITY_CATEGORY_HOSTILE.getTranslatedName(),
+                        EntityTypeCategories::isHostile),
+                new Category<>(EpsilonTranslations.Gui.ENTITY_CATEGORY_RIDEABLE.getTranslatedName(),
+                        EntityTypeCategories::isRideable),
+                new Category<>(EpsilonTranslations.Gui.ENTITY_CATEGORY_MISC.getTranslatedName(),
+                        EntityTypeCategories::isMisc)
+        );
     }
 
     private static RegistryListSelectPopup<SoundEvent> soundEventPopup(PanelLayout.Rect bounds,
@@ -518,9 +535,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         List<T> result = new ArrayList<>();
         for (T entry : allEntries) {
             if (setting.getValue().contains(entry)) continue;
-            if (selectedCategory >= 0 && selectedCategory < categories.size()) {
-                if (!categories.get(selectedCategory).predicate().test(entry)) continue;
-            }
+            if (!matchesSelectedCategory(entry)) continue;
             String text = displayNameFn.apply(entry).toLowerCase(Locale.ROOT);
             if (needle.isEmpty() || text.contains(needle)) result.add(entry);
         }
@@ -531,10 +546,17 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         String needle = query.toLowerCase(Locale.ROOT).trim();
         List<T> result = new ArrayList<>();
         for (T entry : setting.getValue()) {
+            if (!matchesSelectedCategory(entry)) continue;
             String text = displayNameFn.apply(entry).toLowerCase(Locale.ROOT);
             if (needle.isEmpty() || text.contains(needle)) result.add(entry);
         }
         return result;
+    }
+
+    private boolean matchesSelectedCategory(T entry) {
+        return selectedCategory < 0
+                || selectedCategory >= categories.size()
+                || categories.get(selectedCategory).predicate().test(entry);
     }
 
     private void buildColumn(PanelUiTree.Scope scope, List<T> entries, float columnX, float startY,

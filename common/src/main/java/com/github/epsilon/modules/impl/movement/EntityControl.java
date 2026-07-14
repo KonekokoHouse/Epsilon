@@ -12,6 +12,7 @@ import com.github.epsilon.elements.impl.notification.NotificationMode;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.world.EntityTypeCategories;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
@@ -22,8 +23,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
-
-import java.util.*;
 
 public class EntityControl extends Module {
 
@@ -46,7 +45,7 @@ public class EntityControl extends Module {
 
     //Control
     private final RegistryListSetting<EntityType<?>> entities = entityTypeListSetting("Entities",
-            getAllRideableEntities()).group(sgControl);
+            EntityTypeCategories.rideable()).group(sgControl);
 
     private final BoolSetting spoofSaddle = boolSetting("Spoof Saddle", false).group(sgControl);
     private final BoolSetting maxJump = boolSetting("Max jump", true).group(sgControl);
@@ -333,21 +332,4 @@ public class EntityControl extends Module {
         }
     }
 
-    private static Set<EntityType<?>> getAllRideableEntities() {
-        return Set.of(
-            EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
-            EntityType.SKELETON_HORSE, EntityType.ZOMBIE_HORSE,
-            EntityType.PIG, EntityType.STRIDER,
-            EntityType.CAMEL, EntityType.LLAMA, EntityType.TRADER_LLAMA,
-            EntityType.HAPPY_GHAST, EntityType.NAUTILUS, EntityType.ZOMBIE_NAUTILUS,
-            EntityType.OAK_BOAT, EntityType.SPRUCE_BOAT, EntityType.BIRCH_BOAT,
-            EntityType.JUNGLE_BOAT, EntityType.ACACIA_BOAT, EntityType.DARK_OAK_BOAT,
-            EntityType.CHERRY_BOAT, EntityType.MANGROVE_BOAT, EntityType.PALE_OAK_BOAT,
-            EntityType.BAMBOO_RAFT,
-            EntityType.OAK_CHEST_BOAT, EntityType.SPRUCE_CHEST_BOAT, EntityType.BIRCH_CHEST_BOAT,
-            EntityType.JUNGLE_CHEST_BOAT, EntityType.ACACIA_CHEST_BOAT, EntityType.DARK_OAK_CHEST_BOAT,
-            EntityType.CHERRY_CHEST_BOAT, EntityType.MANGROVE_CHEST_BOAT, EntityType.PALE_OAK_CHEST_BOAT,
-            EntityType.BAMBOO_CHEST_RAFT
-        );
-    }
 }
