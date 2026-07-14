@@ -1,7 +1,7 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.AttackEvent;
+import com.github.epsilon.events.impl.AttackEntityEvent;
 import com.github.epsilon.events.impl.DestroyBlockEvent;
 import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.events.impl.UseItemEvent;
@@ -34,7 +34,7 @@ public class MixinMultiPlayerGameMode {
 
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void onAttackEntity(Player player, Entity entity, CallbackInfo ci) {
-        AttackEvent event = EventBus.INSTANCE.post(new AttackEvent(player, entity));
+        AttackEntityEvent event = EventBus.INSTANCE.post(new AttackEntityEvent(player, entity));
         if (event.isCancelled()) {
             ci.cancel();
         }

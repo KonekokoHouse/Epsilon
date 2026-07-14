@@ -50,6 +50,7 @@ public class ModuleHolder {
         addModule(AutoMend.INSTANCE);
         addModule(AutoTotem.INSTANCE);
         addModule(AutoWeapon.INSTANCE);
+        addModule(Criticals.INSTANCE);
         addModule(ZealotCrystalPlus.INSTANCE);
         addModule(CrystalAura.INSTANCE);
         addModule(CrystalBlocker.INSTANCE);
