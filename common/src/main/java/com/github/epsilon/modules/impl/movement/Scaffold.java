@@ -240,7 +240,7 @@ public class Scaffold extends Module {
 
             if ((!reachable || mc.player.getDeltaMovement().horizontal().length() >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
                 Rot2f rotation = getRotation(blockPos, direction);
-                event.setCancelled(true);
+                event.cancel();
 
                 rotateCount++;
                 Managers.ROTATION.rotations = rotation;

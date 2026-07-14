@@ -85,7 +85,7 @@ public class Velocity extends Module {
 
                 if (serverMotion.getValue() && event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.id() == mc.player.getId()) {
                     if (!shouldExcludeMotion(packet)) {
-                        event.setCancelled(true);
+                        event.cancel();
                     }
                     return;
                 }

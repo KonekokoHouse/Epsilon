@@ -190,7 +190,7 @@ public class CrystalAura extends Module {
         if (mc.hitResult instanceof BlockHitResult hit) {
             if ((mc.level.getBlockState(hit.getBlockPos()).is(Blocks.OBSIDIAN) || mc.level.getBlockState(hit.getBlockPos()).is(Blocks.BEDROCK))
                     && canPlaceCrystalAssumeObsidian(hit.getBlockPos())) {
-                event.setCancelled(true);
+                event.cancel();
             }
         }
     }

@@ -36,14 +36,14 @@ public class Disabler extends Module {
             if (packet instanceof ServerboundSetCarriedItemPacket setCarriedItemPacket) {
                 int slot = setCarriedItemPacket.getSlot();
                 if (slot == lastSendSlot && slot != -1) {
-                    event.setCancelled(true);
+                    event.cancel();
                 }
                 lastSendSlot = setCarriedItemPacket.getSlot();
             }
         }
 
         if (packet instanceof ServerboundContainerClickPacket || packet instanceof ServerboundContainerClosePacket) {
-            event.setCancelled(true);
+            event.cancel();
 
             boolean sprinted = false;
 
