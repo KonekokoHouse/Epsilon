@@ -1382,5 +1382,10 @@
   "epsilon.elements.mtf": "补佳乐",
   "epsilon.elements.mtf.size": "大小",
   "epsilon.elements.mtf.speed": "速度",
-  "epsilon.elements.mtf.color": "颜色"
+  "epsilon.elements.mtf.color": "颜色",
+  "epsilon.elements.niuren": "牛人",
+  "epsilon.elements.niuren.size": "大小",
+  "epsilon.elements.niuren.duration": "持续时间",
+  "epsilon.elements.niuren.spins": "旋转圈数",
+  "epsilon.elements.niuren.wobble": "滑稽程度"
 }

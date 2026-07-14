@@ -1382,5 +1382,10 @@
   "epsilon.elements.mtf": "MTF",
   "epsilon.elements.mtf.size": "Size",
   "epsilon.elements.mtf.speed": "Speed",
-  "epsilon.elements.mtf.color": "Color"
+  "epsilon.elements.mtf.color": "Color",
+  "epsilon.elements.niuren": "NiuRen",
+  "epsilon.elements.niuren.size": "Size",
+  "epsilon.elements.niuren.duration": "Duration",
+  "epsilon.elements.niuren.spins": "Spins",
+  "epsilon.elements.niuren.wobble": "Silliness"
 }
