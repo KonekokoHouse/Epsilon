@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.movement.elytrafly.ElytraFly;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.settings.impl.KeybindSetting;
@@ -14,7 +15,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Predicate;
@@ -22,6 +22,11 @@ import java.util.function.Predicate;
 public class ElytraSwap extends Module {
 
     public static final ElytraSwap INSTANCE = new ElytraSwap();
+
+    public enum SwapTarget {
+        Chestplate,
+        Elytra
+    }
 
     private ElytraSwap() {
         super("Elytra Swap", Category.PLAYER);
@@ -40,16 +45,34 @@ public class ElytraSwap extends Module {
     private int switchCounter;
     private int originalSlot;
     private boolean isKeyDown;
+    private SwapTarget lastSwapTarget;
+
+    public SwapTarget getLastSwapTarget() {
+        return lastSwapTarget;
+    }
+
+    public boolean isBusy() {
+        return isEnabled() && (isKeyDown || isItemSwapped || isSwinging || originalSlot != -1
+                || KeybindUtils.isPressed(activateKey.getValue()));
+    }
 
     @Override
     protected void onEnable() {
         resetState();
         isKeyDown = false;
+        updateSwapTargetFromChest();
     }
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
         if (mc.screen != null) return;
+        if (ElytraFly.INSTANCE.isManagingChestSlot()) {
+            if (this.originalSlot != -1) InvUtils.swap(this.originalSlot, false);
+            resetState();
+            isKeyDown = false;
+            return;
+        }
+        if (lastSwapTarget == null) updateSwapTargetFromChest();
 
         boolean pressed = KeybindUtils.isPressed(activateKey.getValue());
         if (!pressed) {
@@ -70,16 +93,16 @@ public class ElytraSwap extends Module {
             }
 
 
-            boolean wearingElytra = mc.player.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA);
+            boolean wearingElytra = mc.player.getItemBySlot(EquipmentSlot.CHEST).has(DataComponents.GLIDER);
 
 
             Predicate<ItemStack> predicate = wearingElytra ?
                     stack -> {
                         if (stack.isEmpty()) return false;
                         var equippable = stack.get(DataComponents.EQUIPPABLE);
-                        return equippable != null && equippable.slot() == EquipmentSlot.CHEST;
+                        return equippable != null && equippable.slot() == EquipmentSlot.CHEST && !stack.has(DataComponents.GLIDER);
                     } :
-                    stack -> stack.is(Items.ELYTRA);
+                    stack -> !stack.isEmpty() && stack.has(DataComponents.GLIDER);
             if (!this.isItemSwapped) {
                 int targetSlot = InvUtils.findInHotbar(predicate).slot();
 
@@ -115,6 +138,7 @@ public class ElytraSwap extends Module {
 
                 mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
                 mc.player.swing(InteractionHand.MAIN_HAND);
+                updateSwapTargetFromChest();
                 this.isSwinging = true;
             }
 
@@ -144,6 +168,16 @@ public class ElytraSwap extends Module {
         this.swapCounter = 0;
         this.isSwinging = false;
         this.isItemSwapped = false;
+    }
+
+    private void updateSwapTargetFromChest() {
+        if (mc.player == null) {
+            lastSwapTarget = null;
+            return;
+        }
+        lastSwapTarget = mc.player.getItemBySlot(EquipmentSlot.CHEST).has(DataComponents.GLIDER)
+                ? SwapTarget.Elytra
+                : SwapTarget.Chestplate;
     }
 
 }

@@ -84,6 +84,10 @@ public class ElytraFly extends Module {
         return isEnabled() && mode.is(ElytraFlightModes.Control) && armored.getValue();
     }
 
+    public boolean isManagingChestSlot() {
+        return isEnabled() && armored.getValue();
+    }
+
     public Pitch40ControlState capturePitch40ControlState() {
         return new Pitch40ControlState(
                 isEnabled(),

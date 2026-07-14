@@ -93,6 +93,7 @@ public class InvManager extends Module {
         if (InvHelper.isGodItem(stack)) return true;
         if (stack.getDisplayName().getString().contains("点击使用")) return true;
         if (InvHelper.isArmor(stack)) {
+            if (AutoArmor.INSTANCE.isEnabled()) return true;
             float protection = InvHelper.getProtection(stack);
             if (InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) >= protection) return false;
             float bestArmor = InvHelper.getBestArmorScore(InvHelper.getArmorSlot(stack));
@@ -176,7 +177,7 @@ public class InvManager extends Module {
             return;
         int nextDelay = Math.max(minDelay.getValue(), (int) (this.delay.getValue() + random.nextGaussian() * 50));
 
-        if (this.autoArmor.getValue()) {
+        if (this.autoArmor.getValue() && !AutoArmor.INSTANCE.isEnabled()) {
             EquipmentSlot[] armorSlots = {EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD};
             for (int i = 0; i < armorSlots.length; i++) {
                 ItemStack stack = InvHelper.getArmorStack(armorSlots[i]);

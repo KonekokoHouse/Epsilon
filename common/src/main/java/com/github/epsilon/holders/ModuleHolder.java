@@ -70,6 +70,7 @@ public class ModuleHolder {
         addModule(AutoFirework.INSTANCE);
         addModule(AutoKouZi.INSTANCE);
         addModule(AutoTool.INSTANCE);
+        addModule(AutoArmor.INSTANCE);
         addModule(BreakCooldown.INSTANCE);
         addModule(Disabler.INSTANCE);
         addModule(ElytraSwap.INSTANCE);
