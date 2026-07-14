@@ -491,6 +491,11 @@
   "epsilon.modules.kill aura.esp mode.capturemark": "Capture Mark",
   "epsilon.modules.kill aura.esp mode.circle": "Circle",
   "epsilon.modules.kill aura.esp mode.firefly": "Firefly",
+  "epsilon.modules.kill aura.esp mode.deobf": "Deobf",
+  "epsilon.modules.kill aura.deobf size": "Deobf Size",
+  "epsilon.modules.kill aura.deobf spins": "Deobf Spins",
+  "epsilon.modules.kill aura.deobf wobble": "Deobf Silliness",
+  "epsilon.modules.kill aura.deobf fly height": "Deobf Fly Height",
   "epsilon.modules.kill aura.esp main": "ESP Main Color",
   "epsilon.modules.kill aura.esp second": "ESP Second Color",
   "epsilon.modules.kill aura.esp size": "ESP Size",
@@ -1382,10 +1387,5 @@
   "epsilon.elements.mtf": "MTF",
   "epsilon.elements.mtf.size": "Size",
   "epsilon.elements.mtf.speed": "Speed",
-  "epsilon.elements.mtf.color": "Color",
-  "epsilon.elements.niuren": "NiuRen",
-  "epsilon.elements.niuren.size": "Size",
-  "epsilon.elements.niuren.duration": "Duration",
-  "epsilon.elements.niuren.spins": "Spins",
-  "epsilon.elements.niuren.wobble": "Silliness"
+  "epsilon.elements.mtf.color": "Color"
 }

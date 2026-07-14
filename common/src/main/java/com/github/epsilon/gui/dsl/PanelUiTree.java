@@ -466,33 +466,12 @@ public class PanelUiTree {
             texture(new Render2DTexture.LuminRef(texture), x, y, width, height, u0, v0, u1, v1, color);
         }
 
-        public void rotatedTexture(Render2DTexture texture, float x, float y, float width, float height,
-                                   float u0, float v0, float u1, float v1, Color color,
-                                   float originX, float originY, float rotationDegrees) {
-            nodes.add(new RotatedTextureNode(texture,
-                    resolveX(x), resolveY(y), width, height, u0, v0, u1, v1, color,
-                    resolveX(originX), resolveY(originY), rotationDegrees));
-        }
-
-        public void rotatedTexture(Identifier texture, float x, float y, float width, float height,
-                                   float u0, float v0, float u1, float v1, Color color,
-                                   float originX, float originY, float rotationDegrees) {
-            rotatedTexture(texture, x, y, width, height, u0, v0, u1, v1, color,
-                    originX, originY, rotationDegrees, false);
-        }
-
-        public void rotatedTexture(Identifier texture, float x, float y, float width, float height,
-                                   float u0, float v0, float u1, float v1, Color color,
-                                   float originX, float originY, float rotationDegrees, boolean linearFilter) {
-            rotatedTexture(new Render2DTexture.IdentifierRef(texture, linearFilter),
-                    x, y, width, height, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
-        }
-
         public void rotatedTexture(LuminTexture texture, float x, float y, float width, float height,
                                    float u0, float v0, float u1, float v1, Color color,
                                    float originX, float originY, float rotationDegrees) {
-            rotatedTexture(new Render2DTexture.LuminRef(texture),
-                    x, y, width, height, u0, v0, u1, v1, color, originX, originY, rotationDegrees);
+            nodes.add(new RotatedTextureNode(new Render2DTexture.LuminRef(texture),
+                    resolveX(x), resolveY(y), width, height, u0, v0, u1, v1, color,
+                    resolveX(originX), resolveY(originY), rotationDegrees));
         }
 
         public void roundedTexture(Render2DTexture texture, float x, float y, float width, float height, float radius,

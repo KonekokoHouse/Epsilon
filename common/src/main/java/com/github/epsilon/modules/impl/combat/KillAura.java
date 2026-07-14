@@ -1,6 +1,8 @@
 package com.github.epsilon.modules.impl.combat;
 
+import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.bus.listeners.ConsumerListener;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.managers.Managers;
@@ -11,6 +13,7 @@ import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.math.MathUtils;
 import com.github.epsilon.utils.render.esp.CaptureMarkESP;
 import com.github.epsilon.utils.render.esp.CircleESP;
+import com.github.epsilon.utils.render.esp.DeobfESP;
 import com.github.epsilon.utils.render.esp.FireflyESP;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -29,6 +32,15 @@ public class KillAura extends Module {
 
     private KillAura() {
         super("Kill Aura", Category.COMBAT);
+        EventBus.INSTANCE.subscribe(new ConsumerListener<>(Render3DEvent.class, event -> {
+            DeobfESP.render(
+                    event.getPoseStack(),
+                    deobfSize.getValue().floatValue(),
+                    deobfSpins.getValue().floatValue(),
+                    deobfWobble.getValue().floatValue(),
+                    deobfFlyHeight.getValue().floatValue()
+            );
+        }));
     }
 
     private enum Mode {
@@ -45,7 +57,8 @@ public class KillAura extends Module {
     private enum ESPMode {
         CaptureMark,
         Circle,
-        Firefly
+        Firefly,
+        Deobf
     }
 
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.OnePointEight);
@@ -74,6 +87,11 @@ public class KillAura extends Module {
     private final BoolSetting esp = boolSetting("ESP", true);
 
     private final EnumSetting<ESPMode> espMode = enumSetting("ESP Mode", ESPMode.Circle, esp::getValue);
+
+    private final DoubleSetting deobfSize = doubleSetting("Deobf Size", 0.75, 0.25, 2.0, 0.05, () -> esp.getValue() && espMode.is(ESPMode.Deobf));
+    private final DoubleSetting deobfSpins = doubleSetting("Deobf Spins", 3.0, 0.5, 8.0, 0.25, () -> esp.getValue() && espMode.is(ESPMode.Deobf));
+    private final DoubleSetting deobfWobble = doubleSetting("Deobf Wobble", 1.0, 0.0, 2.0, 0.1, () -> esp.getValue() && espMode.is(ESPMode.Deobf));
+    private final DoubleSetting deobfFlyHeight = doubleSetting("Deobf Fly Height", 5.0, 1.0, 12.0, 0.5, () -> esp.getValue() && espMode.is(ESPMode.Deobf));
 
     private final ColorSetting espColor1 = colorSetting("ESP Main", new Color(255, 183, 197), () -> esp.getValue() && espMode.is(ESPMode.CaptureMark));
     private final ColorSetting espColor2 = colorSetting("ESP Second", new Color(255, 133, 161), () -> esp.getValue() && espMode.is(ESPMode.CaptureMark));
@@ -108,10 +126,15 @@ public class KillAura extends Module {
     protected void onDisable() {
         target = null;
         switchIndex = 0;
+        DeobfESP.retainRisingEffects();
     }
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
+        if (!esp.getValue() || !espMode.is(ESPMode.Deobf)) {
+            DeobfESP.clear();
+        }
+
         if (mc.player.isUsingItem() || mc.player.isBlocking()) return;
 
         List<LivingEntity> targets = Managers.TARGET.acquireTargets(TargetRequest.of(
@@ -178,6 +201,9 @@ public class KillAura extends Module {
 
     private void doAttack(LivingEntity target) {
         mc.gameMode.attack(mc.player, target);
+        if (esp.getValue() && espMode.is(ESPMode.Deobf)) {
+            DeobfESP.markHit(target);
+        }
         if (swingHand.getValue()) {
             mc.player.swing(InteractionHand.MAIN_HAND);
         } else {
@@ -187,9 +213,7 @@ public class KillAura extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-        if (!esp.getValue()) return;
-
-        if (target == null) return;
+        if (!esp.getValue() || espMode.is(ESPMode.Deobf) || target == null) return;
 
         PoseStack stack = event.getPoseStack();
 
