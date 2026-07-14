@@ -48,7 +48,6 @@ public class HudEditorScreen extends Screen {
     private HudModule draggingElement;
     private float dragOffsetX;
     private float dragOffsetY;
-    private boolean movedDuringDrag;
     private SnapInfo currentSnap = SnapInfo.none();
 
     private final TextRenderer textMetrics = TextRenderer.create();
@@ -359,7 +358,6 @@ public class HudEditorScreen extends Screen {
                 draggingElement = element;
                 dragOffsetX = (float) epsilonEvent.x() - element.x;
                 dragOffsetY = (float) epsilonEvent.y() - element.y;
-                movedDuringDrag = false;
                 currentSnap = SnapInfo.none();
                 return true;
             }
@@ -376,10 +374,6 @@ public class HudEditorScreen extends Screen {
         if (draggingElement != null && epsilonEvent.button() == 0) {
             draggingElement = null;
             currentSnap = SnapInfo.none();
-            if (movedDuringDrag) {
-                ConfigHolder.INSTANCE.saveNow();
-            }
-            movedDuringDrag = false;
             return true;
         }
         if (hudPanel != null && hudPanel.mouseReleased(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
@@ -395,7 +389,6 @@ public class HudEditorScreen extends Screen {
             double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(event.x());
             double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(event.y());
             moveElementTo(draggingElement, (float) epsilonMouseX - dragOffsetX, (float) epsilonMouseY - dragOffsetY, true);
-            movedDuringDrag = true;
             return true;
         }
         if (hudPanel != null) {
@@ -423,28 +416,23 @@ public class HudEditorScreen extends Screen {
         return switch (event.key()) {
             case GLFW.GLFW_KEY_LEFT -> {
                 moveElementTo(selectedElement, selectedElement.x - step, selectedElement.y, false);
-                ConfigHolder.INSTANCE.saveNow();
                 yield true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
                 moveElementTo(selectedElement, selectedElement.x + step, selectedElement.y, false);
-                ConfigHolder.INSTANCE.saveNow();
                 yield true;
             }
             case GLFW.GLFW_KEY_UP -> {
                 moveElementTo(selectedElement, selectedElement.x, selectedElement.y - step, false);
-                ConfigHolder.INSTANCE.saveNow();
                 yield true;
             }
             case GLFW.GLFW_KEY_DOWN -> {
                 moveElementTo(selectedElement, selectedElement.x, selectedElement.y + step, false);
-                ConfigHolder.INSTANCE.saveNow();
                 yield true;
             }
             case GLFW.GLFW_KEY_DELETE, GLFW.GLFW_KEY_BACKSPACE -> {
                 selectedElement.setEnabled(false);
                 selectedElement = null;
-                ConfigHolder.INSTANCE.saveNow();
                 yield true;
             }
             default -> false;
@@ -570,7 +558,6 @@ public class HudEditorScreen extends Screen {
     public void removed() {
         super.removed();
         draggingElement = null;
-        movedDuringDrag = false;
         currentSnap = SnapInfo.none();
     }
 

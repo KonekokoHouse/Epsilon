@@ -290,7 +290,6 @@ public class AutoMap extends Module {
             }
         }
 
-        ConfigHolder.INSTANCE.saveNow();
         routeDirty = false;
         saveTicks = 0;
         if (notify) sendMessage("已写入记录");

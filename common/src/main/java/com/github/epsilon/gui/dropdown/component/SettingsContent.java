@@ -228,7 +228,6 @@ public class SettingsContent {
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.charTyped(typedText)) {
-                    ConfigHolder.INSTANCE.saveNow();
                     return true;
                 }
             }

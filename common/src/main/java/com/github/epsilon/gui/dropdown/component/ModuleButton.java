@@ -401,7 +401,6 @@ public class ModuleButton extends Component {
         if (isHovered(mouseX, mouseY, x, y, width, DropdownTheme.MODULE_HEIGHT)) {
             if (isHiddenButtonHovered(mouseX, mouseY)) {
                 module.setHidden(!module.isHidden());
-                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
             if (isKeybindButtonHovered(mouseX, mouseY)) {

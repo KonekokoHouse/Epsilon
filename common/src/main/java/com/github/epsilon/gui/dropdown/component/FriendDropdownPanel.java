@@ -82,7 +82,6 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
             float removeX = x + width - PADDING - 18.0f;
             if (isHovered(mouseX, mouseY, removeX, rowY + 1.0f, 16.0f, 16.0f)) {
                 Managers.FRIEND.removeFriend(name);
-                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
             rowY += ROW_HEIGHT + GAP;
@@ -118,7 +117,6 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
         String name = inputField.getText().trim();
         if (!name.isEmpty() && !Managers.FRIEND.isFriend(name)) {
             Managers.FRIEND.addFriend(name);
-            ConfigHolder.INSTANCE.saveNow();
         }
         inputField.clear();
     }

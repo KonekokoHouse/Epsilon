@@ -129,7 +129,7 @@ public class ConfigHolder {
     public synchronized void saveNow() {
         try {
             saveActiveConfigSnapshot();
-        } catch (Exception e) {
+        } catch (IOException e) {
             Constants.LOGGER.error("保存配置失败", e);
         }
     }

@@ -173,7 +173,6 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         for (FriendRowEntry entry : rowEntries) {
             if (entry.removeBounds().contains(event.x(), event.y())) {
                 Managers.FRIEND.removeFriend(entry.name());
-                ConfigHolder.INSTANCE.saveNow();
                 markDirty();
                 return true;
             }
@@ -266,7 +265,6 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         String name = inputField.getText().trim();
         if (!name.isEmpty() && !Managers.FRIEND.isFriend(name)) {
             Managers.FRIEND.addFriend(name);
-            ConfigHolder.INSTANCE.saveNow();
         }
         inputField.clear();
         markDirty();

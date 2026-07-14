@@ -152,7 +152,6 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.charTyped(typedText)) {
-                ConfigHolder.INSTANCE.saveNow();
                 return true;
             }
         }
