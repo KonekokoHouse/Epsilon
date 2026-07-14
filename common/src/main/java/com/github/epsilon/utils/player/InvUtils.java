@@ -1,6 +1,5 @@
 package com.github.epsilon.utils.player;
 
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -95,13 +94,13 @@ public class InvUtils {
         else if (slot == 40) containerSlot = 45;
 
         int selectedSlot = mc.player.getInventory().getSelectedSlot();
-        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, containerSlot, selectedSlot, ContainerInput.SWAP, mc.player);
+        ClickSlotUtils.swap(mc.player.containerMenu.containerId, containerSlot, selectedSlot);
         invSlots = new int[]{containerSlot, selectedSlot};
     }
 
     public static void invSwapBack() {
         if (invSlots == null || invSlots.length < 2) return;
-        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, invSlots[0], invSlots[1], ContainerInput.SWAP, mc.player);
+        ClickSlotUtils.swap(mc.player.containerMenu.containerId, invSlots[0], invSlots[1]);
     }
 
 }

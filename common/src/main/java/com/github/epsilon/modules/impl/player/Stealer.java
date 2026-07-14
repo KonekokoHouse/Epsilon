@@ -6,13 +6,13 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.*;
 
 import java.util.Collections;
@@ -169,7 +169,7 @@ public class Stealer extends Module {
                         for (Integer pSlotId : slots) {
                             ItemStack stack = menu.getSlot(pSlotId).getItem();
                             if (isItemUseful(stack) && isBestItemInChest(menu, stack) && timer.passedMillise(nextDelay)) {
-                                mc.gameMode.handleContainerInput(menu.containerId, pSlotId, 0, ContainerInput.QUICK_MOVE, mc.player);
+                                ClickSlotUtils.shiftClick(menu.containerId, pSlotId);
                                 timer.reset();
                                 break;
                             }

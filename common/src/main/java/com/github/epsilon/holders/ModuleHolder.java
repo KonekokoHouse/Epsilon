@@ -68,6 +68,7 @@ public class ModuleHolder {
         addModule(TriggerBot.INSTANCE);
 
         // Player
+        addModule(AutoArmor.INSTANCE);
         addModule(AutoFirework.INSTANCE);
         addModule(AutoKouZi.INSTANCE);
         addModule(AutoTool.INSTANCE);

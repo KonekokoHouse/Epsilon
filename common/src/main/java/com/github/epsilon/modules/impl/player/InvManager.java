@@ -8,13 +8,13 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.*;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -181,7 +181,7 @@ public class InvManager extends Module {
                 ItemStack stack = InvHelper.getArmorStack(armorSlots[i]);
                 if (InvHelper.isArmor(stack)) {
                     if (!stack.isEmpty() && timer.passedMillise(nextDelay) && InvHelper.getBestArmorScore(armorSlots[i]) > InvHelper.getProtection(stack)) {
-                        mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, 4 + (4 - i), 1, ContainerInput.THROW, mc.player);
+                        ClickSlotUtils.dropAll(4 + (4 - i));
                         this.inventoryOpen = true;
                         timer.reset();
                     }
@@ -195,9 +195,9 @@ public class InvManager extends Module {
                     boolean isBetterItem = InvHelper.getCurrentArmorScore(InvHelper.getArmorSlot(stack)) < currentItemScore;
                     if (isBestItem && isBetterItem && timer.passedMillise(nextDelay)) {
                         if (ix < 9)
-                            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, ix + 36, 0, ContainerInput.QUICK_MOVE, mc.player);
+                            ClickSlotUtils.shiftClick(ix + 36);
                         else
-                            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, ix, 0, ContainerInput.QUICK_MOVE, mc.player);
+                            ClickSlotUtils.shiftClick(ix);
                         this.inventoryOpen = true;
                         timer.reset();
                     }
@@ -206,7 +206,7 @@ public class InvManager extends Module {
         }
 
         if (this.clickOffHand && timer.passedMillise(nextDelay)) {
-            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, 45, 0, ContainerInput.PICKUP, mc.player);
+            ClickSlotUtils.click(45);
             this.inventoryOpen = true;
             this.clickOffHand = false;
             timer.reset();
@@ -224,9 +224,9 @@ public class InvManager extends Module {
                     if (timer.passedMillise(nextDelay)) {
                         int targetSlot = egapSlot;
                         if (targetSlot < 9)
-                            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, targetSlot + 36, 0, ContainerInput.PICKUP, mc.player);
+                            ClickSlotUtils.click(targetSlot + 36);
                         else
-                            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, targetSlot, 0, ContainerInput.PICKUP, mc.player);
+                            ClickSlotUtils.click(targetSlot);
                         this.inventoryOpen = true;
                         this.clickOffHand = true;
                         timer.reset();
@@ -242,9 +242,9 @@ public class InvManager extends Module {
                     if (timer.passedMillise(nextDelay)) {
                         int targetSlot = gapSlot;
                         if (targetSlot < 9)
-                            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, targetSlot + 36, 0, ContainerInput.PICKUP, mc.player);
+                            ClickSlotUtils.click(targetSlot + 36);
                         else
-                            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, targetSlot, 0, ContainerInput.PICKUP, mc.player);
+                            ClickSlotUtils.click(targetSlot);
                         this.inventoryOpen = true;
                         this.clickOffHand = true;
                         timer.reset();
@@ -421,9 +421,9 @@ public class InvManager extends Module {
 
     private void swapOffHand(int slot) {
         if (slot < 9) {
-            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, slot + 36, 40, ContainerInput.SWAP, mc.player);
+            ClickSlotUtils.swap(slot + 36, 40);
         } else {
-            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, slot, 40, ContainerInput.SWAP, mc.player);
+            ClickSlotUtils.swap(slot, 40);
         }
         this.inventoryOpen = true;
         timer.reset();
@@ -435,9 +435,9 @@ public class InvManager extends Module {
             int itemSlot = InvHelper.getItemStackSlot(item);
             if (itemSlot != -1) {
                 if (itemSlot < 9) {
-                    mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, itemSlot + 36, 1, ContainerInput.THROW, mc.player);
+                    ClickSlotUtils.dropAll(itemSlot + 36);
                 } else {
-                    mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, itemSlot, 1, ContainerInput.THROW, mc.player);
+                    ClickSlotUtils.dropAll(itemSlot);
                 }
                 this.inventoryOpen = true;
                 timer.reset();
@@ -452,9 +452,9 @@ public class InvManager extends Module {
             int bestItemSlot = InvHelper.getItemStackSlot(bestItem);
             if (bestItemSlot != -1) {
                 if (bestItemSlot < 9) {
-                    mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, bestItemSlot + 36, targetSlot, ContainerInput.SWAP, mc.player);
+                    ClickSlotUtils.swap(bestItemSlot + 36, targetSlot);
                 } else {
-                    mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, bestItemSlot, targetSlot, ContainerInput.SWAP, mc.player);
+                    ClickSlotUtils.swap(bestItemSlot, targetSlot);
                 }
                 this.inventoryOpen = true;
                 timer.reset();
@@ -471,9 +471,9 @@ public class InvManager extends Module {
                 ItemStack bestItemStack = InvHelper.getInventoryStack(bestItemSlot);
                 if (currentSlot.getItem() != item || currentSlot.getItem() == item && currentSlot.getCount() < bestItemStack.getCount()) {
                     if (bestItemSlot < 9) {
-                        mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, bestItemSlot + 36, targetSlot, ContainerInput.SWAP, mc.player);
+                        ClickSlotUtils.swap(bestItemSlot + 36, targetSlot);
                     } else {
-                        mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, bestItemSlot, targetSlot, ContainerInput.SWAP, mc.player);
+                        ClickSlotUtils.swap(bestItemSlot, targetSlot);
                     }
                     this.inventoryOpen = true;
                     timer.reset();

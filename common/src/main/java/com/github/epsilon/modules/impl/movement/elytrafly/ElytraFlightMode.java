@@ -4,6 +4,7 @@ import com.github.epsilon.events.impl.FallFlyingEvent;
 import com.github.epsilon.events.impl.FireworkRotationEvent;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.TravelEvent;
+import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
@@ -13,7 +14,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -66,8 +66,8 @@ public abstract class ElytraFlightMode {
         if (!LivingEntity.canGlideUsing(chestStack, EquipmentSlot.CHEST)) return;
 
         int containerId = mc.player.containerMenu.containerId;
-        mc.gameMode.handleContainerInput(containerId, 6, 0, ContainerInput.PICKUP, mc.player);
-        mc.gameMode.handleContainerInput(containerId, 6, 0, ContainerInput.PICKUP, mc.player);
+        ClickSlotUtils.click(containerId, 6);
+        ClickSlotUtils.click(containerId, 6);
 
         mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
         mc.player.startFallFlying();
@@ -131,9 +131,9 @@ public abstract class ElytraFlightMode {
 
     protected void swapArmor(int containerSlot) {
         int containerId = mc.player.containerMenu.containerId;
-        mc.gameMode.handleContainerInput(containerId, containerSlot, 0, ContainerInput.PICKUP, mc.player);
-        mc.gameMode.handleContainerInput(containerId, 6, 0, ContainerInput.PICKUP, mc.player);
-        mc.gameMode.handleContainerInput(containerId, containerSlot, 0, ContainerInput.PICKUP, mc.player);
+        ClickSlotUtils.click(containerId, containerSlot);
+        ClickSlotUtils.click(containerId, 6);
+        ClickSlotUtils.click(containerId, containerSlot);
     }
 
 }

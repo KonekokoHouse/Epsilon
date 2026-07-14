@@ -6,8 +6,8 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.utils.player.ClickSlotUtils;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Items;
 
@@ -76,7 +76,7 @@ public class HoverTotem extends Module {
                             --this.clock;
                             return;
                         }
-                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slotIndex, totem, ContainerInput.SWAP, mc.player);
+                        ClickSlotUtils.swap(mc.player.containerMenu.containerId, slotIndex, totem);
                         this.currentDelay = this.getRandomDelay();
                         this.clock = this.currentDelay;
                     } else if (!mc.player.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) {
@@ -84,7 +84,7 @@ public class HoverTotem extends Module {
                             --this.clock;
                             return;
                         }
-                        mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, slotIndex, 40, ContainerInput.SWAP, mc.player);
+                        ClickSlotUtils.swap(mc.player.containerMenu.containerId, slotIndex, 40);
                         this.currentDelay = this.getRandomDelay();
                         this.clock = this.currentDelay;
                     }
