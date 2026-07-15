@@ -1070,6 +1070,7 @@
   "epsilon.modules.free camera.toggle on log": "Disable On Logout",
   "epsilon.modules.free camera.reload chunks": "Reload Chunks",
   "epsilon.modules.free camera.show hands": "Show Hands",
+  "epsilon.modules.free camera.rotate": "Rotate",
   "epsilon.modules.free camera.static": "Static View",
   "epsilon.modules.fullbright": "Fullbright",
   "epsilon.modules.fullbright.mode": "Mode",
