@@ -13,7 +13,7 @@ public class NeoForgePlatformAddon extends EpsilonAddon {
     public static final NeoForgePlatformAddon INSTANCE = new NeoForgePlatformAddon();
 
     private NeoForgePlatformAddon() {
-        super("sakura_neoforge");
+        super("epsilon_neoforge");
     }
 
     @Override
@@ -38,8 +38,7 @@ public class NeoForgePlatformAddon extends EpsilonAddon {
 
     @Override
     public List<String> getAuthors() {
-        return List.of("Sakura");
+        return List.of("slmpc", "06789");
     }
 
 }
-

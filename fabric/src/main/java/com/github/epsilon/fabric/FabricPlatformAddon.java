@@ -11,7 +11,7 @@ import java.util.List;
 public class FabricPlatformAddon extends EpsilonAddon {
 
     public FabricPlatformAddon() {
-        super("sakura_fabric");
+        super("epsilon_fabric");
     }
 
     @Override
@@ -36,8 +36,7 @@ public class FabricPlatformAddon extends EpsilonAddon {
 
     @Override
     public List<String> getAuthors() {
-        return List.of("Sakura");
+        return List.of("slmpc", "06789");
     }
-
 
 }
