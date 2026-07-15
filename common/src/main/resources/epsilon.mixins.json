@@ -20,6 +20,7 @@
     "MixinConnection",
     "MixinCrystalChamsEntityRenderer",
     "MixinDataComponentInitializerEntry",
+    "MixinDeltaTrackerTimer",
     "MixinEntity",
     "MixinEntityRenderDispatcher",
     "MixinEntityRenderer",

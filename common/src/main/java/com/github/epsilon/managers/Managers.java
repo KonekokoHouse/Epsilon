@@ -5,6 +5,7 @@ import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.managers.impl.FriendManager;
 import com.github.epsilon.managers.impl.HealthManager;
 import com.github.epsilon.managers.impl.NotificationManager;
+import com.github.epsilon.managers.impl.TimerManager;
 import com.github.epsilon.managers.impl.network.ClientboundPacketManager;
 import com.github.epsilon.managers.impl.network.ServerboundPacketManager;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
@@ -24,6 +25,7 @@ public class Managers {
     public static FriendManager FRIEND;
     public static SoundManager SOUND;
     public static NotificationManager NOTIFICATION;
+    public static TimerManager TIMER;
 
     public static void initManagers() {
         switchRotationManager(ClientSetting.INSTANCE.rotationMode.getValue());
@@ -34,6 +36,7 @@ public class Managers {
         FRIEND = new FriendManager();
         SOUND = new SoundManager();
         NOTIFICATION = new NotificationManager();
+        TIMER = new TimerManager();
         Render3DScheduler.init();
     }
 
