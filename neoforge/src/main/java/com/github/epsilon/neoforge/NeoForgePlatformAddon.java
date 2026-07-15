@@ -2,7 +2,6 @@ package com.github.epsilon.neoforge;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.addon.EpsilonAddon;
-import com.github.epsilon.settings.impl.BoolSetting;
 
 import java.util.List;
 
