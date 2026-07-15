@@ -1061,8 +1061,6 @@
   "epsilon.modules.filter.mode.shader": "Shader",
   "epsilon.modules.filter.mode.lightmap": "LightMap",
   "epsilon.modules.filter.base color": "Base Color",
-  "epsilon.modules.better death screen": "Better Death Screen",
-  "epsilon.modules.better death screen.freecam key": "Freecam Key",
   "epsilon.modules.free camera": "Free Camera",
   "epsilon.modules.free camera.speed": "Speed",
   "epsilon.modules.free camera.speed scroll sensitivity": "Scroll Speed Sensitivity",
