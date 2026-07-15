@@ -31,28 +31,47 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ESP extends Module {
+public class BlockESP extends Module {
 
-    public static final ESP INSTANCE = new ESP();
+    public static final BlockESP INSTANCE = new BlockESP();
 
-    private ESP() {
-        super("ESP", Category.RENDER);
+    private BlockESP() {
+        super("Block ESP", Category.RENDER);
     }
 
-    private final BoolSetting blocksValue = boolSetting("Blocks", true);
-    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List", defaultBlockList(), blocksValue::getValue);
-
-    private static List<Block> defaultBlockList() {
-        List<Block> blocks = new ArrayList<>(List.of(
-                Blocks.CHEST,
-                Blocks.TRAPPED_CHEST,
-                Blocks.ENDER_CHEST,
-                Blocks.BARREL,
-                Blocks.SHULKER_BOX
-        ));
-        blocks.addAll(Blocks.DYED_SHULKER_BOX.asList());
-        return blocks;
-    }
+    private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List",
+            List.of(
+                    Blocks.CHEST,
+                    Blocks.TRAPPED_CHEST,
+                    Blocks.COPPER_CHEST,
+                    Blocks.EXPOSED_COPPER_CHEST,
+                    Blocks.WEATHERED_COPPER_CHEST,
+                    Blocks.OXIDIZED_COPPER_CHEST,
+                    Blocks.WAXED_COPPER_CHEST,
+                    Blocks.WAXED_EXPOSED_COPPER_CHEST,
+                    Blocks.WAXED_WEATHERED_COPPER_CHEST,
+                    Blocks.WAXED_OXIDIZED_COPPER_CHEST,
+                    Blocks.ENDER_CHEST,
+                    Blocks.BARREL,
+                    Blocks.SHULKER_BOX,
+                    Blocks.WHITE_SHULKER_BOX,
+                    Blocks.ORANGE_SHULKER_BOX,
+                    Blocks.MAGENTA_SHULKER_BOX,
+                    Blocks.LIGHT_BLUE_SHULKER_BOX,
+                    Blocks.YELLOW_SHULKER_BOX,
+                    Blocks.LIME_SHULKER_BOX,
+                    Blocks.PINK_SHULKER_BOX,
+                    Blocks.GRAY_SHULKER_BOX,
+                    Blocks.LIGHT_GRAY_SHULKER_BOX,
+                    Blocks.CYAN_SHULKER_BOX,
+                    Blocks.PURPLE_SHULKER_BOX,
+                    Blocks.BLUE_SHULKER_BOX,
+                    Blocks.BROWN_SHULKER_BOX,
+                    Blocks.GREEN_SHULKER_BOX,
+                    Blocks.RED_SHULKER_BOX,
+                    Blocks.BLACK_SHULKER_BOX
+            )
+    );
     private final BoolSetting illegals = boolSetting("Illegals", true);
     private final DoubleSetting range = doubleSetting("Range", 64.0, 1.0, 128.0, 1.0);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
@@ -88,7 +107,7 @@ public class ESP extends Module {
         if (boxes.isEmpty()) return;
 
         if (mc.getFps() < 8 && mc.player.tickCount > 150) {
-            ChatUtils.addChatMessage("就你这 FPS 你还开 ESP 呢? 该换电脑了!");
+            ChatUtils.addChatMessage("你的 FPS 太低了，我帮你给 BlockESP 关掉了。");
             toggle();
             return;
         }

@@ -114,11 +114,11 @@ public class ModuleHolder {
         // Render
         addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);
+        addModule(BlockESP.INSTANCE);
         addModule(BlockHighlight.INSTANCE);
         addModule(CameraClip.INSTANCE);
         addModule(Chams.INSTANCE);
         addModule(CrystalChams.INSTANCE);
-        addModule(ESP.INSTANCE);
         addModule(ESP2D.INSTANCE);
         addModule(Filter.INSTANCE);
         addModule(FreeCamera.INSTANCE);
@@ -127,6 +127,7 @@ public class ModuleHolder {
         addModule(HandsView.INSTANCE);
         addModule(Hat.INSTANCE);
         addModule(HitParticles.INSTANCE);
+        addModule(HoleESP.INSTANCE);
         addModule(JumpCircle.INSTANCE);
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);

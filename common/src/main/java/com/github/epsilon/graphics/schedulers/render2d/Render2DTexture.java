@@ -15,4 +15,5 @@ public sealed interface Render2DTexture permits Render2DTexture.IdentifierRef, R
 
     record LuminRef(LuminTexture texture) implements Render2DTexture {
     }
+
 }
