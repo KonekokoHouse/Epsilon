@@ -1,10 +1,6 @@
 package com.github.epsilon.utils.render;
 
-<<<<<<< HEAD
-=======
 import com.github.epsilon.graphics.LuminRenderSystem;
-import net.minecraft.client.Camera;
->>>>>>> e89b3c40 (修复 2D ESP 的投影问题 (#408))
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -50,11 +46,7 @@ public class WorldToScreen {
             return null;
         }
 
-<<<<<<< HEAD
-        return projection.div(mc.getWindow().getGuiScale());
-=======
         return projection.div(LuminRenderSystem.getGuiScale());
->>>>>>> e89b3c40 (修复 2D ESP 的投影问题 (#408))
     }
 
     public static Vector4d projectEntity(int[] viewport, Matrix4f matrix, AABB absoluteBoundingBox) {
