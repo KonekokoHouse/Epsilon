@@ -3,19 +3,25 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.ChatUtils;
+import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
+import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.client.CameraType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
@@ -36,7 +42,7 @@ public class FreeCamera extends Module {
     private final BoolSetting toggleOnLog = boolSetting("Toggle On Log", true);
     private final BoolSetting reloadChunks = boolSetting("Reload Chunks", true);
     private final BoolSetting renderHands = boolSetting("Show Hands", true);
-    //    private final BoolSetting rotate = boolSetting("Rotate", false);
+    private final BoolSetting rotate = boolSetting("Rotate", false);
     private final BoolSetting staticView = boolSetting("Static", true);
 
     public final Vector3d pos = new Vector3d();
@@ -45,13 +51,15 @@ public class FreeCamera extends Module {
     private CameraType perspective;
     private double speedValue;
 
-    private final Rot2f rotation = new Rot2f(0f, 0f);
-    private final Rot2f lastRotation = new Rot2f(0f, 0f);
+    public float yaw, pitch;
+    public float lastYaw, lastPitch;
 
     private double fovScale;
     private boolean bobView;
 
     private boolean forward, backward, right, left, up, down, isSneaking;
+
+    private Rot2f rotation;
 
     @Override
     protected void onEnable() {
@@ -61,7 +69,8 @@ public class FreeCamera extends Module {
             mc.options.fovEffectScale().set((double) 0);
             mc.options.bobView().set(false);
         }
-        rotation.set(mc.player.getYRot(), mc.player.getXRot());
+        yaw = mc.player.getYRot();
+        pitch = mc.player.getXRot();
 
         perspective = mc.options.getCameraType();
         speedValue = speed.getValue();
@@ -71,11 +80,12 @@ public class FreeCamera extends Module {
         prevPos.set(pos);
 
         if (mc.options.getCameraType() == CameraType.THIRD_PERSON_FRONT) {
-            rotation.setYaw(rotation.getYaw() + 180);
-            rotation.setPitch(rotation.getPitch() * -1);
+            yaw += 180;
+            pitch *= -1;
         }
 
-        lastRotation.set(rotation);
+        lastYaw = yaw;
+        lastPitch = pitch;
 
         isSneaking = mc.options.keyShift.isDown();
 
@@ -114,7 +124,8 @@ public class FreeCamera extends Module {
         unpress();
 
         prevPos.set(pos);
-        lastRotation.set(rotation);
+        lastYaw = yaw;
+        lastPitch = pitch;
     }
 
     private void unpress() {
@@ -133,28 +144,28 @@ public class FreeCamera extends Module {
         if (mc.getCameraEntity().isInWall()) mc.getCameraEntity().noPhysics = true;
         if (!perspective.isFirstPerson()) mc.options.setCameraType(CameraType.FIRST_PERSON);
 
-        Vec3 forward = Vec3.directionFromRotation(0, rotation.getYaw());
-        Vec3 right = Vec3.directionFromRotation(0, rotation.getYaw() + 90);
+        Vec3 forward = Vec3.directionFromRotation(0, yaw);
+        Vec3 right = Vec3.directionFromRotation(0, yaw + 90);
         double velX = 0;
         double velY = 0;
         double velZ = 0;
 
-//        if (rotate.getValue()) {
-//            BlockPos crossHairPos;
-//            Vec3 crossHairPosition;
-//
-//            if (mc.hitResult instanceof EntityHitResult ehr) {
-//                crossHairPos = ehr.getEntity().blockPosition();
-//                rotation = RotationUtils.calculate(crossHairPos);
-//            } else {
-//                crossHairPosition = mc.hitResult.getLocation();
-//                crossHairPos = ((BlockHitResult) mc.hitResult).getBlockPos();
-//
-//                if (!mc.level.getBlockState(crossHairPos).isAir()) {
-//                    rotation = RotationUtils.calculate(crossHairPosition);
-//                }
-//            }
-//        }
+        if (rotate.getValue()) {
+            rotation = null;
+
+            if (mc.hitResult instanceof EntityHitResult ehr) {
+                rotation = RotationUtils.calculate(ehr.getEntity().blockPosition());
+            } else if (mc.hitResult instanceof BlockHitResult bhr) {
+                BlockPos crossHairPos = bhr.getBlockPos();
+                if (!mc.level.getBlockState(crossHairPos).isAir()) {
+                    rotation = RotationUtils.calculate(bhr.getLocation());
+                }
+            }
+
+            if (rotation != null) {
+                Managers.ROTATION.setRotations(rotation, 180, Priority.Highest);
+            }
+        }
 
         double s = 0.5;
         if (KeybindUtils.isPressed(mc.options.keySprint)) s = 1;
@@ -288,9 +299,13 @@ public class FreeCamera extends Module {
     }
 
     public void changeLookDirection(double deltaX, double deltaY) {
-        lastRotation.set(rotation);
-        rotation.setYaw(rotation.getYaw() + (float) deltaX);
-        rotation.setPitch(Mth.clamp(rotation.getPitch() + (float) deltaY, -90, 90));
+        lastYaw = yaw;
+        lastPitch = pitch;
+
+        yaw += (float) deltaX;
+        pitch += (float) deltaY;
+
+        pitch = Mth.clamp(pitch, -90, 90);
     }
 
     public void sendChatInfo(String text) {
@@ -314,19 +329,11 @@ public class FreeCamera extends Module {
     }
 
     public double getYaw(float tickDelta) {
-        return Mth.lerp(tickDelta, lastRotation.getYaw(), rotation.getYaw());
+        return Mth.lerp(tickDelta, lastYaw, yaw);
     }
 
     public double getPitch(float tickDelta) {
-        return Mth.lerp(tickDelta, lastRotation.getPitch(), rotation.getPitch());
-    }
-
-    public Rot2f getRotation() {
-        return rotation;
-    }
-
-    public Rot2f getLastRotation() {
-        return lastRotation;
+        return Mth.lerp(tickDelta, lastPitch, pitch);
     }
 
 }

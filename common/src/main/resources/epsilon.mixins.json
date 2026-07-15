@@ -19,7 +19,7 @@
     "MixinCompassAngleState",
     "MixinConnection",
     "MixinDataComponentInitializerEntry",
-    "MixinDeathScreen",
+    "MixinDeltaTrackerTimer",
     "MixinEntity",
     "MixinEntityRenderDispatcher",
     "MixinEntityRenderer",

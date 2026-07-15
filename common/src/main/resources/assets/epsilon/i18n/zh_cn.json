@@ -1230,6 +1230,10 @@
         "close delay value": "关闭延迟值",
         "ender chest": "末影箱"
       },
+      "timer": {
+        "_value": "变速",
+        "multiplier": "倍率"
+      },
       "use cooldown": {
         "_value": "使用冷却",
         "cooldown": "冷却时间"
@@ -1309,6 +1313,33 @@
       "gui move": {
         "_value": "GUI移动",
         "sneak": "潜行"
+      },
+      "hole snap": {
+        "_value": "拉坑",
+        "general": "常规",
+        "use step": "启用跨步",
+        "toggle step": "停用时关闭跨步",
+        "jump": "跳跃",
+        "jump cooldown": "跳跃冷却",
+        "range": "水平范围",
+        "down range": "向下范围",
+        "collisions to disable": "碰撞关闭次数",
+        "rubberbands to disable": "回弹关闭次数",
+        "speed": "速度",
+        "speed boost": "速度加速",
+        "boosted speed": "加速速度",
+        "boost ticks": "加速刻数",
+        "timer": "变速",
+        "hole": "坑洞",
+        "single target": "单一目标",
+        "hole depth": "坑洞深度",
+        "single holes": "单格坑洞",
+        "double holes": "双格坑洞",
+        "quad holes": "四格坑洞",
+        "render": "渲染",
+        "segments": "线段数",
+        "line width": "线宽",
+        "color": "颜色"
       },
       "jump reset": "跳跃重置",
       "keep sprint": {
@@ -1439,6 +1470,23 @@
         "cooldown": "加速冷却时间",
         "slowness": "应用缓慢效果"
       },
+      "step": {
+        "_value": "跨步",
+        "mode": {
+          "_value": "模式",
+          "vanilla": "原版",
+          "oldncp": "旧版 NCP",
+          "ncp": "NCP"
+        },
+        "height": "高度",
+        "timer": "变速",
+        "fast": "快速",
+        "only moving": "仅移动时",
+        "feettrap pause": "脚部围困时暂停",
+        "in web pause": "蛛网中暂停",
+        "inside block pause": "方块内暂停",
+        "sneaking pause": "潜行时暂停"
+      },
       "strafe": {
         "_value": "侧移",
         "air stop": "空中停止",
@@ -1490,6 +1538,53 @@
         "line width": "线条宽度",
         "blur": "模糊",
         "blur strength": "模糊强度"
+      },
+      "hole esp": {
+        "_value": "坑洞透视",
+        "general": "常规",
+        "air": "可填位置",
+        "unsafe": "非安全坑",
+        "safe": "安全坑",
+        "wall": "基岩墙",
+        "wall side": "墙侧开口",
+        "start fade": "开始淡出距离",
+        "distance": "扫描距离",
+        "height": "坑洞高度",
+        "update delay": "更新延迟",
+        "air height": "可填位置高度",
+        "air y check": "限制可填位置高度",
+        "air fill": "可填位置填充",
+        "air fill color": "可填位置填充颜色",
+        "air fade": "可填位置渐变",
+        "air fade color": "可填位置渐变颜色",
+        "air box": "可填位置边框",
+        "air box color": "可填位置边框颜色",
+        "unsafe fill": "非安全坑填充",
+        "unsafe fill color": "非安全坑填充颜色",
+        "unsafe fade": "非安全坑渐变",
+        "unsafe fade color": "非安全坑渐变颜色",
+        "unsafe box": "非安全坑边框",
+        "unsafe box color": "非安全坑边框颜色",
+        "safe fill": "安全坑填充",
+        "safe fill color": "安全坑填充颜色",
+        "safe fade": "安全坑渐变",
+        "safe fade color": "安全坑渐变颜色",
+        "safe box": "安全坑边框",
+        "safe box color": "安全坑边框颜色",
+        "wall height": "基岩墙高度",
+        "side check": "检查墙侧开口",
+        "wall fill": "基岩墙填充",
+        "wall fill color": "基岩墙填充颜色",
+        "wall fade": "基岩墙渐变",
+        "wall fade color": "基岩墙渐变颜色",
+        "wall box": "基岩墙边框",
+        "wall box color": "基岩墙边框颜色",
+        "wall side fill": "墙侧开口填充",
+        "wall side fill color": "墙侧开口填充颜色",
+        "wall side fade": "墙侧开口渐变",
+        "wall side fade color": "墙侧开口渐变颜色",
+        "wall side box": "墙侧开口边框",
+        "wall side box color": "墙侧开口边框颜色"
       },
       "camera clip": {
         "_value": "相机穿透",
@@ -1551,10 +1646,6 @@
         },
         "base color": "底色"
       },
-      "better death screen": {
-        "_value": "更好的死亡界面",
-        "freecam key": "自由视角按键"
-      },
       "free camera": {
         "_value": "自由视角",
         "speed": "移动速度",
@@ -1565,6 +1656,7 @@
         "toggle on log": "断开时关闭",
         "reload chunks": "重新加载区块",
         "show hands": "显示手臂",
+        "rotate": "转头",
         "static": "固定视角"
       },
       "fullbright": {

@@ -11,8 +11,8 @@ public record Render2DScissor(int x, int y, int width, int height) {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Render2DScissor that)) return false;
-        return x == that.x && y == that.y && width == that.width && height == that.height;
+        if (!(o instanceof Render2DScissor(int x1, int y1, int width1, int height1))) return false;
+        return x == x1 && y == y1 && width == width1 && height == height1;
     }
 
     @Override

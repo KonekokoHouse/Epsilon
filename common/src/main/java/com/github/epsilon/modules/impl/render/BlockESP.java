@@ -31,15 +31,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ESP extends Module {
+public class BlockESP extends Module {
 
-    public static final ESP INSTANCE = new ESP();
+    public static final BlockESP INSTANCE = new BlockESP();
 
-    private ESP() {
-        super("ESP", Category.RENDER);
+    private BlockESP() {
+        super("Block ESP", Category.RENDER);
     }
 
-    private final BoolSetting blocksValue = boolSetting("Blocks", true);
     private final RegistryListSetting<Block> blockListValue = blockListSetting("Block List",
             List.of(
                     Blocks.CHEST,
@@ -71,7 +70,8 @@ public class ESP extends Module {
                     Blocks.GREEN_SHULKER_BOX,
                     Blocks.RED_SHULKER_BOX,
                     Blocks.BLACK_SHULKER_BOX
-            ), blocksValue::getValue);
+            )
+    );
     private final BoolSetting illegals = boolSetting("Illegals", true);
     private final DoubleSetting range = doubleSetting("Range", 64.0, 1.0, 128.0, 1.0);
     private final ColorSetting sideColor = colorSetting("Side Color", new Color(160, 210, 255, 30));
@@ -107,7 +107,7 @@ public class ESP extends Module {
         if (boxes.isEmpty()) return;
 
         if (mc.getFps() < 8 && mc.player.tickCount > 150) {
-            ChatUtils.addChatMessage("就你这 FPS 你还开 ESP 呢? 该换电脑了!");
+            ChatUtils.addChatMessage("你的 FPS 太低了，我帮你给 BlockESP 关掉了。");
             toggle();
             return;
         }
