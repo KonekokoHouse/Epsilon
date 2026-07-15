@@ -1,15 +1,15 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.control.UiScrollBar;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.control.UiScrollBar;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Category;
-import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.ClientSetting;
 
 import java.util.*;
 

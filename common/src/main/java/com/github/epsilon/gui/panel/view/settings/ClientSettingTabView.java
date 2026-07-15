@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.view.settings;
 
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;

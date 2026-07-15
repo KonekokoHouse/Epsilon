@@ -16,8 +16,8 @@ import net.minecraft.util.Mth;
 
 import java.awt.*;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ModuleList extends HudModule {
 
