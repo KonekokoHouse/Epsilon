@@ -16,20 +16,16 @@ import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Moli
- * 用于无反香草服，如LBLT
+ * 用于无反香草服，如 LBLT
  */
 
 public class MaceAura extends Module {
@@ -45,14 +41,7 @@ public class MaceAura extends Module {
         Mace
     }
 
-    private enum TargetPriority {
-        Distance,
-        Angle,
-        Health
-    }
-
     private final EnumSetting<AttackMode> mode = enumSetting("Mode", AttackMode.Mace);
-    private final EnumSetting<TargetPriority> priority = enumSetting("Priority", TargetPriority.Distance);
     private final DoubleSetting range = doubleSetting("Range", 3.0, 1.0, 6.0, 0.1);
     private final DoubleSetting moveDistance = doubleSetting("Move Distance", 8.0, 1.0, 20, 0.1);
     private final BoolSetting paperServer = boolSetting("Paper Server", true);
@@ -67,11 +56,9 @@ public class MaceAura extends Module {
     private final BoolSetting animals = boolSetting("Animals", false);
     private final BoolSetting mobs = boolSetting("Mobs", false);
     private final BoolSetting villagers = boolSetting("Villagers", false);
-    private final BoolSetting slimes = boolSetting("Slimes", false);
 
     public LivingEntity target;
     private final TimerUtils attackTimer = new TimerUtils();
-    private boolean rotationReady;
 
     @Override
     protected void onEnable() {
@@ -82,12 +69,21 @@ public class MaceAura extends Module {
     @Override
     protected void onDisable() {
         target = null;
-        rotationReady = false;
     }
 
     @EventHandler
-    public void onTick(PlayerTickEvent e) {
-        updateTarget();
+    private void onTick(PlayerTickEvent.Pre event) {
+        target = Managers.TARGET.acquirePrimary(TargetRequest.of(
+                range.getValue(),
+                360.0f,
+                players.getValue(),
+                mobs.getValue(),
+                animals.getValue(),
+                villagers.getValue(),
+                true,
+                64
+        ));
+
         if (target == null) {
             return;
         }
@@ -99,59 +95,10 @@ public class MaceAura extends Module {
         doAura();
     }
 
-    private void updateTarget() {
-        List<LivingEntity> candidates = new ArrayList<>();
-        double rangeValue = range.getValue();
-
-        for (LivingEntity entity : Managers.TARGET.acquireTargets(
-                TargetRequest.of(
-                        rangeValue,
-                        360.0f,
-                        players.getValue(),
-                        mobs.getValue(),
-                        animals.getValue(),
-                        villagers.getValue(),
-                        true,
-                        64
-                ))) {
-            if (!isValidTarget(entity)) continue;
-            candidates.add(entity);
-        }
-
-        if (priority.is(TargetPriority.Distance)) {
-            candidates.sort((a, b) -> Double.compare(RotationUtils.getEyeDistanceToEntity(a), RotationUtils.getEyeDistanceToEntity(b)));
-        } else if (priority.is(TargetPriority.Angle)) {
-            candidates.sort((a, b) -> Double.compare(getAngleScore(a), getAngleScore(b)));
-        } else if (priority.is(TargetPriority.Health)) {
-            candidates.sort((a, b) -> Float.compare(a.getHealth(), b.getHealth()));
-        }
-
-        target = candidates.isEmpty() ? null : candidates.getFirst();
-    }
-
-    private double getAngleScore(LivingEntity entity) {
-        Vec3 hitVec = getClosestPointOnBB(entity.getBoundingBox(), mc.player.getEyePosition());
-        var angle = RotationUtils.calculate(hitVec);
-        float yawDiff = Math.abs(Mth.wrapDegrees(angle.getYaw() - mc.player.getYRot()));
-        float pitchDiff = Math.abs(Mth.wrapDegrees(angle.getPitch() - mc.player.getXRot()));
-        return yawDiff * yawDiff + pitchDiff * pitchDiff;
-    }
-
-    private Vec3 getClosestPointOnBB(AABB box, Vec3 point) {
-        double x = Mth.clamp(point.x(), box.minX, box.maxX);
-        double y = Mth.clamp(point.y(), box.minY, box.maxY);
-        double z = Mth.clamp(point.z(), box.minZ, box.maxZ);
-        return new Vec3(x, y, z);
-    }
-
-    private boolean isValidTarget(LivingEntity entity) {
-        if (slimes.getValue()) {
-            return entity instanceof Slime;
-        }
-        return true;
-    }
-
     private boolean isReadyToAttack() {
+        if (mc.hitResult.getType() != HitResult.Type.ENTITY) {
+            return false;
+        }
         if (cooldown.getValue()) {
             return mc.player.getAttackStrengthScale(0.5f) >= cooldownBase.getValue();
         }
@@ -163,7 +110,7 @@ public class MaceAura extends Module {
         if (RotationUtils.getEyeDistanceToEntity(target) > range.getValue()) return;
 
         if (mode.is(AttackMode.Normal)) {
-            doNormalAttack();
+            attack();
         } else {
             doMaceAttack(vclip.getValue());
             if (damageOverride.getValue()) {
@@ -175,8 +122,6 @@ public class MaceAura extends Module {
     }
 
     private void doMaceAttack(double vclip) {
-        if (nullCheck()) return;
-
         int currentSlot = mc.player.getInventory().getSelectedSlot();
         boolean swappedInventory = false;
 
@@ -195,6 +140,7 @@ public class MaceAura extends Module {
 
         Vec3 startPos = mc.player.position();
         Vec3 targetPos = startPos.add(0.0, vclip, 0.0);
+
         // 何意味，，，
         if (paperServer.getValue()) {
             for (int i = 0; i < 4; i++) {
@@ -232,16 +178,11 @@ public class MaceAura extends Module {
     }
 
     private void sendMovePacket(Vec3 pos, boolean onGround) {
-        mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(pos.x(), pos.y(), pos.z(), onGround, false));
+        sendMovePacket(pos.x(), pos.y(), pos.z(), onGround);
     }
 
     private void sendMovePacket(double x, double y, double z, boolean onGround) {
         mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false));
-    }
-
-    private void doNormalAttack() {
-        if (target == null) return;
-        attack();
     }
 
     private void attack() {
@@ -251,4 +192,5 @@ public class MaceAura extends Module {
             mc.player.swing(InteractionHand.MAIN_HAND);
         }
     }
+
 }
