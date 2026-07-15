@@ -148,7 +148,7 @@ public class ScaffoldBlock extends HudModule {
 
     private void drawText(UiTree.Scope scope, TextRenderer textRenderer, Layout layout, AnimationState animation) {
         float numberColumnX = layout.renderX() + layout.padX();
-        float numberY = this.y + (layout.height() - textRenderer.getHeight(layout.numberScale())) / 2.0f - scale.getValue().floatValue();
+        float numberY = this.y + (layout.height() - textRenderer.getHeight(layout.numberScale())) / 2.0f;
         float animatedNumberColumnX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.numberColumnWidth() / 2.0f, numberColumnX);
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
@@ -162,7 +162,7 @@ public class ScaffoldBlock extends HudModule {
 
             float labelX = numberColumnX + layout.numberColumnWidth() + layout.labelGap();
             float animatedLabelX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.labelWidth() / 2.0f, labelX);
-            float labelY = this.y + (layout.height() - textRenderer.getHeight(layout.labelScale())) / 2.0f - 0.5f * scale.getValue().floatValue();
+            float labelY = this.y + (layout.height() - textRenderer.getHeight(layout.labelScale())) / 2.0f;
             clipped.text(LABEL, animatedLabelX, labelY, layout.labelScale(), withAlpha(textSecondary.getValue(), animation.contentAlpha()));
         });
     }
