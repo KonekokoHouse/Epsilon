@@ -89,7 +89,11 @@ public final class Render3DScheduler {
     }
 
     public void addFilledSide(AABB box, int color, Direction direction) {
-        filledSides.add(new FilledSideCommand(box, color, direction));
+        addFilledFadeSide(box, color, color, direction);
+    }
+
+    public void addFilledFadeSide(AABB box, int bottomColor, int topColor, Direction direction) {
+        filledSides.add(new FilledSideCommand(box, bottomColor, topColor, direction));
     }
 
     public void addOutlineBox(PoseStack stack, AABB box, Color color) {
@@ -129,8 +133,12 @@ public final class Render3DScheduler {
     }
 
     public void addLine(Vec3 from, Vec3 to, int color, float thickness) {
+        addGradientLine(from, to, color, color, thickness);
+    }
+
+    public void addGradientLine(Vec3 from, Vec3 to, int fromColor, int toColor, float thickness) {
         if (from.distanceToSqr(to) < 1.0E-6) return;
-        lines.add(new LineCommand(from, to, color, thickness));
+        lines.add(new LineCommand(from, to, fromColor, toColor, thickness));
     }
 
     public void flush(PoseStack stack) {
@@ -264,35 +272,35 @@ public final class Render3DScheduler {
 
         switch (command.direction()) {
             case DOWN -> quad(builder, matrix,
-                    minX, minY, minZ, command.color(),
-                    maxX, minY, minZ, command.color(),
-                    maxX, minY, maxZ, command.color(),
-                    minX, minY, maxZ, command.color());
+                    minX, minY, minZ, command.bottomColor(),
+                    maxX, minY, minZ, command.bottomColor(),
+                    maxX, minY, maxZ, command.bottomColor(),
+                    minX, minY, maxZ, command.bottomColor());
             case NORTH -> quad(builder, matrix,
-                    minX, minY, minZ, command.color(),
-                    minX, maxY, minZ, command.color(),
-                    maxX, maxY, minZ, command.color(),
-                    maxX, minY, minZ, command.color());
+                    minX, minY, minZ, command.bottomColor(),
+                    minX, maxY, minZ, command.topColor(),
+                    maxX, maxY, minZ, command.topColor(),
+                    maxX, minY, minZ, command.bottomColor());
             case EAST -> quad(builder, matrix,
-                    maxX, minY, minZ, command.color(),
-                    maxX, maxY, minZ, command.color(),
-                    maxX, maxY, maxZ, command.color(),
-                    maxX, minY, maxZ, command.color());
+                    maxX, minY, minZ, command.bottomColor(),
+                    maxX, maxY, minZ, command.topColor(),
+                    maxX, maxY, maxZ, command.topColor(),
+                    maxX, minY, maxZ, command.bottomColor());
             case SOUTH -> quad(builder, matrix,
-                    minX, minY, maxZ, command.color(),
-                    maxX, minY, maxZ, command.color(),
-                    maxX, maxY, maxZ, command.color(),
-                    minX, maxY, maxZ, command.color());
+                    minX, minY, maxZ, command.bottomColor(),
+                    maxX, minY, maxZ, command.bottomColor(),
+                    maxX, maxY, maxZ, command.topColor(),
+                    minX, maxY, maxZ, command.topColor());
             case WEST -> quad(builder, matrix,
-                    minX, minY, minZ, command.color(),
-                    minX, minY, maxZ, command.color(),
-                    minX, maxY, maxZ, command.color(),
-                    minX, maxY, minZ, command.color());
+                    minX, minY, minZ, command.bottomColor(),
+                    minX, minY, maxZ, command.bottomColor(),
+                    minX, maxY, maxZ, command.topColor(),
+                    minX, maxY, minZ, command.topColor());
             case UP -> quad(builder, matrix,
-                    minX, maxY, minZ, command.color(),
-                    minX, maxY, maxZ, command.color(),
-                    maxX, maxY, maxZ, command.color(),
-                    maxX, maxY, minZ, command.color());
+                    minX, maxY, minZ, command.topColor(),
+                    minX, maxY, maxZ, command.topColor(),
+                    maxX, maxY, maxZ, command.topColor(),
+                    maxX, maxY, minZ, command.topColor());
         }
     }
 
@@ -376,7 +384,7 @@ public final class Render3DScheduler {
         vertexLine(builder, matrix, pose,
                 (float) from.x, (float) from.y, (float) from.z,
                 (float) to.x, (float) to.y, (float) to.z,
-                command.color(), command.thickness());
+                command.fromColor(), command.toColor(), command.thickness());
     }
 
     private void quad(
@@ -393,9 +401,13 @@ public final class Render3DScheduler {
     }
 
     private void vertexLine(LuminImmediateRenderer.Lines builder, Matrix4f matrix, PoseStack.Pose pose, float x1, float y1, float z1, float x2, float y2, float z2, int color, float thickness) {
+        vertexLine(builder, matrix, pose, x1, y1, z1, x2, y2, z2, color, color, thickness);
+    }
+
+    private void vertexLine(LuminImmediateRenderer.Lines builder, Matrix4f matrix, PoseStack.Pose pose, float x1, float y1, float z1, float x2, float y2, float z2, int fromColor, int toColor, float thickness) {
         Vector3f normal = getNormal(x1, y1, z1, x2, y2, z2);
-        builder.vertex(matrix, pose, x1, y1, z1, color, normal.x, normal.y, normal.z, thickness);
-        builder.vertex(matrix, pose, x2, y2, z2, color, normal.x, normal.y, normal.z, thickness);
+        builder.vertex(matrix, pose, x1, y1, z1, fromColor, normal.x, normal.y, normal.z, thickness);
+        builder.vertex(matrix, pose, x2, y2, z2, toColor, normal.x, normal.y, normal.z, thickness);
     }
 
     private Vector3f getNormal(float x1, float y1, float z1, float x2, float y2, float z2) {
@@ -412,7 +424,7 @@ public final class Render3DScheduler {
     private record FilledBoxCommand(AABB box, int bottomColor, int topColor) {
     }
 
-    private record FilledSideCommand(AABB box, int color, Direction direction) {
+    private record FilledSideCommand(AABB box, int bottomColor, int topColor, Direction direction) {
     }
 
     private record OutlineBoxCommand(AABB box, int color, float thickness) {
@@ -421,7 +433,7 @@ public final class Render3DScheduler {
     private record SideOutlineCommand(AABB box, int color, float thickness, Direction direction) {
     }
 
-    private record LineCommand(Vec3 from, Vec3 to, int color, float thickness) {
+    private record LineCommand(Vec3 from, Vec3 to, int fromColor, int toColor, float thickness) {
     }
 
 }
