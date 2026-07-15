@@ -1,7 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.ButtonSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -20,7 +21,7 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
     }
 
     @Override
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float btnX = DropdownTheme.SETTING_PADDING_X;
         float btnY = 1.0f;
         float btnW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;
@@ -29,12 +30,12 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
         boolean hovered = isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), btnW, btnH);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
-        renderer.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.BUTTON_RADIUS, DropdownTheme.buttonSurface(hoverAnim.getValue()));
+        scope.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.BUTTON_RADIUS, DropdownTheme.buttonSurface(hoverAnim.getValue()));
 
         String label = setting.getDisplayName();
-        float textW = renderer.textWidth(label, DropdownTheme.SETTING_TEXT_SCALE);
-        float textY = btnY + (btnH - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f;
-        renderer.text(label, btnX + (btnW - textW) * 0.5f, textY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.buttonText());
+        float textW = textMetrics.textWidth(label, DropdownTheme.SETTING_TEXT_SCALE);
+        float textY = btnY + (btnH - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f;
+        scope.text(label, btnX + (btnW - textW) * 0.5f, textY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.buttonText());
     }
 
     @Override

@@ -1,7 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.StringSetting;
 
 import java.util.Objects;
@@ -20,8 +21,8 @@ public class StringWidget extends SettingWidget<StringSetting> {
     }
 
     @Override
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
-        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+        scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         float fieldX = DropdownTheme.SETTING_PADDING_X;
         float fieldY = DropdownTheme.SETTING_HEIGHT;
@@ -31,7 +32,7 @@ public class StringWidget extends SettingWidget<StringSetting> {
         if (!inputField.isFocused() && !inputField.getText().equals(setting.getValue())) {
             inputField.setText(setting.getValue());
         }
-        inputField.draw(renderer, fieldX, fieldY, fieldW, fieldH, mouseX, mouseY, "...", DropdownTheme.SETTING_TEXT_SCALE);
+        inputField.draw(scope, textMetrics, fieldX, fieldY, fieldW, fieldH, mouseX, mouseY, "...", DropdownTheme.SETTING_TEXT_SCALE);
     }
 
     @Override

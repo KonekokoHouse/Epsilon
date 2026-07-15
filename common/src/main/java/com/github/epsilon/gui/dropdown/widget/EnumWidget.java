@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -41,14 +42,14 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     @Override
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float expand = updateExpandProgress();
         float hover = updateHoverProgress(isFieldHovered(mouseX, mouseY));
         float fieldX = getLocalFieldX();
         float fieldY = getLocalFieldY();
         float fieldW = getFieldWidth();
 
-        renderer.text(
+        scope.text(
                 setting.getDisplayName(),
                 DropdownTheme.SETTING_PADDING_X,
                 1.0f,
@@ -56,10 +57,10 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
                 DropdownTheme.settingLabel()
         );
 
-        drawCurrentValueField(renderer, fieldX, fieldY, fieldW, hover, expand);
+        drawCurrentValueField(scope, textMetrics, fieldX, fieldY, fieldW, hover, expand);
 
         if (expand > 0.001f && getHiddenModeCount() > 0) {
-            drawExpandedOptions(renderer, mouseX, mouseY, fieldX, fieldW, expand);
+            drawExpandedOptions(scope, textMetrics, mouseX, mouseY, fieldX, fieldW, expand);
         }
     }
 
@@ -85,37 +86,37 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return false;
     }
 
-    private void drawCurrentValueField(DropdownDrawContext renderer, float fieldX, float fieldY, float fieldW, float hover, float expand) {
+    private void drawCurrentValueField(UiTree.Scope scope, UiTextMetrics textMetrics, float fieldX, float fieldY, float fieldW, float hover, float expand) {
         Color background = MD3Theme.filledFieldSurface(expanded, hover);
         Color outline = MD3Theme.filledFieldIndicator(expanded, hover);
-        float textY = fieldY + (FIELD_HEIGHT - renderer.textHeight(FIELD_TEXT_SCALE)) * 0.5f;
+        float textY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(FIELD_TEXT_SCALE)) * 0.5f;
         float arrowCenterX = fieldX + fieldW - 10.0f;
         float arrowCenterY = fieldY + FIELD_HEIGHT * 0.5f;
 
-        renderer.roundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, background);
-        renderer.outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, 0.7f, outline);
-        renderer.text(
+        scope.roundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, background);
+        scope.outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, FIELD_RADIUS, 0.7f, outline);
+        scope.text(
                 setting.getTranslatedValue(),
                 fieldX + FIELD_TEXT_PADDING_X,
                 textY,
                 FIELD_TEXT_SCALE,
                 MD3Theme.filledFieldContent(expanded)
         );
-        renderer.triangle(arrowCenterX, arrowCenterY, FIELD_ARROW_SIZE, expand, DropdownTheme.expandArrow(expand));
+        scope.triangle(arrowCenterX, arrowCenterY, FIELD_ARROW_SIZE, expand, DropdownTheme.expandArrow(expand));
     }
 
-    private void drawExpandedOptions(DropdownDrawContext renderer, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
+    private void drawExpandedOptions(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
         float listX = fieldX;
         float listY = getLocalListY();
         float listH = getListHeight();
         float clipH = listH * expand;
         float visibleBottom = listY + clipH;
 
-        drawExpandedBackground(renderer, listX, listY, fieldW, clipH);
+        drawExpandedBackground(scope, listX, listY, fieldW, clipH);
 
         Enum<?>[] hiddenModes = getHiddenModes();
         for (int optionIndex = 0; optionIndex < hiddenModes.length; optionIndex++) {
-            drawOption(renderer, mouseX, mouseY, listX, fieldW, visibleBottom, optionIndex, hiddenModes[optionIndex]);
+            drawOption(scope, textMetrics, mouseX, mouseY, listX, fieldW, visibleBottom, optionIndex, hiddenModes[optionIndex]);
         }
     }
 
@@ -162,12 +163,12 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return hoverAnim.getValue();
     }
 
-    private void drawExpandedBackground(DropdownDrawContext renderer, float listX, float listY, float fieldW, float clipH) {
-        renderer.roundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface());
-        renderer.outline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96));
+    private void drawExpandedBackground(UiTree.Scope scope, float listX, float listY, float fieldW, float clipH) {
+        scope.roundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface());
+        scope.outline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96));
     }
 
-    private void drawOption(DropdownDrawContext renderer, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
+    private void drawOption(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
         float optionY = getLocalOptionY(optionIndex);
         if (optionY >= visibleBottom) {
             return;
@@ -180,7 +181,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
 
         boolean hovered = isOptionHovered(mouseX, mouseY, optionIndex);
         if (hovered) {
-            renderer.roundRect(
+            scope.roundRect(
                     listX + 1.5f,
                     optionY,
                     fieldW - 3.0f,
@@ -190,7 +191,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
             );
         }
 
-        float lineHeight = renderer.textHeight(OPTION_TEXT_SCALE);
+        float lineHeight = textMetrics.textHeight(OPTION_TEXT_SCALE);
         float textY = optionY + (OPTION_HEIGHT - lineHeight) * 0.5f;
         if (textY + lineHeight > visibleBottom) {
             return;
@@ -199,7 +200,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         float alpha = Mth.clamp((visibleBottom - optionY) / OPTION_HEIGHT, 0.0f, 1.0f);
         Color textColor = hovered ? MD3Theme.TEXT_PRIMARY : DropdownTheme.settingLabelMuted();
         textColor = MD3Theme.withAlpha(textColor, Mth.clamp((int) (textColor.getAlpha() * alpha), 0, 255));
-        renderer.text(
+        scope.text(
                 setting.getTranslatedValueUnchecked(mode),
                 listX + FIELD_TEXT_PADDING_X,
                 textY,

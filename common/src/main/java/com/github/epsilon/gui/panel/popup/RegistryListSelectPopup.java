@@ -3,16 +3,17 @@ package com.github.epsilon.gui.panel.popup;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
-import com.github.epsilon.settings.Setting;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.RegistryListSetting;
+import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.world.BlockRegistryUtils;
@@ -20,17 +21,17 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.lwjgl.glfw.GLFW;
 
@@ -60,7 +61,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private static final float CATEGORY_TAB_HEIGHT = 16.0f;
     private static final float CATEGORY_TAB_GAP = 4.0f;
 
-    private final PanelLayout.Rect bounds;
+    private final UiRect bounds;
     private final Setting<List<T>> setting;
     private final Function<T, String> displayNameFn;
     private final Function<T, ItemStack> iconProvider;
@@ -68,8 +69,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final Consumer<T> removeFn;
     private final List<T> allEntries;
     private final List<Category<T>> categories;
-    private final PanelContentBuffer availableBuffer = new PanelContentBuffer();
-    private final PanelContentBuffer selectedBuffer = new PanelContentBuffer();
+    private final UiContentBuffer availableBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+    private final UiContentBuffer selectedBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState availableScrollBarDrag = new ScrollBarDragState();
@@ -86,29 +87,29 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private float maxSelectedScroll;
     private T hoveredAdd;
     private T hoveredRemove;
-    private PanelLayout.Rect lastAvailableViewport;
-    private PanelLayout.Rect lastSelectedViewport;
-    private PanelLayout.Rect lastOverlayViewport;
+    private UiRect lastAvailableViewport;
+    private UiRect lastSelectedViewport;
+    private UiRect lastOverlayViewport;
 
-    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
+    public RegistryListSelectPopup(UiRect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Consumer<T> addFn, Consumer<T> removeFn) {
         this(bounds, setting, registry, displayNameFn, null, List.of(), addFn, removeFn);
     }
 
-    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
+    public RegistryListSelectPopup(UiRect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
                                    Consumer<T> addFn, Consumer<T> removeFn) {
         this(bounds, setting, registry, displayNameFn, iconProvider, List.of(), addFn, removeFn);
     }
 
-    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Registry<T> registry,
+    public RegistryListSelectPopup(UiRect bounds, Setting<List<T>> setting, Registry<T> registry,
                                    Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
                                    List<Category<T>> categories,
                                    Consumer<T> addFn, Consumer<T> removeFn) {
         this(bounds, setting, collectRegistryEntries(registry, setting), displayNameFn, iconProvider, categories, addFn, removeFn);
     }
 
-    public RegistryListSelectPopup(PanelLayout.Rect bounds, Setting<List<T>> setting, Collection<T> entries,
+    public RegistryListSelectPopup(UiRect bounds, Setting<List<T>> setting, Collection<T> entries,
                                    Function<T, String> displayNameFn, Function<T, ItemStack> iconProvider,
                                    List<Category<T>> categories,
                                    Consumer<T> addFn, Consumer<T> removeFn) {
@@ -147,7 +148,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static PanelPopupHost.Popup create(PanelLayout.Rect bounds, RegistryListSetting<?> setting) {
+    public static PanelPopupHost.Popup create(UiRect bounds, RegistryListSetting<?> setting) {
         return switch (setting.getRegistryType()) {
             case BLOCK -> blockPopup(bounds, (RegistryListSetting) setting);
             case ITEM -> itemPopup(bounds, (RegistryListSetting) setting);
@@ -157,26 +158,26 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         };
     }
 
-    private static RegistryListSelectPopup<Block> blockPopup(PanelLayout.Rect bounds, RegistryListSetting<Block> setting) {
+    private static RegistryListSelectPopup<Block> blockPopup(UiRect bounds, RegistryListSetting<Block> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.BLOCK,
                 BlockRegistryUtils::displayName, RegistryListSelectPopup::blockPreviewStack,
                 setting::add, setting::remove);
     }
 
-    private static RegistryListSelectPopup<Item> itemPopup(PanelLayout.Rect bounds, RegistryListSetting<Item> setting) {
+    private static RegistryListSelectPopup<Item> itemPopup(UiRect bounds, RegistryListSetting<Item> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ITEM,
                 RegistryListSelectPopup::itemDisplayName, RegistryListSelectPopup::itemPreviewStack,
                 setting::add, setting::remove);
     }
 
-    private static RegistryListSelectPopup<EntityType<?>> entityTypePopup(PanelLayout.Rect bounds,
+    private static RegistryListSelectPopup<EntityType<?>> entityTypePopup(UiRect bounds,
                                                                           RegistryListSetting<EntityType<?>> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.ENTITY_TYPE,
                 entityType -> entityType.getDescription().getString(), RegistryListSelectPopup::entityTypePreviewStack,
                 setting::add, setting::remove);
     }
 
-    private static RegistryListSelectPopup<SoundEvent> soundEventPopup(PanelLayout.Rect bounds,
+    private static RegistryListSelectPopup<SoundEvent> soundEventPopup(UiRect bounds,
                                                                        RegistryListSetting<SoundEvent> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
                 sound -> {
@@ -186,7 +187,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 setting::add, setting::remove);
     }
 
-    private static RegistryListSelectPopup<String> enchantmentPopup(PanelLayout.Rect bounds,
+    private static RegistryListSelectPopup<String> enchantmentPopup(UiRect bounds,
                                                                     RegistryListSetting<String> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, collectEnchantments(),
                 RegistryListSelectPopup::enchantmentDisplayName, null, List.of(), setting::add, setting::remove);
@@ -281,12 +282,12 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @Override
-    public PanelLayout.Rect getBounds() {
+    public UiRect getBounds() {
         return bounds;
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         availableBuffer.clear();
         selectedBuffer.clear();
         itemPreviews.clear();
@@ -295,12 +296,12 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         float availableContentHeight = available.size() * (ROW_HEIGHT + ROW_GAP);
         float selectedContentHeight = selected.size() * (ROW_HEIGHT + ROW_GAP);
 
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        UiTree tree = UiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
             float popupY = bounds.y() - (1.0f - progress) * 6.0f;
-            PanelLayout.Rect animatedBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
-            PanelLayout.Rect searchBounds = getSearchBounds(popupY);
-            PanelLayout.Rect animatedViewport = getViewport(popupY);
+            UiRect animatedBounds = new UiRect(bounds.x(), popupY, bounds.width(), bounds.height());
+            UiRect searchBounds = getSearchBounds(popupY);
+            UiRect animatedViewport = getViewport(popupY);
             scope.pushAbsolute(animatedBounds, popup -> {
                 popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, POPUP_SHADOW_RADIUS,
                         MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
@@ -330,7 +331,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                         String catName = ci < 0 ? EpsilonTranslations.Gui.LIST_ALL.getTranslatedName() : categories.get(ci).name();
                         float catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f;
                         boolean catSelected = selectedCategory == ci;
-                        PanelLayout.Rect catBounds = new PanelLayout.Rect(catTabX, catY, catTextW, CATEGORY_TAB_HEIGHT);
+                        UiRect catBounds = new UiRect(catTabX, catY, catTextW, CATEGORY_TAB_HEIGHT);
                         popup.roundRect(catBounds.x() - animatedBounds.x(), catBounds.y() - animatedBounds.y(),
                                 catBounds.width(), catBounds.height(), CATEGORY_TAB_HEIGHT / 2.0f,
                                 catSelected ? MD3Theme.PRIMARY : MD3Theme.SURFACE_CONTAINER_HIGH);
@@ -352,11 +353,11 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 hoveredAdd = null;
                 hoveredRemove = null;
                 float viewportHeight = animatedViewport.bottom() - effectiveViewportY;
-                PanelLayout.Rect availableViewport = new PanelLayout.Rect(leftX, effectiveViewportY, columnViewportWidth, viewportHeight);
-                PanelLayout.Rect selectedViewport = new PanelLayout.Rect(rightX, effectiveViewportY, columnViewportWidth, viewportHeight);
+                UiRect availableViewport = new UiRect(leftX, effectiveViewportY, columnViewportWidth, viewportHeight);
+                UiRect selectedViewport = new UiRect(rightX, effectiveViewportY, columnViewportWidth, viewportHeight);
                 lastAvailableViewport = availableViewport;
                 lastSelectedViewport = selectedViewport;
-                lastOverlayViewport = new PanelLayout.Rect(availableViewport.x(), availableViewport.y(),
+                lastOverlayViewport = new UiRect(availableViewport.x(), availableViewport.y(),
                         selectedViewport.right() - availableViewport.x(), availableViewport.height());
 
                 maxAvailableScroll = Math.max(0.0f, availableContentHeight - availableViewport.height());
@@ -366,15 +367,15 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 updateAvailableSmoothScroll(partialTick);
                 updateSelectedSmoothScroll(partialTick);
 
-                PanelLayout.Rect localAvailableViewport = availableViewport.relativeTo(animatedBounds);
-                popup.viewport(availableBuffer, localAvailableViewport, guiGraphics.guiHeight(), availableScroll,
+                UiRect localAvailableViewport = availableViewport.relativeTo(animatedBounds);
+                popup.viewport(availableBuffer, localAvailableViewport, availableScroll,
                         maxAvailableScroll, availableContentHeight, mouseX, mouseY, content -> {
                             buildColumn(content, available, availableViewport.x(), availableViewport.y() - availableScroll,
                                     availableViewport.width() - (maxAvailableScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
                                     mouseX, mouseY, true, availableViewport);
                         });
-                PanelLayout.Rect localSelectedViewport = selectedViewport.relativeTo(animatedBounds);
-                popup.viewport(selectedBuffer, localSelectedViewport, guiGraphics.guiHeight(), selectedScroll,
+                UiRect localSelectedViewport = selectedViewport.relativeTo(animatedBounds);
+                popup.viewport(selectedBuffer, localSelectedViewport, selectedScroll,
                         maxSelectedScroll, selectedContentHeight, mouseX, mouseY, content -> {
                             buildColumn(content, selected, selectedViewport.x(), selectedViewport.y() - selectedScroll,
                                     selectedViewport.width() - (maxSelectedScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f),
@@ -386,7 +387,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @Override
-    public void flush(PanelRenderBatch renderBatch) {
+    public void flush(UiRenderBatch renderBatch) {
         availableBuffer.flushAndClear();
         selectedBuffer.flushAndClear();
     }
@@ -416,7 +417,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         if (event.button() != 0 || !bounds.contains(event.x(), event.y())) return false;
         // Check category tab clicks
         if (!categories.isEmpty()) {
-            PanelLayout.Rect searchBounds = getSearchBounds(bounds.y());
+            UiRect searchBounds = getSearchBounds(bounds.y());
             float catY = searchBounds.bottom() + 4.0f;
             float catTabX = bounds.x() + PADDING;
             for (int ci = -1; ci < categories.size(); ci++) {
@@ -431,8 +432,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                 catTabX += catTextW + CATEGORY_TAB_GAP;
             }
         }
-        PanelLayout.Rect availableViewport = lastAvailableViewport != null ? lastAvailableViewport : getAvailableViewport();
-        PanelLayout.Rect selectedViewport = lastSelectedViewport != null ? lastSelectedViewport : getSelectedViewport();
+        UiRect availableViewport = lastAvailableViewport != null ? lastAvailableViewport : getAvailableViewport();
+        UiRect selectedViewport = lastSelectedViewport != null ? lastSelectedViewport : getSelectedViewport();
         if (availableScrollBarDrag.mouseClicked(event.x(), event.y(), availableViewport, availableScroll, maxAvailableScroll)) {
             applyDraggedAvailableScroll(event.y(), availableViewport);
             return true;
@@ -500,12 +501,12 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        PanelLayout.Rect availableViewport = lastAvailableViewport != null ? lastAvailableViewport : getAvailableViewport();
+        UiRect availableViewport = lastAvailableViewport != null ? lastAvailableViewport : getAvailableViewport();
         if (availableViewport.contains(mouseX, mouseY) && maxAvailableScroll > 0.0f) {
             availableScrollVelocity -= (float) scrollY * SCROLL_STEP;
             return true;
         }
-        PanelLayout.Rect selectedViewport = lastSelectedViewport != null ? lastSelectedViewport : getSelectedViewport();
+        UiRect selectedViewport = lastSelectedViewport != null ? lastSelectedViewport : getSelectedViewport();
         if (selectedViewport.contains(mouseX, mouseY) && maxSelectedScroll > 0.0f) {
             selectedScrollVelocity -= (float) scrollY * SCROLL_STEP;
             return true;
@@ -537,16 +538,16 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         return result;
     }
 
-    private void buildColumn(PanelUiTree.Scope scope, List<T> entries, float columnX, float startY,
-                             float columnWidth, int mouseX, int mouseY, boolean addColumn, PanelLayout.Rect viewport) {
-        PanelLayout.Rect origin = scope.bound();
+    private void buildColumn(UiTree.Scope scope, List<T> entries, float columnX, float startY,
+                             float columnWidth, int mouseX, int mouseY, boolean addColumn, UiRect viewport) {
+        UiRect origin = scope.bound();
         final boolean hasIcons = iconProvider != null;
         for (int i = 0; i < entries.size(); i++) {
             T entry = entries.get(i);
             float rowY = startY + i * (ROW_HEIGHT + ROW_GAP);
             if (rowY + ROW_HEIGHT < viewport.y() || rowY > viewport.bottom()) continue;
 
-            PanelLayout.Rect rowBounds = new PanelLayout.Rect(columnX, rowY, columnWidth, ROW_HEIGHT);
+            UiRect rowBounds = new UiRect(columnX, rowY, columnWidth, ROW_HEIGHT);
             boolean hovered = rowBounds.contains(mouseX, mouseY) && viewport.contains(mouseX, mouseY);
             if (hovered) {
                 if (addColumn) hoveredAdd = entry;
@@ -569,7 +570,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             final String display = trim(rawName, 0.50f, textMaxWidth);
             final float textY = centeredTextY(0.0f, rowBounds.height(), 0.50f);
 
-            PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
+            UiRect localRowBounds = rowBounds.relativeTo(origin);
             scope.pushRelative(localRowBounds, row -> {
                 if (addColumn) {
                     row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
@@ -586,33 +587,33 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         }
     }
 
-    private PanelLayout.Rect getSearchBounds(float popupY) {
-        return new PanelLayout.Rect(bounds.x() + PADDING, popupY + TITLE_HEIGHT + 10.0f, bounds.width() - PADDING * 2.0f, SEARCH_HEIGHT);
+    private UiRect getSearchBounds(float popupY) {
+        return new UiRect(bounds.x() + PADDING, popupY + TITLE_HEIGHT + 10.0f, bounds.width() - PADDING * 2.0f, SEARCH_HEIGHT);
     }
 
-    private PanelLayout.Rect getViewport() {
+    private UiRect getViewport() {
         return getViewport(bounds.y());
     }
 
-    private PanelLayout.Rect getViewport(float popupY) {
+    private UiRect getViewport(float popupY) {
         float y = popupY + TITLE_HEIGHT + SEARCH_HEIGHT + HEADER_HEIGHT + 18.0f;
-        return new PanelLayout.Rect(bounds.x() + PADDING, y, bounds.width() - PADDING * 2.0f, bounds.bottom() - y - PADDING);
+        return new UiRect(bounds.x() + PADDING, y, bounds.width() - PADDING * 2.0f, bounds.bottom() - y - PADDING);
     }
 
-    private PanelLayout.Rect getAvailableViewport() {
+    private UiRect getAvailableViewport() {
         return getColumnViewports(getViewport(bounds.y()))[0];
     }
 
-    private PanelLayout.Rect getSelectedViewport() {
+    private UiRect getSelectedViewport() {
         return getColumnViewports(getViewport(bounds.y()))[1];
     }
 
-    private PanelLayout.Rect[] getColumnViewports(PanelLayout.Rect viewport) {
+    private UiRect[] getColumnViewports(UiRect viewport) {
         float columnViewportWidth = (viewport.width() - COLUMN_GAP) / 2.0f;
-        PanelLayout.Rect availableViewport = new PanelLayout.Rect(viewport.x(), viewport.y(), columnViewportWidth, viewport.height());
-        PanelLayout.Rect selectedViewport = new PanelLayout.Rect(availableViewport.right() + COLUMN_GAP,
+        UiRect availableViewport = new UiRect(viewport.x(), viewport.y(), columnViewportWidth, viewport.height());
+        UiRect selectedViewport = new UiRect(availableViewport.right() + COLUMN_GAP,
                 viewport.y(), columnViewportWidth, viewport.height());
-        return new PanelLayout.Rect[]{availableViewport, selectedViewport};
+        return new UiRect[]{availableViewport, selectedViewport};
     }
 
     private void updateAvailableSmoothScroll(float partialTick) {
@@ -662,7 +663,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         selectedScrollVelocity = 0.0f;
     }
 
-    private void applyDraggedAvailableScroll(double mouseY, PanelLayout.Rect viewport) {
+    private void applyDraggedAvailableScroll(double mouseY, UiRect viewport) {
         float newScroll = availableScrollBarDrag.mouseDragged(mouseY, viewport, maxAvailableScroll);
         if (newScroll >= 0.0f) {
             availableScroll = Mth.clamp(newScroll, 0.0f, maxAvailableScroll);
@@ -670,7 +671,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         }
     }
 
-    private void applyDraggedSelectedScroll(double mouseY, PanelLayout.Rect viewport) {
+    private void applyDraggedSelectedScroll(double mouseY, UiRect viewport) {
         float newScroll = selectedScrollBarDrag.mouseDragged(mouseY, viewport, maxSelectedScroll);
         if (newScroll >= 0.0f) {
             selectedScroll = Mth.clamp(newScroll, 0.0f, maxSelectedScroll);

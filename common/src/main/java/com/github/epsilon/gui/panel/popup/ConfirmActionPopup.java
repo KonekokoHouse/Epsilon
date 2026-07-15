@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.panel.popup;
 
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 
 public class ConfirmActionPopup implements PanelPopupHost.Popup {
 
-    private final PanelLayout.Rect bounds;
+    private final UiRect bounds;
     private final Supplier<String> titleSupplier;
     private final Supplier<String> messageSupplier;
     private final String detail;
@@ -28,15 +28,15 @@ public class ConfirmActionPopup implements PanelPopupHost.Popup {
 
     private boolean closeAfterClick;
     private float animatedY;
-    private PanelLayout.Rect confirmButtonBounds;
-    private PanelLayout.Rect cancelButtonBounds;
+    private UiRect confirmButtonBounds;
+    private UiRect cancelButtonBounds;
 
-    public ConfirmActionPopup(PanelLayout.Rect bounds, String title, String message, String detail,
+    public ConfirmActionPopup(UiRect bounds, String title, String message, String detail,
                               String confirmLabel, String cancelLabel, Runnable onConfirm) {
         this(bounds, () -> title, () -> message, detail, () -> confirmLabel, () -> cancelLabel, onConfirm);
     }
 
-    public ConfirmActionPopup(PanelLayout.Rect bounds, Supplier<String> titleSupplier, Supplier<String> messageSupplier, String detail,
+    public ConfirmActionPopup(UiRect bounds, Supplier<String> titleSupplier, Supplier<String> messageSupplier, String detail,
                               Supplier<String> confirmLabelSupplier, Supplier<String> cancelLabelSupplier, Runnable onConfirm) {
         this.bounds = bounds;
         this.titleSupplier = titleSupplier;
@@ -52,12 +52,12 @@ public class ConfirmActionPopup implements PanelPopupHost.Popup {
     }
 
     @Override
-    public PanelLayout.Rect getBounds() {
+    public UiRect getBounds() {
         return bounds;
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         openAnimation.run(1.0f);
         float progress = openAnimation.getValue();
         animatedY = bounds.y() - (1.0f - progress) * 6.0f;
@@ -65,8 +65,8 @@ public class ConfirmActionPopup implements PanelPopupHost.Popup {
 
         confirmHoverAnimation.run(confirmButtonBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
         cancelHoverAnimation.run(cancelButtonBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
-        PanelUiTree tree = PanelUiTree.build(scope -> {
-            PanelLayout.Rect popupBounds = new PanelLayout.Rect(bounds.x(), animatedY, bounds.width(), bounds.height());
+        UiTree tree = UiTree.build(scope -> {
+            UiRect popupBounds = new UiRect(bounds.x(), animatedY, bounds.width(), bounds.height());
             scope.pushAbsolute(popupBounds, popup -> {
                 popup.popupCard(popupBounds.atOrigin(),
                         MD3Theme.CARD_RADIUS,
@@ -117,7 +117,7 @@ public class ConfirmActionPopup implements PanelPopupHost.Popup {
         return closeAfterClick;
     }
 
-    private void buildButton(PanelUiTree.Scope scope, PanelLayout.Rect buttonBounds, String label, boolean destructive, float hover) {
+    private void buildButton(UiTree.Scope scope, UiRect buttonBounds, String label, boolean destructive, float hover) {
         Color baseColor = destructive ? MD3Theme.ERROR : MD3Theme.SURFACE_CONTAINER_HIGH;
         Color hoverColor = destructive ? MD3Theme.withAlpha(MD3Theme.ERROR, 220) : MD3Theme.SURFACE_CONTAINER_HIGHEST;
         Color textColor = destructive ? MD3Theme.ON_PRIMARY : MD3Theme.TEXT_PRIMARY;
@@ -133,8 +133,8 @@ public class ConfirmActionPopup implements PanelPopupHost.Popup {
         float cancelX = bounds.right() - buttonWidth * 2.0f - gap - 12.0f;
         float confirmX = bounds.right() - buttonWidth - 12.0f;
         float buttonY = popupY + bounds.height() - buttonHeight - 10.0f;
-        cancelButtonBounds = new PanelLayout.Rect(cancelX, buttonY, buttonWidth, buttonHeight);
-        confirmButtonBounds = new PanelLayout.Rect(confirmX, buttonY, buttonWidth, buttonHeight);
+        cancelButtonBounds = new UiRect(cancelX, buttonY, buttonWidth, buttonHeight);
+        confirmButtonBounds = new UiRect(confirmX, buttonY, buttonWidth, buttonHeight);
     }
 }
 

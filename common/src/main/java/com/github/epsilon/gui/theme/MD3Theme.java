@@ -1,4 +1,4 @@
-package com.github.epsilon.gui.panel;
+package com.github.epsilon.gui.theme;
 
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.util.Mth;

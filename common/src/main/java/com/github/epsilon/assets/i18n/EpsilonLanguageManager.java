@@ -5,7 +5,6 @@ import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import net.minecraft.resources.Identifier;
@@ -20,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 public class EpsilonLanguageManager {
@@ -100,10 +98,10 @@ public class EpsilonLanguageManager {
                 if (entries == null) {
                     continue;
                 }
-                for (Entry<String, JsonElement> entry : entries.entrySet()) {
-                    String text = GsonHelper.convertToString(entry.getValue(), entry.getKey());
-                    output.put(entry.getKey(), UNSUPPORTED_FORMAT_PATTERN.matcher(text).replaceAll("%$1s"));
-                }
+                I18NJson.read(entries, (key, value) -> {
+                    String text = GsonHelper.convertToString(value, key);
+                    output.put(key, UNSUPPORTED_FORMAT_PATTERN.matcher(text).replaceAll("%$1s"));
+                });
             } catch (IOException | JsonParseException exception) {
                 Constants.LOGGER.warn("读取 Epsilon 语言文件失败: {} from pack {} ({})", location, resource.sourcePackId(), exception.toString());
             }

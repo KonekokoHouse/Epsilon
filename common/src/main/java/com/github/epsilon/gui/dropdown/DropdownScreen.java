@@ -6,16 +6,18 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.component.*;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.scene.UiLayer;
+import com.github.epsilon.gui.lib.scene.UiScene;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import com.github.epsilon.gui.scene.GuiLayer;
-import com.github.epsilon.gui.scene.GuiScene;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
@@ -23,8 +25,8 @@ import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -36,6 +38,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,7 +49,8 @@ public class DropdownScreen extends Screen {
 
     private final List<DropdownPanel> panels = new ArrayList<>();
     private final TextRenderer textMetrics = TextRenderer.create();
-    private final GuiScene scene = new GuiScene();
+    private final UiTextMetrics uiTextMetrics = new DropdownTextMetrics();
+    private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final Animation scrimAnim = new Animation(Easing.EASE_OUT_SINE, 200L);
     private final DropdownTextField searchField = new DropdownTextField(64);
@@ -57,9 +61,8 @@ public class DropdownScreen extends Screen {
     private boolean initialized;
     private int sessionId;
     private int renderFrameId;
-    private PanelRenderBatch dropdownBatch;
-    private PanelUiTree.Scope dropdownScope;
-    private DropdownDrawContext drawContext;
+    private UiRenderBatch dropdownBatch;
+    private UiTree.Scope dropdownScope;
     private int dropdownLayer;
 
     private DropdownScreen() {
@@ -112,9 +115,9 @@ public class DropdownScreen extends Screen {
 
     private void drawGui(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         scrimAnim.run(1.0f);
-        dropdownBatch = scene.batch(GuiLayer.CONTENT);
+        dropdownBatch = scene.batch(UiLayer.CONTENT);
         dropdownLayer = -10;
-        popupHost.setOverlayBounds(new PanelLayout.Rect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()));
+        popupHost.setOverlayBounds(new UiRect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()));
         updatePanelHeightLimits();
         updateVisiblePanelIds();
         beginPanelFrames();
@@ -122,7 +125,7 @@ public class DropdownScreen extends Screen {
         beginDropdownLayer();
         Color scrim = DropdownTheme.scrim();
         float scrimAlpha = scrimAnim.getValue();
-        drawContext.rect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
+        dropdownScope.rect(0, 0, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight(), new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
         flushDropdownLayer();
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
@@ -162,7 +165,7 @@ public class DropdownScreen extends Screen {
                     panel.getY() - shadowPad,
                     panel.getWidth() + shadowPad * 2,
                     revealedH + shadowPad * 2,
-                    () -> panel.drawBackground(drawContext));
+                    scope -> panel.drawBackground(scope, uiTextMetrics));
             flushDropdownLayer();
 
             float clipY = panel.getContentClipY();
@@ -174,7 +177,7 @@ public class DropdownScreen extends Screen {
                 int hoverMouseX = panel == topmostHovered ? backgroundMouseX : -1;
                 int hoverMouseY = panel == topmostHovered ? backgroundMouseY : -1;
                 withDropdownScissor(panel.getX(), clipY, panel.getWidth(), actualClipH,
-                        () -> panel.drawContent(drawContext, hoverMouseX, hoverMouseY));
+                        scope -> panel.drawContent(scope, uiTextMetrics, hoverMouseX, hoverMouseY));
                 flushDropdownLayer();
             }
 
@@ -182,7 +185,7 @@ public class DropdownScreen extends Screen {
         }
 
         drawSearch(backgroundMouseX, backgroundMouseY);
-        popupHost.render(graphics, scene.batch(GuiLayer.POPUP), mouseX, mouseY, partialTick);
+        popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick);
         scene.flush();
         popupHost.flush();
     }
@@ -191,7 +194,7 @@ public class DropdownScreen extends Screen {
         beginDropdownLayer();
         float searchX = getSearchX();
         float searchY = getSearchY();
-        searchField.draw(drawContext, searchX, searchY, getSearchWidth(), getSearchHeight(), mouseX, mouseY, EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f);
+        searchField.draw(dropdownScope, uiTextMetrics, searchX, searchY, getSearchWidth(), getSearchHeight(), mouseX, mouseY, EpsilonTranslations.Gui.SEARCH.getTranslatedName(), 0.58f);
         drawHints();
         flushDropdownLayer();
     }
@@ -200,7 +203,7 @@ public class DropdownScreen extends Screen {
         if (ClientSetting.INSTANCE.dropdownHints.getValue()) {
             float scale = 0.62f;
             float lineGap = 5.0f;
-            float lineHeight = drawContext.textHeight(scale);
+            float lineHeight = uiTextMetrics.textHeight(scale);
             String[] hints = {
                     EpsilonTranslations.Gui.DROPDOWN_HINT_SEARCH.getTranslatedName(),
                     EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
@@ -214,8 +217,8 @@ public class DropdownScreen extends Screen {
             }
             Color color = MD3Theme.withAlpha(Color.WHITE, alpha);
             for (String hint : hints) {
-                float x = xRight - drawContext.textWidth(hint, scale);
-                drawContext.text(hint, x, y, scale, color);
+                float x = xRight - uiTextMetrics.textWidth(hint, scale);
+                dropdownScope.text(hint, x, y, scale, color);
                 y += lineHeight + lineGap;
             }
         }
@@ -224,45 +227,37 @@ public class DropdownScreen extends Screen {
 
     private void beginDropdownLayer() {
         dropdownLayer += 10;
-        dropdownScope = new PanelUiTree.Scope();
-        drawContext = new DropdownDrawContext(dropdownScope, new DropdownTextMetrics());
+        dropdownScope = new UiTree.Scope();
     }
 
     private void flushDropdownLayer() {
-        dropdownBatch.render(PanelUiTree.from(dropdownScope), dropdownLayer);
+        dropdownBatch.render(UiTree.from(dropdownScope), dropdownLayer);
     }
 
-    private void withDropdownScissor(float guiX, float guiY, float guiW, float guiH, Runnable content) {
-        DropdownDrawContext previous = drawContext;
-        dropdownScope.scissor(new PanelLayout.Rect(guiX, guiY, guiW, guiH), scope -> {
-            drawContext = new DropdownDrawContext(scope, new DropdownTextMetrics());
-            try {
-                content.run();
-            } finally {
-                drawContext = previous;
-            }
-        });
+    private void withDropdownScissor(float guiX, float guiY, float guiW, float guiH,
+                                     Consumer<UiTree.Scope> content) {
+        dropdownScope.scissor(new UiRect(guiX, guiY, guiW, guiH), content);
     }
 
-    private final class DropdownTextMetrics implements DropdownDrawContext.TextMetrics {
+    private final class DropdownTextMetrics implements UiTextMetrics {
         @Override
-        public float getHeight(float scale) {
-            return textMetrics.getHeight(scale);
-        }
-
-        @Override
-        public float getHeight(float scale, TtfFontLoader fontLoader) {
-            return textMetrics.getHeight(scale, fontLoader);
-        }
-
-        @Override
-        public float getWidth(String text, float scale) {
+        public float textWidth(String text, float scale) {
             return textMetrics.getWidth(text, scale);
         }
 
         @Override
-        public float getWidth(String text, float scale, TtfFontLoader fontLoader) {
+        public float textWidth(String text, float scale, TtfFontLoader fontLoader) {
             return textMetrics.getWidth(text, scale, fontLoader);
+        }
+
+        @Override
+        public float textHeight(float scale) {
+            return textMetrics.getHeight(scale);
+        }
+
+        @Override
+        public float textHeight(float scale, TtfFontLoader fontLoader) {
+            return textMetrics.getHeight(scale, fontLoader);
         }
     }
 
@@ -574,7 +569,7 @@ public class DropdownScreen extends Screen {
     }
 
     public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+        UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
@@ -582,7 +577,7 @@ public class DropdownScreen extends Screen {
     }
 
     public void openStringListSettingPopup(StringListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+        UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );

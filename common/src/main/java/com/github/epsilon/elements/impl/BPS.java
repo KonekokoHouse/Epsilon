@@ -3,7 +3,7 @@ package com.github.epsilon.elements.impl;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -13,8 +13,8 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
-import java.util.Locale;
 import java.util.function.Supplier;
+import java.util.Locale;
 
 public class BPS extends HudModule {
 
@@ -84,7 +84,7 @@ public class BPS extends HudModule {
         updateBps();
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelUiTree.Scope scope = renderScope();
+        UiTree.Scope scope = renderScope();
 
         float s = scale.getValue().floatValue();
         float radius = cornerRadius.getValue().floatValue() * s;
@@ -155,7 +155,7 @@ public class BPS extends HudModule {
         setBounds(panelW, panelH);
     }
 
-    private void drawGraph(PanelUiTree.Scope scope, float x, float y, float w, float h, float s) {
+    private void drawGraph(UiTree.Scope scope, float x, float y, float w, float h, float s) {
         float graphRadius = 4f * s;
 
         scope.roundRect(x, y, w, h, graphRadius, graphBgColor.getValue());
@@ -295,7 +295,7 @@ public class BPS extends HudModule {
         return Math.max(max, 8f);
     }
 
-    private void drawRollingNumber(PanelUiTree.Scope scope, TextRenderer textRenderer, float numberScale, float s) {
+    private void drawRollingNumber(UiTree.Scope scope, TextRenderer textRenderer, float numberScale, float s) {
         float progress = numberAnimProgress;
         String prev = previousBpsText;
         String target = targetBpsText;

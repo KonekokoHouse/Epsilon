@@ -2,14 +2,15 @@ package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.ColorWidget;
 import com.github.epsilon.gui.dropdown.widget.KeybindWidget;
 import com.github.epsilon.gui.dropdown.widget.SettingWidget;
 import com.github.epsilon.gui.dropdown.widget.StringWidget;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.settings.Setting;
 
@@ -51,50 +52,50 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
         List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         EpsilonAddon selected = resolveSelectedAddon();
         if (addons.isEmpty()) {
-            renderer.text(EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            scope.text(EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
 
         for (EpsilonAddon addon : addons) {
             boolean active = selected != null && Objects.equals(addon.getAddonId(), selected.getAddonId());
             boolean hovered = isHovered(mouseX, mouseY, contentX, currentY, contentW, ADDON_ROW_HEIGHT);
-            renderer.roundRect(contentX, currentY, contentW, ADDON_ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+            scope.roundRect(contentX, currentY, contentW, ADDON_ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     active ? MD3Theme.PRIMARY_CONTAINER : (hovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_LOW));
-            renderer.text(trimToWidth(addon.getDisplayName(), 0.56f, contentW - 10.0f, renderer),
+            scope.text(trimToWidth(addon.getDisplayName(), 0.56f, contentW - 10.0f, textMetrics),
                     contentX + 6.0f, currentY + 5.0f, 0.56f, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
-            renderer.text(trimToWidth(addon.getAddonId(), 0.44f, contentW - 10.0f, renderer),
+            scope.text(trimToWidth(addon.getAddonId(), 0.44f, contentW - 10.0f, textMetrics),
                     contentX + 6.0f, currentY + 16.0f, 0.44f, active ? MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180) : MD3Theme.TEXT_MUTED);
             currentY += ADDON_ROW_HEIGHT + GAP;
         }
 
         if (selected == null) return;
         ensureWidgets(selected);
-        renderer.roundRect(contentX, currentY, contentW, INFO_HEIGHT, DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
-        renderer.text(trimToWidth(selected.getDisplayName(), 0.58f, contentW - 10.0f, renderer),
+        scope.roundRect(contentX, currentY, contentW, INFO_HEIGHT, DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
+        scope.text(trimToWidth(selected.getDisplayName(), 0.58f, contentW - 10.0f, textMetrics),
                 contentX + 6.0f, currentY + 5.0f, 0.58f, MD3Theme.TEXT_PRIMARY);
         String meta = EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName() + " " + selected.getRegisteredModules().size();
         if (!selected.getVersion().isBlank())
             meta += "  " + EpsilonTranslations.Gui.ADDON_INFO_VERSION.getTranslatedName() + " " + selected.getVersion();
-        renderer.text(trimToWidth(meta, 0.45f, contentW - 10.0f, renderer),
+        scope.text(trimToWidth(meta, 0.45f, contentW - 10.0f, textMetrics),
                 contentX + 6.0f, currentY + 18.0f, 0.45f, MD3Theme.TEXT_MUTED);
         currentY += INFO_HEIGHT + GAP;
 
         if (widgets.isEmpty()) {
-            renderer.text(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
+            scope.text(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
-        var stack = renderer.scope().stack(new PanelLayout.Rect(contentX, currentY, contentW, computeWidgetsHeight()));
+        var stack = scope.stack(new UiRect(contentX, currentY, contentW, computeWidgetsHeight()));
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
-                    (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
+                    (bounds, itemScope) -> widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds));
         }
     }
 

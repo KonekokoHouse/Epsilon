@@ -2,14 +2,15 @@ package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -21,8 +22,8 @@ import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.List;
 
 public class StringListSelectPopup implements PanelPopupHost.Popup {
 
@@ -39,11 +40,11 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private static final float MIN_SCROLL_VELOCITY = 0.3f;
     private static final int MAX_QUERY_LENGTH = 64;
 
-    private final PanelLayout.Rect bounds;
+    private final UiRect bounds;
     private final Setting<List<String>> setting;
     private final Consumer<String> addFn;
     private final Consumer<String> removeFn;
-    private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
+    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
@@ -55,9 +56,9 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private String hoveredRemove;
     private String hoveredMoveUp;
     private String hoveredMoveDown;
-    private PanelLayout.Rect lastViewport;
+    private UiRect lastViewport;
 
-    public StringListSelectPopup(PanelLayout.Rect bounds, Setting<List<String>> setting, Consumer<String> addFn, Consumer<String> removeFn) {
+    public StringListSelectPopup(UiRect bounds, Setting<List<String>> setting, Consumer<String> addFn, Consumer<String> removeFn) {
         this.bounds = bounds;
         this.setting = setting;
         this.addFn = addFn;
@@ -66,26 +67,26 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     }
 
     @Override
-    public PanelLayout.Rect getBounds() {
+    public UiRect getBounds() {
         return bounds;
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         contentBuffer.clear();
         List<String> entries = entries();
         float contentHeight = entries.size() * (ROW_HEIGHT + ROW_GAP);
-        PanelLayout.Rect viewport = getViewport();
+        UiRect viewport = getViewport();
         maxScroll = Math.max(0.0f, contentHeight - viewport.height());
         scroll = Mth.clamp(scroll, 0.0f, maxScroll);
         updateSmoothScroll(partialTick);
 
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        UiTree tree = UiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
             float popupY = bounds.y() - (1.0f - progress) * 6.0f;
-            PanelLayout.Rect animatedBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
-            PanelLayout.Rect inputBounds = getInputBounds(popupY);
-            PanelLayout.Rect animatedViewport = getViewport(popupY);
+            UiRect animatedBounds = new UiRect(bounds.x(), popupY, bounds.width(), bounds.height());
+            UiRect inputBounds = getInputBounds(popupY);
+            UiRect animatedViewport = getViewport(popupY);
             lastViewport = animatedViewport;
             scope.pushAbsolute(animatedBounds, popup -> {
                 popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, POPUP_SHADOW_RADIUS,
@@ -109,8 +110,8 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
                 hoveredRemove = null;
                 hoveredMoveUp = null;
                 hoveredMoveDown = null;
-                PanelLayout.Rect localViewport = animatedViewport.relativeTo(animatedBounds);
-                popup.viewport(contentBuffer, localViewport, guiGraphics.guiHeight(), scroll, maxScroll, contentHeight, mouseX, mouseY, content -> {
+                UiRect localViewport = animatedViewport.relativeTo(animatedBounds);
+                popup.viewport(contentBuffer, localViewport, scroll, maxScroll, contentHeight, mouseX, mouseY, content -> {
                     buildEntryList(content, entries, animatedViewport.x(), animatedViewport.y() - scroll,
                             localViewport, mouseX, mouseY, animatedViewport);
                 });
@@ -120,14 +121,14 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     }
 
     @Override
-    public void flush(PanelRenderBatch renderBatch) {
+    public void flush(UiRenderBatch renderBatch) {
         contentBuffer.flushAndClear();
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (event.button() != 0 || !bounds.contains(event.x(), event.y())) return false;
-        PanelLayout.Rect viewport = lastViewport != null ? lastViewport : getViewport();
+        UiRect viewport = lastViewport != null ? lastViewport : getViewport();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, scroll, maxScroll)) {
             applyDraggedScroll(event.y(), viewport);
             return true;
@@ -198,22 +199,22 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         return new ArrayList<>(setting.getValue());
     }
 
-    private void buildEntryList(PanelUiTree.Scope scope, List<String> entries, float startX, float startY,
-                                PanelLayout.Rect localViewport, int mouseX, int mouseY, PanelLayout.Rect viewport) {
-        PanelLayout.Rect origin = scope.bound();
+    private void buildEntryList(UiTree.Scope scope, List<String> entries, float startX, float startY,
+                                UiRect localViewport, int mouseX, int mouseY, UiRect viewport) {
+        UiRect origin = scope.bound();
         float width = localViewport.width() - (maxScroll > 0.0f ? SCROLLBAR_GUTTER : 0.0f);
         for (int i = 0; i < entries.size(); i++) {
             String entry = entries.get(i);
             float rowY = startY + i * (ROW_HEIGHT + ROW_GAP);
             if (rowY + ROW_HEIGHT < viewport.y() || rowY > viewport.bottom()) continue;
 
-            PanelLayout.Rect rowBounds = new PanelLayout.Rect(startX, rowY, width, ROW_HEIGHT);
+            UiRect rowBounds = new UiRect(startX, rowY, width, ROW_HEIGHT);
             boolean hovered = rowBounds.contains(mouseX, mouseY) && viewport.contains(mouseX, mouseY);
             boolean canMoveUp = i > 0;
             boolean canMoveDown = i < entries.size() - 1;
-            PanelLayout.Rect removeBounds = actionBounds(rowBounds, 0);
-            PanelLayout.Rect downBounds = actionBounds(rowBounds, 1);
-            PanelLayout.Rect upBounds = actionBounds(rowBounds, 2);
+            UiRect removeBounds = actionBounds(rowBounds, 0);
+            UiRect downBounds = actionBounds(rowBounds, 1);
+            UiRect upBounds = actionBounds(rowBounds, 2);
             boolean removeHovered = hovered && removeBounds.contains(mouseX, mouseY);
             boolean downHovered = hovered && canMoveDown && downBounds.contains(mouseX, mouseY);
             boolean upHovered = hovered && canMoveUp && upBounds.contains(mouseX, mouseY);
@@ -224,7 +225,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             float bgHover = hovered ? 0.45f : 0.0f;
             float actionAreaWidth = ACTION_WIDTH * 3.0f + ACTION_GAP * 2.0f;
             final String display = trim(entry, 0.50f, rowBounds.width() - actionAreaWidth - 14.0f);
-            PanelLayout.Rect localRowBounds = rowBounds.relativeTo(origin);
+            UiRect localRowBounds = rowBounds.relativeTo(origin);
             scope.pushRelative(localRowBounds, row -> {
                 row.roundRect(0.0f, 0.0f, rowBounds.width(), rowBounds.height(), MD3Theme.CONTROL_RADIUS,
                         MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.PRIMARY_CONTAINER, bgHover));
@@ -236,12 +237,12 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         }
     }
 
-    private PanelLayout.Rect actionBounds(PanelLayout.Rect rowBounds, int indexFromRight) {
+    private UiRect actionBounds(UiRect rowBounds, int indexFromRight) {
         float x = rowBounds.right() - 6.0f - ACTION_WIDTH - indexFromRight * (ACTION_WIDTH + ACTION_GAP);
-        return new PanelLayout.Rect(x, rowBounds.y() + 2.0f, ACTION_WIDTH, rowBounds.height() - 4.0f);
+        return new UiRect(x, rowBounds.y() + 2.0f, ACTION_WIDTH, rowBounds.height() - 4.0f);
     }
 
-    private void drawAction(PanelUiTree.Scope scope, PanelLayout.Rect bounds, String label, boolean enabled, boolean hovered) {
+    private void drawAction(UiTree.Scope scope, UiRect bounds, String label, boolean enabled, boolean hovered) {
         float textScale = 0.50f;
         if (enabled && hovered) {
             scope.roundRect(bounds.x(), bounds.y(), bounds.width(), bounds.height(), 4.0f,
@@ -266,17 +267,17 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         setting.setValue(next);
     }
 
-    private PanelLayout.Rect getInputBounds(float popupY) {
-        return new PanelLayout.Rect(bounds.x() + PADDING, popupY + TITLE_HEIGHT + 10.0f, bounds.width() - PADDING * 2.0f, INPUT_HEIGHT);
+    private UiRect getInputBounds(float popupY) {
+        return new UiRect(bounds.x() + PADDING, popupY + TITLE_HEIGHT + 10.0f, bounds.width() - PADDING * 2.0f, INPUT_HEIGHT);
     }
 
-    private PanelLayout.Rect getViewport() {
+    private UiRect getViewport() {
         return getViewport(bounds.y());
     }
 
-    private PanelLayout.Rect getViewport(float popupY) {
+    private UiRect getViewport(float popupY) {
         float y = popupY + TITLE_HEIGHT + INPUT_HEIGHT + 20.0f;
-        return new PanelLayout.Rect(bounds.x() + PADDING, y, bounds.width() - PADDING * 2.0f, bounds.bottom() - y - PADDING);
+        return new UiRect(bounds.x() + PADDING, y, bounds.width() - PADDING * 2.0f, bounds.bottom() - y - PADDING);
     }
 
     private void updateSmoothScroll(float partialTick) {
@@ -300,7 +301,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
         scrollVelocity = 0.0f;
     }
 
-    private void applyDraggedScroll(double mouseY, PanelLayout.Rect viewport) {
+    private void applyDraggedScroll(double mouseY, UiRect viewport) {
         float newScroll = scrollBarDrag.mouseDragged(mouseY, viewport, maxScroll);
         if (newScroll >= 0.0f) {
             scroll = Mth.clamp(newScroll, 0.0f, maxScroll);
@@ -316,5 +317,10 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
 
     private float centeredTextY(float boxY, float boxHeight, float scale) {
         return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f;
+    }
+
+    @Override
+    public void close() {
+        contentBuffer.close();
     }
 }

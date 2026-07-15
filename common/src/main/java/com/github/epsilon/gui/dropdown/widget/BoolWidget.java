@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -40,7 +41,7 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
     }
 
     @Override
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float target = setting.getValue() ? 1.0f : 0.0f;
         toggleAnim.run(target);
         knobBounceAnim.run(target);
@@ -56,15 +57,15 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
         hoverAnim.run(hovered ? 1.0f : 0.0f);
         float hoverProgress = hoverAnim.getValue();
 
-        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
-                (getHeight() - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+        scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
+                (getHeight() - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
                 DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
-        renderer.roundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t));
+        scope.roundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t));
 
         float outlineW = MD3Theme.switchTrackOutlineWidth(t);
         if (outlineW > 0.01f) {
-            renderer.outline(sx, sy, sw, sh, SWITCH_RADIUS, outlineW, MD3Theme.switchTrackOutline(t, hoverProgress));
+            scope.outline(sx, sy, sw, sh, SWITCH_RADIUS, outlineW, MD3Theme.switchTrackOutline(t, hoverProgress));
         }
 
         float knobSize = Mth.lerp(Mth.clamp(t, 0.0f, 1.0f), KNOB_SIZE_OFF, KNOB_SIZE_ON);
@@ -79,11 +80,11 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
         if (hoverProgress > 0.02f) {
             float haloX = knobCx - STATE_LAYER_SIZE * 0.5f;
             float haloY = knobCy - STATE_LAYER_SIZE * 0.5f;
-            renderer.roundRect(haloX, haloY, STATE_LAYER_SIZE, STATE_LAYER_SIZE, STATE_LAYER_SIZE * 0.5f, MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18));
+            scope.roundRect(haloX, haloY, STATE_LAYER_SIZE, STATE_LAYER_SIZE, STATE_LAYER_SIZE * 0.5f, MD3Theme.stateLayer(MD3Theme.TEXT_PRIMARY, hoverProgress, 18));
         }
 
         float knobRadius = knobSize * 0.5f;
-        renderer.roundRect(knobCx - knobW * 0.5f, knobCy - knobSize * 0.5f, knobW, knobSize, knobRadius, MD3Theme.switchKnob(t));
+        scope.roundRect(knobCx - knobW * 0.5f, knobCy - knobSize * 0.5f, knobW, knobSize, knobRadius, MD3Theme.switchKnob(t));
     }
 
     @Override

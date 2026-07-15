@@ -1,20 +1,21 @@
-package com.github.epsilon.gui.panel.panel.clientsettings;
+package com.github.epsilon.gui.panel.view.settings;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.state.UiInvalidationState;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.popup.ConfirmActionPopup;
 import com.github.epsilon.gui.panel.popup.MessagePopup;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
-import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
-import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.utils.client.ConfigFolderOpener;
@@ -29,8 +30,8 @@ import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.List;
 import java.util.function.Supplier;
+import java.util.List;
 
 public class ConfigClientSettingTab implements ClientSettingTabView {
     private static final float ROW_HEIGHT = 36.0f;
@@ -43,8 +44,8 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     private final PanelState state;
     private final PanelPopupHost popupHost;
     private final TextRenderer textRenderer;
-    private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
-    private final PanelContentInvalidationState contentState = new PanelContentInvalidationState();
+    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+    private final UiInvalidationState contentState = new UiInvalidationState();
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
     private final ClientSettingTextField inputField = new ClientSettingTextField(MAX_INPUT_LENGTH);
     private final Map<String, Animation> rowHoverAnimations = new HashMap<>();
@@ -52,7 +53,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     private final Map<String, Animation> buttonHoverAnimations = new HashMap<>();
     private final List<ConfigRowEntry> rowEntries = new ArrayList<>();
 
-    private PanelLayout.Rect bounds;
+    private UiRect bounds;
     private float lastScroll = Float.NaN;
     private List<String> lastConfigList = List.of();
     private String lastActiveConfig = "";
@@ -66,7 +67,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         if (Math.abs(scrollVelocity) > 0.01f) {
@@ -80,8 +81,8 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
         List<String> configs = ConfigHolder.INSTANCE.listConfigs();
         String activeConfig = ConfigHolder.INSTANCE.getActiveConfigName();
-        PanelLayout.Rect inputSection = getInputSectionBounds(bounds);
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect inputSection = getInputSectionBounds(bounds);
+        UiRect listViewport = getListViewport(bounds);
         float contentHeight = configs.size() * (ROW_HEIGHT + MD3Theme.ROW_GAP);
         state.setMaxConfigScroll(contentHeight - listViewport.height());
         float maxScroll = Math.max(0.0f, contentHeight - listViewport.height());
@@ -98,20 +99,20 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             deleteHoverAnimations.keySet().removeIf(name -> !configs.contains(name));
         }
 
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        UiTree tree = UiTree.build(scope -> {
             inputField.buildUi(scope, getInputFieldBounds(inputSection), mouseX, mouseY, textRenderer,
                     EpsilonTranslations.Gui.CONFIG_INPUT_PLACEHOLDER.getTranslatedName(), FIELD_SCALE, null);
             for (ActionButton button : getActionButtons(inputSection)) {
                 buildActionButton(scope, button, mouseX, mouseY);
             }
-            scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getConfigScroll(), maxScroll, contentHeight, mouseX, mouseY, content -> {
+            scope.viewport(contentBuffer, listViewport, state.getConfigScroll(), maxScroll, contentHeight, mouseX, mouseY, content -> {
                 if (!rebuildContent) {
                     return;
                 }
                 float rowY = listViewport.y() - state.getConfigScroll();
                 for (String configName : configs) {
-                    PanelLayout.Rect rowBounds = new PanelLayout.Rect(listViewport.x(), rowY, rowWidth, ROW_HEIGHT);
-                    PanelLayout.Rect deleteBounds = getDeleteButtonBounds(rowBounds);
+                    UiRect rowBounds = new UiRect(listViewport.x(), rowY, rowWidth, ROW_HEIGHT);
+                    UiRect deleteBounds = getDeleteButtonBounds(rowBounds);
                     rowEntries.add(new ConfigRowEntry(configName, rowBounds, deleteBounds));
 
                     Animation rowHover = rowHoverAnimations.computeIfAbsent(configName, ignored -> createAnimation());
@@ -177,7 +178,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
         scrollVelocity = 0;
 
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect listViewport = getListViewport(bounds);
         float maxScroll = state.getMaxConfigScroll();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), listViewport, state.getConfigScroll(), maxScroll)) {
             float newScroll = scrollBarDrag.mouseDragged(event.y(), listViewport, maxScroll);
@@ -188,8 +189,8 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             return true;
         }
 
-        PanelLayout.Rect inputSection = getInputSectionBounds(bounds);
-        PanelLayout.Rect inputBounds = getInputFieldBounds(inputSection);
+        UiRect inputSection = getInputSectionBounds(bounds);
+        UiRect inputBounds = getInputFieldBounds(inputSection);
         if (inputBounds.contains(event.x(), event.y())) {
             inputField.focusIfContains(inputBounds, event.x(), event.y());
             markDirty();
@@ -236,7 +237,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         if (!scrollBarDrag.isDragging()) {
             return false;
         }
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect listViewport = getListViewport(bounds);
         float newScroll = scrollBarDrag.mouseDragged(event.y(), listViewport, state.getMaxConfigScroll());
         if (newScroll >= 0.0f) {
             state.setConfigScroll(newScroll);
@@ -250,7 +251,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         if (bounds == null) {
             return false;
         }
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect listViewport = getListViewport(bounds);
         if (listViewport.contains(mouseX, mouseY)) {
             scrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
@@ -299,7 +300,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         markDirty();
     }
 
-    private void buildActionButton(PanelUiTree.Scope scope, ActionButton button, int mouseX, int mouseY) {
+    private void buildActionButton(UiTree.Scope scope, ActionButton button, int mouseX, int mouseY) {
         Animation hoverAnimation = buttonHoverAnimations.computeIfAbsent(button.type().name(), ignored -> createAnimation());
         boolean hovered = button.bounds().contains(mouseX, mouseY);
         float hover = scope.animate(hoverAnimation, hovered);
@@ -335,7 +336,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         });
     }
 
-    private void buildConfigRow(PanelUiTree.Scope scope, String configName, String activeConfig, PanelLayout.Rect rowBounds, PanelLayout.Rect deleteBounds, float hover, float deleteHover) {
+    private void buildConfigRow(UiTree.Scope scope, String configName, String activeConfig, UiRect rowBounds, UiRect deleteBounds, float hover, float deleteHover) {
         boolean active = Objects.equals(configName, activeConfig);
 
         Color baseColor = MD3Theme.lerp(MD3Theme.SURFACE_CONTAINER, MD3Theme.SURFACE_CONTAINER_HIGH, hover);
@@ -358,7 +359,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
             float chipScale = 0.48f;
             float chipWidth = textRenderer.getWidth(chipText, chipScale) + 10.0f;
             float chipHeight = 14.0f;
-            PanelLayout.Rect localDeleteBounds = deleteBounds.relativeTo(rowBounds);
+            UiRect localDeleteBounds = deleteBounds.relativeTo(rowBounds);
             float chipX = localDeleteBounds.x() - chipWidth - 6.0f;
             float chipY = (rowBounds.height() - chipHeight) / 2.0f;
             scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY);
@@ -369,7 +370,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
                     MD3Theme.ON_PRIMARY);
         }
 
-        PanelLayout.Rect localDeleteBounds = deleteBounds.relativeTo(rowBounds);
+        UiRect localDeleteBounds = deleteBounds.relativeTo(rowBounds);
         scope.roundRect(localDeleteBounds.x(), localDeleteBounds.y(), localDeleteBounds.width(), localDeleteBounds.height(),
                 localDeleteBounds.height() / 2.0f,
                 MD3Theme.lerp(MD3Theme.withAlpha(MD3Theme.ERROR, 0), MD3Theme.withAlpha(MD3Theme.ERROR, 32), deleteHover));
@@ -501,7 +502,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
 
     private void openDeleteConfirmation(String configName) {
         float popupWidth = 198.0f;
-        PanelLayout.Rect popupBounds = popupHost.getCenteredBounds(popupWidth, 82.0f);
+        UiRect popupBounds = popupHost.getCenteredBounds(popupWidth, 82.0f);
         popupHost.open(new ConfirmActionPopup(
                 popupBounds,
                 EpsilonTranslations.Gui.CONFIG_DELETE_CONFIRM_TITLE::getTranslatedName,
@@ -554,7 +555,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         return message == null || message.isBlank() ? exception.getClass().getSimpleName() : message;
     }
 
-    private boolean shouldRebuild(PanelLayout.Rect listViewport, int mouseX, int mouseY, List<String> configs, String activeConfig, int currentGuiHeight, long contentSignature) {
+    private boolean shouldRebuild(UiRect listViewport, int mouseX, int mouseY, List<String> configs, String activeConfig, int currentGuiHeight, long contentSignature) {
         if (contentState.needsRebuild(listViewport, mouseX, mouseY, currentGuiHeight, contentSignature)) {
             return true;
         }
@@ -570,7 +571,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         return lastContentSignature != contentSignature;
     }
 
-    private void rememberSnapshot(PanelLayout.Rect listViewport, int mouseX, int mouseY, List<String> configs, String activeConfig, int currentGuiHeight, long contentSignature) {
+    private void rememberSnapshot(UiRect listViewport, int mouseX, int mouseY, List<String> configs, String activeConfig, int currentGuiHeight, long contentSignature) {
         contentState.rememberSnapshot(listViewport, mouseX, mouseY, currentGuiHeight, contentSignature);
         lastScroll = state.getConfigScroll();
         lastConfigList = new ArrayList<>(configs);
@@ -589,41 +590,41 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         return signature;
     }
 
-    private PanelLayout.Rect getInputSectionBounds(PanelLayout.Rect bounds) {
+    private UiRect getInputSectionBounds(UiRect bounds) {
         float inputHeight = FIELD_HEIGHT + BUTTON_HEIGHT * 2.0f + SECTION_GAP * 3.0f;
-        return new PanelLayout.Rect(bounds.x(), bounds.bottom() - inputHeight, bounds.width(), inputHeight);
+        return new UiRect(bounds.x(), bounds.bottom() - inputHeight, bounds.width(), inputHeight);
     }
 
-    private PanelLayout.Rect getListViewport(PanelLayout.Rect bounds) {
-        PanelLayout.Rect inputBounds = getInputSectionBounds(bounds);
+    private UiRect getListViewport(UiRect bounds) {
+        UiRect inputBounds = getInputSectionBounds(bounds);
         float y = bounds.y();
         float bottom = inputBounds.y() - SECTION_GAP;
-        return new PanelLayout.Rect(bounds.x(), y, bounds.width(), Math.max(0.0f, bottom - y));
+        return new UiRect(bounds.x(), y, bounds.width(), Math.max(0.0f, bottom - y));
     }
 
-    private PanelLayout.Rect getInputFieldBounds(PanelLayout.Rect inputBounds) {
-        return new PanelLayout.Rect(inputBounds.x(), inputBounds.y(), inputBounds.width(), FIELD_HEIGHT);
+    private UiRect getInputFieldBounds(UiRect inputBounds) {
+        return new UiRect(inputBounds.x(), inputBounds.y(), inputBounds.width(), FIELD_HEIGHT);
     }
 
-    private List<ActionButton> getActionButtons(PanelLayout.Rect inputBounds) {
+    private List<ActionButton> getActionButtons(UiRect inputBounds) {
         float y = getInputFieldBounds(inputBounds).bottom() + SECTION_GAP;
         float gap = 4.0f;
         float width = (inputBounds.width() - gap * 3.0f) / 4.0f;
         float secondRowWidth = (inputBounds.width() - gap) / 2.0f;
         float secondRowY = y + BUTTON_HEIGHT + SECTION_GAP;
         return List.of(
-                new ActionButton(ActionButtonType.SAVE_AS, EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.RELOAD, EpsilonTranslations.Gui.CONFIG_ACTION_RELOAD.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + width + gap, y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.EXPORT, EpsilonTranslations.Gui.CONFIG_ACTION_EXPORT.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 2.0f, y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.IMPORT, EpsilonTranslations.Gui.CONFIG_ACTION_IMPORT.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + (width + gap) * 3.0f, y, width, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.NEW, EpsilonTranslations.Gui.CONFIG_ACTION_NEW.getTranslatedName(), new PanelLayout.Rect(inputBounds.x(), secondRowY, secondRowWidth, BUTTON_HEIGHT)),
-                new ActionButton(ActionButtonType.OPEN_FOLDER, EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.getTranslatedName(), new PanelLayout.Rect(inputBounds.x() + secondRowWidth + gap, secondRowY, secondRowWidth, BUTTON_HEIGHT))
+                new ActionButton(ActionButtonType.SAVE_AS, EpsilonTranslations.Gui.CONFIG_ACTION_SAVE_AS.getTranslatedName(), new UiRect(inputBounds.x(), y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.RELOAD, EpsilonTranslations.Gui.CONFIG_ACTION_RELOAD.getTranslatedName(), new UiRect(inputBounds.x() + width + gap, y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.EXPORT, EpsilonTranslations.Gui.CONFIG_ACTION_EXPORT.getTranslatedName(), new UiRect(inputBounds.x() + (width + gap) * 2.0f, y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.IMPORT, EpsilonTranslations.Gui.CONFIG_ACTION_IMPORT.getTranslatedName(), new UiRect(inputBounds.x() + (width + gap) * 3.0f, y, width, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.NEW, EpsilonTranslations.Gui.CONFIG_ACTION_NEW.getTranslatedName(), new UiRect(inputBounds.x(), secondRowY, secondRowWidth, BUTTON_HEIGHT)),
+                new ActionButton(ActionButtonType.OPEN_FOLDER, EpsilonTranslations.Gui.CONFIG_ACTION_OPEN_FOLDER.getTranslatedName(), new UiRect(inputBounds.x() + secondRowWidth + gap, secondRowY, secondRowWidth, BUTTON_HEIGHT))
         );
     }
 
-    private PanelLayout.Rect getDeleteButtonBounds(PanelLayout.Rect rowBounds) {
+    private UiRect getDeleteButtonBounds(UiRect rowBounds) {
         float buttonSize = 20.0f;
-        return new PanelLayout.Rect(
+        return new UiRect(
                 rowBounds.right() - MD3Theme.ROW_TRAILING_INSET - buttonSize,
                 rowBounds.y() + (rowBounds.height() - buttonSize) / 2.0f,
                 buttonSize,
@@ -664,10 +665,10 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
         markDirty();
     }
 
-    private record ConfigRowEntry(String name, PanelLayout.Rect rowBounds, PanelLayout.Rect deleteBounds) {
+    private record ConfigRowEntry(String name, UiRect rowBounds, UiRect deleteBounds) {
     }
 
-    private record ActionButton(ActionButtonType type, String label, PanelLayout.Rect bounds) {
+    private record ActionButton(ActionButtonType type, String label, UiRect bounds) {
     }
 
     private enum ActionButtonType {

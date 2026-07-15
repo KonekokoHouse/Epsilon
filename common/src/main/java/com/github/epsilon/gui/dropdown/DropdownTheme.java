@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.dropdown;
 
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.theme.MD3Theme;
 
 import java.awt.*;
 

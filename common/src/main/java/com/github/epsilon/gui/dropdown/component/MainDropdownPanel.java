@@ -1,21 +1,22 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.List;
 
 public class MainDropdownPanel extends AbstractDropdownPanel {
 
@@ -49,19 +50,19 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    public void drawBackground(DropdownDrawContext renderer) {
-        super.drawBackground(renderer);
+    public void drawBackground(UiTree.Scope scope, UiTextMetrics textMetrics) {
+        super.drawBackground(scope, textMetrics);
 
         float versionScale = 0.48f;
-        float versionX = x + renderer.textWidth(getTitle(), DropdownTheme.HEADER_TEXT_SCALE) + 12.0f;
+        float versionX = x + textMetrics.textWidth(getTitle(), DropdownTheme.HEADER_TEXT_SCALE) + 12.0f;
         float versionMaxWidth = x + width - 17.0f - versionX;
         if (versionMaxWidth <= 2.0f) return;
 
-        String version = trimToWidth(Constants.VERSION, versionScale, versionMaxWidth, renderer);
+        String version = trimToWidth(Constants.VERSION, versionScale, versionMaxWidth, textMetrics);
         if (!version.isEmpty()) {
-            float nameY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
-            float versionY = nameY + renderer.textHeight(DropdownTheme.HEADER_TEXT_SCALE) - renderer.textHeight(versionScale);
-            renderer.text(version, versionX, versionY, versionScale, MD3Theme.TEXT_MUTED);
+            float nameY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
+            float versionY = nameY + textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE) - textMetrics.textHeight(versionScale);
+            scope.text(version, versionX, versionY, versionScale, MD3Theme.TEXT_MUTED);
         }
     }
 
@@ -72,9 +73,9 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING;
-        renderer.rect(x + CONTENT_PADDING, y + DropdownTheme.PANEL_HEADER_HEIGHT, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
+        scope.rect(x + CONTENT_PADDING, y + DropdownTheme.PANEL_HEADER_HEIGHT, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
 
         for (int index = 0; index < entries.size(); index++) {
             Entry entry = entries.get(index);
@@ -85,23 +86,23 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
             boolean active = entry.isActive();
             entry.hoverAnim.run(hovered ? 1.0f : 0.0f);
             float hover = entry.hoverAnim.getValue();
-            renderer.roundRect(iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS, MD3Theme.lerp(active ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.PRIMARY_CONTAINER, hover * 0.5f));
+            scope.roundRect(iconX, iconY, ICON_SIZE, ICON_SIZE, DropdownTheme.BUTTON_RADIUS, MD3Theme.lerp(active ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH, MD3Theme.PRIMARY_CONTAINER, hover * 0.5f));
             float iconScale = ICON_SCALE;
-            float iconW = renderer.textWidth(entry.icon, iconScale, StaticFontLoader.ICONS);
-            float iconH = renderer.textHeight(iconScale, StaticFontLoader.ICONS);
-            renderer.text(entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) * 0.5f - 1.0f, iconScale, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS);
+            float iconW = textMetrics.textWidth(entry.icon, iconScale, StaticFontLoader.ICONS);
+            float iconH = textMetrics.textHeight(iconScale, StaticFontLoader.ICONS);
+            scope.text(entry.icon, iconX + (ICON_SIZE - iconW) * 0.5f, iconY + (ICON_SIZE - iconH) * 0.5f - 1.0f, iconScale, active ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY, StaticFontLoader.ICONS);
             if (hovered) {
                 String label = entry.labelSupplier.get();
                 float labelScale = 0.42f;
-                float labelW = renderer.textWidth(label, labelScale);
+                float labelW = textMetrics.textWidth(label, labelScale);
                 float labelX = Math.max(x + 2.0f, Math.min(iconX + (ICON_SIZE - labelW) * 0.5f, x + width - labelW - 2.0f));
-                renderer.text(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED);
+                scope.text(label, labelX, iconY + ICON_SIZE + 1.0f, labelScale, MD3Theme.TEXT_MUTED);
             }
         }
         int rows = getIconRows();
         currentY += rows * ICON_SIZE + Math.max(0, rows - 1) * ICON_GAP + 4.0f + CONTENT_PADDING;
-        renderer.rect(x + CONTENT_PADDING, currentY - 3.0f, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
-        settingsContent.draw(renderer, mouseX, mouseY, x, currentY, width, getRenderFrameId());
+        scope.rect(x + CONTENT_PADDING, currentY - 3.0f, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
+        settingsContent.draw(scope, textMetrics, mouseX, mouseY, x, currentY, width, getRenderFrameId());
     }
 
     @Override

@@ -1,17 +1,18 @@
-package com.github.epsilon.gui.panel.panel.clientsettings;
+package com.github.epsilon.gui.panel.view.settings;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.PanelState;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.state.UiInvalidationState;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.PanelElements;
-import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
-import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
+import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -33,15 +34,15 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
     private final PanelState state;
     private final TextRenderer textRenderer;
-    private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
-    private final PanelContentInvalidationState contentState = new PanelContentInvalidationState();
+    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+    private final UiInvalidationState contentState = new UiInvalidationState();
     private final Map<String, Animation> rowHoverAnimations = new HashMap<>();
     private final Map<String, Animation> removeHoverAnimations = new HashMap<>();
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
     private final List<FriendRowEntry> rowEntries = new ArrayList<>();
     private final ClientSettingTextField inputField = new ClientSettingTextField(MAX_FRIEND_NAME_LENGTH);
 
-    private PanelLayout.Rect bounds;
+    private UiRect bounds;
     private float lastScroll = Float.NaN;
     private List<String> lastFriendList = List.of();
     private long lastContentSignature = Long.MIN_VALUE;
@@ -53,7 +54,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         if (Math.abs(scrollVelocity) > 0.01f) {
@@ -65,8 +66,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
             markDirty();
         }
 
-        PanelLayout.Rect inputBounds = getInputBounds(bounds);
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect inputBounds = getInputBounds(bounds);
+        UiRect listViewport = getListViewport(bounds);
         List<String> friends = Managers.FRIEND.getFriends().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
         float contentHeight = friends.size() * (FRIEND_ROW_HEIGHT + MD3Theme.ROW_GAP);
         state.setMaxFriendScroll(contentHeight - listViewport.height());
@@ -84,17 +85,17 @@ public class FriendClientSettingTab implements ClientSettingTabView {
             removeHoverAnimations.keySet().removeIf(name -> !friends.contains(name));
         }
 
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        UiTree tree = UiTree.build(scope -> {
             inputField.buildUi(scope, inputBounds, mouseX, mouseY, textRenderer,
                     EpsilonTranslations.Gui.FRIEND_INPUT_PLACEHOLDER.getTranslatedName(), FRIEND_INPUT_FIELD_SCALE, "↵");
-            scope.viewport(contentBuffer, listViewport, guiGraphics.guiHeight(), state.getFriendScroll(), maxScroll, contentHeight, mouseX, mouseY, content -> {
+            scope.viewport(contentBuffer, listViewport, state.getFriendScroll(), maxScroll, contentHeight, mouseX, mouseY, content -> {
                 if (!rebuildContent) {
                     return;
                 }
                 float rowY = listViewport.y() - state.getFriendScroll();
                 for (String friendName : friends) {
-                    PanelLayout.Rect rowBounds = new PanelLayout.Rect(listViewport.x(), rowY, rowWidth, FRIEND_ROW_HEIGHT);
-                    PanelLayout.Rect removeBounds = getRemoveButtonBounds(rowBounds);
+                    UiRect rowBounds = new UiRect(listViewport.x(), rowY, rowWidth, FRIEND_ROW_HEIGHT);
+                    UiRect removeBounds = getRemoveButtonBounds(rowBounds);
                     rowEntries.add(new FriendRowEntry(friendName, rowBounds, removeBounds));
 
                     Animation hoverAnimation = rowHoverAnimations.computeIfAbsent(friendName, ignored -> createAnimation());
@@ -151,7 +152,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         scrollVelocity = 0;
 
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect listViewport = getListViewport(bounds);
         float maxScroll = state.getMaxFriendScroll();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), listViewport, state.getFriendScroll(), maxScroll)) {
             float newScroll = scrollBarDrag.mouseDragged(event.y(), listViewport, maxScroll);
@@ -162,7 +163,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
             return true;
         }
 
-        PanelLayout.Rect inputBounds = getInputBounds(bounds);
+        UiRect inputBounds = getInputBounds(bounds);
         if (inputField.focusIfContains(inputBounds, event.x(), event.y())) {
             markDirty();
             return true;
@@ -194,7 +195,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         if (!scrollBarDrag.isDragging()) {
             return false;
         }
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect listViewport = getListViewport(bounds);
         float newScroll = scrollBarDrag.mouseDragged(event.y(), listViewport, state.getMaxFriendScroll());
         if (newScroll >= 0.0f) {
             state.setFriendScroll(newScroll);
@@ -208,7 +209,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         if (bounds == null) {
             return false;
         }
-        PanelLayout.Rect listViewport = getListViewport(bounds);
+        UiRect listViewport = getListViewport(bounds);
         if (listViewport.contains(mouseX, mouseY)) {
             scrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
@@ -269,7 +270,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         markDirty();
     }
 
-    private void buildFriendRow(PanelUiTree.Scope scope, String name, PanelLayout.Rect bounds, PanelLayout.Rect removeBounds, float hoverProgress, float removeHoverProgress) {
+    private void buildFriendRow(UiTree.Scope scope, String name, UiRect bounds, UiRect removeBounds, float hoverProgress, float removeHoverProgress) {
         PanelElements.buildRowSurface(scope, bounds, hoverProgress);
 
         float avatarSize = 20.0f;
@@ -294,8 +295,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         PanelElements.buildIconButton(scope, textRenderer, removeBounds.relativeTo(bounds), "✕", 0.50f, MD3Theme.ERROR, removeHoverProgress);
     }
 
-    private PanelLayout.Rect getListViewport(PanelLayout.Rect bounds) {
-        return new PanelLayout.Rect(
+    private UiRect getListViewport(UiRect bounds) {
+        return new UiRect(
                 bounds.x(),
                 bounds.y(),
                 bounds.width(),
@@ -303,8 +304,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         );
     }
 
-    private PanelLayout.Rect getInputBounds(PanelLayout.Rect bounds) {
-        return new PanelLayout.Rect(
+    private UiRect getInputBounds(UiRect bounds) {
+        return new UiRect(
                 bounds.x() + 2.0f,
                 bounds.bottom() - FRIEND_INPUT_HEIGHT - FRIEND_INPUT_BOTTOM_MARGIN,
                 bounds.width() - 4.0f,
@@ -312,9 +313,9 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         );
     }
 
-    private PanelLayout.Rect getRemoveButtonBounds(PanelLayout.Rect rowBounds) {
+    private UiRect getRemoveButtonBounds(UiRect rowBounds) {
         float buttonSize = 20.0f;
-        return new PanelLayout.Rect(
+        return new UiRect(
                 rowBounds.right() - MD3Theme.ROW_TRAILING_INSET - buttonSize,
                 rowBounds.y() + (rowBounds.height() - buttonSize) / 2.0f,
                 buttonSize,
@@ -322,7 +323,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         );
     }
 
-    private boolean shouldRebuild(PanelLayout.Rect listViewport, int mouseX, int mouseY, List<String> friends, int guiHeight, long contentSignature) {
+    private boolean shouldRebuild(UiRect listViewport, int mouseX, int mouseY, List<String> friends, int guiHeight, long contentSignature) {
         if (contentState.needsRebuild(listViewport, mouseX, mouseY, guiHeight, contentSignature)) {
             return true;
         }
@@ -335,7 +336,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         return lastContentSignature != contentSignature;
     }
 
-    private void rememberSnapshot(PanelLayout.Rect listViewport, int mouseX, int mouseY, List<String> friends, int guiHeight, long contentSignature) {
+    private void rememberSnapshot(UiRect listViewport, int mouseX, int mouseY, List<String> friends, int guiHeight, long contentSignature) {
         contentState.rememberSnapshot(listViewport, mouseX, mouseY, guiHeight, contentSignature);
         lastScroll = state.getFriendScroll();
         lastFriendList = new ArrayList<>(friends);
@@ -364,7 +365,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         markDirty();
     }
 
-    private record FriendRowEntry(String name, PanelLayout.Rect rowBounds, PanelLayout.Rect removeBounds) {
+    private record FriendRowEntry(String name, UiRect rowBounds, UiRect removeBounds) {
     }
 
 }

@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.panel.popup;
 
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 public class MessagePopup implements PanelPopupHost.Popup {
 
-    private final PanelLayout.Rect bounds;
+    private final UiRect bounds;
     private final Supplier<String> titleSupplier;
     private final Supplier<String> messageSupplier;
     private final String detail;
@@ -23,13 +23,13 @@ public class MessagePopup implements PanelPopupHost.Popup {
     private final Animation buttonHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
 
     private boolean closeAfterClick;
-    private PanelLayout.Rect buttonBounds;
+    private UiRect buttonBounds;
 
-    public MessagePopup(PanelLayout.Rect bounds, String title, String message, String detail, String buttonLabel) {
+    public MessagePopup(UiRect bounds, String title, String message, String detail, String buttonLabel) {
         this(bounds, () -> title, () -> message, detail, () -> buttonLabel);
     }
 
-    public MessagePopup(PanelLayout.Rect bounds, Supplier<String> titleSupplier, Supplier<String> messageSupplier, String detail, Supplier<String> buttonLabelSupplier) {
+    public MessagePopup(UiRect bounds, Supplier<String> titleSupplier, Supplier<String> messageSupplier, String detail, Supplier<String> buttonLabelSupplier) {
         this.bounds = bounds;
         this.titleSupplier = titleSupplier;
         this.messageSupplier = messageSupplier;
@@ -41,19 +41,19 @@ public class MessagePopup implements PanelPopupHost.Popup {
     }
 
     @Override
-    public PanelLayout.Rect getBounds() {
+    public UiRect getBounds() {
         return bounds;
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         openAnimation.run(1.0f);
         float progress = openAnimation.getValue();
         float popupY = bounds.y() - (1.0f - progress) * 6.0f;
         updateLayout(popupY);
         buttonHoverAnimation.run(buttonBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
-        PanelUiTree tree = PanelUiTree.build(scope -> {
-            PanelLayout.Rect popupBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
+        UiTree tree = UiTree.build(scope -> {
+            UiRect popupBounds = new UiRect(bounds.x(), popupY, bounds.width(), bounds.height());
             scope.pushAbsolute(popupBounds, popup -> {
                 popup.popupCard(popupBounds.atOrigin(),
                         MD3Theme.CARD_RADIUS,
@@ -74,7 +74,7 @@ public class MessagePopup implements PanelPopupHost.Popup {
                 }
 
                 float hover = buttonHoverAnimation.getValue();
-                PanelLayout.Rect localButtonBounds = buttonBounds.relativeTo(popupBounds);
+                UiRect localButtonBounds = buttonBounds.relativeTo(popupBounds);
                 popup.button(localButtonBounds, localButtonBounds.height() / 2.0f,
                         MD3Theme.lerp(MD3Theme.PRIMARY_CONTAINER, MD3Theme.PRIMARY, hover * 0.35f),
                         buttonLabel, 0.56f, MD3Theme.ON_PRIMARY_CONTAINER);
@@ -100,7 +100,7 @@ public class MessagePopup implements PanelPopupHost.Popup {
     private void updateLayout(float popupY) {
         float buttonWidth = 68.0f;
         float buttonHeight = 24.0f;
-        buttonBounds = new PanelLayout.Rect(
+        buttonBounds = new UiRect(
                 bounds.x() + bounds.width() - buttonWidth - 12.0f,
                 popupY + bounds.height() - buttonHeight - 10.0f,
                 buttonWidth,

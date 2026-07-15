@@ -1,16 +1,17 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
-import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 
@@ -107,16 +108,16 @@ public class SettingsContent {
         return height;
     }
 
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY, float panelX, float contentY, float panelWidth) {
-        draw(renderer, mouseX, mouseY, panelX, contentY, panelWidth, Integer.MIN_VALUE);
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float panelX, float contentY, float panelWidth) {
+        draw(scope, textMetrics, mouseX, mouseY, panelX, contentY, panelWidth, Integer.MIN_VALUE);
     }
 
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY, float panelX, float contentY, float panelWidth, int frameId) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float panelX, float contentY, float panelWidth, int frameId) {
         if (sections.isEmpty()) {
             String label = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
             float labelScale = 0.58f;
-            float textW = renderer.textWidth(label, labelScale);
-            renderer.text(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED);
+            float textW = textMetrics.textWidth(label, labelScale);
+            scope.text(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED);
             return;
         }
 
@@ -131,9 +132,9 @@ public class SettingsContent {
             SettingSection section = sections.get(index);
             float sectionHeight = cachedSectionHeights.get(index);
             if (section.hasHeader()) {
-                drawSection(renderer, mouseX, mouseY, section, panelX, currentY, panelWidth, sectionHeight);
+                drawSection(scope, textMetrics, mouseX, mouseY, section, panelX, currentY, panelWidth, sectionHeight);
             } else {
-                var stack = renderer.scope().stack(new PanelLayout.Rect(
+                var stack = scope.stack(new UiRect(
                         panelX + DropdownTheme.SETTING_INDENT,
                         currentY,
                         panelWidth - DropdownTheme.SETTING_INDENT * 2.0f,
@@ -142,7 +143,7 @@ public class SettingsContent {
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
                     stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
-                            (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
+                            (bounds, itemScope) -> widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds));
                 }
             }
             currentY += sectionHeight;
@@ -271,7 +272,7 @@ public class SettingsContent {
         return h;
     }
 
-    private void drawSection(DropdownDrawContext renderer, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth, float sectionHeight) {
+    private void drawSection(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth, float sectionHeight) {
         Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(section.isCollapsed() ? 0.0f : 1.0f));
         Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(0.0f));
         float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
@@ -282,34 +283,34 @@ public class SettingsContent {
 
         float hoverProgress = hoverAnim.getValue();
         float expandProgress = expandAnimG.getValue();
-        renderer.roundRect(headerX, sectionY, headerW, headerH, DropdownTheme.BUTTON_RADIUS,
+        scope.roundRect(headerX, sectionY, headerW, headerH, DropdownTheme.BUTTON_RADIUS,
                 MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress));
 
-        String label = trimToWidth(section.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE, headerW - 74.0f, renderer);
-        float labelY = sectionY + (headerH - renderer.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
-        renderer.text(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
+        String label = trimToWidth(section.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE, headerW - 74.0f, textMetrics);
+        float labelY = sectionY + (headerH - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
+        scope.text(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
 
         String countLabel = Integer.toString(section.widgets().size());
-        float countWidth = renderer.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
+        float countWidth = textMetrics.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
         float countX = headerX + headerW - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f;
         float chipH = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT;
         float countY = sectionY + (headerH - chipH) * 0.5f;
-        renderer.roundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
-        float countTextY = countY + (chipH - renderer.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
-        renderer.text(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
+        scope.roundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
+        float countTextY = countY + (chipH - textMetrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
+        scope.text(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
 
-        renderer.triangle(headerX + headerW - DropdownTheme.SETTING_PADDING_X - 2.5f,
+        scope.triangle(headerX + headerW - DropdownTheme.SETTING_PADDING_X - 2.5f,
                 sectionY + headerH * 0.5f, 2.5f, expandProgress, DropdownTheme.groupChevron(hoverProgress));
 
         if (!section.isCollapsed()) {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = panelX + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = panelWidth - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            var stack = renderer.scope().stack(new PanelLayout.Rect(childX, childY, childW, sectionHeight));
+            var stack = scope.stack(new UiRect(childX, childY, childW, sectionHeight));
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
-                        (bounds, scope) -> widget.drawInScope(renderer, mouseX, mouseY, bounds, scope));
+                        (bounds, itemScope) -> widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds));
             }
         }
     }
@@ -324,15 +325,15 @@ public class SettingsContent {
         return mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
     }
 
-    private String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
+    private String trimToWidth(String value, float scale, float maxWidth, UiTextMetrics textMetrics) {
         if (value == null || value.isEmpty()) return "";
-        if (renderer.textWidth(value, scale) <= maxWidth) return value;
+        if (textMetrics.textWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = renderer.textWidth(ellipsis, scale);
+        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         for (int len = value.length() - 1; len >= 0; len--) {
             String candidate = value.substring(0, len) + ellipsis;
-            if (renderer.textWidth(candidate, scale) <= maxWidth) return candidate;
+            if (textMetrics.textWidth(candidate, scale) <= maxWidth) return candidate;
         }
         return ellipsis;
     }

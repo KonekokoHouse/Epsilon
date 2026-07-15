@@ -1,12 +1,12 @@
-package com.github.epsilon.gui.scene;
+package com.github.epsilon.gui.lib.scene;
 
 /**
  * GUI 的语义层级。
  * <p>
- * 业务代码只选择语义层，具体数字 layer 由 {@link GuiLayerStack} 统一分配，
+ * 业务代码只选择语义层，具体数字 layer 由 {@link UiLayerStack} 统一分配，
  * 避免不同 GUI 子系统各自猜测绘制顺序。
  */
-public enum GuiLayer {
+public enum UiLayer {
     BACKGROUND(0),
     CHROME(100),
     CONTENT(200),
@@ -16,7 +16,7 @@ public enum GuiLayer {
 
     private final int baseLayer;
 
-    GuiLayer(int baseLayer) {
+    UiLayer(int baseLayer) {
         this.baseLayer = baseLayer;
     }
 

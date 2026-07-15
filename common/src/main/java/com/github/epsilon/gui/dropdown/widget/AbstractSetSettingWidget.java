@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -47,11 +48,11 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
     }
 
     @Override
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         boolean hovered = isFieldHovered(mouseX, mouseY);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 
-        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f,
+        scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f,
                 DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         // 渲染使用本地坐标
@@ -64,13 +65,13 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         String label = elementCount() + labelText();
         float labelScale = 0.50f;
         float iconScale = 0.54f;
-        float labelY = centeredTextY(renderer, fieldY, FIELD_HEIGHT, labelScale);
-        float iconY = centeredTextY(renderer, fieldY, FIELD_HEIGHT, iconScale);
+        float labelY = centeredTextY(textMetrics, fieldY, FIELD_HEIGHT, labelScale);
+        float iconY = centeredTextY(textMetrics, fieldY, FIELD_HEIGHT, iconScale);
 
-        renderer.roundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, background);
-        renderer.outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, 0.7f, outline);
-        renderer.text(label, fieldX + 6.0f, labelY, labelScale, MD3Theme.ON_SECONDARY_CONTAINER);
-        renderer.text("+", fieldX + fieldW - 12.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER);
+        scope.roundRect(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, background);
+        scope.outline(fieldX, fieldY, fieldW, FIELD_HEIGHT, DropdownTheme.INPUT_RADIUS, 0.7f, outline);
+        scope.text(label, fieldX + 6.0f, labelY, labelScale, MD3Theme.ON_SECONDARY_CONTAINER);
+        scope.text("+", fieldX + fieldW - 12.0f, iconY, iconScale, MD3Theme.ON_SECONDARY_CONTAINER);
     }
 
     @Override
@@ -103,7 +104,7 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         return width - DropdownTheme.SETTING_PADDING_X * 2.0f;
     }
 
-    private float centeredTextY(DropdownDrawContext renderer, float boxY, float boxHeight, float scale) {
-        return boxY + (boxHeight - renderer.textHeight(scale)) * 0.5f;
+    private float centeredTextY(UiTextMetrics textMetrics, float boxY, float boxHeight, float scale) {
+        return boxY + (boxHeight - textMetrics.textHeight(scale)) * 0.5f;
     }
 }

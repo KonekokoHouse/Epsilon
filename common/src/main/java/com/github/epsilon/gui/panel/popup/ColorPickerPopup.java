@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -33,8 +33,8 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         }
     }
 
-    private final PanelLayout.Rect bounds;
-    private final PanelLayout.Rect anchorBounds;
+    private final UiRect bounds;
+    private final UiRect anchorBounds;
     private final ColorSetting setting;
     private final TextRenderer textRenderer = TextRenderer.create();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
@@ -50,7 +50,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
     private int cursorIndex;
     private Color pendingValue;
 
-    public ColorPickerPopup(PanelLayout.Rect bounds, PanelLayout.Rect anchorBounds, ColorSetting setting) {
+    public ColorPickerPopup(UiRect bounds, UiRect anchorBounds, ColorSetting setting) {
         this.bounds = bounds;
         this.anchorBounds = anchorBounds;
         this.setting = setting;
@@ -61,16 +61,16 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
     }
 
     @Override
-    public PanelLayout.Rect getBounds() {
+    public UiRect getBounds() {
         return bounds;
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+    public void extractGui(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+        UiTree tree = UiTree.build(scope -> {
             float progress = scope.animate(openAnimation, 1.0f);
             float popupY = bounds.y() - (1.0f - progress) * 6.0f;
-            PanelLayout.Rect popupBounds = new PanelLayout.Rect(bounds.x(), popupY, bounds.width(), bounds.height());
+            UiRect popupBounds = new UiRect(bounds.x(), popupY, bounds.width(), bounds.height());
             scope.pushAbsolute(popupBounds, popup -> {
                 popup.popupCard(popupBounds.atOrigin(),
                         MD3Theme.CARD_RADIUS,
@@ -80,10 +80,10 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
                 popup.pushAbsolute(anchorBounds, anchor ->
                         anchor.roundRect(0.0f, 0.0f, anchorBounds.width(), anchorBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 255)));
 
-                PanelLayout.Rect previewBounds = getPreviewBounds(popupY);
-                PanelLayout.Rect swatchBounds = getPreviewSwatchBounds(popupY);
-                PanelLayout.Rect localPreviewBounds = previewBounds.relativeTo(popupBounds);
-                PanelLayout.Rect localSwatchBounds = swatchBounds.relativeTo(popupBounds);
+                UiRect previewBounds = getPreviewBounds(popupY);
+                UiRect swatchBounds = getPreviewSwatchBounds(popupY);
+                UiRect localPreviewBounds = previewBounds.relativeTo(popupBounds);
+                UiRect localSwatchBounds = swatchBounds.relativeTo(popupBounds);
                 Color previewSurface = MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER;
                 Color swatchSurface = MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGHEST;
                 popup.roundRect(localPreviewBounds.x(), localPreviewBounds.y(), localPreviewBounds.width(), localPreviewBounds.height(), 10.0f, MD3Theme.withAlpha(previewSurface, 255));
@@ -99,12 +99,12 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
                 Channel[] channels = getChannels();
                 for (int i = 0; i < channels.length; i++) {
                     Channel channel = channels[i];
-                    PanelLayout.Rect rowBounds = getChannelRowBounds(popupY, i);
-                    PanelLayout.Rect localRowBounds = rowBounds.relativeTo(popupBounds);
-                    PanelLayout.Rect trackBounds = getTrackBounds(rowBounds);
-                    PanelLayout.Rect localTrackBounds = trackBounds.relativeTo(popupBounds);
-                    PanelLayout.Rect valueBounds = getValueBounds(rowBounds);
-                    PanelLayout.Rect localValueBounds = valueBounds.relativeTo(popupBounds);
+                    UiRect rowBounds = getChannelRowBounds(popupY, i);
+                    UiRect localRowBounds = rowBounds.relativeTo(popupBounds);
+                    UiRect trackBounds = getTrackBounds(rowBounds);
+                    UiRect localTrackBounds = trackBounds.relativeTo(popupBounds);
+                    UiRect valueBounds = getValueBounds(rowBounds);
+                    UiRect localValueBounds = valueBounds.relativeTo(popupBounds);
                     boolean hovered = rowBounds.contains(mouseX, mouseY);
                     float channelProgress = getChannelValue(channel) / 255.0f;
                     float handleX = localTrackBounds.x() + localTrackBounds.width() * channelProgress - 2.0f;
@@ -139,9 +139,9 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         }
         Channel[] channels = getChannels();
         for (int i = 0; i < channels.length; i++) {
-            PanelLayout.Rect rowBounds = getChannelRowBounds(bounds.y(), i);
-            PanelLayout.Rect trackBounds = getTrackBounds(rowBounds);
-            PanelLayout.Rect valueBounds = getValueBounds(rowBounds);
+            UiRect rowBounds = getChannelRowBounds(bounds.y(), i);
+            UiRect trackBounds = getTrackBounds(rowBounds);
+            UiRect valueBounds = getValueBounds(rowBounds);
             if (valueBounds.contains(event.x(), event.y())) {
                 draggingChannel = null;
                 focusedChannel = channels[i];
@@ -149,7 +149,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
                 cursorIndex = getCursorIndex(event.x(), valueBounds, inputBuffer);
                 return true;
             }
-            PanelLayout.Rect interactiveBounds = new PanelLayout.Rect(trackBounds.x(), trackBounds.y() - 5.0f, trackBounds.width(), trackBounds.height() + 10.0f);
+            UiRect interactiveBounds = new UiRect(trackBounds.x(), trackBounds.y() - 5.0f, trackBounds.width(), trackBounds.height() + 10.0f);
             if (interactiveBounds.contains(event.x(), event.y())) {
                 draggingChannel = channels[i];
                 focusedChannel = null;
@@ -178,7 +178,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
             return false;
         }
         int index = getChannelIndex(draggingChannel);
-        PanelLayout.Rect trackBounds = getTrackBounds(getChannelRowBounds(bounds.y(), index));
+        UiRect trackBounds = getTrackBounds(getChannelRowBounds(bounds.y(), index));
         updateChannelFromMouse(draggingChannel, event.x(), trackBounds);
         return true;
     }
@@ -243,25 +243,25 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         return true;
     }
 
-    private PanelLayout.Rect getPreviewBounds(float popupY) {
-        return new PanelLayout.Rect(bounds.x() + 8.0f, popupY + 8.0f, bounds.width() - 16.0f, 34.0f);
+    private UiRect getPreviewBounds(float popupY) {
+        return new UiRect(bounds.x() + 8.0f, popupY + 8.0f, bounds.width() - 16.0f, 34.0f);
     }
 
-    private PanelLayout.Rect getPreviewSwatchBounds(float popupY) {
-        return new PanelLayout.Rect(bounds.x() + 14.0f, popupY + 13.0f, 24.0f, 24.0f);
+    private UiRect getPreviewSwatchBounds(float popupY) {
+        return new UiRect(bounds.x() + 14.0f, popupY + 13.0f, 24.0f, 24.0f);
     }
 
-    private PanelLayout.Rect getChannelRowBounds(float popupY, int index) {
+    private UiRect getChannelRowBounds(float popupY, int index) {
         float rowY = popupY + 50.0f + index * 24.0f;
-        return new PanelLayout.Rect(bounds.x() + 8.0f, rowY, bounds.width() - 16.0f, 20.0f);
+        return new UiRect(bounds.x() + 8.0f, rowY, bounds.width() - 16.0f, 20.0f);
     }
 
-    private PanelLayout.Rect getTrackBounds(PanelLayout.Rect rowBounds) {
-        return new PanelLayout.Rect(rowBounds.x() + 18.0f, rowBounds.y() + 8.0f, rowBounds.width() - 48.0f, 4.0f);
+    private UiRect getTrackBounds(UiRect rowBounds) {
+        return new UiRect(rowBounds.x() + 18.0f, rowBounds.y() + 8.0f, rowBounds.width() - 48.0f, 4.0f);
     }
 
-    private PanelLayout.Rect getValueBounds(PanelLayout.Rect rowBounds) {
-        return new PanelLayout.Rect(rowBounds.right() - 24.0f, rowBounds.y() + 2.0f, 18.0f, 16.0f);
+    private UiRect getValueBounds(UiRect rowBounds) {
+        return new UiRect(rowBounds.right() - 24.0f, rowBounds.y() + 2.0f, 18.0f, 16.0f);
     }
 
     private Channel[] getChannels() {
@@ -290,7 +290,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         };
     }
 
-    private void updateChannelFromMouse(Channel channel, double mouseX, PanelLayout.Rect trackBounds) {
+    private void updateChannelFromMouse(Channel channel, double mouseX, UiRect trackBounds) {
         double progress = (mouseX - trackBounds.x()) / trackBounds.width();
         progress = Mth.clamp(progress, 0.0, 1.0);
         int value = Mth.clamp((int) Math.round(progress * 255.0), 0, 255);
@@ -311,7 +311,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
     }
 
-    private void buildValueIndicator(PanelUiTree.Scope scope, float anchorX, float rowTop, String valueText, float progress) {
+    private void buildValueIndicator(UiTree.Scope scope, float anchorX, float rowTop, String valueText, float progress) {
         float textScale = 0.54f;
         float bubbleWidth = textRenderer.getWidth(valueText, textScale) + 12.0f;
         float bubbleHeight = 16.0f;
@@ -323,7 +323,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         scope.text(valueText, bubbleX + (bubbleWidth - textRenderer.getWidth(valueText, textScale)) / 2.0f, textY, textScale, MD3Theme.withAlpha(MD3Theme.INVERSE_ON_SURFACE, bubbleAlpha));
     }
 
-    private void buildValueBox(PanelUiTree.Scope scope, PanelLayout.Rect bounds, String valueText, boolean focused, int alpha) {
+    private void buildValueBox(UiTree.Scope scope, UiRect bounds, String valueText, boolean focused, int alpha) {
         Color boxBase = MD3Theme.isLightTheme() ? MD3Theme.SURFACE_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH;
         Color boxHover = MD3Theme.SURFACE_CONTAINER_HIGHEST;
         Color boxColor = focused ? MD3Theme.INVERSE_SURFACE : MD3Theme.withAlpha(MD3Theme.lerp(boxBase, boxHover, 0.85f), alpha);
@@ -343,7 +343,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         });
     }
 
-    private void buildCheckerboard(PanelUiTree.Scope scope, PanelLayout.Rect bounds, int alpha) {
+    private void buildCheckerboard(UiTree.Scope scope, UiRect bounds, int alpha) {
         float inset = 2.0f;
         float cell = 4.0f;
         Color dark = MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, alpha);
@@ -386,7 +386,7 @@ public class ColorPickerPopup implements PanelPopupHost.Popup {
         return inputBuffer == null ? Integer.toString(getChannelValue(focusedChannel)) : inputBuffer;
     }
 
-    private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds, String text) {
+    private int getCursorIndex(double mouseX, UiRect fieldBounds, String text) {
         float scale = 0.52f;
         float textWidth = textRenderer.getWidth(text, scale);
         float textStart = fieldBounds.x() + (fieldBounds.width() - textWidth) / 2.0f;
