@@ -132,6 +132,7 @@ public class ModuleHolder {
         addModule(HitParticles.INSTANCE);
         addModule(HoleESP.INSTANCE);
         addModule(JumpCircle.INSTANCE);
+        addModule(MasEffects.INSTANCE);
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);
         addModule(Particles.INSTANCE);
