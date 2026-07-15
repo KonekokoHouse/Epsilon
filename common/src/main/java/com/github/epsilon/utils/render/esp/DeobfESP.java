@@ -1,20 +1,17 @@
 package com.github.epsilon.utils.render.esp;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
+import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.LayeringTransform;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -43,13 +40,6 @@ public final class DeobfESP {
             .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
             .withCull(false)
             .build();
-
-    private static final RenderType LAYER = RenderType.create("epsilon_deobf_esp", RenderSetup.builder(PIPELINE)
-            .withTexture("Sampler0", TEXTURE)
-            .sortOnUpload()
-            .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-            .setOutputTarget(OutputTarget.MAIN_TARGET)
-            .createRenderSetup());
 
     private static final Map<Integer, Effect> EFFECTS = new LinkedHashMap<>();
 
@@ -106,8 +96,8 @@ public final class DeobfESP {
 
         long now = System.currentTimeMillis();
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        Camera camera = mc.gameRenderer.getMainCamera();
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Camera camera = mc.gameRenderer.mainCamera();
+        LuminImmediateRenderer.PosTexColorQuads buffer = LuminImmediateRenderer.beginPosTexColorQuads(PIPELINE, TEXTURE);
         Iterator<Effect> iterator = EFFECTS.values().iterator();
 
         while (iterator.hasNext()) {
@@ -134,14 +124,11 @@ public final class DeobfESP {
             renderEffect(poseStack, buffer, camera, effect, now, partialTick, size, spins, wobble, flyHeight);
         }
 
-        MeshData mesh = buffer.build();
-        if (mesh != null) {
-            LAYER.draw(mesh);
-        }
+        buffer.end();
     }
 
     private static void renderEffect(
-            PoseStack poseStack, BufferBuilder buffer, Camera camera, Effect effect,
+            PoseStack poseStack, LuminImmediateRenderer.PosTexColorQuads buffer, Camera camera, Effect effect,
             long now, float partialTick, float size, float spins, float wobble, float flyHeight
     ) {
         float baseWidth = Math.max(0.01f, size);
@@ -200,10 +187,10 @@ public final class DeobfESP {
         float halfHeight = drawHeight / 2.0f;
         int argb = tint.getRGB();
 
-        buffer.addVertex(matrix, -halfWidth, halfHeight, 0.0f).setUv(0.0f, 1.0f).setColor(argb);
-        buffer.addVertex(matrix, halfWidth, halfHeight, 0.0f).setUv(1.0f, 1.0f).setColor(argb);
-        buffer.addVertex(matrix, halfWidth, -halfHeight, 0.0f).setUv(1.0f, 0.0f).setColor(argb);
-        buffer.addVertex(matrix, -halfWidth, -halfHeight, 0.0f).setUv(0.0f, 0.0f).setColor(argb);
+        buffer.vertex(matrix, -halfWidth, halfHeight, 0.0f, 0.0f, 1.0f, argb);
+        buffer.vertex(matrix, halfWidth, halfHeight, 0.0f, 1.0f, 1.0f, argb);
+        buffer.vertex(matrix, halfWidth, -halfHeight, 0.0f, 1.0f, 0.0f, argb);
+        buffer.vertex(matrix, -halfWidth, -halfHeight, 0.0f, 0.0f, 0.0f, argb);
 
         poseStack.popPose();
     }
