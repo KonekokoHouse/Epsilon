@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 import java.awt.*;
+
 public class Inventory extends HudModule {
 
     public static final Inventory INSTANCE = new Inventory();

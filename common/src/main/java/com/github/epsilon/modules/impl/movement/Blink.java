@@ -50,7 +50,7 @@ public class Blink extends Module {
         if (nullCheck()) return;
         Packet<?> packet = e.getPacket();
         if (packet instanceof ServerboundHelloPacket || packet instanceof ClientIntentionPacket) return;
-        e.setCancelled(true);
+        e.cancel();
         packets.add(packet);
     }
 

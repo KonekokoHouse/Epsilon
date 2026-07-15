@@ -1,5 +1,8 @@
 package com.github.epsilon.gui.panel;
 
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.theme.MD3Theme;
+
 public class PanelLayout {
 
     private PanelLayout() {
@@ -23,49 +26,15 @@ public class PanelLayout {
         float detailX = modulesX + moduleWidth + gap;
         float detailWidth = maxContentRight - detailX;
 
-        Rect panel = new Rect(x, y, panelWidth, panelHeight);
-        Rect rail = new Rect(railX, y + MD3Theme.OUTER_PADDING, railWidth, columnHeight);
-        Rect modules = new Rect(modulesX, y + MD3Theme.OUTER_PADDING, moduleWidth, columnHeight);
-        Rect detail = new Rect(detailX, y + MD3Theme.OUTER_PADDING, detailWidth, columnHeight);
+        UiRect panel = new UiRect(x, y, panelWidth, panelHeight);
+        UiRect rail = new UiRect(railX, y + MD3Theme.OUTER_PADDING, railWidth, columnHeight);
+        UiRect modules = new UiRect(modulesX, y + MD3Theme.OUTER_PADDING, moduleWidth, columnHeight);
+        UiRect detail = new UiRect(detailX, y + MD3Theme.OUTER_PADDING, detailWidth, columnHeight);
 
         return new Layout(panel, rail, modules, detail);
     }
 
-    public record Layout(Rect panel, Rect rail, Rect modules, Rect detail) {
-    }
-
-    public record Rect(float x, float y, float width, float height) {
-        public float right() {
-            return x + width;
-        }
-
-        public float bottom() {
-            return y + height;
-        }
-
-        public float centerX() {
-            return x + width / 2.0f;
-        }
-
-        public float centerY() {
-            return y + height / 2.0f;
-        }
-
-        public boolean contains(double px, double py) {
-            return px >= x && px <= right() && py >= y && py <= bottom();
-        }
-
-        public Rect inset(float amount) {
-            return new Rect(x + amount, y + amount, width - amount * 2.0f, height - amount * 2.0f);
-        }
-
-        public Rect atOrigin() {
-            return new Rect(0.0f, 0.0f, width, height);
-        }
-
-        public Rect relativeTo(Rect origin) {
-            return new Rect(x - origin.x(), y - origin.y(), width, height);
-        }
+    public record Layout(UiRect panel, UiRect rail, UiRect modules, UiRect detail) {
     }
 
 }

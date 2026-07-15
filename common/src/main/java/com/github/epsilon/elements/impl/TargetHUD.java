@@ -4,8 +4,8 @@ import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -89,7 +89,7 @@ public class TargetHUD extends HudModule {
         if (target == null || animationScale <= 0.01f) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelUiTree.Scope scope = renderScope();
+        UiTree.Scope scope = renderScope();
 
         LivingEntity liveTarget = resolveTarget();
         float maxHealth = lastKnownMaxHealth;

@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -36,7 +36,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     }
 
     @Override
-    public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         this.textMetrics = textRenderer;
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
@@ -51,8 +51,8 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(animatedHover));
         scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
-        PanelLayout.Rect trackBounds = getTrackBounds(bounds);
-        PanelLayout.Rect fieldBounds = getFieldBounds(bounds);
+        UiRect trackBounds = getTrackBounds(bounds);
+        UiRect fieldBounds = getFieldBounds(bounds);
         float progress = getProgress();
         float visualProgress = Math.clamp(progress, 0.0f, 1.0f);
         float handleWidth = 2.0f - animatedPress * 2.0f;
@@ -73,7 +73,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
             float bubbleX = handleX + handleWidth / 2.0f - bubbleWidth / 2.0f;
             float bubbleY = bounds.y() - 22.0f;
             int bubbleAlpha = (int) (255 * indicatorProgress);
-            scope.pushAbsolute(new PanelLayout.Rect(bubbleX, bubbleY, bubbleWidth, bubbleHeight), bubble -> {
+            scope.pushAbsolute(new UiRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight), bubble -> {
                 bubble.roundRect(0.0f, 0.0f, bubbleWidth, bubbleHeight, 9.0f, MD3Theme.withAlpha(MD3Theme.INVERSE_SURFACE, bubbleAlpha));
                 float textWidth = textRenderer.getWidth(label, textScale);
                 float textHeight = textRenderer.getHeight(textScale);
@@ -94,17 +94,17 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
                 null, 0.0f, null);
     }
 
-    public PanelLayout.Rect getTrackBounds(PanelLayout.Rect bounds) {
-        return new PanelLayout.Rect(bounds.right() - MD3Theme.ROW_TRAILING_INSET - 116.0f, bounds.y() + 12.0f, 72.0f, 6.0f);
+    public UiRect getTrackBounds(UiRect bounds) {
+        return new UiRect(bounds.right() - MD3Theme.ROW_TRAILING_INSET - 116.0f, bounds.y() + 12.0f, 72.0f, 6.0f);
     }
 
-    public PanelLayout.Rect getFieldBounds(PanelLayout.Rect bounds) {
-        return new PanelLayout.Rect(bounds.right() - MD3Theme.ROW_TRAILING_INSET - 40.0f, bounds.y() + 4.0f, 40.0f, 18.0f);
+    public UiRect getFieldBounds(UiRect bounds) {
+        return new UiRect(bounds.right() - MD3Theme.ROW_TRAILING_INSET - 40.0f, bounds.y() + 4.0f, 40.0f, 18.0f);
     }
 
     @Override
-    public boolean mouseClicked(PanelLayout.Rect bounds, MouseButtonEvent event, boolean isDoubleClick) {
-        PanelLayout.Rect fieldBounds = getFieldBounds(bounds);
+    public boolean mouseClicked(UiRect bounds, MouseButtonEvent event, boolean isDoubleClick) {
+        UiRect fieldBounds = getFieldBounds(bounds);
         if (event.button() == 0 && fieldBounds.contains(event.x(), event.y())) {
             dragging = false;
             focused = true;
@@ -122,7 +122,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     }
 
     @Override
-    public boolean mouseReleased(PanelLayout.Rect bounds, MouseButtonEvent event) {
+    public boolean mouseReleased(UiRect bounds, MouseButtonEvent event) {
         if (event.button() == 0 && dragging) {
             commitPendingValue();
             dragging = false;
@@ -211,8 +211,8 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         return !hoverAnimation.isFinished() || !pressAnimation.isFinished() || !indicatorAnimation.isFinished();
     }
 
-    public void updateFromMouse(PanelLayout.Rect bounds, double mouseX) {
-        PanelLayout.Rect trackBounds = getTrackBounds(bounds);
+    public void updateFromMouse(UiRect bounds, double mouseX) {
+        UiRect trackBounds = getTrackBounds(bounds);
         double progress = (mouseX - trackBounds.x()) / trackBounds.width();
         progress = Math.clamp(progress, 0.0, 1.0);
         double rawValue = setting.getMin() + (setting.getMax() - setting.getMin()) * progress;
@@ -225,9 +225,9 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         return dragging;
     }
 
-    private PanelLayout.Rect getInteractiveBounds(PanelLayout.Rect bounds) {
-        PanelLayout.Rect track = getTrackBounds(bounds);
-        return new PanelLayout.Rect(track.x(), track.y() - 6.0f, track.width(), track.height() + 12.0f);
+    private UiRect getInteractiveBounds(UiRect bounds) {
+        UiRect track = getTrackBounds(bounds);
+        return new UiRect(track.x(), track.y() - 6.0f, track.width(), track.height() + 12.0f);
     }
 
     private float getProgress() {
@@ -291,7 +291,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         applyValueNow(value);
     }
 
-    private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds) {
+    private int getCursorIndex(double mouseX, UiRect fieldBounds) {
         String text = getDisplayBuffer();
         TextRenderer metrics = textMetrics();
         float scale = getFieldTextScale(metrics, text, fieldBounds);
@@ -306,7 +306,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         return text.length();
     }
 
-    private float getFieldTextScale(TextRenderer textRenderer, String text, PanelLayout.Rect fieldBounds) {
+    private float getFieldTextScale(TextRenderer textRenderer, String text, UiRect fieldBounds) {
         float textWidth = textRenderer.getWidth(text, FIELD_TEXT_SCALE);
         float maxTextWidth = Math.max(1.0f, fieldBounds.width() - FIELD_TEXT_PADDING * 2.0f);
         if (textWidth <= maxTextWidth || textWidth <= 0.0f) {

@@ -8,7 +8,10 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.github.epsilon.utils.player.*;
+import com.github.epsilon.utils.player.ChatUtils;
+import com.github.epsilon.utils.player.FindItemResult;
+import com.github.epsilon.utils.player.InvUtils;
+import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -80,7 +83,7 @@ public class FeetTrap extends Module {
 
         progress = 0;
 
-        if (!MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
+        if (!mc.player.isMoving() && !mc.options.keyJump.isDown()) {
             startX = mc.player.getX();
             startY = mc.player.getY();
             startZ = mc.player.getZ();

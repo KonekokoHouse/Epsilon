@@ -110,7 +110,7 @@ public final class WireframeEntityRenderer {
         offsetZ = Mth.lerp(tickDelta, entity.zOld, entity.getZ());
 
         EntityRenderer renderer = mc.getEntityRenderDispatcher().getRenderer(entity);
-        EntityRenderState state = (EntityRenderState) renderer.createRenderState(entity, tickDelta);
+        EntityRenderState state = renderer.createRenderState(entity, tickDelta);
 
         Vec3 renderOffset = renderer.getRenderOffset(state);
         offsetX += renderOffset.x;

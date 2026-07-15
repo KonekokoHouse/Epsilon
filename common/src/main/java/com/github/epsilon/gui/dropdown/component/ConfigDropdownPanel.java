@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.utils.client.ConfigFolderOpener;
 
@@ -37,7 +38,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
@@ -46,7 +47,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         if (!inputField.isFocused() && inputField.getText().isEmpty()) {
             inputField.setText(placeholder);
         }
-        inputField.draw(renderer, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY, placeholder, DropdownTheme.SETTING_TEXT_SCALE);
+        inputField.draw(scope, textMetrics, contentX, currentY, contentW, FIELD_HEIGHT, mouseX, mouseY, placeholder, DropdownTheme.SETTING_TEXT_SCALE);
         currentY += FIELD_HEIGHT + GAP;
 
         String[] actions = {
@@ -65,18 +66,18 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                 float btnX = contentX + col * (btnW + GAP);
                 float btnY = currentY + row * (BUTTON_HEIGHT + GAP);
                 boolean hovered = isHovered(mouseX, mouseY, btnX, btnY, btnW, BUTTON_HEIGHT);
-                renderer.roundRect(btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+                scope.roundRect(btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                         hovered ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH);
                 float labelScale = 0.48f;
-                float labelW = renderer.textWidth(actions[index], labelScale);
-                renderer.text(actions[index], btnX + (btnW - labelW) * 0.5f, getCenteredTextY(renderer, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY);
+                float labelW = textMetrics.textWidth(actions[index], labelScale);
+                scope.text(actions[index], btnX + (btnW - labelW) * 0.5f, getCenteredTextY(textMetrics, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY);
             }
         }
         currentY += BUTTON_HEIGHT * 3.0f + GAP * 3.0f;
 
         if (!status.isEmpty()) {
             float statusScale = 0.50f;
-            renderer.text(trimToWidth(status, statusScale, contentW, renderer), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, statusScale), statusScale, MD3Theme.TEXT_MUTED);
+            scope.text(trimToWidth(status, statusScale, contentW, textMetrics), contentX, getCenteredTextY(textMetrics, currentY, ROW_HEIGHT, statusScale), statusScale, MD3Theme.TEXT_MUTED);
             currentY += ROW_HEIGHT;
         }
 
@@ -84,20 +85,20 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         List<String> configs = configsForFrame();
         if (configs.isEmpty()) {
             float emptyScale = 0.55f;
-            renderer.text(EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName(), contentX, getCenteredTextY(renderer, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
+            scope.text(EpsilonTranslations.Gui.CONFIG_EMPTY.getTranslatedName(), contentX, getCenteredTextY(textMetrics, currentY, ROW_HEIGHT, emptyScale), emptyScale, MD3Theme.TEXT_MUTED);
             return;
         }
         for (String name : configs) {
             boolean activeRow = Objects.equals(name, active);
             boolean hovered = isHovered(mouseX, mouseY, contentX, currentY, contentW, ROW_HEIGHT);
-            renderer.roundRect(contentX, currentY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
+            scope.roundRect(contentX, currentY, contentW, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     activeRow ? MD3Theme.PRIMARY_CONTAINER : (hovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_LOW));
             float nameScale = 0.56f;
-            renderer.text(trimToWidth(name, nameScale, contentW - 28.0f, renderer), contentX + 6.0f, getCenteredTextY(renderer, currentY, ROW_HEIGHT, nameScale), nameScale,
+            scope.text(trimToWidth(name, nameScale, contentW - 28.0f, textMetrics), contentX + 6.0f, getCenteredTextY(textMetrics, currentY, ROW_HEIGHT, nameScale), nameScale,
                     activeRow ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
             float deleteX = contentX + contentW - 18.0f;
             float deleteScale = 0.52f;
-            renderer.text("x", deleteX + 5.0f, getCenteredTextY(renderer, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
+            scope.text("x", deleteX + 5.0f, getCenteredTextY(textMetrics, currentY + 3.0f, 16.0f, deleteScale), deleteScale,
                     isHovered(mouseX, mouseY, deleteX, currentY + 3.0f, 16.0f, 16.0f) ? MD3Theme.ERROR : MD3Theme.TEXT_MUTED);
             currentY += ROW_HEIGHT + GAP;
         }
@@ -228,8 +229,8 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
         return EpsilonTranslations.Gui.CONFIG_ERROR_TITLE.getTranslatedName() + ": " + (message == null || message.isBlank() ? e.getClass().getSimpleName() : message);
     }
 
-    private float getCenteredTextY(DropdownDrawContext renderer, float boxY, float boxH, float scale) {
-        return boxY + (boxH - renderer.textHeight(scale)) / 2.0f;
+    private float getCenteredTextY(UiTextMetrics textMetrics, float boxY, float boxH, float scale) {
+        return boxY + (boxH - textMetrics.textHeight(scale)) / 2.0f;
     }
 
     private List<String> configsForFrame() {

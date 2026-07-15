@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用 runClient 生成的 epsilon-empty-i18n.json 同步语言文件。"""
+"""用 runClient 生成的嵌套 epsilon-empty-i18n.json 同步全部或单个 owner 的语言文件。"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_I18N_DIR = PROJECT_ROOT / "common" / "src" / "main" / "resources" / "assets" / "epsilon" / "i18n"
 EMPTY_I18N_FILE = "epsilon-empty-i18n.json"
+VALUE_PROPERTY = "_value"
 DEFAULT_EMPTY_I18N_PATHS = {
     "fabric": PROJECT_ROOT / "fabric" / "runs" / "client" / EMPTY_I18N_FILE,
     "neoforge": PROJECT_ROOT / "neoforge" / "runs" / "client" / EMPTY_I18N_FILE,
@@ -40,6 +41,12 @@ def parse_args() -> argparse.Namespace:
         "--target",
         type=Path,
         help="要补全的目标 i18n JSON 文件路径；未指定时通过 input 选择。",
+    )
+    parser.add_argument(
+        "--owner",
+        "--match-owner",
+        dest="owner",
+        help="仅同步一个 owner；本体使用 epsilon，Addon 使用其 addonId。未指定时同步全部。",
     )
     parser.add_argument(
         "--missing-value",
@@ -175,18 +182,79 @@ def load_json_object(path: Path) -> OrderedDict[str, Any]:
     return data
 
 
+def flatten_i18n(data: OrderedDict[str, Any]) -> OrderedDict[str, str]:
+    flattened: OrderedDict[str, str] = OrderedDict()
+
+    def visit(node: Any, prefix: str) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == VALUE_PROPERTY:
+                    if not prefix:
+                        raise ValueError(f"{VALUE_PROPERTY} 不能出现在 i18n 根节点")
+                    if not isinstance(value, str):
+                        raise ValueError(f"翻译值必须是字符串：{prefix}.{VALUE_PROPERTY}")
+                    flattened[prefix] = value
+                else:
+                    child_key = f"{prefix}.{key}" if prefix else key
+                    visit(value, child_key)
+            return
+
+        if not prefix or not isinstance(node, str):
+            raise ValueError(f"翻译值必须是字符串：{prefix or '<root>'}")
+        flattened[prefix] = node
+
+    visit(data, "")
+    return flattened
+
+
+def nest_i18n(flattened: OrderedDict[str, str]) -> OrderedDict[str, Any]:
+    root: OrderedDict[str, Any] = OrderedDict()
+
+    for key, value in flattened.items():
+        segments = key.split(".")
+        current = root
+        for index, segment in enumerate(segments):
+            if not segment or segment == VALUE_PROPERTY:
+                raise ValueError(f"无效 i18n key：{key}")
+
+            leaf = index == len(segments) - 1
+            existing = current.get(segment)
+            if leaf:
+                if isinstance(existing, dict):
+                    existing[VALUE_PROPERTY] = value
+                    if isinstance(existing, OrderedDict):
+                        existing.move_to_end(VALUE_PROPERTY, last=False)
+                else:
+                    current[segment] = value
+                continue
+
+            if existing is None:
+                child: OrderedDict[str, Any] = OrderedDict()
+                current[segment] = child
+            elif isinstance(existing, dict):
+                child = existing
+            elif isinstance(existing, str):
+                child = OrderedDict(((VALUE_PROPERTY, existing),))
+                current[segment] = child
+            else:
+                raise ValueError(f"i18n key 与非字符串节点冲突：{key}")
+            current = child
+
+    return root
+
+
 def merge_i18n(
-    template: OrderedDict[str, Any],
-    target: OrderedDict[str, Any],
+    template: OrderedDict[str, str],
+    target: OrderedDict[str, str],
     missing_value: str,
     sort_by_template: bool,
-) -> tuple[OrderedDict[str, Any], list[str], list[str]]:
+) -> tuple[OrderedDict[str, str], list[str], list[str]]:
     template_keys = set(template.keys())
     added_keys: list[str] = []
     removed_keys = [key for key in target.keys() if key not in template_keys]
 
     if sort_by_template:
-        merged: OrderedDict[str, Any] = OrderedDict()
+        merged: OrderedDict[str, str] = OrderedDict()
         keys = template.keys()
     else:
         merged = OrderedDict((key, value) for key, value in target.items() if key in template_keys)
@@ -199,6 +267,44 @@ def merge_i18n(
         else:
             merged[key] = missing_value
             added_keys.append(key)
+
+    return merged, added_keys, removed_keys
+
+
+def matches_owner(key: str, owner: str) -> bool:
+    return key == owner or key.startswith(f"{owner}.")
+
+
+def merge_i18n_for_owner(
+    template: OrderedDict[str, str],
+    target: OrderedDict[str, str],
+    owner: str,
+    missing_value: str,
+    sort_by_template: bool,
+) -> tuple[OrderedDict[str, str], list[str], list[str]]:
+    template_scope = OrderedDict((key, value) for key, value in template.items() if matches_owner(key, owner))
+    if not template_scope:
+        raise ValueError(f"模板中不存在 owner：{owner}")
+
+    target_scope = OrderedDict((key, value) for key, value in target.items() if matches_owner(key, owner))
+    merged_scope, added_keys, removed_keys = merge_i18n(
+        template_scope,
+        target_scope,
+        missing_value,
+        sort_by_template,
+    )
+
+    merged: OrderedDict[str, str] = OrderedDict()
+    inserted = False
+    for key, value in target.items():
+        if matches_owner(key, owner):
+            if not inserted:
+                merged.update(merged_scope)
+                inserted = True
+        else:
+            merged[key] = value
+    if not inserted:
+        merged.update(merged_scope)
 
     return merged, added_keys, removed_keys
 
@@ -224,12 +330,31 @@ def main() -> int:
         target_path = choose_target_path(args)
         sort_by_template = choose_sort_enabled(args)
 
-        template = load_json_object(empty_i18n_path)
-        target = load_json_object(target_path)
-        merged, added_keys, removed_keys = merge_i18n(template, target, args.missing_value, sort_by_template)
+        template = flatten_i18n(load_json_object(empty_i18n_path))
+        target = flatten_i18n(load_json_object(target_path))
+        owner = args.owner.strip() if args.owner else None
+        if args.owner and not owner:
+            raise ValueError("owner 不能为空")
+
+        if owner:
+            merged, added_keys, removed_keys = merge_i18n_for_owner(
+                template,
+                target,
+                owner,
+                args.missing_value,
+                sort_by_template,
+            )
+        else:
+            merged, added_keys, removed_keys = merge_i18n(
+                template,
+                target,
+                args.missing_value,
+                sort_by_template,
+            )
 
         print(f"模板文件：{empty_i18n_path}")
         print(f"目标文件：{target_path}")
+        print(f"匹配 owner：{owner or '全部'}")
         print(f"按模板排序：{'是' if sort_by_template else '否'}")
         print(f"模板 key 数：{len(template)}")
         print(f"目标原 key 数：{len(target)}")
@@ -253,7 +378,7 @@ def main() -> int:
         if not args.no_backup:
             backup_path = create_backup(target_path)
 
-        write_json(target_path, merged)
+        write_json(target_path, nest_i18n(merged))
 
         if backup_path:
             print(f"已创建备份：{backup_path}")

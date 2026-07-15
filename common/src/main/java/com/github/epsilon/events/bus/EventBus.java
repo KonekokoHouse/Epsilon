@@ -45,23 +45,6 @@ public class EventBus {
         return event;
     }
 
-    public <T extends Cancellable> T post(T event) {
-        List<IListener> listeners = listenerMap.get(event.getClass());
-
-        if (listeners != null) {
-            event.setCancelled(false);
-
-            for (IListener listener : listeners) {
-                listener.call(event);
-                if (event.isCancelled()) {
-                    break;
-                }
-            }
-        }
-
-        return event;
-    }
-
     public void subscribe(Object object) {
         subscribe(getListeners(object.getClass(), object), false);
     }

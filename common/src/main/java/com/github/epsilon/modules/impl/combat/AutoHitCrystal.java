@@ -206,12 +206,12 @@ public class AutoHitCrystal extends Module {
 
         if (this.active && KeybindUtils.isPressed(activateKey.getValue())) {
             if (mainHandStack.is(Items.END_CRYSTAL) || mainHandStack.is(Items.OBSIDIAN)) {
-                event.setCancelled(true);
+                event.cancel();
             }
         }
 
         if (mainHandStack.is(Items.END_CRYSTAL) && !mc.mouseHandler.isLeftPressed()) {
-            event.setCancelled(true);
+            event.cancel();
         }
     }
 

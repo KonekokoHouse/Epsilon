@@ -1,8 +1,9 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -58,18 +59,18 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
     }
 
     @Override
-    public void draw(DropdownDrawContext renderer, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         syncAlphaAvailability();
         openAnim.run(opened ? 1.0f : 0.0f);
         float t = openAnim.getValue();
 
-        renderer.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
-                (DropdownTheme.SETTING_HEIGHT - renderer.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+        scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
+                (DropdownTheme.SETTING_HEIGHT - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
                 DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         float previewX = width - DropdownTheme.SETTING_PADDING_X - DropdownTheme.COLOR_PREVIEW_SIZE;
         float previewY = (DropdownTheme.SETTING_HEIGHT - DropdownTheme.COLOR_PREVIEW_SIZE) * 0.5f;
-        renderer.roundRect(previewX, previewY, DropdownTheme.COLOR_PREVIEW_SIZE, DropdownTheme.COLOR_PREVIEW_SIZE, 2.0f, getVisibleColor());
+        scope.roundRect(previewX, previewY, DropdownTheme.COLOR_PREVIEW_SIZE, DropdownTheme.COLOR_PREVIEW_SIZE, 2.0f, getVisibleColor());
 
         if (t < 0.01f) return;
 
@@ -83,15 +84,15 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float gradH = PICKER_HEIGHT * t;
 
         Color hueColor = Color.getHSBColor(hsb[0], 1.0f, 1.0f);
-        drawSaturationBrightnessPalette(renderer, gradX, gradY, gradW, gradH, hueColor);
+        drawSaturationBrightnessPalette(scope, gradX, gradY, gradW, gradH, hueColor);
 
         float hueY = gradY + gradH + PICKER_TO_HUE_GAP;
         float hueH = HUE_HEIGHT * t;
         for (int i = 0; i < (int) gradW; i++) {
             Color c = Color.getHSBColor(i / gradW, 1.0f, 1.0f);
-            renderer.rect(gradX + i, hueY, 1.0f, hueH, c);
+            scope.rect(gradX + i, hueY, 1.0f, hueH, c);
         }
-        drawSliderPicker(renderer, gradX + gradW * hsb[0], hueY, hueH);
+        drawSliderPicker(scope, gradX + gradW * hsb[0], hueY, hueH);
 
         if (pickingSB) {
             float newSat = Mth.clamp((mouseX - absoluteX(gradX)) / gradW, 0.0f, 1.0f);
@@ -117,57 +118,57 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
         float pickerCx = gradX + gradW * hsb[1];
         float pickerCy = gradY + gradH * (1.0f - hsb[2]);
-        renderer.rect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, new Color(0, 0, 0, 135));
-        renderer.rect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE);
+        scope.rect(pickerCx - 3.0f, pickerCy - 3.0f, 6.0f, 6.0f, new Color(0, 0, 0, 135));
+        scope.rect(pickerCx - 2.0f, pickerCy - 2.0f, 4.0f, 4.0f, Color.WHITE);
 
-        drawChannelRows(renderer, mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t);
+        drawChannelRows(scope, textMetrics, mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t);
     }
 
-    private void drawSaturationBrightnessPalette(DropdownDrawContext renderer, float localX, float localY, float width, float height, Color hueColor) {
-        renderer.rect(localX - 1.0f, localY - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
-        renderer.rectGradient(localX, localY, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
-        renderer.rectGradient(localX, localY, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
+    private void drawSaturationBrightnessPalette(UiTree.Scope scope, float localX, float localY, float width, float height, Color hueColor) {
+        scope.rect(localX - 1.0f, localY - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
+        scope.rectGradient(localX, localY, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
+        scope.rectGradient(localX, localY, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
     }
 
-    private void drawSliderPicker(DropdownDrawContext renderer, float centerX, float localY, float height) {
+    private void drawSliderPicker(UiTree.Scope scope, float centerX, float localY, float height) {
         float pickerW = 3.0f;
-        renderer.rect(centerX - pickerW * 0.5f - 1.0f, localY - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
-        renderer.rect(centerX - pickerW * 0.5f, localY - 1.0f, pickerW, height + 2.0f, Color.WHITE);
+        scope.rect(centerX - pickerW * 0.5f - 1.0f, localY - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
+        scope.rect(centerX - pickerW * 0.5f, localY - 1.0f, pickerW, height + 2.0f, Color.WHITE);
     }
 
-    private void drawChannelRows(DropdownDrawContext renderer, int mouseX, int mouseY, float startY, float alphaProgress) {
+    private void drawChannelRows(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float startY, float alphaProgress) {
         syncFieldsFromColor();
         Channel[] channels = getChannels();
         for (int i = 0; i < channels.length; i++) {
             Channel channel = channels[i];
             float rowY = startY + i * (CHANNEL_ROW_HEIGHT + CHANNEL_GAP) * alphaProgress;
             float rowAlpha = alphaProgress;
-            drawChannelRow(renderer, mouseX, mouseY, channel, rowY, rowAlpha);
+            drawChannelRow(scope, textMetrics, mouseX, mouseY, channel, rowY, rowAlpha);
         }
     }
 
-    private void drawChannelRow(DropdownDrawContext renderer, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
+    private void drawChannelRow(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
         int value = getChannelValue(channel);
-        float textY = rowY + (CHANNEL_ROW_HEIGHT - renderer.textHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
+        float textY = rowY + (CHANNEL_ROW_HEIGHT - textMetrics.textHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
         Color textColor = MD3Theme.withAlpha(DropdownTheme.settingLabel(), (int) (DropdownTheme.settingLabel().getAlpha() * alphaProgress));
-        renderer.text(channel.label, DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor);
+        scope.text(channel.label, DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor);
 
         float boxX = getLocalFieldX();
         float boxY = rowY + (CHANNEL_ROW_HEIGHT - CHANNEL_BOX_HEIGHT) * 0.5f;
         float trackX = getLocalTrackX();
         float trackY = rowY + (CHANNEL_ROW_HEIGHT - CHANNEL_TRACK_HEIGHT) * 0.5f;
         float trackW = getLocalTrackWidth();
-        drawChannelTrack(renderer, channel, trackX, trackY, trackW, CHANNEL_TRACK_HEIGHT, alphaProgress);
+        drawChannelTrack(scope, channel, trackX, trackY, trackW, CHANNEL_TRACK_HEIGHT, alphaProgress);
 
         float knobX = trackX + trackW * (value / 255.0f);
         float knobR = 2.75f;
-        renderer.roundRect(knobX - knobR, trackY + CHANNEL_TRACK_HEIGHT * 0.5f - knobR, knobR * 2.0f, knobR * 2.0f, knobR, DropdownTheme.sliderKnob());
+        scope.roundRect(knobX - knobR, trackY + CHANNEL_TRACK_HEIGHT * 0.5f - knobR, knobR * 2.0f, knobR * 2.0f, knobR, DropdownTheme.sliderKnob());
 
         DropdownTextField field = getField(channel);
-        field.drawCentered(renderer, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY, Integer.toString(value), CHANNEL_TEXT_SCALE);
+        field.drawCentered(scope, textMetrics, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY, Integer.toString(value), CHANNEL_TEXT_SCALE);
     }
 
-    private void drawChannelTrack(DropdownDrawContext renderer, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
+    private void drawChannelTrack(UiTree.Scope scope, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
         Color current = getVisibleColor();
         Color start = switch (channel) {
             case RED -> new Color(0, current.getGreen(), current.getBlue());
@@ -181,7 +182,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             case BLUE -> new Color(current.getRed(), current.getGreen(), 255);
             case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), 255);
         };
-        renderer.roundRectHorizontalGradient(trackX, trackY, trackW, trackH, trackH * 0.5f, MD3Theme.withAlpha(start, (int) (start.getAlpha() * alphaProgress)), MD3Theme.withAlpha(end, (int) (end.getAlpha() * alphaProgress)));
+        scope.roundRectHorizontalGradient(trackX, trackY, trackW, trackH, trackH * 0.5f, MD3Theme.withAlpha(start, (int) (start.getAlpha() * alphaProgress)), MD3Theme.withAlpha(end, (int) (end.getAlpha() * alphaProgress)));
     }
 
     @Override

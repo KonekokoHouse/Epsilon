@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.panel.component;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.adapter.ModuleViewModel;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.utils.client.KeybindUtils;
 
 import java.awt.*;
@@ -24,8 +24,8 @@ public class ModuleRow {
     public static final float KEYBIND_TOGGLE_GAP = 8.0f;
 
     private final ModuleViewModel module;
-    private final PanelLayout.Rect bounds;
-    private final PanelLayout.Rect toggleBounds;
+    private final UiRect bounds;
+    private final UiRect toggleBounds;
 
     /**
      * 创建一个模块行实例。
@@ -33,7 +33,7 @@ public class ModuleRow {
      * @param module 模块视图模型
      * @param bounds 行布局区域
      */
-    public ModuleRow(ModuleViewModel module, PanelLayout.Rect bounds) {
+    public ModuleRow(ModuleViewModel module, UiRect bounds) {
         this.module = module;
         this.bounds = bounds;
         this.toggleBounds = PanelElements.switchBounds(bounds);
@@ -49,14 +49,14 @@ public class ModuleRow {
     /**
      * 返回整行的命中区域。
      */
-    public PanelLayout.Rect getBounds() {
+    public UiRect getBounds() {
         return bounds;
     }
 
     /**
      * 返回行内开关控件的命中区域。
      */
-    public PanelLayout.Rect getToggleBounds() {
+    public UiRect getToggleBounds() {
         return toggleBounds;
     }
 
@@ -70,7 +70,7 @@ public class ModuleRow {
      * @param toggleProgress      开关进度
      * @param toggleHoverProgress 开关悬停进度
      */
-    public void buildUi(PanelUiTree.Scope scope, TextRenderer textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
+    public void buildUi(UiTree.Scope scope, TextRenderer textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
         float titleScale = 0.70f;
         float subScale = 0.60f;
         float keyScale = 0.6f;
@@ -87,11 +87,11 @@ public class ModuleRow {
         Color keyColor = MD3Theme.isLightTheme() ? MD3Theme.TEXT_SECONDARY : MD3Theme.TEXT_MUTED;
         String keybindText = formatKeybind(module.module().getKeyBind());
         float keyWidth = textRenderer.getWidth(keybindText, keyScale);
-        PanelLayout.Rect localToggleBounds = toggleBounds.relativeTo(bounds);
+        UiRect localToggleBounds = toggleBounds.relativeTo(bounds);
         float clipRight = localToggleBounds.x() - KEYBIND_TOGGLE_GAP;
         float clipWidth = Math.min(keyWidth, KEYBIND_CLIP_WIDTH);
         float clipX = clipRight - clipWidth;
-        PanelLayout.Rect keybindClip = new PanelLayout.Rect(clipX, keyY, clipWidth, keyHeight);
+        UiRect keybindClip = new UiRect(clipX, keyY, clipWidth, keyHeight);
 
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
         if (selectedProgress > 0.01f) {

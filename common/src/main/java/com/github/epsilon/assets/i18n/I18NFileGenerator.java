@@ -1,6 +1,8 @@
 package com.github.epsilon.assets.i18n;
 
 import com.github.epsilon.Constants;
+import com.github.epsilon.addon.EpsilonAddon;
+import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
@@ -18,27 +20,53 @@ import java.io.IOException;
 
 public class I18NFileGenerator {
 
-    private static final String PREFIX = "epsilon.";
+    private static final String EPSILON_OWNER = "epsilon";
+    private static final String PREFIX = EPSILON_OWNER + ".";
 
     public static void generate(String filePath) {
+        generate(filePath, null);
+    }
+
+    /**
+     * 生成指定 owner 的空翻译模板。
+     *
+     * @param filePath 输出文件路径
+     * @param ownerId  {@code epsilon}、Addon ID，或使用 {@code null} / 空字符串生成全部
+     */
+    public static void generate(String filePath, String ownerId) {
+        String selectedOwner = normalizeOwner(ownerId);
         JsonObject root = new JsonObject();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        boolean matched = false;
 
-        for (Category category : Category.values()) {
-            String catKey = PREFIX + "categories." + category.toString().toLowerCase();
-            root.addProperty(catKey, "");
+        if (matchesOwner(EPSILON_OWNER, selectedOwner)) {
+            addEpsilonKeys(root);
+            matched = true;
         }
 
-        for (TranslateComponent component : EpsilonTranslations.all()) {
-            root.addProperty(component.getFullKey(), "");
+        for (EpsilonAddon addon : AddonHolder.INSTANCE.getAddons()) {
+            if (matchesOwner(addon.getAddonId(), selectedOwner)) {
+                addAddonKeys(root, addon);
+                matched = true;
+            }
         }
 
         for (Module module : ModuleHolder.INSTANCE.getModules()) {
-            addModuleKeys(root, module);
+            if (matchesOwner(module.getAddonId(), selectedOwner)) {
+                addModuleKeys(root, module);
+                matched = true;
+            }
         }
 
         for (Module module : HudElementHolder.INSTANCE.getElements()) {
-            addModuleKeys(root, module);
+            if (matchesOwner(module.getAddonId(), selectedOwner)) {
+                addModuleKeys(root, module);
+                matched = true;
+            }
+        }
+
+        if (selectedOwner != null && !matched) {
+            throw new IllegalArgumentException("Unknown i18n owner: " + selectedOwner);
         }
 
         final var file = new File(filePath);
@@ -58,29 +86,71 @@ public class I18NFileGenerator {
         }
     }
 
+    private static void addEpsilonKeys(JsonObject root) {
+        I18NJson.addTranslation(root, EPSILON_OWNER, "");
+        for (Category category : Category.values()) {
+            String catKey = PREFIX + "categories." + category.toString().toLowerCase();
+            I18NJson.addTranslation(root, catKey, "");
+        }
+
+        for (TranslateComponent component : EpsilonTranslations.all()) {
+            I18NJson.addTranslation(root, component.getFullKey(), "");
+        }
+    }
+
+    private static void addAddonKeys(JsonObject root, EpsilonAddon addon) {
+        I18NJson.addTranslation(root, addon.getAddonId(), "");
+        for (SettingGroup group : addon.getSettingGroups()) {
+            addSettingGroupKey(root, group);
+        }
+        for (Setting<?> setting : addon.getSettings()) {
+            addSettingKey(root, setting);
+        }
+    }
+
     private static void addModuleKeys(JsonObject root, Module module) {
         if (module.translateComponent == null) return;
         String moduleKey = module.translateComponent.getFullKey();
-        root.addProperty(moduleKey, "");
+        I18NJson.addTranslation(root, moduleKey, "");
 
         for (SettingGroup group : module.getSettingGroups()) {
-            TranslateComponent groupComp = group.getTranslateComponent();
-            if (groupComp == null) continue;
-            root.addProperty(groupComp.getFullKey(), "");
+            addSettingGroupKey(root, group);
         }
 
         for (Setting<?> setting : module.getSettings()) {
-            TranslateComponent settingComp = setting.getTranslateComponent();
-            if (settingComp == null) continue;
-            String settingKey = settingComp.getFullKey();
-            root.addProperty(settingKey, "");
+            addSettingKey(root, setting);
+        }
+    }
 
-            if (setting instanceof EnumSetting<?> enumSetting) {
-                for (final var mode : enumSetting.getModes()) {
-                    root.addProperty(settingKey + "." + mode.toString().toLowerCase(), "");
-                }
+    private static void addSettingGroupKey(JsonObject root, SettingGroup group) {
+        TranslateComponent component = group.getTranslateComponent();
+        if (component != null) {
+            I18NJson.addTranslation(root, component.getFullKey(), "");
+        }
+    }
+
+    private static void addSettingKey(JsonObject root, Setting<?> setting) {
+        TranslateComponent component = setting.getTranslateComponent();
+        if (component == null) return;
+        String settingKey = component.getFullKey();
+        I18NJson.addTranslation(root, settingKey, "");
+
+        if (setting instanceof EnumSetting<?> enumSetting) {
+            for (final var mode : enumSetting.getModes()) {
+                I18NJson.addTranslation(root, settingKey + "." + mode.toString().toLowerCase(), "");
             }
         }
+    }
+
+    private static boolean matchesOwner(String ownerId, String selectedOwner) {
+        return selectedOwner == null || selectedOwner.equals(ownerId);
+    }
+
+    private static String normalizeOwner(String ownerId) {
+        if (ownerId == null || ownerId.isBlank()) {
+            return null;
+        }
+        return ownerId.trim();
     }
 
 }

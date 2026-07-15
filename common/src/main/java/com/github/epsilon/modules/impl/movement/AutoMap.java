@@ -3,7 +3,6 @@ package com.github.epsilon.modules.impl.movement;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -290,7 +289,6 @@ public class AutoMap extends Module {
             }
         }
 
-        ConfigHolder.INSTANCE.saveNow();
         routeDirty = false;
         saveTicks = 0;
         if (notify) sendMessage("已写入记录");

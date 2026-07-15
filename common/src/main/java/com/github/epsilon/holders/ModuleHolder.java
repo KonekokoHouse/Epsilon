@@ -50,6 +50,7 @@ public class ModuleHolder {
         addModule(AutoMend.INSTANCE);
         addModule(AutoTotem.INSTANCE);
         addModule(AutoWeapon.INSTANCE);
+        addModule(Criticals.INSTANCE);
         addModule(ZealotCrystalPlus.INSTANCE);
         addModule(CrystalAura.INSTANCE);
         addModule(CrystalBlocker.INSTANCE);
@@ -67,6 +68,7 @@ public class ModuleHolder {
         addModule(TriggerBot.INSTANCE);
 
         // Player
+        addModule(AutoArmor.INSTANCE);
         addModule(AutoFirework.INSTANCE);
         addModule(AutoKouZi.INSTANCE);
         addModule(AutoTool.INSTANCE);
@@ -83,6 +85,7 @@ public class ModuleHolder {
         addModule(PlayerAlarms.INSTANCE);
         addModule(SoundFX.INSTANCE);
         addModule(Stealer.INSTANCE);
+        addModule(Timer.INSTANCE);
         addModule(UseCooldown.INSTANCE);
         addModule(AutoQueue.INSTANCE);
 
@@ -94,7 +97,9 @@ public class ModuleHolder {
         addModule(Eagle.INSTANCE);
         addModule(AutoMap.INSTANCE);
         addModule(FastWeb.INSTANCE);
+        addModule(Flight.INSTANCE);
         addModule(GUIMove.INSTANCE);
+        addModule(HoleSnap.INSTANCE);
         addModule(JumpReset.INSTANCE);
         addModule(KeepSprint.INSTANCE);
         addModule(MovementFix.INSTANCE);
@@ -103,26 +108,29 @@ public class ModuleHolder {
         addModule(Phase.INSTANCE);
         addModule(SafeWalk.INSTANCE);
         addModule(Scaffold.INSTANCE);
+        addModule(Speed.INSTANCE);
+        addModule(Step.INSTANCE);
+        addModule(Strafe.INSTANCE);
         addModule(Stuck.INSTANCE);
         addModule(Velocity.INSTANCE);
 
         // Render
         addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);
+        addModule(BlockESP.INSTANCE);
         addModule(BlockHighlight.INSTANCE);
         addModule(CameraClip.INSTANCE);
         addModule(Chams.INSTANCE);
         addModule(CrystalChams.INSTANCE);
-        addModule(ESP.INSTANCE);
         addModule(ESP2D.INSTANCE);
         addModule(Filter.INSTANCE);
-        addModule(BetterDeathScreen.INSTANCE);
         addModule(FreeCamera.INSTANCE);
         addModule(Fullbright.INSTANCE);
         addModule(GameAnimation.INSTANCE);
         addModule(HandsView.INSTANCE);
         addModule(Hat.INSTANCE);
         addModule(HitParticles.INSTANCE);
+        addModule(HoleESP.INSTANCE);
         addModule(JumpCircle.INSTANCE);
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);

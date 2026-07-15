@@ -6,8 +6,8 @@ import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
+import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvHelper;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
@@ -82,15 +82,15 @@ public class AutoTotem extends Module {
         }
 
         if (!strict.getValue()) {
-            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, slot, 40, ContainerInput.SWAP, mc.player);
+            ClickSlotUtils.swap(slot, 40);
             return;
         }
 
-        mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, slot, 0, ContainerInput.PICKUP, mc.player);
-        mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, 45, 0, ContainerInput.PICKUP, mc.player);
+        ClickSlotUtils.click(slot);
+        ClickSlotUtils.click(45);
 
         if (!mc.player.inventoryMenu.getCarried().isEmpty()) {
-            mc.gameMode.handleContainerInput(mc.player.inventoryMenu.containerId, slot, 0, ContainerInput.PICKUP, mc.player);
+            ClickSlotUtils.click(slot);
         }
     }
 
