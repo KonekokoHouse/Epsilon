@@ -988,25 +988,21 @@ public class ZealotCrystalPlus extends Module {
 
         InteractionHand finalHand = hand;
         BlockHitResult hitResult = new BlockHitResult(placeInfo.hitVec(), placeInfo.side(), placeInfo.blockPos(), false);
-        Managers.ROTATION.setRotations(placeInfo.rotation(), getRotationSpeed(), null, Priority.High, () -> {
-            if (!isEnabled() || nullCheck()) {
-                InvUtils.swapBack();
-                return;
-            }
 
-            InteractionResult result = mc.gameMode.useItemOn(mc.player, finalHand, hitResult);
-            if (result.consumesAction()) {
-                if (placeSwing.getValue()) {
-                    doSwing(resolveSwingHand(true));
-                }
-                placedPosMap.put(placeInfo.blockPos().asLong(), System.currentTimeMillis() + ownTimeout.getValue());
-                placeTimer.reset();
-                lastActiveTime = System.currentTimeMillis();
-                target = placeInfo.target();
-                updateRenderTarget(placeInfo.blockPos(), placeInfo.targetDamage(), placeInfo.selfDamage());
+        Managers.ROTATION.setRotations(placeInfo.rotation(), getRotationSpeed(), null, Priority.High);
+
+        InteractionResult result = mc.gameMode.useItemOn(mc.player, finalHand, hitResult);
+        if (result.consumesAction()) {
+            if (placeSwing.getValue()) {
+                doSwing(resolveSwingHand(true));
             }
-            InvUtils.swapBack();
-        });
+            placedPosMap.put(placeInfo.blockPos().asLong(), System.currentTimeMillis() + ownTimeout.getValue());
+            placeTimer.reset();
+            lastActiveTime = System.currentTimeMillis();
+            target = placeInfo.target();
+            updateRenderTarget(placeInfo.blockPos(), placeInfo.targetDamage(), placeInfo.selfDamage());
+        }
+        InvUtils.swapBack();
 
         return true;
     }
@@ -1034,37 +1030,33 @@ public class ZealotCrystalPlus extends Module {
             }
         }
 
-        Managers.ROTATION.setRotations(RotationUtils.calculate(breakPlan.pos()), getRotationSpeed(), null, Priority.High, () -> {
-            if (!isEnabled() || nullCheck()) {
-                InvUtils.swapBack();
-                return;
-            }
+        Managers.ROTATION.setRotations(RotationUtils.calculate(breakPlan.pos()), getRotationSpeed(), null, Priority.High);
 
-            Entity current = mc.level.getEntity(breakPlan.entityId());
-            if (!(current instanceof EndCrystal currentCrystal) || !currentCrystal.isAlive()) {
-                InvUtils.swapBack();
-                return;
-            }
-            if (!checkBreakRange(currentCrystal.position())) {
-                InvUtils.swapBack();
-                return;
-            }
-
-            mc.gameMode.attack(mc.player, currentCrystal);
-            doSwing(resolveSwingHand(false));
-            breakTimer.reset();
-            lastActiveTime = System.currentTimeMillis();
-            attackedCrystalMap.put(currentCrystal.getId(), System.currentTimeMillis() + 1000L);
-            attackedPosMap.put(BlockPos.containing(currentCrystal.position()).asLong(), System.currentTimeMillis() + 1000L);
-            updateRenderTarget(currentCrystal.blockPosition().below(), breakPlan.targetDamage(), breakPlan.selfDamage());
-
-            PlaceInfo placeInfo = getActionPlaceInfo();
-            if (packetPlace.getValue().onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos(), currentCrystal.getBoundingBox())) {
-                placeDirect(placeInfo, true);
-            }
-
+        Entity current = mc.level.getEntity(breakPlan.entityId());
+        if (!(current instanceof EndCrystal currentCrystal) || !currentCrystal.isAlive()) {
             InvUtils.swapBack();
-        });
+            return true;
+        }
+        if (!checkBreakRange(currentCrystal.position())) {
+            InvUtils.swapBack();
+            return true;
+        }
+
+        mc.gameMode.attack(mc.player, currentCrystal);
+        doSwing(resolveSwingHand(false));
+        breakTimer.reset();
+        lastActiveTime = System.currentTimeMillis();
+        attackedCrystalMap.put(currentCrystal.getId(), System.currentTimeMillis() + 1000L);
+        attackedPosMap.put(BlockPos.containing(currentCrystal.position()).asLong(), System.currentTimeMillis() + 1000L);
+        updateRenderTarget(currentCrystal.blockPosition().below(), breakPlan.targetDamage(), breakPlan.selfDamage());
+
+        PlaceInfo placeInfo = getActionPlaceInfo();
+        if (packetPlace.getValue().onBreak && placeInfo != null && crystalPlaceBoxIntersects(placeInfo.blockPos(), currentCrystal.getBoundingBox())) {
+            placeDirect(placeInfo, true);
+        }
+
+        InvUtils.swapBack();
+
         return true;
     }
 

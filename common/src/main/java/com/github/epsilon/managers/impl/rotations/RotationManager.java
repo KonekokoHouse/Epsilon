@@ -31,25 +31,20 @@ public abstract class RotationManager {
     private boolean s08;
 
     protected int priority;
-    protected Runnable callback;
 
     public void setRotations(Rot2f rotations, double rotationSpeed) {
-        setRotations(rotations, rotationSpeed, null, Priority.Medium, null);
+        setRotations(rotations, rotationSpeed, null, Priority.Medium);
     }
 
     public void setRotations(Rot2f rotations, double rotationSpeed, Priority priority) {
-        setRotations(rotations, rotationSpeed, null, priority, null);
+        setRotations(rotations, rotationSpeed, null, priority);
     }
 
     public void setRotations(Rot2f rotations, double rotationSpeed, Function<Rot2f, Boolean> raytrace) {
-        setRotations(rotations, rotationSpeed, raytrace, Priority.Medium, null);
+        setRotations(rotations, rotationSpeed, raytrace, Priority.Medium);
     }
 
     public void setRotations(Rot2f rotations, double rotationSpeed, Function<Rot2f, Boolean> raytrace, Priority priority) {
-        setRotations(rotations, rotationSpeed, raytrace, priority, null);
-    }
-
-    public void setRotations(Rot2f rotations, double rotationSpeed, Function<Rot2f, Boolean> raytrace, Priority priority, Runnable callback) {
         if (rotations == null) return;
 
         if (this.active && priority.priority < this.priority) {
@@ -58,7 +53,6 @@ public abstract class RotationManager {
 
         if (s08) {
             this.rotations = this.lastRotations = this.targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
-            this.callback = null;
             resetModeState();
             s08 = false;
             return;
@@ -68,7 +62,6 @@ public abstract class RotationManager {
         this.rotationSpeed = rotationSpeed * 18.0;
         this.raytrace = raytrace;
         this.priority = priority.priority;
-        this.callback = callback;
         this.active = true;
 
         smooth();
@@ -181,7 +174,6 @@ public abstract class RotationManager {
         this.rotationSpeed = manager.rotationSpeed;
         this.raytrace = manager.raytrace;
         this.priority = manager.priority;
-        this.callback = manager.callback;
     }
 
     @EventHandler
@@ -194,7 +186,6 @@ public abstract class RotationManager {
         lastAnimationRotation = null;
         active = false;
         priority = 0;
-        callback = null;
         smoothed = false;
         raytrace = null;
         randomAngle = 0;
@@ -217,20 +208,11 @@ public abstract class RotationManager {
 
         if (active) {
             smooth();
-            runCallback();
             afterPlayerTick();
         }
     }
 
     protected void afterPlayerTick() {
-    }
-
-    protected void runCallback() {
-        if (callback != null) {
-            Runnable pendingCallback = callback;
-            callback = null;
-            pendingCallback.run();
-        }
     }
 
     @EventHandler
@@ -251,7 +233,6 @@ public abstract class RotationManager {
             if (Math.abs((rotations.getYaw() - mc.player.getYRot()) % 360) < 1 && Math.abs((rotations.getPitch() - mc.player.getXRot())) < 1) {
                 active = false;
                 priority = 0;
-                callback = null;
                 this.correctDisabledRotations();
             }
 

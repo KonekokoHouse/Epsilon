@@ -34,7 +34,6 @@ public class SnapRotationManager extends RotationManager {
         if (finishRotation) {
             active = false;
             priority = 0;
-            callback = null;
             targetRotations = new Rot2f(mc.player.getYRot(), mc.player.getXRot());
         }
     }
