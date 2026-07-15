@@ -1,5 +1,10 @@
 package com.github.epsilon.utils.render;
 
+<<<<<<< HEAD
+=======
+import com.github.epsilon.graphics.LuminRenderSystem;
+import net.minecraft.client.Camera;
+>>>>>>> e89b3c40 (修复 2D ESP 的投影问题 (#408))
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -42,10 +47,14 @@ public class WorldToScreen {
     public static Vector4d projectAbsoluteAABBOn2D(AABB absoluteBoundingBox) {
         Vector4d projection = projectEntity(getViewport(), getViewProjectionMatrix(), absoluteBoundingBox);
         if (projection == null) {
-            return new Vector4d(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+            return null;
         }
 
+<<<<<<< HEAD
         return projection.div(mc.getWindow().getGuiScale());
+=======
+        return projection.div(LuminRenderSystem.getGuiScale());
+>>>>>>> e89b3c40 (修复 2D ESP 的投影问题 (#408))
     }
 
     public static Vector4d projectEntity(int[] viewport, Matrix4f matrix, AABB absoluteBoundingBox) {
@@ -58,9 +67,9 @@ public class WorldToScreen {
 
         for (int i = 0; i < 8; i++) {
             Vector3f point = new Vector3f(
-                    (float) ((i & 1) == 0 ? absoluteBoundingBox.minX : absoluteBoundingBox.maxX) - (float) cameraPos.x,
-                    (float) ((i & 2) == 0 ? absoluteBoundingBox.minY : absoluteBoundingBox.maxY) - (float) cameraPos.y,
-                    (float) ((i & 4) == 0 ? absoluteBoundingBox.minZ : absoluteBoundingBox.maxZ) - (float) cameraPos.z
+                    (float) (((i & 1) == 0 ? absoluteBoundingBox.minX : absoluteBoundingBox.maxX) - cameraPos.x),
+                    (float) (((i & 2) == 0 ? absoluteBoundingBox.minY : absoluteBoundingBox.maxY) - cameraPos.y),
+                    (float) (((i & 4) == 0 ? absoluteBoundingBox.minZ : absoluteBoundingBox.maxZ) - cameraPos.z)
             );
 
             matrix.project(point, viewport, projected);
