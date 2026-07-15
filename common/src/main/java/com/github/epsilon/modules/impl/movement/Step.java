@@ -32,7 +32,6 @@ public class Step extends Module {
     private final DoubleSetting height = doubleSetting("Height", 1.0, 0.0, 5.0, 0.5);
     private final BoolSetting useTimer = boolSetting("Timer", true, () -> mode.is(Mode.OldNCP) || mode.is(Mode.NCP));
     private final BoolSetting fast = boolSetting("Fast", true, () -> mode.is(Mode.NCP) && useTimer.getValue());
-    private final BoolSetting onlyMoving = boolSetting("Only Moving", true);
     private final BoolSetting feetTrapPause = boolSetting("FeetTrap Pause", true);
     private final BoolSetting inWebPause = boolSetting("In Web Pause", true);
     private final BoolSetting insideBlockPause = boolSetting("Inside Block Pause", true);
@@ -58,7 +57,7 @@ public class Step extends Module {
     private void onClientTick(ClientTickEvent.Pre event) {
         if (nullCheck()) return;
 
-        if (sneakingPause.getValue() && mc.player.isCrouching() || insideBlockPause.getValue() && PlayerUtils.isInBlock() || mc.player.isInLava() || mc.player.isInWater() || inWebPause.getValue() && PlayerUtils.isInWeb() || !mc.player.onGround() || onlyMoving.getValue() && !mc.player.isMoving() || feetTrapPause.getValue() && FeetTrap.INSTANCE.isEnabled()) {
+        if (sneakingPause.getValue() && mc.player.isCrouching() || insideBlockPause.getValue() && PlayerUtils.isInBlock() || mc.player.isInLava() || mc.player.isInWater() || inWebPause.getValue() && PlayerUtils.isInWeb() || !mc.player.onGround() || feetTrapPause.getValue() && FeetTrap.INSTANCE.isEnabled()) {
             setStepHeight(0.6f);
             return;
         }

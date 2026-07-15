@@ -85,6 +85,7 @@ public class ModuleHolder {
         addModule(PlayerAlarms.INSTANCE);
         addModule(SoundFX.INSTANCE);
         addModule(Stealer.INSTANCE);
+        addModule(Timer.INSTANCE);
         addModule(UseCooldown.INSTANCE);
         addModule(AutoQueue.INSTANCE);
 
@@ -98,6 +99,7 @@ public class ModuleHolder {
         addModule(FastWeb.INSTANCE);
         addModule(Flight.INSTANCE);
         addModule(GUIMove.INSTANCE);
+        addModule(HoleSnap.INSTANCE);
         addModule(JumpReset.INSTANCE);
         addModule(KeepSprint.INSTANCE);
         addModule(MovementFix.INSTANCE);
@@ -107,6 +109,7 @@ public class ModuleHolder {
         addModule(SafeWalk.INSTANCE);
         addModule(Scaffold.INSTANCE);
         addModule(Speed.INSTANCE);
+        addModule(Step.INSTANCE);
         addModule(Strafe.INSTANCE);
         addModule(Stuck.INSTANCE);
         addModule(Velocity.INSTANCE);
