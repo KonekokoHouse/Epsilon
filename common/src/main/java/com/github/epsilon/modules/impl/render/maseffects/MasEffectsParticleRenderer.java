@@ -1,7 +1,6 @@
 package com.github.epsilon.modules.impl.render.maseffects;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import com.github.epsilon.modules.impl.render.MasEffects;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;

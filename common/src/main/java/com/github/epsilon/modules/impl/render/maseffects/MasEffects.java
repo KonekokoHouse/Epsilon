@@ -1,4 +1,4 @@
-package com.github.epsilon.modules.impl.render;
+package com.github.epsilon.modules.impl.render.maseffects;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
@@ -195,21 +195,25 @@ public class MasEffects extends Module {
             float fade = distanceFade(entity, hitboxFadeDistance.getValue().floatValue());
             int color = ARGB.colorFromFloat((1.0F - fade) * playerHitboxOpacity.getValue().floatValue(), 1.0F, 1.0F, 1.0F);
             drawHitbox(entity, partialTicks, color);
+            return true;
         } else if (entity instanceof ThrownEnderpearl pearl) {
             float fade = distanceFade(entity, projectileFadeDistance.getValue().floatValue());
             Color selected = pearlHitboxColors.getValue() ? pearlColor(pearl) : new Color(255, 255, 0);
             int alpha = Math.round(fade * selected.getAlpha());
             drawHitbox(entity, partialTicks, ARGB.color(alpha, selected.getRed(), selected.getGreen(), selected.getBlue()));
+            return true;
         } else if (entity instanceof WindCharge) {
             float fade = distanceFade(entity, projectileFadeDistance.getValue().floatValue());
             drawHitbox(entity, partialTicks, ARGB.colorFromFloat(fade, 0.9F, 0.9F, 1.0F));
+            return true;
         } else if (entity instanceof LivingEntity) {
             float fade = distanceFade(entity, hitboxFadeDistance.getValue().floatValue());
             int color = ARGB.colorFromFloat((1.0F - fade) * mobHitboxOpacity.getValue().floatValue(), 1.0F, 1.0F, 1.0F);
             drawHitbox(entity, partialTicks, color);
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public boolean shouldHideVanillaTotemParticles() {
