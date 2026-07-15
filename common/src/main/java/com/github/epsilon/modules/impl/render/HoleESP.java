@@ -67,8 +67,7 @@ public class HoleESP extends Module {
     private final BoolSetting fadeOut = boolSetting("Fade Out", true).group(sgRender);
     private final IntSetting renderTicks = intSetting("Ticks", 10, 1, 15, 1).group(sgRender);
     private final EnumSetting<ShapeMode> shapeMode = enumSetting("Shape Mode", ShapeMode.Both).group(sgRender);
-    private final DoubleSetting lineWidth = doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.1,
-            () -> shapeMode.is(ShapeMode.Both) || shapeMode.is(ShapeMode.Lines)).group(sgRender);
+    private final DoubleSetting lineWidth = doubleSetting("Line Width", 1.0, 0.0, 5.0, 0.1, () -> shapeMode.is(ShapeMode.Both) || shapeMode.is(ShapeMode.Lines)).group(sgRender);
     private final DoubleSetting renderHeight = doubleSetting("Height", 0.75, 0.0, 1.0, 0.05).group(sgRender);
     private final DoubleSetting shrinkSpeed = doubleSetting("Shrink Speed", 0.1, 0.0, 0.25, 0.01).group(sgRender);
     private final BoolSetting topQuad = boolSetting("Top Quad", false).group(sgRender);
