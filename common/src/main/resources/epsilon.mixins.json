@@ -20,7 +20,6 @@
     "MixinConnection",
     "MixinCrystalChamsEntityRenderer",
     "MixinDataComponentInitializerEntry",
-    "MixinDeathScreen",
     "MixinEntity",
     "MixinEntityRenderDispatcher",
     "MixinEntityRenderer",
