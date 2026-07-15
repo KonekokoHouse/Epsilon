@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.panel.PanelLayout;
 
 public abstract class Component {
@@ -12,17 +12,17 @@ public abstract class Component {
 
     public abstract float getHeight();
 
-    public abstract void draw(DropdownDrawContext renderer, int mouseX, int mouseY);
+    public abstract void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY);
 
-    public final void draw(DropdownDrawContext renderer, int mouseX, int mouseY, PanelLayout.Rect bounds) {
+    public final void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, PanelLayout.Rect bounds) {
         // 组件只缓存本帧命中区域，位置由 PanelUiTree/stack 在调用侧统一计算。
-        renderer.scope().pushAbsolute(bounds, scope -> drawInScope(renderer, mouseX, mouseY, bounds, scope));
+        scope.pushAbsolute(bounds, child -> drawInScope(child, textMetrics, mouseX, mouseY, bounds));
     }
 
-    public final void drawInScope(DropdownDrawContext renderer, int mouseX, int mouseY,
-                                  PanelLayout.Rect bounds, PanelUiTree.Scope scope) {
+    public final void drawInScope(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY,
+                                  PanelLayout.Rect bounds) {
         setPosition(bounds.x(), bounds.y(), bounds.width());
-        draw(renderer.withScope(scope), mouseX, mouseY);
+        draw(scope, textMetrics, mouseX, mouseY);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {

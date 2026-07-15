@@ -1,8 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
-import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -23,17 +22,6 @@ public class DropdownScrollBar {
 
     public boolean isDragging() {
         return dragging;
-    }
-
-    public void draw(DropdownDrawContext renderer, PanelLayout.Rect viewport, float scroll, float maxScroll,
-                     float contentHeight, double mouseX, double mouseY) {
-        Geometry geometry = computeGeometry(viewport, scroll, maxScroll, contentHeight);
-        if (geometry == null) {
-            hoverAnimation.run(0.0f);
-            return;
-        }
-        hoverAnimation.run(geometry.trackContains(mouseX, mouseY) || dragging ? 1.0f : 0.0f);
-        draw(renderer, geometry, hoverAnimation.getValue());
     }
 
     public void draw(PanelUiTree.Scope scope, PanelLayout.Rect viewport, float scroll, float maxScroll,
@@ -122,13 +110,6 @@ public class DropdownScrollBar {
         }
         float ratio = (thumbTopY - geometry.trackY()) / thumbTravel;
         return Mth.clamp(ratio, 0.0f, 1.0f) * maxScroll;
-    }
-
-    private static void draw(DropdownDrawContext renderer, Geometry geometry, float hoverProgress) {
-        float thumbWidth = Mth.lerp(hoverProgress, geometry.thumbWidth(), HOVER_WIDTH);
-        float thumbX = geometry.thumbX() - (thumbWidth - geometry.thumbWidth()) * 0.5f;
-        renderer.roundRect(thumbX, geometry.thumbY(), thumbWidth, geometry.thumbHeight(),
-                thumbWidth * 0.5f, DropdownTheme.scrollbar(hoverProgress));
     }
 
     private static void draw(PanelUiTree.Scope scope, Geometry geometry, float hoverProgress) {

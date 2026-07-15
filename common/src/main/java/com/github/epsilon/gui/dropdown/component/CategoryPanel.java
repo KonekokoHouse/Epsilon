@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
+import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.holders.ModuleHolder;
@@ -50,12 +51,12 @@ public class CategoryPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         List<ModuleButton> buttons = visibleButtons();
         float expand = openAnim.getValue();
         int frameId = getRenderFrameId();
         float buttonWidth = maxScroll > 0.0f ? width - DropdownScrollBar.HOVER_WIDTH + 1f : width;
-        var stack = renderer.scope().stack(new PanelLayout.Rect(
+        var stack = scope.stack(new PanelLayout.Rect(
                 x,
                 y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
                 buttonWidth,
@@ -63,11 +64,11 @@ public class CategoryPanel extends AbstractDropdownPanel {
         ));
         for (ModuleButton button : buttons) {
             float btnH = button.getHeightForFrame(frameId);
-            stack.item(btnH, (bounds, scope) -> {
+            stack.item(btnH, (bounds, itemScope) -> {
                 float visibleTop = y + DropdownTheme.PANEL_HEADER_HEIGHT;
                 float visibleBottom = visibleTop + visibleHeight * expand;
                 if (bounds.bottom() > visibleTop && bounds.y() < visibleBottom) {
-                    button.drawInScope(renderer, mouseX, mouseY, bounds, scope);
+                    button.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds);
                 }
             });
         }

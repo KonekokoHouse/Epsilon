@@ -2,7 +2,8 @@ package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
+import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
@@ -95,7 +96,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
-    public void drawBackground(DropdownDrawContext renderer) {
+    public void drawBackground(PanelUiTree.Scope scope, UiTextMetrics textMetrics) {
         ensureFrameMetrics();
         float expand = cachedExpand;
         float contentHeight = cachedContentHeight;
@@ -103,24 +104,24 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         updateScroll(contentHeight, visibleHeight, true);
         float panelHeight = cachedPanelHeight;
 
-        renderer.shadow(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow());
-        renderer.roundRect(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground());
+        scope.shadow(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.PANEL_SHADOW_BLUR, DropdownTheme.panelShadow());
+        scope.roundRect(x, y, width, panelHeight, DropdownTheme.PANEL_RADIUS, DropdownTheme.panelBackground());
 
         float iconX = x + 7.5f;
         float textX = icon == null || icon.isBlank() ? x + 10.0f : iconX + 16.0f;
-        float textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
+        float textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
         if (icon != null && !icon.isBlank()) {
-            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - renderer.textHeight(DropdownTheme.HEADER_ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f - 2.0f;
-            renderer.text(icon, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, StaticFontLoader.ICONS);
+            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f - 2.0f;
+            scope.text(icon, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, StaticFontLoader.ICONS);
         }
         String headerTitle = getTitle();
-        renderer.text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY);
-        renderer.triangle(x + width - 10.0f, y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f, 3.0f, expand, DropdownTheme.groupChevron(0.0f));
+        scope.text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY);
+        scope.triangle(x + width - 10.0f, y + DropdownTheme.PANEL_HEADER_HEIGHT * 0.5f, 3.0f, expand, DropdownTheme.groupChevron(0.0f));
 
     }
 
     @Override
-    public void drawContent(DropdownDrawContext renderer, int mouseX, int mouseY) {
+    public void drawContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         ensureFrameMetrics();
         if (cachedExpand < 0.01f) return;
 
@@ -131,8 +132,8 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         boolean scrollbarHovered = scrollBar.isHovered(mouseX, mouseY, scrollbarViewport, scroll, maxScroll, contentHeight);
         int contentMouseX = scrollbarHovered || scrollBar.isDragging() ? Integer.MIN_VALUE : mouseX;
         int contentMouseY = scrollbarHovered || scrollBar.isDragging() ? Integer.MIN_VALUE : mouseY;
-        drawPanelContent(renderer, contentMouseX, contentMouseY, visibleHeight);
-        scrollBar.draw(renderer, scrollbarViewport, scroll, maxScroll, contentHeight, mouseX, mouseY);
+        drawPanelContent(scope, textMetrics, contentMouseX, contentMouseY, visibleHeight);
+        scrollBar.draw(scope, scrollbarViewport, scroll, maxScroll, contentHeight, mouseX, mouseY);
     }
 
     @Override
@@ -294,7 +295,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     protected abstract float computeContentHeight();
 
-    protected abstract void drawPanelContent(DropdownDrawContext renderer, int mouseX, int mouseY, float visibleHeight);
+    protected abstract void drawPanelContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight);
 
     protected boolean mouseClickedContent(double mouseX, double mouseY, int button) {
         return false;
@@ -381,15 +382,15 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         return new PanelLayout.Rect(x, y + DropdownTheme.PANEL_HEADER_HEIGHT, width, cachedVisibleContentHeight * cachedExpand);
     }
 
-    protected String trimToWidth(String value, float scale, float maxWidth, DropdownDrawContext renderer) {
+    protected String trimToWidth(String value, float scale, float maxWidth, UiTextMetrics textMetrics) {
         if (value == null || value.isEmpty()) return "";
-        if (renderer.textWidth(value, scale) <= maxWidth) return value;
+        if (textMetrics.textWidth(value, scale) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = renderer.textWidth(ellipsis, scale);
+        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         for (int len = value.length() - 1; len >= 0; len--) {
             String candidate = value.substring(0, len) + ellipsis;
-            if (renderer.textWidth(candidate, scale) <= maxWidth) return candidate;
+            if (textMetrics.textWidth(candidate, scale) <= maxWidth) return candidate;
         }
         return ellipsis;
     }

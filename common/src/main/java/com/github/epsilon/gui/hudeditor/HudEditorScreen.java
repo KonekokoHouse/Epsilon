@@ -5,12 +5,12 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
-import com.github.epsilon.gui.dropdown.DropdownDrawContext;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.component.CategoryPanel;
 import com.github.epsilon.gui.dsl.PanelRenderBatch;
 import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.panel.MD3Theme;
 import com.github.epsilon.gui.panel.PanelLayout;
 import com.github.epsilon.gui.panel.PanelScreen;
@@ -29,6 +29,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class HudEditorScreen extends Screen {
 
@@ -50,10 +51,10 @@ public class HudEditorScreen extends Screen {
     private SnapInfo currentSnap = SnapInfo.none();
 
     private final TextRenderer textMetrics = TextRenderer.create();
+    private final UiTextMetrics uiTextMetrics = new EditorTextMetrics();
     private final GuiScene scene = new GuiScene();
     private PanelRenderBatch editorBatch;
     private PanelUiTree.Scope editorScope;
-    private DropdownDrawContext drawContext;
     private int editorLayer;
 
     private HudEditorScreen() {
@@ -106,7 +107,7 @@ public class HudEditorScreen extends Screen {
         float screenH = LuminRenderSystem.getScaledHeight();
 
         beginEditorLayer(10);
-        drawContext.rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
+        editorScope.rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
         flushEditorLayer();
 
         float centerX = screenW / 2.0f;
@@ -114,9 +115,9 @@ public class HudEditorScreen extends Screen {
         Color centerGuide = MD3Theme.withAlpha(MD3Theme.OUTLINE, 52);
 
         beginEditorLayer(10);
-        drawContext.rect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
-        drawContext.rect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
-        drawSnapGuides(drawContext, screenW, screenH);
+        editorScope.rect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
+        editorScope.rect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
+        drawSnapGuides(editorScope, screenW, screenH);
         flushEditorLayer();
 
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
@@ -132,7 +133,7 @@ public class HudEditorScreen extends Screen {
             boolean selected = element == selectedElement;
             boolean hover = element == hovered;
             if (!selected && !hover) continue;
-            drawElementFrame(drawContext, element, selected, hover);
+            drawElementFrame(editorScope, uiTextMetrics, element, selected, hover);
         }
         flushEditorLayer();
 
@@ -179,7 +180,7 @@ public class HudEditorScreen extends Screen {
                     hudPanel.getY() - shadowPad,
                     hudPanel.getWidth() + shadowPad * 2.0f,
                     revealedH + shadowPad * 2.0f,
-                    () -> hudPanel.drawBackground(drawContext)
+                    scope -> hudPanel.drawBackground(scope, uiTextMetrics)
             );
             flushEditorLayer();
 
@@ -190,7 +191,7 @@ public class HudEditorScreen extends Screen {
             if (actualClipH > 0.5f) {
                 beginEditorLayer(10);
                 withEditorScissor(hudPanel.getX(), clipY, hudPanel.getWidth(), actualClipH,
-                        () -> hudPanel.drawContent(drawContext, mouseX, mouseY));
+                        scope -> hudPanel.drawContent(scope, uiTextMetrics, mouseX, mouseY));
                 flushEditorLayer();
             }
 
@@ -217,28 +218,29 @@ public class HudEditorScreen extends Screen {
         float subtitleY = titleY + titleH + middlePadding;
 
         beginEditorLayer(10);
-        drawContext.shadow(labelX, labelY, boxW, boxH, radius, 8.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, 38));
-        drawContext.roundRect(labelX, labelY, boxW, boxH, radius, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238));
-        drawContext.text(title, labelX + 12.0f, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
-        drawContext.text(subtitle, labelX + 12.0f, subtitleY, subtitleScale, MD3Theme.TEXT_MUTED);
+        editorScope.shadow(labelX, labelY, boxW, boxH, radius, 8.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, 38));
+        editorScope.roundRect(labelX, labelY, boxW, boxH, radius, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238));
+        editorScope.text(title, labelX + 12.0f, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
+        editorScope.text(subtitle, labelX + 12.0f, subtitleY, subtitleScale, MD3Theme.TEXT_MUTED);
         flushEditorLayer();
     }
 
-    private void drawSnapGuides(DropdownDrawContext renderer, float screenW, float screenH) {
+    private void drawSnapGuides(PanelUiTree.Scope scope, float screenW, float screenH) {
         if (currentSnap.hasAny()) {
             Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
             if (!Float.isNaN(currentSnap.verticalLineX())) {
                 float x = currentSnap.verticalLineX();
-                renderer.rect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
+                scope.rect(x - 0.5f, 0.0f, 1.0f, screenH, guideColor);
             }
             if (!Float.isNaN(currentSnap.horizontalLineY())) {
                 float y = currentSnap.horizontalLineY();
-                renderer.rect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
+                scope.rect(0.0f, y - 0.5f, screenW, 1.0f, guideColor);
             }
         }
     }
 
-    private void drawElementFrame(DropdownDrawContext renderer, HudModule element, boolean selected, boolean hover) {
+    private void drawElementFrame(PanelUiTree.Scope scope, UiTextMetrics textMetrics,
+                                  HudModule element, boolean selected, boolean hover) {
         float x = element.x - ELEMENT_PADDING;
         float y = element.y - ELEMENT_PADDING;
         float w = element.width + ELEMENT_PADDING * 2.0f;
@@ -246,73 +248,66 @@ public class HudEditorScreen extends Screen {
         Color frameColor = selected ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 150);
         Color fillColor = selected ? MD3Theme.withAlpha(MD3Theme.PRIMARY_CONTAINER, 44) : MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_HIGH, hover ? 48 : 24);
 
-        renderer.rect(x, y, w, h, fillColor);
-        renderer.rectOutline(x, y, w, h, selected ? 1.2f : 0.8f, frameColor);
+        scope.rect(x, y, w, h, fillColor);
+        scope.rectOutline(x, y, w, h, selected ? 1.2f : 0.8f, frameColor);
 
         if (selected) {
-            drawAnchorMarker(renderer, element, frameColor);
-            drawElementLabel(renderer, element, x, y);
+            drawAnchorMarker(scope, element, frameColor);
+            drawElementLabel(scope, textMetrics, element, x, y);
         }
     }
 
-    private void drawAnchorMarker(DropdownDrawContext renderer, HudModule element, Color color) {
+    private void drawAnchorMarker(PanelUiTree.Scope scope, HudModule element, Color color) {
         float anchorX = HudLayoutHelper.getAnchorPointX(element.getHorizontalAnchor(), element.x, element.width);
         float anchorY = HudLayoutHelper.getAnchorPointY(element.getVerticalAnchor(), element.y, element.height);
-        renderer.rect(anchorX - 2.5f, anchorY - 2.5f, 5.0f, 5.0f, color);
+        scope.rect(anchorX - 2.5f, anchorY - 2.5f, 5.0f, 5.0f, color);
     }
 
-    private void drawElementLabel(DropdownDrawContext renderer, HudModule element, float frameX, float frameY) {
+    private void drawElementLabel(PanelUiTree.Scope scope, UiTextMetrics textMetrics,
+                                  HudModule element, float frameX, float frameY) {
         String label = element.getTranslatedName();
         float scale = 0.48f;
-        float textW = renderer.textWidth(label, scale);
+        float textW = textMetrics.textWidth(label, scale);
         float labelW = textW + 10.0f;
         float labelY = frameY - LABEL_HEIGHT - 3.0f;
-        float textY = labelY + (LABEL_HEIGHT - renderer.textHeight(scale)) * 0.5f;
-        renderer.roundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
-        renderer.text(label, frameX + (labelW - textW) / 2.0f, textY, scale, MD3Theme.ON_PRIMARY_CONTAINER);
+        float textY = labelY + (LABEL_HEIGHT - textMetrics.textHeight(scale)) * 0.5f;
+        scope.roundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
+        scope.text(label, frameX + (labelW - textW) / 2.0f, textY, scale, MD3Theme.ON_PRIMARY_CONTAINER);
     }
 
     private void beginEditorLayer(int step) {
         editorLayer += step;
         editorScope = new PanelUiTree.Scope();
-        drawContext = new DropdownDrawContext(editorScope, new EditorTextMetrics());
     }
 
     private void flushEditorLayer() {
         editorBatch.render(PanelUiTree.from(editorScope), editorLayer);
     }
 
-    private void withEditorScissor(float guiX, float guiY, float guiW, float guiH, Runnable content) {
-        DropdownDrawContext previous = drawContext;
-        editorScope.scissor(new PanelLayout.Rect(guiX, guiY, guiW, guiH), scope -> {
-            drawContext = new DropdownDrawContext(scope, new EditorTextMetrics());
-            try {
-                content.run();
-            } finally {
-                drawContext = previous;
-            }
-        });
+    private void withEditorScissor(float guiX, float guiY, float guiW, float guiH,
+                                   Consumer<PanelUiTree.Scope> content) {
+        editorScope.scissor(new PanelLayout.Rect(guiX, guiY, guiW, guiH), content);
     }
 
-    private final class EditorTextMetrics implements DropdownDrawContext.TextMetrics {
+    private final class EditorTextMetrics implements UiTextMetrics {
         @Override
-        public float getHeight(float scale) {
-            return textMetrics.getHeight(scale);
-        }
-
-        @Override
-        public float getHeight(float scale, TtfFontLoader fontLoader) {
-            return textMetrics.getHeight(scale, fontLoader);
-        }
-
-        @Override
-        public float getWidth(String text, float scale) {
+        public float textWidth(String text, float scale) {
             return textMetrics.getWidth(text, scale);
         }
 
         @Override
-        public float getWidth(String text, float scale, TtfFontLoader fontLoader) {
+        public float textWidth(String text, float scale, TtfFontLoader fontLoader) {
             return textMetrics.getWidth(text, scale, fontLoader);
+        }
+
+        @Override
+        public float textHeight(float scale) {
+            return textMetrics.getHeight(scale);
+        }
+
+        @Override
+        public float textHeight(float scale, TtfFontLoader fontLoader) {
+            return textMetrics.getHeight(scale, fontLoader);
         }
     }
 
