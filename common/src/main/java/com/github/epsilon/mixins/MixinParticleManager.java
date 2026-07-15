@@ -1,5 +1,6 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.modules.impl.render.MasEffects;
 import com.github.epsilon.modules.impl.render.NoRender;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
@@ -32,9 +33,15 @@ public class MixinParticleManager {
     }
 
     private boolean shouldCancel(ParticleOptions particleOptions) {
-        if (!NoRender.INSTANCE.isEnabled() || particleOptions == null) {
+        if (particleOptions == null) {
             return false;
         }
+        if (particleOptions.getType() == ParticleTypes.TOTEM_OF_UNDYING
+                && MasEffects.INSTANCE.shouldHideVanillaTotemParticles()) {
+            return true;
+        }
+        if (!NoRender.INSTANCE.isEnabled()) return false;
+
         if (NoRender.INSTANCE.explosions.getValue()
                 && (particleOptions.getType() == ParticleTypes.EXPLOSION
                 || particleOptions.getType() == ParticleTypes.EXPLOSION_EMITTER
