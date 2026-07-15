@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.panel.utils;
 
-import com.github.epsilon.gui.lib.control.UiScrollBar;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.control.UiScrollBar;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 
 public class ScrollBarUtils {

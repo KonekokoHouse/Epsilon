@@ -72,7 +72,7 @@ public class PanelElements {
     }
 
     public static UiRect measureAssistChipBounds(TextRenderer textRenderer, UiRect rowBounds, String label,
-                                                           float textScale, float horizontalPadding, float trailingSlotWidth, float maxWidth) {
+                                                 float textScale, float horizontalPadding, float trailingSlotWidth, float maxWidth) {
         float desiredWidth = textRenderer.getWidth(label, textScale) + horizontalPadding * 2.0f + trailingSlotWidth;
         return alignTrailing(rowBounds, Math.min(maxWidth, desiredWidth), MD3Theme.COMPACT_CHIP_HEIGHT);
     }

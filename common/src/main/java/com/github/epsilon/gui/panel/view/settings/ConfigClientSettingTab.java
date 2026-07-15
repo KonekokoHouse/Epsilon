@@ -1,13 +1,13 @@
 package com.github.epsilon.gui.panel.view.settings;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.Constants;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.state.UiInvalidationState;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.popup.ConfirmActionPopup;
 import com.github.epsilon.gui.panel.popup.MessagePopup;
@@ -30,8 +30,8 @@ import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ConfigClientSettingTab implements ClientSettingTabView {
     private static final float ROW_HEIGHT = 36.0f;

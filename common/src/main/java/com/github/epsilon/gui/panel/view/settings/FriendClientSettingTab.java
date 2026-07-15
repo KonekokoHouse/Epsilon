@@ -2,13 +2,13 @@ package com.github.epsilon.gui.panel.view.settings;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.state.UiInvalidationState;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.PanelState;
+import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;

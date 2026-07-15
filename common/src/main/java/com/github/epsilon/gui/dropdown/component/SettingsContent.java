@@ -7,11 +7,11 @@ import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.managers.Managers;
-import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 

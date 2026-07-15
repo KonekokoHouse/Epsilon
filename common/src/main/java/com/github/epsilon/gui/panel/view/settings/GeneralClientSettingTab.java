@@ -1,23 +1,23 @@
 package com.github.epsilon.gui.panel.view.settings;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.state.UiInvalidationState;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.adapter.SettingListController;
 import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow;
-import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
+import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;

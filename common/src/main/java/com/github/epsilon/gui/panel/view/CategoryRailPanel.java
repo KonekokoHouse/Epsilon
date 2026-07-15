@@ -1,18 +1,18 @@
 package com.github.epsilon.gui.panel.view;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.Constants;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;

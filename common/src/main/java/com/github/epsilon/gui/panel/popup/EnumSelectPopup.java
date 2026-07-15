@@ -2,10 +2,10 @@ package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.lib.render.UiContentBuffer;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.EnumSetting;

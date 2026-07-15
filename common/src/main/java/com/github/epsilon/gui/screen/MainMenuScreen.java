@@ -1,23 +1,23 @@
 package com.github.epsilon.gui.screen;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.Constants;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.shaders.GlslSandBox;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.lib.scene.UiLayer;
 import com.github.epsilon.gui.lib.scene.UiScene;
-import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.modules.impl.ClientSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.multiplayer.SafetyScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;

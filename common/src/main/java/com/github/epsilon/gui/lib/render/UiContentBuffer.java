@@ -4,10 +4,10 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
-import com.github.epsilon.gui.lib.control.UiScrollBar;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTheme;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.control.UiScrollBar;
 
 import java.awt.*;
 import java.util.ArrayList;

@@ -13,8 +13,8 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
-import java.util.function.Supplier;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 public class BPS extends HudModule {
 

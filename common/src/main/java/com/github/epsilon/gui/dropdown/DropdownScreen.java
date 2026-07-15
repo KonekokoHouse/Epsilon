@@ -6,12 +6,12 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.component.*;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
-import com.github.epsilon.gui.lib.scene.UiLayer;
-import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.scene.UiLayer;
+import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
@@ -25,8 +25,8 @@ import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.IMEPreeditOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -38,10 +38,10 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.function.Consumer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class DropdownScreen extends Screen {
 

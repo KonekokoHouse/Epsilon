@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.lib.scene;
 
 import com.github.epsilon.graphics.schedulers.render2d.Render2DScheduler;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.UiTheme;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
 
 import java.util.Objects;
 

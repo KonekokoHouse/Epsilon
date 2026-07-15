@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.panel.input;
 
+import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.view.CategoryRailPanel;
 import com.github.epsilon.gui.panel.view.ClientSettingPanel;
 import com.github.epsilon.gui.panel.view.ModuleDetailPanel;
 import com.github.epsilon.gui.panel.view.ModuleListPanel;
-import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;

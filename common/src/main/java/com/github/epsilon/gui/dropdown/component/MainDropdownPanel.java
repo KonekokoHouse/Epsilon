@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.Constants;
+import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
@@ -14,9 +14,9 @@ import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.List;
 
 public class MainDropdownPanel extends AbstractDropdownPanel {
 

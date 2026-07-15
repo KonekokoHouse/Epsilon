@@ -2,10 +2,10 @@ package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.render.UiContentBuffer;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
@@ -22,8 +22,8 @@ import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
-import java.util.function.Consumer;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class StringListSelectPopup implements PanelPopupHost.Popup {
 

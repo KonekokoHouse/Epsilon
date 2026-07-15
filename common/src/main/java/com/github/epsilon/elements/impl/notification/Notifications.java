@@ -13,8 +13,8 @@ import net.minecraft.client.DeltaTracker;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.function.Supplier;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class Notifications extends HudModule {
 
@@ -41,6 +41,7 @@ public class Notifications extends HudModule {
     private static final float SUBTITLE_SCALE = 0.92f;
 
     private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
+
     @Override
     public void render(DeltaTracker deltaTracker) {
         Managers.NOTIFICATION.update();
