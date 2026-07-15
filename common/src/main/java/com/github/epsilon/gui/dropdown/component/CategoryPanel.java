@@ -1,14 +1,15 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.control.UiScrollBar;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Category;
-import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.modules.Module;
 
 import java.util.*;
 
@@ -51,12 +52,12 @@ public class CategoryPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         List<ModuleButton> buttons = visibleButtons();
         float expand = openAnim.getValue();
         int frameId = getRenderFrameId();
-        float buttonWidth = maxScroll > 0.0f ? width - DropdownScrollBar.HOVER_WIDTH + 1f : width;
-        var stack = scope.stack(new PanelLayout.Rect(
+        float buttonWidth = maxScroll > 0.0f ? width - UiScrollBar.HOVER_WIDTH + 1f : width;
+        var stack = scope.stack(new UiRect(
                 x,
                 y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll,
                 buttonWidth,

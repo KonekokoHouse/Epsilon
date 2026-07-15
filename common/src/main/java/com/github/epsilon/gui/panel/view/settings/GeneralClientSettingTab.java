@@ -1,22 +1,23 @@
-package com.github.epsilon.gui.panel.panel.clientsettings;
+package com.github.epsilon.gui.panel.view.settings;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.PanelState;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.state.UiInvalidationState;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.adapter.SettingListController;
 import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow;
+import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
-import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
-import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
-import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -36,12 +37,12 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
     private final PanelState state;
     private final TextRenderer textRenderer;
     private final SettingListController settingListController;
-    private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
-    private final PanelContentInvalidationState contentState = new PanelContentInvalidationState();
+    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+    private final UiInvalidationState contentState = new UiInvalidationState();
     private final Map<Setting<?>, Animation> hoverAnimations = new HashMap<>();
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
 
-    private PanelLayout.Rect bounds;
+    private UiRect bounds;
     private float lastScroll = Float.NaN;
     private List<String> lastVisibleSettings = List.of();
     private String lastListeningKey = "";
@@ -55,7 +56,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         if (Math.abs(scrollVelocity) > 0.01f) {
@@ -86,7 +87,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
             contentState.beginRebuild();
         }
 
-        PanelUiTree tree = PanelUiTree.build(scope -> scope.viewport(contentBuffer, bounds, guiGraphics.guiHeight(),
+        UiTree tree = UiTree.build(scope -> scope.viewport(contentBuffer, bounds,
                 state.getClientSettingScroll(), maxScroll, contentHeight, effectiveMouseX, effectiveMouseY, content -> {
                     if (!rebuildContent) {
                         return;
@@ -259,7 +260,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
         markDirty();
     }
 
-    private boolean shouldRebuildContent(PanelLayout.Rect bounds, int mouseX, int mouseY, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
+    private boolean shouldRebuildContent(UiRect bounds, int mouseX, int mouseY, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
         if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
             return true;
         }
@@ -277,7 +278,7 @@ public class GeneralClientSettingTab implements ClientSettingTabView {
         return lastContentSignature != contentSignature;
     }
 
-    private void rememberSnapshot(PanelLayout.Rect bounds, int mouseX, int mouseY, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
+    private void rememberSnapshot(UiRect bounds, int mouseX, int mouseY, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
         contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature);
         lastScroll = state.getClientSettingScroll();
         lastListeningKey = state.getListeningKeybindSetting() == null ? "" : state.getListeningKeybindSetting().getName();

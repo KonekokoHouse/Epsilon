@@ -1,14 +1,14 @@
 package com.github.epsilon.gui.panel.adapter;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.component.SettingRow;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.setting.*;
+import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.panel.popup.*;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -95,14 +95,14 @@ public class SettingListController implements AutoCloseable {
         return height;
     }
 
-    public void layoutRows(List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
-                           PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+    public void layoutRows(List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
+                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         layoutRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
     }
 
-    public void layoutRows(String ownerKey, List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
-                           PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+    public void layoutRows(String ownerKey, List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
+                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         prepareLayout(ownerKey, settings);
 
@@ -114,20 +114,20 @@ public class SettingListController implements AutoCloseable {
         appendRows(ownerKey, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
     }
 
-    public void appendRows(List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
-                           PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+    public void appendRows(List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
+                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         appendRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
     }
 
-    public void appendRows(String ownerKey, List<Setting<?>> settings, PanelLayout.Rect viewport, float scroll, float rowWidth,
-                           PanelUiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+    public void appendRows(String ownerKey, List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
+                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         float rowY = viewport.y() - scroll;
         for (SettingLayoutPlanner.Section section : buildSections(ownerKey, settings)) {
             if (section.hasHeader()) {
-                PanelLayout.Rect sectionBounds = new PanelLayout.Rect(viewport.x(), rowY, rowWidth, getSectionHeight(section));
-                PanelLayout.Rect headerBounds = new PanelLayout.Rect(sectionBounds.x(), sectionBounds.y(), sectionBounds.width(), GROUP_HEADER_HEIGHT);
+                UiRect sectionBounds = new UiRect(viewport.x(), rowY, rowWidth, getSectionHeight(section));
+                UiRect headerBounds = new UiRect(sectionBounds.x(), sectionBounds.y(), sectionBounds.width(), GROUP_HEADER_HEIGHT);
                 sectionEntries.add(new SectionEntry(section, headerBounds));
                 buildSectionCard(scope, textRenderer, section, sectionBounds, headerBounds, mouseX, mouseY);
 
@@ -140,7 +140,7 @@ public class SettingListController implements AutoCloseable {
                             continue;
                         }
 
-                        PanelLayout.Rect rowBounds = new PanelLayout.Rect(sectionBounds.x() + GROUP_ROW_INSET, childY, childWidth, row.getHeight());
+                        UiRect rowBounds = new UiRect(sectionBounds.x() + GROUP_ROW_INSET, childY, childWidth, row.getHeight());
                         settingEntries.add(new SettingEntry(row, rowBounds));
                         callback.render(setting, row, rowBounds);
                         childY += row.getHeight() + MD3Theme.ROW_GAP;
@@ -156,7 +156,7 @@ public class SettingListController implements AutoCloseable {
                 if (row == null) {
                     continue;
                 }
-                PanelLayout.Rect rowBounds = new PanelLayout.Rect(viewport.x(), rowY, rowWidth, row.getHeight());
+                UiRect rowBounds = new UiRect(viewport.x(), rowY, rowWidth, row.getHeight());
                 settingEntries.add(new SettingEntry(row, rowBounds));
                 callback.render(setting, row, rowBounds);
                 rowY += row.getHeight() + MD3Theme.ROW_GAP;
@@ -164,11 +164,11 @@ public class SettingListController implements AutoCloseable {
         }
     }
 
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick, PanelLayout.Rect popupBounds) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick, UiRect popupBounds) {
         return mouseClicked(event, isDoubleClick, popupBounds, null);
     }
 
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick, PanelLayout.Rect popupBounds, RowClickInterceptor interceptor) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick, UiRect popupBounds, RowClickInterceptor interceptor) {
         if (event.button() != 0) {
             return false;
         }
@@ -323,15 +323,15 @@ public class SettingListController implements AutoCloseable {
                 || sectionExpandAnimations.values().stream().anyMatch(animation -> !animation.isFinished());
     }
 
-    private void buildSectionCard(PanelUiTree.Scope scope, TextRenderer textRenderer, SettingLayoutPlanner.Section section,
-                                  PanelLayout.Rect groupBounds, PanelLayout.Rect headerBounds, int mouseX, int mouseY) {
+    private void buildSectionCard(UiTree.Scope scope, TextRenderer textRenderer, SettingLayoutPlanner.Section section,
+                                  UiRect groupBounds, UiRect headerBounds, int mouseX, int mouseY) {
         Animation hoverAnimation = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createAnimation(120L, 0.0f));
         Animation expandAnimation = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createAnimation(180L, section.isCollapsed() ? 0.0f : 1.0f));
         float hoverProgress = scope.animate(hoverAnimation, headerBounds.contains(mouseX, mouseY));
         float expandProgress = scope.animate(expandAnimation, !section.isCollapsed());
 
         scope.pushAbsolute(groupBounds, group -> {
-            PanelLayout.Rect localHeader = headerBounds.relativeTo(groupBounds);
+            UiRect localHeader = headerBounds.relativeTo(groupBounds);
             group.roundRect(0.0f, 0.0f, groupBounds.width(), groupBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.OUTLINE_SOFT);
             group.roundRect(
                     GROUP_OUTLINE_INSET,
@@ -435,8 +435,8 @@ public class SettingListController implements AutoCloseable {
         return ellipsis;
     }
 
-    private EnumSelectPopup createEnumPopup(EnumSettingRow enumRow, PanelLayout.Rect rowBounds, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect chipBounds = enumRow.getChipBounds(measureTextRenderer, rowBounds);
+    private EnumSelectPopup createEnumPopup(EnumSettingRow enumRow, UiRect rowBounds, UiRect popupBounds) {
+        UiRect chipBounds = enumRow.getChipBounds(measureTextRenderer, rowBounds);
         int optionCount = enumRow.getSetting().getModes().length;
         int visibleCount = Math.min(optionCount, EnumSelectPopup.MAX_VISIBLE_ITEMS);
         float popupHeight = visibleCount * 24.0f + 12.0f;
@@ -447,11 +447,11 @@ public class SettingListController implements AutoCloseable {
         if (popupY + popupHeight > maxBottom) {
             popupY = chipBounds.y() - popupHeight - 4.0f;
         }
-        return new EnumSelectPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), enumRow.getSetting());
+        return new EnumSelectPopup(new UiRect(popupX, popupY, popupWidth, popupHeight), enumRow.getSetting());
     }
 
-    private ColorPickerPopup createColorPopup(ColorSettingRow colorRow, PanelLayout.Rect rowBounds, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect swatchBounds = colorRow.getSwatchBounds(rowBounds);
+    private ColorPickerPopup createColorPopup(ColorSettingRow colorRow, UiRect rowBounds, UiRect popupBounds) {
+        UiRect swatchBounds = colorRow.getSwatchBounds(rowBounds);
         int channelCount = colorRow.getSetting().isAllowAlpha() ? 4 : 3;
         float popupWidth = 156.0f;
         float popupHeight = 58.0f + channelCount * 24.0f;
@@ -461,36 +461,36 @@ public class SettingListController implements AutoCloseable {
         if (popupY + popupHeight > maxBottom) {
             popupY = swatchBounds.y() - popupHeight - 4.0f;
         }
-        return new ColorPickerPopup(new PanelLayout.Rect(popupX, popupY, popupWidth, popupHeight), swatchBounds, colorRow.getSetting());
+        return new ColorPickerPopup(new UiRect(popupX, popupY, popupWidth, popupHeight), swatchBounds, colorRow.getSetting());
     }
 
     // --- List setting popup factories ---
 
-    private PanelPopupHost.Popup createStringListSettingPopup(StringListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(300.0f, popupBounds.width() - 24.0f), Math.min(220.0f, popupBounds.height() - 24.0f));
+    private PanelPopupHost.Popup createStringListSettingPopup(StringListSettingRow row, UiRect popupBounds) {
+        UiRect bounds = popupHost.getCenteredBounds(Math.min(300.0f, popupBounds.width() - 24.0f), Math.min(220.0f, popupBounds.height() - 24.0f));
         var setting = row.getSetting();
         return new StringListSelectPopup(bounds, setting, setting::add, setting::remove);
     }
 
-    private PanelPopupHost.Popup createRegistryListSettingPopup(RegistryListSettingRow row, PanelLayout.Rect popupBounds) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
+    private PanelPopupHost.Popup createRegistryListSettingPopup(RegistryListSettingRow row, UiRect popupBounds) {
+        UiRect bounds = popupHost.getCenteredBounds(Math.min(360.0f, popupBounds.width() - 24.0f), Math.min(246.0f, popupBounds.height() - 24.0f));
         return RegistryListSelectPopup.create(bounds, row.getSetting());
     }
 
     @FunctionalInterface
     public interface RowRenderCallback {
-        void render(Setting<?> setting, SettingRow<?> row, PanelLayout.Rect rowBounds);
+        void render(Setting<?> setting, SettingRow<?> row, UiRect rowBounds);
     }
 
     @FunctionalInterface
     public interface RowClickInterceptor {
-        boolean handle(SettingRow<?> row, PanelLayout.Rect rowBounds, MouseButtonEvent event, boolean isDoubleClick);
+        boolean handle(SettingRow<?> row, UiRect rowBounds, MouseButtonEvent event, boolean isDoubleClick);
     }
 
-    private record SettingEntry(SettingRow<?> row, PanelLayout.Rect bounds) {
+    private record SettingEntry(SettingRow<?> row, UiRect bounds) {
     }
 
-    private record SectionEntry(SettingLayoutPlanner.Section section, PanelLayout.Rect bounds) {
+    private record SectionEntry(SettingLayoutPlanner.Section section, UiRect bounds) {
     }
 
 }

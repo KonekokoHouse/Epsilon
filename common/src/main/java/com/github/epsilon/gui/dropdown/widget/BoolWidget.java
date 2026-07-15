@@ -1,11 +1,11 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -41,7 +41,7 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float target = setting.getValue() ? 1.0f : 0.0f;
         toggleAnim.run(target);
         knobBounceAnim.run(target);

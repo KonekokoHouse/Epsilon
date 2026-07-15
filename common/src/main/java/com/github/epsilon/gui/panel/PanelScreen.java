@@ -2,20 +2,23 @@ package com.github.epsilon.gui.panel;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.lib.scene.UiLayer;
+import com.github.epsilon.gui.lib.scene.UiScene;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.input.PanelInputRouter;
-import com.github.epsilon.gui.panel.panel.CategoryRailPanel;
-import com.github.epsilon.gui.panel.panel.ClientSettingPanel;
-import com.github.epsilon.gui.panel.panel.ModuleDetailPanel;
-import com.github.epsilon.gui.panel.panel.ModuleListPanel;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import com.github.epsilon.gui.scene.GuiLayer;
-import com.github.epsilon.gui.scene.GuiScene;
+import com.github.epsilon.gui.panel.view.CategoryRailPanel;
+import com.github.epsilon.gui.panel.view.ClientSettingPanel;
+import com.github.epsilon.gui.panel.view.ModuleDetailPanel;
+import com.github.epsilon.gui.panel.view.ModuleListPanel;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -36,7 +39,7 @@ public class PanelScreen extends Screen {
     private final PanelState state = new PanelState();
     private final PanelDirtyState dirtyState = new PanelDirtyState();
     private final TextRenderer textRenderer = TextRenderer.create();
-    private final GuiScene scene = new GuiScene();
+    private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final PanelInputRouter inputRouter = new PanelInputRouter();
     private final CategoryRailPanel categoryRailPanel = new CategoryRailPanel(state, textRenderer);
@@ -142,17 +145,17 @@ public class PanelScreen extends Screen {
         boolean popupActive = popupHost.getActivePopup() != null;
         int panelMouseX = popupActive ? Integer.MIN_VALUE : epsilonMouseX;
         int panelMouseY = popupActive ? Integer.MIN_VALUE : epsilonMouseY;
-        categoryRailPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, -20), layout.rail(), panelMouseX, panelMouseY, partialTick);
+        categoryRailPanel.render(guiGraphics, scene.batch(UiLayer.CONTENT, -20), layout.rail(), panelMouseX, panelMouseY, partialTick);
         if (state.isClientSettingMode()) {
-            PanelLayout.Rect clientSettingsBounds = new PanelLayout.Rect(
+            UiRect clientSettingsBounds = new UiRect(
                     layout.modules().x(), layout.modules().y(),
                     layout.detail().right() - layout.modules().x(),
                     layout.modules().height()
             );
-            clientSettingPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, 10), clientSettingsBounds, panelMouseX, panelMouseY, partialTick);
+            clientSettingPanel.render(guiGraphics, scene.batch(UiLayer.CONTENT, 10), clientSettingsBounds, panelMouseX, panelMouseY, partialTick);
         } else {
-            moduleListPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, 0), layout.modules(), panelMouseX, panelMouseY, partialTick);
-            moduleDetailPanel.render(guiGraphics, scene.batch(GuiLayer.CONTENT, 20), layout.detail(), panelMouseX, panelMouseY, partialTick);
+            moduleListPanel.render(guiGraphics, scene.batch(UiLayer.CONTENT, 0), layout.modules(), panelMouseX, panelMouseY, partialTick);
+            moduleDetailPanel.render(guiGraphics, scene.batch(UiLayer.CONTENT, 20), layout.detail(), panelMouseX, panelMouseY, partialTick);
         }
 
         scene.flush();
@@ -171,7 +174,7 @@ public class PanelScreen extends Screen {
     }
 
     private void drawChrome(PanelLayout.Layout layout) {
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        UiTree tree = UiTree.build(scope -> {
             scope.pushAbsolute(layout.panel(), panel -> {
                 panel.shadow(0.0f, 0.0f, layout.panel().width(), layout.panel().height(),
                         MD3Theme.PANEL_RADIUS, 18.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
@@ -192,7 +195,7 @@ public class PanelScreen extends Screen {
                         MD3Theme.SECTION_RADIUS, MD3Theme.SURFACE_DIM));
             }
         });
-        scene.submit(GuiLayer.CHROME, -20, tree);
+        scene.submit(UiLayer.CHROME, -20, tree);
     }
 
     private void flushQueuedContentBuffers() {
@@ -208,7 +211,7 @@ public class PanelScreen extends Screen {
         if (popupHost.getActivePopup() == null) {
             return;
         }
-        popupHost.render(guiGraphics, scene.batch(GuiLayer.POPUP), mouseX, mouseY, partialTick);
+        popupHost.render(guiGraphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick);
         scene.flush();
         popupHost.flush();
         scene.clear();

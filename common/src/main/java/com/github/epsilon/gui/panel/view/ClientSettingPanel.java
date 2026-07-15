@@ -1,15 +1,15 @@
-package com.github.epsilon.gui.panel.panel;
+package com.github.epsilon.gui.panel.view;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.PanelState;
-import com.github.epsilon.gui.panel.panel.clientsettings.*;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
+import com.github.epsilon.gui.panel.view.settings.*;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -38,7 +38,7 @@ public class ClientSettingPanel implements AutoCloseable {
     private final EnumMap<PanelState.ClientSettingTab, Animation> tabHoverAnimations = new EnumMap<>(PanelState.ClientSettingTab.class);
     private final Animation tabIndicatorAnimation = new Animation(Easing.EASE_OUT_CUBIC, 200L);
 
-    private PanelLayout.Rect bounds;
+    private UiRect bounds;
 
     public ClientSettingPanel(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
         this.state = state;
@@ -57,7 +57,7 @@ public class ClientSettingPanel implements AutoCloseable {
         tabIndicatorAnimation.setStartValue(getTabIndex(state.getClientSettingTab()));
     }
 
-    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
 
         ClientSettingTabView activeTab = getCurrentTabView();
@@ -65,7 +65,7 @@ public class ClientSettingPanel implements AutoCloseable {
         int effectiveMouseX = popupConsumesHover ? Integer.MIN_VALUE : mouseX;
         int effectiveMouseY = popupConsumesHover ? Integer.MIN_VALUE : mouseY;
 
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        UiTree tree = UiTree.build(scope -> {
             scope.pushAbsolute(bounds, panel ->
                     panel.text(EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY));
             buildTabs(scope, effectiveMouseX, effectiveMouseY);
@@ -103,7 +103,7 @@ public class ClientSettingPanel implements AutoCloseable {
             markDirty();
         }
 
-        PanelLayout.Rect tabBar = getTabBarRect();
+        UiRect tabBar = getTabBarRect();
         if (tabBar.contains(event.x(), event.y())) {
             switchToTab(resolveClickedTab(event.x(), tabBar));
             return true;
@@ -135,8 +135,8 @@ public class ClientSettingPanel implements AutoCloseable {
         return getCurrentTabView().charTyped(event);
     }
 
-    private void buildTabs(PanelUiTree.Scope scope, int mouseX, int mouseY) {
-        PanelLayout.Rect tabBar = getTabBarRect();
+    private void buildTabs(UiTree.Scope scope, int mouseX, int mouseY) {
+        UiRect tabBar = getTabBarRect();
         float segmentWidth = tabBar.width() / TABS.size();
         float labelScale = 0.62f;
         float textHeight = textRenderer.getHeight(labelScale);
@@ -146,8 +146,8 @@ public class ClientSettingPanel implements AutoCloseable {
         scope.pushAbsolute(tabBar, tabs -> {
             for (int index = 0; index < TABS.size(); index++) {
                 TabDefinition tab = TABS.get(index);
-                PanelLayout.Rect tabBounds = new PanelLayout.Rect(segmentWidth * index, 0.0f, segmentWidth, tabBar.height());
-                PanelLayout.Rect absoluteTabBounds = new PanelLayout.Rect(tabBar.x() + tabBounds.x(), tabBar.y(), tabBounds.width(), tabBounds.height());
+                UiRect tabBounds = new UiRect(segmentWidth * index, 0.0f, segmentWidth, tabBar.height());
+                UiRect absoluteTabBounds = new UiRect(tabBar.x() + tabBounds.x(), tabBar.y(), tabBounds.width(), tabBounds.height());
                 boolean active = tab.tab() == state.getClientSettingTab();
 
                 Animation hoverAnimation = tabHoverAnimations.get(tab.tab());
@@ -184,7 +184,7 @@ public class ClientSettingPanel implements AutoCloseable {
         markDirty();
     }
 
-    private PanelState.ClientSettingTab resolveClickedTab(double mouseX, PanelLayout.Rect tabBar) {
+    private PanelState.ClientSettingTab resolveClickedTab(double mouseX, UiRect tabBar) {
         float segmentWidth = tabBar.width() / TABS.size();
         int index = Math.clamp((int) ((mouseX - tabBar.x()) / segmentWidth), 0, TABS.size() - 1);
         return TABS.get(index).tab();
@@ -204,8 +204,8 @@ public class ClientSettingPanel implements AutoCloseable {
         };
     }
 
-    private PanelLayout.Rect getTabBarRect() {
-        return new PanelLayout.Rect(
+    private UiRect getTabBarRect() {
+        return new UiRect(
                 bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET,
                 bounds.y() + 28.0f,
                 bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f,
@@ -213,9 +213,9 @@ public class ClientSettingPanel implements AutoCloseable {
         );
     }
 
-    private PanelLayout.Rect getContentBounds() {
+    private UiRect getContentBounds() {
         float tabBottom = bounds.y() + 28.0f + TAB_BAR_HEIGHT + 4.0f;
-        return new PanelLayout.Rect(
+        return new UiRect(
                 bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET,
                 tabBottom,
                 bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f,

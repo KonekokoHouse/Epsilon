@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -30,7 +30,7 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float lineHeight = textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE);
         float labelTextY = (getHeight() - lineHeight) * 0.5f;
         scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());

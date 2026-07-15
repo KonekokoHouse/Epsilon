@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -32,7 +32,7 @@ public class DropdownTextField {
         this.inputFilter = inputFilter == null ? value -> true : inputFilter;
     }
 
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
         scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
         scope.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
@@ -51,7 +51,7 @@ public class DropdownTextField {
         }
     }
 
-    public void drawCentered(PanelUiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
+    public void drawCentered(UiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float width, float height, int mouseX, int mouseY, String placeholder, float textScale) {
         scope.roundRect(x, y, width, height, DropdownTheme.INPUT_RADIUS, DropdownTheme.inputSurface(focused));
         scope.outline(x, y, width, height, DropdownTheme.INPUT_RADIUS, 0.7f, focused ? MD3Theme.PRIMARY : MD3Theme.withAlpha(MD3Theme.OUTLINE, 90));
 
@@ -244,7 +244,7 @@ public class DropdownTextField {
         return text.length();
     }
 
-    private void drawCaret(PanelUiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float textScale) {
+    private void drawCaret(UiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float textScale) {
         if (System.currentTimeMillis() % 1000 > 500) {
             scope.rect(x, y, 0.8f, textMetrics.textHeight(textScale), MD3Theme.TEXT_PRIMARY);
         }

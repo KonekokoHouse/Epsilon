@@ -1,11 +1,11 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.utils.client.ConfigFolderOpener;
 
@@ -38,7 +38,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;

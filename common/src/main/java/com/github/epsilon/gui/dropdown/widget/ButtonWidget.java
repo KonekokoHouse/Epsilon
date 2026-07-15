@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.ButtonSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -21,7 +21,7 @@ public class ButtonWidget extends SettingWidget<ButtonSetting> {
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float btnX = DropdownTheme.SETTING_PADDING_X;
         float btnY = 1.0f;
         float btnW = width - DropdownTheme.SETTING_PADDING_X * 2.0f;

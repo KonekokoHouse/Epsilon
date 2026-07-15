@@ -3,9 +3,9 @@ package com.github.epsilon.elements.impl;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -88,7 +88,7 @@ public class ScaffoldBlock extends HudModule {
         }
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelUiTree.Scope scope = renderScope();
+        UiTree.Scope scope = renderScope();
 
         Layout layout = createLayout(textRenderer);
         drawBackground(scope, layout, animation);
@@ -131,7 +131,7 @@ public class ScaffoldBlock extends HudModule {
         return new Layout(height, radius, padX, scaled, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth, this.x);
     }
 
-    private void drawBackground(PanelUiTree.Scope scope, Layout layout, AnimationState animation) {
+    private void drawBackground(UiTree.Scope scope, Layout layout, AnimationState animation) {
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
         float animatedRadius = Math.min(layout.radius(), animatedWidth / 2.0f);
@@ -146,14 +146,14 @@ public class ScaffoldBlock extends HudModule {
         scope.roundRect(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, withAlpha(backgroundColor.getValue(), animation.contentAlpha()));
     }
 
-    private void drawText(PanelUiTree.Scope scope, TextRenderer textRenderer, Layout layout, AnimationState animation) {
+    private void drawText(UiTree.Scope scope, TextRenderer textRenderer, Layout layout, AnimationState animation) {
         float numberColumnX = layout.renderX() + layout.padX();
         float numberY = this.y + (layout.height() - textRenderer.getHeight(layout.numberScale())) / 2.0f - scale.getValue().floatValue();
         float animatedNumberColumnX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.numberColumnWidth() / 2.0f, numberColumnX);
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
 
-        scope.scissor(new PanelLayout.Rect(animatedX, this.y, animatedWidth, layout.height()), clipped -> {
+        scope.scissor(new UiRect(animatedX, this.y, animatedWidth, layout.height()), clipped -> {
             if (smoothNumber.getValue()) {
                 drawRollingNumber(clipped, textRenderer, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
             } else {
@@ -234,7 +234,7 @@ public class ScaffoldBlock extends HudModule {
         return width + 4.0f * scale.getValue().floatValue();
     }
 
-    private void drawRollingNumber(PanelUiTree.Scope scope, TextRenderer textRenderer, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
+    private void drawRollingNumber(UiTree.Scope scope, TextRenderer textRenderer, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
         String previous = previousCountText;
         String target = targetCountText;
         int maxLen = Math.max(previous.length(), target.length());

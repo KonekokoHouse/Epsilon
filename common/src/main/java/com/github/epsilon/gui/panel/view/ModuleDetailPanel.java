@@ -1,25 +1,26 @@
-package com.github.epsilon.gui.panel.panel;
+package com.github.epsilon.gui.panel.view;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.PanelState;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.state.UiInvalidationState;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.adapter.SettingListController;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow;
+import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
-import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
-import com.github.epsilon.gui.panel.utils.PanelContentInvalidationState;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
-import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -37,11 +38,11 @@ public class ModuleDetailPanel implements AutoCloseable {
     protected final PanelState state;
     private final TextRenderer textRenderer;
     private final SettingListController settingListController;
-    private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
-    private final PanelContentInvalidationState contentState = new PanelContentInvalidationState();
-    private PanelLayout.Rect bounds;
+    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+    private final UiInvalidationState contentState = new UiInvalidationState();
+    private UiRect bounds;
     private int guiHeight;
-    private PanelLayout.Rect headerBounds;
+    private UiRect headerBounds;
     private final Map<Setting<?>, Animation> hoverAnimations = new HashMap<>();
     private float lastDetailScroll = Float.NaN;
     private String lastModuleKey = "";
@@ -68,7 +69,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         this.hiddenHoverAnimation.setStartValue(0.0f);
     }
 
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
         this.guiHeight = GuiGraphicsExtractor.guiHeight();
 
@@ -90,7 +91,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         float titleScale = 0.78f;
         float titleHeight = textRenderer.getHeight(titleScale);
         float titleY = 10.0f + (MD3Theme.CONTROL_HEIGHT - titleHeight) / 2.0f;
-        PanelUiTree headerTree = PanelUiTree.build(scope -> scope.pushAbsolute(bounds, panel ->
+        UiTree headerTree = UiTree.build(scope -> scope.pushAbsolute(bounds, panel ->
                 panel.text(detailTitle, MD3Theme.PANEL_TITLE_INSET, titleY, titleScale, MD3Theme.TEXT_PRIMARY)));
         renderBatch.render(headerTree);
 
@@ -98,8 +99,8 @@ public class ModuleDetailPanel implements AutoCloseable {
             return;
         }
 
-        headerBounds = new PanelLayout.Rect(bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET, bounds.y() + 34.0f, bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, 36.0f);
-        PanelUiTree controlTree = PanelUiTree.build(scope -> {
+        headerBounds = new UiRect(bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET, bounds.y() + 34.0f, bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, 36.0f);
+        UiTree controlTree = UiTree.build(scope -> {
             scope.pushAbsolute(headerBounds, header -> header.roundRect(0.0f, 0.0f, headerBounds.width(), headerBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER));
             buildKeybindControl(scope, module, mouseX, mouseY);
             buildBindModeControl(scope, module, mouseX, mouseY);
@@ -107,7 +108,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         });
         renderBatch.render(controlTree);
 
-        PanelLayout.Rect viewport = getViewport();
+        UiRect viewport = getViewport();
         List<Setting<?>> settings = module.getSettings().stream().filter(Setting::isAvailable).toList();
         String settingOwnerKey = getSettingOwnerKey(module);
         float contentHeight = settingListController.getContentHeight(settingOwnerKey, settings);
@@ -123,7 +124,7 @@ public class ModuleDetailPanel implements AutoCloseable {
             contentState.beginRebuild();
         }
 
-        PanelUiTree contentTree = PanelUiTree.build(scope -> scope.viewport(contentBuffer, viewport, guiHeight,
+        UiTree contentTree = UiTree.build(scope -> scope.viewport(contentBuffer, viewport,
                 state.getDetailScroll(), maxDetailScroll, contentHeight, effectiveMouseX, effectiveMouseY, content -> {
                     if (!rebuildContent) {
                         return;
@@ -160,7 +161,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         }
 
         if (state.getListeningKeyBindModule() == module) {
-            PanelLayout.Rect keybindBounds = getKeybindBounds();
+            UiRect keybindBounds = getKeybindBounds();
             if (keybindBounds.contains(event.x(), event.y())) {
                 module.setKeyBind(KeybindUtils.encodeMouseButton(event.button()));
                 state.setListeningKeyBindModule(null);
@@ -182,7 +183,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         }
 
         // Scrollbar drag
-        PanelLayout.Rect viewport = getViewport();
+        UiRect viewport = getViewport();
         float maxScroll = state.getMaxDetailScroll();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, state.getDetailScroll(), maxScroll)) {
             float newScroll = scrollBarDrag.mouseDragged(event.y(), viewport, maxScroll);
@@ -193,7 +194,7 @@ public class ModuleDetailPanel implements AutoCloseable {
             return true;
         }
 
-        PanelLayout.Rect keybindBounds = getKeybindBounds();
+        UiRect keybindBounds = getKeybindBounds();
         if (keybindBounds.contains(event.x(), event.y())) {
             state.setListeningKeyBindModule(module);
             markDirty();
@@ -203,7 +204,7 @@ public class ModuleDetailPanel implements AutoCloseable {
             markDirty();
         }
 
-        PanelLayout.Rect bindModeBounds = getBindModeBounds();
+        UiRect bindModeBounds = getBindModeBounds();
         if (bindModeBounds.contains(event.x(), event.y())) {
             float midpoint = bindModeBounds.centerX();
             module.setBindMode(event.x() < midpoint ? Module.BindMode.Toggle : Module.BindMode.Hold);
@@ -211,7 +212,7 @@ public class ModuleDetailPanel implements AutoCloseable {
             return true;
         }
 
-        PanelLayout.Rect hiddenBounds = getHiddenBounds();
+        UiRect hiddenBounds = getHiddenBounds();
         if (hiddenBounds.contains(event.x(), event.y())) {
             float midpoint = hiddenBounds.centerX();
             module.setHidden(event.x() >= midpoint);
@@ -246,7 +247,7 @@ public class ModuleDetailPanel implements AutoCloseable {
 
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
         if (scrollBarDrag.isDragging()) {
-            PanelLayout.Rect viewport = getViewport();
+            UiRect viewport = getViewport();
             float newScroll = scrollBarDrag.mouseDragged(event.y(), viewport, state.getMaxDetailScroll());
             if (newScroll >= 0) {
                 state.setDetailScroll(newScroll);
@@ -262,7 +263,7 @@ public class ModuleDetailPanel implements AutoCloseable {
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        PanelLayout.Rect viewport = getViewport();
+        UiRect viewport = getViewport();
         if (bounds != null && viewport.contains(mouseX, mouseY)) {
             scrollVelocity -= (float) scrollY * 24f;
             markDirty();
@@ -323,22 +324,22 @@ public class ModuleDetailPanel implements AutoCloseable {
         return false;
     }
 
-    private PanelLayout.Rect getViewport() {
+    private UiRect getViewport() {
         if (bounds == null) {
-            return new PanelLayout.Rect(0, 0, 0, 0);
+            return new UiRect(0, 0, 0, 0);
         }
         if (headerBounds == null) {
-            return new PanelLayout.Rect(bounds.x(), bounds.y(), bounds.width(), bounds.height());
+            return new UiRect(bounds.x(), bounds.y(), bounds.width(), bounds.height());
         }
-        return new PanelLayout.Rect(bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET, headerBounds.bottom() + 6.0f, bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, bounds.bottom() - headerBounds.bottom() - 10.0f);
+        return new UiRect(bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET, headerBounds.bottom() + 6.0f, bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, bounds.bottom() - headerBounds.bottom() - 10.0f);
     }
 
-    private PanelLayout.Rect getBindModeBounds() {
-        return new PanelLayout.Rect(getHeaderControlGroupLeftX() + getKeybindControlSize() + getHeaderControlGap(), getHeaderControlsY(), getBindModeControlWidth(), getHeaderControlHeight());
+    private UiRect getBindModeBounds() {
+        return new UiRect(getHeaderControlGroupLeftX() + getKeybindControlSize() + getHeaderControlGap(), getHeaderControlsY(), getBindModeControlWidth(), getHeaderControlHeight());
     }
 
-    private PanelLayout.Rect getKeybindBounds() {
-        return new PanelLayout.Rect(getHeaderControlGroupLeftX(), getHeaderControlsY(), getKeybindControlSize(), getKeybindControlSize());
+    private UiRect getKeybindBounds() {
+        return new UiRect(getHeaderControlGroupLeftX(), getHeaderControlsY(), getKeybindControlSize(), getKeybindControlSize());
     }
 
     private float getHeaderControlGroupLeftX() {
@@ -377,8 +378,8 @@ public class ModuleDetailPanel implements AutoCloseable {
         return 72.0f;
     }
 
-    private PanelLayout.Rect getHiddenBounds() {
-        return new PanelLayout.Rect(getHeaderControlGroupRightX() + getKeybindControlSize() + getHeaderControlGap() + getBindModeControlWidth() + getHeaderControlGap(), getHeaderControlsY(), getHiddenControlWidth(), getHeaderControlHeight());
+    private UiRect getHiddenBounds() {
+        return new UiRect(getHeaderControlGroupRightX() + getKeybindControlSize() + getHeaderControlGap() + getBindModeControlWidth() + getHeaderControlGap(), getHeaderControlsY(), getHiddenControlWidth(), getHeaderControlHeight());
     }
 
     private float getHeaderControlGap() {
@@ -397,8 +398,8 @@ public class ModuleDetailPanel implements AutoCloseable {
         return headerBounds.y() + (headerBounds.height() - getHeaderControlHeight()) / 2.0f;
     }
 
-    private void buildBindModeControl(PanelUiTree.Scope scope, Module module, int mouseX, int mouseY) {
-        PanelLayout.Rect bindModeBounds = getBindModeBounds();
+    private void buildBindModeControl(UiTree.Scope scope, Module module, int mouseX, int mouseY) {
+        UiRect bindModeBounds = getBindModeBounds();
         float bindProgress = scope.animate(bindModeAnimation, module.getBindMode() == Module.BindMode.Hold);
         float hoverProgress = scope.animate(bindModeHoverAnimation, bindModeBounds.contains(mouseX, mouseY));
         PanelElements.buildSegmentedControl(scope, textRenderer, bindModeBounds,
@@ -406,8 +407,8 @@ public class ModuleDetailPanel implements AutoCloseable {
                 bindProgress, hoverProgress);
     }
 
-    private void buildKeybindControl(PanelUiTree.Scope scope, Module module, int mouseX, int mouseY) {
-        PanelLayout.Rect keybindBounds = getKeybindBounds();
+    private void buildKeybindControl(UiTree.Scope scope, Module module, int mouseX, int mouseY) {
+        UiRect keybindBounds = getKeybindBounds();
         boolean listening = state.getListeningKeyBindModule() == module;
         float hoverProgress = scope.animate(keybindHoverAnimation, keybindBounds.contains(mouseX, mouseY));
         float focusProgress = scope.animate(keybindFocusAnimation, listening);
@@ -437,8 +438,8 @@ public class ModuleDetailPanel implements AutoCloseable {
         });
     }
 
-    private void buildHiddenControl(PanelUiTree.Scope scope, Module module, int mouseX, int mouseY) {
-        PanelLayout.Rect hiddenBounds = getHiddenBounds();
+    private void buildHiddenControl(UiTree.Scope scope, Module module, int mouseX, int mouseY) {
+        UiRect hiddenBounds = getHiddenBounds();
         float hiddenProgress = scope.animate(hiddenAnimation, module.isHidden());
         float hoverProgress = scope.animate(hiddenHoverAnimation, hiddenBounds.contains(mouseX, mouseY));
         PanelElements.buildSegmentedControl(scope, textRenderer, hiddenBounds,
@@ -516,7 +517,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         markDirty();
     }
 
-    private boolean shouldRebuildContent(PanelLayout.Rect bounds, int mouseX, int mouseY, Module module, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
+    private boolean shouldRebuildContent(UiRect bounds, int mouseX, int mouseY, Module module, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
         if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
             return true;
         }
@@ -533,7 +534,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         return lastContentSignature != contentSignature;
     }
 
-    private void rememberSnapshot(PanelLayout.Rect bounds, int mouseX, int mouseY, Module module, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
+    private void rememberSnapshot(UiRect bounds, int mouseX, int mouseY, Module module, List<Setting<?>> settings, int currentGuiHeight, long contentSignature) {
         contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature);
         lastDetailScroll = state.getDetailScroll();
         lastModuleKey = module.getName() + ":" + module.getBindMode() + ":" + module.getKeyBind() + ":" + module.isHidden();

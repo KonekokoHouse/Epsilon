@@ -1,17 +1,18 @@
 package com.github.epsilon.gui.panel.utils;
 
-import com.github.epsilon.gui.dropdown.component.DropdownScrollBar;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.control.UiScrollBar;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 
 public class ScrollBarDragState {
 
-    private final DropdownScrollBar scrollBar = new DropdownScrollBar();
+    private final UiScrollBar scrollBar = new UiScrollBar(EpsilonUiTheme.INSTANCE);
 
     public boolean isDragging() {
         return scrollBar.isDragging();
     }
 
-    public boolean mouseClicked(double mouseX, double mouseY, PanelLayout.Rect viewport,
+    public boolean mouseClicked(double mouseX, double mouseY, UiRect viewport,
                                 float scroll, float maxScroll) {
         if (maxScroll <= 0.0f) {
             return false;
@@ -20,7 +21,7 @@ public class ScrollBarDragState {
         return scrollBar.mouseClicked(mouseX, mouseY, viewport, scroll, maxScroll, contentHeight);
     }
 
-    public float mouseDragged(double mouseY, PanelLayout.Rect viewport, float maxScroll) {
+    public float mouseDragged(double mouseY, UiRect viewport, float maxScroll) {
         if (!scrollBar.isDragging() || maxScroll <= 0.0f) {
             return -1.0f;
         }

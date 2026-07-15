@@ -2,10 +2,10 @@ package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
@@ -37,15 +37,15 @@ public class KeybindSettingRow extends SettingRow<KeybindSetting> {
     }
 
     @Override
-    public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
 
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
         scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
-        PanelLayout.Rect absoluteChipBounds = getChipBounds(bounds);
-        PanelLayout.Rect chipBounds = absoluteChipBounds.relativeTo(bounds);
+        UiRect absoluteChipBounds = getChipBounds(bounds);
+        UiRect chipBounds = absoluteChipBounds.relativeTo(bounds);
         chipHoverAnimation.run(absoluteChipBounds.contains(mouseX, mouseY) ? 1.0f : 0.0f);
         focusAnimation.run(listening ? 1.0f : 0.0f);
         float chipHover = chipHoverAnimation.getValue();
@@ -76,20 +76,20 @@ public class KeybindSettingRow extends SettingRow<KeybindSetting> {
         scope.text(label, textX, textY, chipTextScale, foreground);
     }
 
-    public PanelLayout.Rect getChipBounds(PanelLayout.Rect bounds) {
+    public UiRect getChipBounds(UiRect bounds) {
         float chipWidth = 56.0f;
         float chipHeight = 18.0f;
         float chipX = bounds.right() - MD3Theme.ROW_TRAILING_INSET - chipWidth;
         float chipY = bounds.y() + (bounds.height() - chipHeight) / 2.0f;
-        return new PanelLayout.Rect(chipX, chipY, chipWidth, chipHeight);
+        return new UiRect(chipX, chipY, chipWidth, chipHeight);
     }
 
     @Override
-    public boolean mouseClicked(PanelLayout.Rect bounds, MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(UiRect bounds, MouseButtonEvent event, boolean isDoubleClick) {
         if (!bounds.contains(event.x(), event.y()) || event.button() != 0) {
             return false;
         }
-        PanelLayout.Rect chipBounds = getChipBounds(bounds);
+        UiRect chipBounds = getChipBounds(bounds);
         return chipBounds.contains(event.x(), event.y());
     }
 

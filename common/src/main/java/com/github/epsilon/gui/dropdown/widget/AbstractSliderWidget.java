@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.Setting;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
@@ -32,7 +32,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         syncSessionState();
 
         float ratio = getRatio();
@@ -214,7 +214,7 @@ public abstract class AbstractSliderWidget<S extends Setting<T>, T extends Numbe
         inputField.blur();
     }
 
-    protected void drawValueLabels(PanelUiTree.Scope scope, UiTextMetrics textMetrics, float trackX, float trackY, float trackW) {
+    protected void drawValueLabels(UiTree.Scope scope, UiTextMetrics textMetrics, float trackX, float trackY, float trackW) {
         String minValue = formatValue(getMin());
         String currentValue = formatValue(getVisibleValue());
         String maxValue = formatValue(getMax());

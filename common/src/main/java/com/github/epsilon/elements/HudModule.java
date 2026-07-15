@@ -1,9 +1,9 @@
 package com.github.epsilon.elements;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.modules.Module;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -31,7 +31,7 @@ public abstract class HudModule extends Module {
 
     private HorizontalAnchor horizontalAnchor = HorizontalAnchor.Left;
     private VerticalAnchor verticalAnchor = VerticalAnchor.Top;
-    private PanelUiTree.Scope currentRenderScope;
+    private UiTree.Scope currentRenderScope;
 
     public HudModule(String name, float width, float height) {
         this(name, 0f, 0f, width, height);
@@ -165,16 +165,16 @@ public abstract class HudModule extends Module {
         return LuminRenderSystem.getScaledHeightInt();
     }
 
-    public final void renderWithBatch(DeltaTracker deltaTracker, PanelRenderBatch renderBatch) {
-        PanelUiTree.Scope previous = currentRenderScope;
-        PanelUiTree.Scope scope = new PanelUiTree.Scope();
+    public final void renderWithBatch(DeltaTracker deltaTracker, UiRenderBatch renderBatch) {
+        UiTree.Scope previous = currentRenderScope;
+        UiTree.Scope scope = new UiTree.Scope();
         currentRenderScope = scope;
         render(deltaTracker);
         currentRenderScope = previous;
-        renderBatch.render(PanelUiTree.from(scope));
+        renderBatch.render(UiTree.from(scope));
     }
 
-    protected final PanelUiTree.Scope renderScope() {
+    protected final UiTree.Scope renderScope() {
         if (currentRenderScope == null) {
             throw new IllegalStateException("HUD elements must render through renderWithBatch.");
         }

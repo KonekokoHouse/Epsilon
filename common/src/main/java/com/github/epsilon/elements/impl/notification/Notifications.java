@@ -2,8 +2,8 @@ package com.github.epsilon.elements.impl.notification;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
@@ -13,8 +13,8 @@ import net.minecraft.client.DeltaTracker;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
+import java.util.List;
 
 public class Notifications extends HudModule {
 
@@ -49,7 +49,7 @@ public class Notifications extends HudModule {
         if (Managers.NOTIFICATION.isEmpty() && previewNotification == null) return;
 
         TextRenderer textRenderer = textRendererSupplier.get();
-        PanelUiTree.Scope scope = renderScope();
+        UiTree.Scope scope = renderScope();
 
         float s = scale.getValue().floatValue();
         float textScale = fontScale.getValue().floatValue() * s;
@@ -134,7 +134,7 @@ public class Notifications extends HudModule {
         return new RenderFrame(RenderStage.HIDDEN, 0.0f, 0.0f);
     }
 
-    private void renderNotification(PanelUiTree.Scope scope, TextRenderer metrics, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha) {
+    private void renderNotification(UiTree.Scope scope, TextRenderer metrics, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha) {
         switch (frame.stage) {
             case ENTER_BAR, EXIT_BAR -> {
                 renderStage1(scope, notification, x, y, anchorWidth, boxWidth, boxHeight, frame.progress);
@@ -147,13 +147,13 @@ public class Notifications extends HudModule {
         }
     }
 
-    private void renderStage1(PanelUiTree.Scope scope, Notification notification, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float progress) {
+    private void renderStage1(UiTree.Scope scope, Notification notification, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float progress) {
         float width = isLeftDocked() ? boxWidth * progress : boxWidth - anchorWidth * (1.0f - progress);
         float renderX = isLeftDocked() ? x : x + boxWidth - width;
         scope.rect(renderX, y, width, boxHeight, notification.getMode().getColor());
     }
 
-    private void renderStage2(PanelUiTree.Scope scope, TextRenderer metrics, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha, float progress) {
+    private void renderStage2(UiTree.Scope scope, TextRenderer metrics, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha, float progress) {
         scope.rect(x, y, boxWidth, boxHeight, new Color(0, 0, 0, bgAlpha));
         scope.scissor(x, y, boxWidth, boxHeight, textScope -> renderText(textScope, metrics, notification, x, y, boxWidth, boxHeight, scale, textScale, Math.round(255.0f * progress)));
         float accentWidth = ACCENT_BAR_WIDTH * scale + (boxWidth - ACCENT_BAR_WIDTH * scale) * (1.0f - progress);
@@ -161,7 +161,7 @@ public class Notifications extends HudModule {
         scope.rect(accentX, y, accentWidth, boxHeight, notification.getMode().getColor());
     }
 
-    private void renderText(PanelUiTree.Scope scope, TextRenderer metrics, Notification n, float x, float y, float boxWidth, float boxHeight, float scale, float desiredTextScale, int alpha) {
+    private void renderText(UiTree.Scope scope, TextRenderer metrics, Notification n, float x, float y, float boxWidth, float boxHeight, float scale, float desiredTextScale, int alpha) {
         boolean hasSubTitle = !n.getSubTitle().isEmpty();
         float textScale = getFittedTextScale(metrics, n, boxWidth, scale, desiredTextScale);
         float subTitleScale = getSubTitleScale(textScale);

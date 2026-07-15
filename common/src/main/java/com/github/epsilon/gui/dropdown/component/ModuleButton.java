@@ -3,18 +3,18 @@ package com.github.epsilon.gui.dropdown.component;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
-import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -150,7 +150,7 @@ public class ModuleButton extends Component {
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         expandAnim.run(expanded ? 1.0f : 0.0f);
         toggleAnim.run(module.isEnabled() ? 1.0f : 0.0f);
         boolean headerHovered = isHovered(mouseX, mouseY, x, y, width, DropdownTheme.MODULE_HEIGHT);
@@ -192,7 +192,7 @@ public class ModuleButton extends Component {
                         drawSection(scope, textMetrics, mouseX, mouseY, section, settingY);
                     }
                 } else {
-                    var stack = scope.stack(new PanelLayout.Rect(
+                    var stack = scope.stack(new UiRect(
                             DropdownTheme.SETTING_INDENT,
                             settingY,
                             width - DropdownTheme.SETTING_INDENT * 2.0f,
@@ -218,7 +218,7 @@ public class ModuleButton extends Component {
         expandAnimG.run(section.isCollapsed() ? 0.0f : 1.0f);
     }
 
-    private void drawAddonInfo(PanelUiTree.Scope scope, UiTextMetrics textMetrics, float infoY) {
+    private void drawAddonInfo(UiTree.Scope scope, UiTextMetrics textMetrics, float infoY) {
         float infoX = DropdownTheme.SETTING_INDENT;
         float infoH = DropdownTheme.MODULE_ADDON_INFO_HEIGHT;
 
@@ -228,7 +228,7 @@ public class ModuleButton extends Component {
         scope.text(addonLabel, infoX + DropdownTheme.SETTING_PADDING_X, textY, scale, DropdownTheme.moduleAddonInfoText());
     }
 
-    private void drawSection(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float sectionY) {
+    private void drawSection(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float sectionY) {
         float headerW = width - DropdownTheme.SETTING_INDENT * 2.0f;
         float headerX = DropdownTheme.SETTING_INDENT;
         float headerH = DropdownTheme.GROUP_HEADER_HEIGHT;
@@ -266,7 +266,7 @@ public class ModuleButton extends Component {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = width - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            var stack = scope.stack(new PanelLayout.Rect(childX, childY, childW, getSectionHeight(section)));
+            var stack = scope.stack(new UiRect(childX, childY, childW, getSectionHeight(section)));
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
@@ -286,7 +286,7 @@ public class ModuleButton extends Component {
         return addonId == null || addonId.isBlank() ? "unknown" : addonId;
     }
 
-    private void drawKeybindButton(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float toggle) {
+    private void drawKeybindButton(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float toggle) {
         float btnW = DropdownTheme.KEYBIND_WIDTH;
         float btnH = DropdownTheme.KEYBIND_HEIGHT;
         float btnX = width - DropdownTheme.MODULE_PADDING_X - btnW;
@@ -354,7 +354,7 @@ public class ModuleButton extends Component {
         return isHovered(mouseX, mouseY, absoluteX(btnX), absoluteY(btnY), DropdownTheme.KEYBIND_WIDTH, DropdownTheme.KEYBIND_HEIGHT);
     }
 
-    private void drawHiddenButton(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    private void drawHiddenButton(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float btnW = 18.0f;
         float btnH = DropdownTheme.KEYBIND_HEIGHT;
         float btnX = width - DropdownTheme.MODULE_PADDING_X - DropdownTheme.KEYBIND_WIDTH - 4.0f - btnW;

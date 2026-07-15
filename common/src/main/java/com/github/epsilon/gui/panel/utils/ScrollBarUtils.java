@@ -1,21 +1,22 @@
 package com.github.epsilon.gui.panel.utils;
 
-import com.github.epsilon.gui.dropdown.component.DropdownScrollBar;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.control.UiScrollBar;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 
 public class ScrollBarUtils {
 
     /**
      * Total horizontal space the scrollbar occupies (width + padding on each side).
      */
-    public static final float TOTAL_WIDTH = DropdownScrollBar.TOTAL_WIDTH;
+    public static final float TOTAL_WIDTH = UiScrollBar.TOTAL_WIDTH;
 
     private ScrollBarUtils() {
     }
 
-    public static void draw(PanelUiTree.Scope scope, PanelLayout.Rect viewport, float scroll, float maxScroll, float contentHeight) {
-        DropdownScrollBar.draw(scope, viewport, scroll, maxScroll, contentHeight);
+    public static void draw(UiTree.Scope scope, UiRect viewport, float scroll, float maxScroll, float contentHeight) {
+        UiScrollBar.draw(scope, EpsilonUiTheme.INSTANCE, viewport, scroll, maxScroll, contentHeight);
     }
 
     /**
@@ -36,8 +37,8 @@ public class ScrollBarUtils {
      * Compute the thumb geometry for hit-testing.
      * Returns null if there is no scrollbar (maxScroll &lt;= 0).
      */
-    public static ThumbGeometry computeThumb(PanelLayout.Rect viewport, float scroll, float maxScroll, float contentHeight) {
-        DropdownScrollBar.Geometry geometry = DropdownScrollBar.computeGeometry(viewport, scroll, maxScroll, contentHeight);
+    public static ThumbGeometry computeThumb(UiRect viewport, float scroll, float maxScroll, float contentHeight) {
+        UiScrollBar.Geometry geometry = UiScrollBar.computeGeometry(viewport, scroll, maxScroll, contentHeight);
         if (geometry == null) {
             return null;
         }
@@ -48,8 +49,8 @@ public class ScrollBarUtils {
     /**
      * Convert a thumb-top Y coordinate back to an absolute scroll value.
      */
-    public static float scrollFromMouseY(float thumbTopY, PanelLayout.Rect viewport, float maxScroll, float contentHeight) {
-        return DropdownScrollBar.scrollFromThumbTopY(thumbTopY, viewport, maxScroll, contentHeight);
+    public static float scrollFromMouseY(float thumbTopY, UiRect viewport, float maxScroll, float contentHeight) {
+        return UiScrollBar.scrollFromThumbTopY(thumbTopY, viewport, maxScroll, contentHeight);
     }
 
 }

@@ -1,17 +1,17 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
-import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 
@@ -108,11 +108,11 @@ public class SettingsContent {
         return height;
     }
 
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float panelX, float contentY, float panelWidth) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float panelX, float contentY, float panelWidth) {
         draw(scope, textMetrics, mouseX, mouseY, panelX, contentY, panelWidth, Integer.MIN_VALUE);
     }
 
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float panelX, float contentY, float panelWidth, int frameId) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float panelX, float contentY, float panelWidth, int frameId) {
         if (sections.isEmpty()) {
             String label = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
             float labelScale = 0.58f;
@@ -134,7 +134,7 @@ public class SettingsContent {
             if (section.hasHeader()) {
                 drawSection(scope, textMetrics, mouseX, mouseY, section, panelX, currentY, panelWidth, sectionHeight);
             } else {
-                var stack = scope.stack(new PanelLayout.Rect(
+                var stack = scope.stack(new UiRect(
                         panelX + DropdownTheme.SETTING_INDENT,
                         currentY,
                         panelWidth - DropdownTheme.SETTING_INDENT * 2.0f,
@@ -272,7 +272,7 @@ public class SettingsContent {
         return h;
     }
 
-    private void drawSection(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth, float sectionHeight) {
+    private void drawSection(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth, float sectionHeight) {
         Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(section.isCollapsed() ? 0.0f : 1.0f));
         Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(0.0f));
         float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
@@ -306,7 +306,7 @@ public class SettingsContent {
             float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
             float childX = panelX + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = panelWidth - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            var stack = scope.stack(new PanelLayout.Rect(childX, childY, childW, sectionHeight));
+            var stack = scope.stack(new UiRect(childX, childY, childW, sectionHeight));
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,

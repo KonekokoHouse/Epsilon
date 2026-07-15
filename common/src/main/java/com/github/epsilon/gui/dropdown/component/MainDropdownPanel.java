@@ -1,22 +1,22 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.List;
 
 public class MainDropdownPanel extends AbstractDropdownPanel {
 
@@ -50,7 +50,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    public void drawBackground(PanelUiTree.Scope scope, UiTextMetrics textMetrics) {
+    public void drawBackground(UiTree.Scope scope, UiTextMetrics textMetrics) {
         super.drawBackground(scope, textMetrics);
 
         float versionScale = 0.48f;
@@ -73,7 +73,7 @@ public class MainDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT - scroll + CONTENT_PADDING;
         scope.rect(x + CONTENT_PADDING, y + DropdownTheme.PANEL_HEADER_HEIGHT, width - CONTENT_PADDING * 2.0f, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 55));
 

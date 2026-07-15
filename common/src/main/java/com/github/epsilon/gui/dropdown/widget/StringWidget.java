@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.settings.impl.StringSetting;
 
 import java.util.Objects;
@@ -21,7 +21,7 @@ public class StringWidget extends SettingWidget<StringSetting> {
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, 1.0f, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         float fieldX = DropdownTheme.SETTING_PADDING_X;

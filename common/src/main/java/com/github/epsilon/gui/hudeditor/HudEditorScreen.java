@@ -5,17 +5,18 @@ import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
+import com.github.epsilon.gui.dropdown.component.CategoryPanel;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.dropdown.component.CategoryPanel;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.scene.UiLayer;
+import com.github.epsilon.gui.lib.scene.UiScene;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.PanelScreen;
-import com.github.epsilon.gui.scene.GuiLayer;
-import com.github.epsilon.gui.scene.GuiScene;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -28,8 +29,8 @@ import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.List;
 
 public class HudEditorScreen extends Screen {
 
@@ -52,9 +53,9 @@ public class HudEditorScreen extends Screen {
 
     private final TextRenderer textMetrics = TextRenderer.create();
     private final UiTextMetrics uiTextMetrics = new EditorTextMetrics();
-    private final GuiScene scene = new GuiScene();
-    private PanelRenderBatch editorBatch;
-    private PanelUiTree.Scope editorScope;
+    private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
+    private UiRenderBatch editorBatch;
+    private UiTree.Scope editorScope;
     private int editorLayer;
 
     private HudEditorScreen() {
@@ -100,7 +101,7 @@ public class HudEditorScreen extends Screen {
 
         validateSelection();
 
-        editorBatch = scene.batch(GuiLayer.CONTENT);
+        editorBatch = scene.batch(UiLayer.CONTENT);
         editorLayer = -120;
 
         float screenW = LuminRenderSystem.getScaledWidth();
@@ -122,7 +123,7 @@ public class HudEditorScreen extends Screen {
 
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
-            element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(GuiLayer.CONTENT, -40));
+            element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
         }
 
         beginEditorLayer(100);
@@ -225,7 +226,7 @@ public class HudEditorScreen extends Screen {
         flushEditorLayer();
     }
 
-    private void drawSnapGuides(PanelUiTree.Scope scope, float screenW, float screenH) {
+    private void drawSnapGuides(UiTree.Scope scope, float screenW, float screenH) {
         if (currentSnap.hasAny()) {
             Color guideColor = MD3Theme.withAlpha(MD3Theme.PRIMARY, (int) GUIDE_ALPHA);
             if (!Float.isNaN(currentSnap.verticalLineX())) {
@@ -239,7 +240,7 @@ public class HudEditorScreen extends Screen {
         }
     }
 
-    private void drawElementFrame(PanelUiTree.Scope scope, UiTextMetrics textMetrics,
+    private void drawElementFrame(UiTree.Scope scope, UiTextMetrics textMetrics,
                                   HudModule element, boolean selected, boolean hover) {
         float x = element.x - ELEMENT_PADDING;
         float y = element.y - ELEMENT_PADDING;
@@ -257,13 +258,13 @@ public class HudEditorScreen extends Screen {
         }
     }
 
-    private void drawAnchorMarker(PanelUiTree.Scope scope, HudModule element, Color color) {
+    private void drawAnchorMarker(UiTree.Scope scope, HudModule element, Color color) {
         float anchorX = HudLayoutHelper.getAnchorPointX(element.getHorizontalAnchor(), element.x, element.width);
         float anchorY = HudLayoutHelper.getAnchorPointY(element.getVerticalAnchor(), element.y, element.height);
         scope.rect(anchorX - 2.5f, anchorY - 2.5f, 5.0f, 5.0f, color);
     }
 
-    private void drawElementLabel(PanelUiTree.Scope scope, UiTextMetrics textMetrics,
+    private void drawElementLabel(UiTree.Scope scope, UiTextMetrics textMetrics,
                                   HudModule element, float frameX, float frameY) {
         String label = element.getTranslatedName();
         float scale = 0.48f;
@@ -277,16 +278,16 @@ public class HudEditorScreen extends Screen {
 
     private void beginEditorLayer(int step) {
         editorLayer += step;
-        editorScope = new PanelUiTree.Scope();
+        editorScope = new UiTree.Scope();
     }
 
     private void flushEditorLayer() {
-        editorBatch.render(PanelUiTree.from(editorScope), editorLayer);
+        editorBatch.render(UiTree.from(editorScope), editorLayer);
     }
 
     private void withEditorScissor(float guiX, float guiY, float guiW, float guiH,
-                                   Consumer<PanelUiTree.Scope> content) {
-        editorScope.scissor(new PanelLayout.Rect(guiX, guiY, guiW, guiH), content);
+                                   Consumer<UiTree.Scope> content) {
+        editorScope.scissor(new UiRect(guiX, guiY, guiW, guiH), content);
     }
 
     private final class EditorTextMetrics implements UiTextMetrics {

@@ -1,17 +1,19 @@
 # Epsilon GUI 渲染架构
 
+> 公共库 API、依赖边界与使用示例见 [GUI Library 文档](gui-library.md)。
+
 ## 目标
 
 新的 GUI 管线统一为 `GUI -> GUI Layers -> Render2DScheduler`。屏幕、Dropdown、Popup、MainMenu 与 HUD Editor 不再直接持有一组 renderer 做零散的 `drawAndClear`，而是提交声明式 UI 节点或 scheduler 命令，由统一场景按层调度、合批和 flush。
 
-`PanelUiTree` 已移除旧的 `group/memo` 模式。布局由 `PanelUiTree.layout(...)`、`PanelContentBuffer` 和显式 Setting 分组系统协作完成；滚动列表不再把缓存语义混入 DSL 树。
+`UiTree` 已移除旧的 `group/memo` 模式。布局由 `UiTree.layout(...)`、`UiContentBuffer` 和显式 Setting 分组系统协作完成；滚动列表不再把缓存语义混入 DSL 树。
 
 ## 总体架构
 
 ```mermaid
 flowchart TD
-    A["GUI Host: PanelScreen / DropdownScreen / MainMenu / HudEditor"] --> B["GuiScene"]
-    B --> C["GuiLayerStack"]
+    A["GUI Host: PanelScreen / DropdownScreen / MainMenu / HudEditor"] --> B["UiScene"]
+    B --> C["UiLayerStack"]
     C --> C1["BACKGROUND"]
     C --> C2["CHROME"]
     C --> C3["CONTENT"]
@@ -19,13 +21,13 @@ flowchart TD
     C --> C5["POPUP"]
     C --> C6["OVERLAY"]
 
-    C1 --> D["PanelRenderBatch"]
+    C1 --> D["UiRenderBatch"]
     C2 --> D
     C3 --> D
     C4 --> D
     C5 --> D
 
-    D --> E["PanelUiCompiler"]
+    D --> E["LuminUiRenderer"]
     E --> F["Render2DCommand"]
     F --> G["Render2DScheduler"]
     G --> H["LayerBucket"]
@@ -39,7 +41,7 @@ flowchart TD
 
 ## Layer 设计
 
-`GuiLayer` 是语义层，`GuiLayerStack` 把语义层映射到整数 layer。每个语义层预留相对偏移空间，调用方只在自己的语义层里表达局部顺序。
+`UiLayer` 是语义层，`UiLayerStack` 把语义层映射到整数 layer。每个语义层预留相对偏移空间，调用方只在自己的语义层里表达局部顺序。
 
 ```mermaid
 flowchart LR
@@ -61,12 +63,12 @@ PanelScreen 当前分层：
 
 DropdownRenderer 将旧的多次 `flush()` 迁移为 pass layer；每个 pass 映射为 `passIndex * 10`，用于保留旧 Dropdown 的视觉顺序。
 
-## PanelUiTree 与自动布局
+## UiTree 与自动布局
 
 ```mermaid
 flowchart TD
-    A["PanelUiTree.build"] --> B["Scope: draw nodes"]
-    A2["PanelUiTree.layout(bounds)"] --> C["LayoutScope"]
+    A["UiTree.build"] --> B["Scope: draw nodes"]
+    A2["UiTree.layout(bounds)"] --> C["LayoutScope"]
     C --> C1["box(insets)"]
     C --> C2["row(gap)"]
     C --> C3["column(gap)"]
@@ -76,7 +78,7 @@ flowchart TD
     C3 --> E
     B --> F["UiNode list"]
     C --> F
-    F --> G["PanelUiCompiler"]
+    F --> G["LuminUiRenderer"]
 ```
 
 自动布局原则：
@@ -114,17 +116,17 @@ flowchart TD
 - 同名 group 会在 `SettingLayoutPlanner` 中合并成同一个 section，避免同一设置页重复出现相同分组。
 - 折叠状态保存在 `SettingGroup` 自身，Panel、Dropdown 和 Addon 使用同一个显式分组状态。
 
-## PanelContentBuffer
+## UiContentBuffer
 
-滚动列表、设置列表和部分 Popup 列表使用 `PanelContentBuffer`。
+滚动列表、设置列表和部分 Popup 列表使用 `UiContentBuffer`。
 
 ```mermaid
 flowchart TD
-    A["ViewportNode"] --> B["PanelContentBuffer.beginViewport"]
+    A["ViewportNode"] --> B["UiContentBuffer.beginViewport"]
     B --> C["Compile children into local batch"]
     C --> D["queueViewport"]
     D --> E["Main scene flush"]
-    E --> F["PanelContentBuffer.flush"]
+    E --> F["UiContentBuffer.flush"]
     F --> G["content scissor layer"]
     F --> H["scrollbar layer"]
     F --> I["marquee text layer"]
@@ -178,8 +180,8 @@ flowchart TD
 flowchart TD
     A["PanelPopupHost"] --> B["active Popup"]
     B --> C["extractGui(batch POPUP)"]
-    C --> D["普通图元进入 GuiScene"]
-    C --> E["可滚动内容进入 PanelContentBuffer"]
+    C --> D["普通图元进入 UiScene"]
+    C --> E["可滚动内容进入 UiContentBuffer"]
     D --> F["scene.flush"]
     F --> G["popup.flush"]
     G --> H["flush private buffers"]
@@ -191,9 +193,9 @@ Popup 不再默认提前 `flushAndClear` 主 scene batch。普通弹窗图元由
 
 ## 入口状态
 
-- `PanelScreen`：已迁移到 `GuiScene + PanelRenderBatch`。
-- `DropdownScreen`：已迁移到 `GuiScene`，`DropdownRenderer` pass 映射为 layer。
-- `MainMenuScreen`：UI 层已使用 `GuiScene`，背景 shader 保持独立目标。
-- `HudEditorScreen`：编辑器 chrome 使用 `GuiScene`，HUD 模块通过 `renderWithBatch` 进入统一 batch。
-- `PanelUiTree.group/memo`：已移除。
+- `PanelScreen`：已迁移到 `UiScene + UiRenderBatch`。
+- `DropdownScreen`：已迁移到 `UiScene`，`DropdownRenderer` pass 映射为 layer。
+- `MainMenuScreen`：UI 层已使用 `UiScene`，背景 shader 保持独立目标。
+- `HudEditorScreen`：编辑器 chrome 使用 `UiScene`，HUD 模块通过 `renderWithBatch` 进入统一 batch。
+- `UiTree.group/memo`：已移除。
 - `SettingGroup/.group(...)`：继续保留，设置分段由调用方手动声明，`SettingLayoutPlanner` 只做布局聚合。

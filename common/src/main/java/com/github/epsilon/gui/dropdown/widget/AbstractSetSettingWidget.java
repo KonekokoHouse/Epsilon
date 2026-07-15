@@ -1,11 +1,11 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -48,7 +48,7 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         boolean hovered = isFieldHovered(mouseX, mouseY);
         hoverAnim.run(hovered ? 1.0f : 0.0f);
 

@@ -5,7 +5,7 @@ import com.github.epsilon.assets.i18n.TranslateComponent;
 /**
  * Setting 的显式分组模型。
  * <p>
- * 分组只描述语义和折叠状态，具体位置仍交给 PanelUiTree / Dropdown stack 统一计算。
+ * 分组只描述语义和折叠状态，具体位置仍交给 UiTree / Dropdown stack 统一计算。
  */
 public class SettingGroup {
 

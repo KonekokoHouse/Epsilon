@@ -2,11 +2,13 @@ package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.control.UiScrollBar;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.util.Mth;
@@ -20,7 +22,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     protected final String icon;
     protected final Animation openAnim = new Animation(Easing.EASE_IN_OUT_CUBIC, DropdownTheme.ANIM_OPEN);
     protected final Animation introAnim;
-    protected final DropdownScrollBar scrollBar = new DropdownScrollBar();
+    protected final UiScrollBar scrollBar = new UiScrollBar(EpsilonUiTheme.INSTANCE);
 
     protected float x;
     protected float y;
@@ -96,7 +98,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
-    public void drawBackground(PanelUiTree.Scope scope, UiTextMetrics textMetrics) {
+    public void drawBackground(UiTree.Scope scope, UiTextMetrics textMetrics) {
         ensureFrameMetrics();
         float expand = cachedExpand;
         float contentHeight = cachedContentHeight;
@@ -121,14 +123,14 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
-    public void drawContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void drawContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         ensureFrameMetrics();
         if (cachedExpand < 0.01f) return;
 
         float contentHeight = cachedContentHeight;
         float visibleHeight = cachedVisibleContentHeight;
         updateScroll(contentHeight, visibleHeight, false);
-        PanelLayout.Rect scrollbarViewport = getScrollbarViewport();
+        UiRect scrollbarViewport = getScrollbarViewport();
         boolean scrollbarHovered = scrollBar.isHovered(mouseX, mouseY, scrollbarViewport, scroll, maxScroll, contentHeight);
         int contentMouseX = scrollbarHovered || scrollBar.isDragging() ? Integer.MIN_VALUE : mouseX;
         int contentMouseY = scrollbarHovered || scrollBar.isDragging() ? Integer.MIN_VALUE : mouseY;
@@ -295,7 +297,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     protected abstract float computeContentHeight();
 
-    protected abstract void drawPanelContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight);
+    protected abstract void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight);
 
     protected boolean mouseClickedContent(double mouseX, double mouseY, int button) {
         return false;
@@ -378,8 +380,8 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
         }
     }
 
-    private PanelLayout.Rect getScrollbarViewport() {
-        return new PanelLayout.Rect(x, y + DropdownTheme.PANEL_HEADER_HEIGHT, width, cachedVisibleContentHeight * cachedExpand);
+    private UiRect getScrollbarViewport() {
+        return new UiRect(x, y + DropdownTheme.PANEL_HEADER_HEIGHT, width, cachedVisibleContentHeight * cachedExpand);
     }
 
     protected String trimToWidth(String value, float scale, float maxWidth, UiTextMetrics textMetrics) {

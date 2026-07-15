@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -59,7 +59,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         syncAlphaAvailability();
         openAnim.run(opened ? 1.0f : 0.0f);
         float t = openAnim.getValue();
@@ -124,19 +124,19 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         drawChannelRows(scope, textMetrics, mouseX, mouseY, hueY + hueH + HUE_TO_CHANNEL_GAP, t);
     }
 
-    private void drawSaturationBrightnessPalette(PanelUiTree.Scope scope, float localX, float localY, float width, float height, Color hueColor) {
+    private void drawSaturationBrightnessPalette(UiTree.Scope scope, float localX, float localY, float width, float height, Color hueColor) {
         scope.rect(localX - 1.0f, localY - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
         scope.rectGradient(localX, localY, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
         scope.rectGradient(localX, localY, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
     }
 
-    private void drawSliderPicker(PanelUiTree.Scope scope, float centerX, float localY, float height) {
+    private void drawSliderPicker(UiTree.Scope scope, float centerX, float localY, float height) {
         float pickerW = 3.0f;
         scope.rect(centerX - pickerW * 0.5f - 1.0f, localY - 2.0f, pickerW + 2.0f, height + 4.0f, new Color(0, 0, 0, 145));
         scope.rect(centerX - pickerW * 0.5f, localY - 1.0f, pickerW, height + 2.0f, Color.WHITE);
     }
 
-    private void drawChannelRows(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float startY, float alphaProgress) {
+    private void drawChannelRows(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float startY, float alphaProgress) {
         syncFieldsFromColor();
         Channel[] channels = getChannels();
         for (int i = 0; i < channels.length; i++) {
@@ -147,7 +147,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         }
     }
 
-    private void drawChannelRow(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
+    private void drawChannelRow(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
         int value = getChannelValue(channel);
         float textY = rowY + (CHANNEL_ROW_HEIGHT - textMetrics.textHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
         Color textColor = MD3Theme.withAlpha(DropdownTheme.settingLabel(), (int) (DropdownTheme.settingLabel().getAlpha() * alphaProgress));
@@ -168,7 +168,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         field.drawCentered(scope, textMetrics, boxX, boxY, CHANNEL_BOX_WIDTH, CHANNEL_BOX_HEIGHT, mouseX, mouseY, Integer.toString(value), CHANNEL_TEXT_SCALE);
     }
 
-    private void drawChannelTrack(PanelUiTree.Scope scope, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
+    private void drawChannelTrack(UiTree.Scope scope, Channel channel, float trackX, float trackY, float trackW, float trackH, float alphaProgress) {
         Color current = getVisibleColor();
         Color start = switch (channel) {
             case RED -> new Color(0, current.getGreen(), current.getBlue());

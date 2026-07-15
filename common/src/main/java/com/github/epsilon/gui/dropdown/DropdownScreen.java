@@ -6,17 +6,18 @@ import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.component.*;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.scene.UiLayer;
+import com.github.epsilon.gui.lib.scene.UiScene;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import com.github.epsilon.gui.scene.GuiLayer;
-import com.github.epsilon.gui.scene.GuiScene;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.RegistryListSetting;
@@ -24,8 +25,8 @@ import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.IMEPreeditOverlay;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -37,10 +38,10 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class DropdownScreen extends Screen {
 
@@ -49,7 +50,7 @@ public class DropdownScreen extends Screen {
     private final List<DropdownPanel> panels = new ArrayList<>();
     private final TextRenderer textMetrics = TextRenderer.create();
     private final UiTextMetrics uiTextMetrics = new DropdownTextMetrics();
-    private final GuiScene scene = new GuiScene();
+    private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final Animation scrimAnim = new Animation(Easing.EASE_OUT_SINE, 200L);
     private final DropdownTextField searchField = new DropdownTextField(64);
@@ -60,8 +61,8 @@ public class DropdownScreen extends Screen {
     private boolean initialized;
     private int sessionId;
     private int renderFrameId;
-    private PanelRenderBatch dropdownBatch;
-    private PanelUiTree.Scope dropdownScope;
+    private UiRenderBatch dropdownBatch;
+    private UiTree.Scope dropdownScope;
     private int dropdownLayer;
 
     private DropdownScreen() {
@@ -114,9 +115,9 @@ public class DropdownScreen extends Screen {
 
     private void drawGui(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         scrimAnim.run(1.0f);
-        dropdownBatch = scene.batch(GuiLayer.CONTENT);
+        dropdownBatch = scene.batch(UiLayer.CONTENT);
         dropdownLayer = -10;
-        popupHost.setOverlayBounds(new PanelLayout.Rect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()));
+        popupHost.setOverlayBounds(new UiRect(0.0f, 0.0f, LuminRenderSystem.getScaledWidth(), LuminRenderSystem.getScaledHeight()));
         updatePanelHeightLimits();
         updateVisiblePanelIds();
         beginPanelFrames();
@@ -184,7 +185,7 @@ public class DropdownScreen extends Screen {
         }
 
         drawSearch(backgroundMouseX, backgroundMouseY);
-        popupHost.render(graphics, scene.batch(GuiLayer.POPUP), mouseX, mouseY, partialTick);
+        popupHost.render(graphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick);
         scene.flush();
         popupHost.flush();
     }
@@ -226,16 +227,16 @@ public class DropdownScreen extends Screen {
 
     private void beginDropdownLayer() {
         dropdownLayer += 10;
-        dropdownScope = new PanelUiTree.Scope();
+        dropdownScope = new UiTree.Scope();
     }
 
     private void flushDropdownLayer() {
-        dropdownBatch.render(PanelUiTree.from(dropdownScope), dropdownLayer);
+        dropdownBatch.render(UiTree.from(dropdownScope), dropdownLayer);
     }
 
     private void withDropdownScissor(float guiX, float guiY, float guiW, float guiH,
-                                     Consumer<PanelUiTree.Scope> content) {
-        dropdownScope.scissor(new PanelLayout.Rect(guiX, guiY, guiW, guiH), content);
+                                     Consumer<UiTree.Scope> content) {
+        dropdownScope.scissor(new UiRect(guiX, guiY, guiW, guiH), content);
     }
 
     private final class DropdownTextMetrics implements UiTextMetrics {
@@ -568,7 +569,7 @@ public class DropdownScreen extends Screen {
     }
 
     public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+        UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(360.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(300.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );
@@ -576,7 +577,7 @@ public class DropdownScreen extends Screen {
     }
 
     public void openStringListSettingPopup(StringListSetting setting) {
-        PanelLayout.Rect bounds = popupHost.getCenteredBounds(
+        UiRect bounds = popupHost.getCenteredBounds(
                 Math.min(300.0f, LuminRenderSystem.getScaledWidth() - 28.0f),
                 Math.min(260.0f, LuminRenderSystem.getScaledHeight() - 28.0f)
         );

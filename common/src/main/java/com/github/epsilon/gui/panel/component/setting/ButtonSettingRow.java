@@ -1,10 +1,10 @@
 package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.ButtonSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -21,7 +21,7 @@ public class ButtonSettingRow extends SettingRow<ButtonSetting> {
     }
 
     @Override
-    public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         hoverAnimation.run(hoverProgress);
@@ -33,7 +33,7 @@ public class ButtonSettingRow extends SettingRow<ButtonSetting> {
     }
 
     @Override
-    public boolean mouseClicked(PanelLayout.Rect bounds, MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(UiRect bounds, MouseButtonEvent event, boolean isDoubleClick) {
         if (!bounds.contains(event.x(), event.y()) || event.button() != 0) {
             return false;
         }

@@ -1,18 +1,18 @@
-package com.github.epsilon.gui.panel.panel;
+package com.github.epsilon.gui.panel.view;
 
-import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.Constants;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.PanelState;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.ModuleHolder;
-import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -42,7 +42,7 @@ public class CategoryRailPanel {
     private final Animation hoverYAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final Animation hoverAlphaAnimation = new Animation(Easing.EASE_OUT_CUBIC, 100L);
     private final Animation settingsHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
-    private PanelLayout.Rect bounds;
+    private UiRect bounds;
 
     public CategoryRailPanel(PanelState state, TextRenderer textRenderer) {
         this.state = state;
@@ -65,9 +65,9 @@ public class CategoryRailPanel {
         return expandAnimation.getValue();
     }
 
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
-        PanelUiTree tree = PanelUiTree.build(root -> root.scissor(bounds, scope -> {
+        UiTree tree = UiTree.build(root -> root.scissor(bounds, scope -> {
             float contentProgress = scope.animate(contentAnimation, state.isSidebarExpanded());
             float titleProgress = scope.animate(headerTitleAnimation, contentProgress);
             float subtitleProgress = scope.animate(headerSubtitleAnimation, contentProgress > 0.08f);
@@ -78,7 +78,7 @@ public class CategoryRailPanel {
             float itemLabelScale = 0.62f;
             float itemCountScale = 0.58f;
 
-            PanelLayout.Rect menuButton = getMenuButtonBounds();
+            UiRect menuButton = getMenuButtonBounds();
             float menuHover = scope.animate(menuHoverAnimation, mouseOver(menuButton, mouseX, mouseY));
             scope.pushAbsolute(menuButton, menu -> {
                 menu.roundRect(0.0f, 0.0f, menuButton.width(), menuButton.height(), 12.0f,
@@ -128,7 +128,7 @@ public class CategoryRailPanel {
             float hoveredY = -1.0f;
             float scanY = categoryStartY;
             for (Category category : Category.values()) {
-                PanelLayout.Rect scanRect = new PanelLayout.Rect(bounds.x() + 5.0f, scanY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
+                UiRect scanRect = new UiRect(bounds.x() + 5.0f, scanY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
                 if (scanRect.contains(mouseX, mouseY)) {
                     hoveredY = scanY;
                     break;
@@ -136,7 +136,7 @@ public class CategoryRailPanel {
                 scanY += CATEGORY_ITEM_SPACING;
             }
             if (hoveredY < 0) {
-                PanelLayout.Rect settingsScanRect = new PanelLayout.Rect(bounds.x() + 5.0f, getSettingsButtonY(), bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
+                UiRect settingsScanRect = new UiRect(bounds.x() + 5.0f, getSettingsButtonY(), bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
                 if (settingsScanRect.contains(mouseX, mouseY)) {
                     hoveredY = getSettingsButtonY();
                 }
@@ -160,7 +160,7 @@ public class CategoryRailPanel {
             float itemY = categoryStartY;
             for (Category category : Category.values()) {
                 float currentItemY = itemY;
-                PanelLayout.Rect itemRect = new PanelLayout.Rect(bounds.x() + 5.0f, currentItemY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
+                UiRect itemRect = new UiRect(bounds.x() + 5.0f, currentItemY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
                 boolean hovered = itemRect.contains(mouseX, mouseY);
                 boolean selected = !state.isClientSettingMode() && state.getSelectedCategory() == category;
                 int count = getCategoryCount(category);
@@ -169,7 +169,7 @@ public class CategoryRailPanel {
             }
 
             float settingsBtnY = getSettingsButtonY();
-            PanelLayout.Rect settingsRect = new PanelLayout.Rect(bounds.x() + 5.0f, settingsBtnY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
+            UiRect settingsRect = new UiRect(bounds.x() + 5.0f, settingsBtnY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
             boolean settingsHovered = settingsRect.contains(mouseX, mouseY);
             boolean settingsSelected = state.isClientSettingMode();
             float settingsHover = scope.animate(settingsHoverAnimation, settingsHovered);
@@ -190,7 +190,7 @@ public class CategoryRailPanel {
 
         float itemY = getCategoryStartY(bounds);
         for (Category category : Category.values()) {
-            PanelLayout.Rect itemRect = new PanelLayout.Rect(bounds.x() + 5.0f, itemY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
+            UiRect itemRect = new UiRect(bounds.x() + 5.0f, itemY, bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
             if (itemRect.contains(event.x(), event.y())) {
                 state.setClientSettingMode(false);
                 state.setSelectedCategory(category);
@@ -199,7 +199,7 @@ public class CategoryRailPanel {
             itemY += CATEGORY_ITEM_SPACING;
         }
 
-        PanelLayout.Rect settingsRect = new PanelLayout.Rect(bounds.x() + 5.0f, getSettingsButtonY(), bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
+        UiRect settingsRect = new UiRect(bounds.x() + 5.0f, getSettingsButtonY(), bounds.width() - 10.0f, CATEGORY_ITEM_HEIGHT);
         if (settingsRect.contains(event.x(), event.y())) {
             state.setClientSettingMode(true);
             return true;
@@ -208,8 +208,8 @@ public class CategoryRailPanel {
         return false;
     }
 
-    private PanelLayout.Rect getMenuButtonBounds() {
-        return new PanelLayout.Rect(bounds.x() + 4.0f + RAIL_ICON_CENTER_X_OFFSET, bounds.y() + 4.0f, 28.0f, 28.0f);
+    private UiRect getMenuButtonBounds() {
+        return new UiRect(bounds.x() + 4.0f + RAIL_ICON_CENTER_X_OFFSET, bounds.y() + 4.0f, 28.0f, 28.0f);
     }
 
     public boolean hasActiveAnimations() {
@@ -226,11 +226,11 @@ public class CategoryRailPanel {
                 || !settingsHoverAnimation.isFinished();
     }
 
-    private boolean mouseOver(PanelLayout.Rect rect, int mouseX, int mouseY) {
+    private boolean mouseOver(UiRect rect, int mouseX, int mouseY) {
         return rect.contains(mouseX, mouseY);
     }
 
-    private float getCategoryStartY(PanelLayout.Rect bounds) {
+    private float getCategoryStartY(UiRect bounds) {
         // Keep category list vertically stable regardless of sidebar expansion progress.
         return bounds.y() + CATEGORY_START_Y;
     }
@@ -239,7 +239,7 @@ public class CategoryRailPanel {
         return bounds.bottom() - CATEGORY_ITEM_HEIGHT - 5.0f;
     }
 
-    private void buildMenuGlyph(PanelUiTree.Scope scope, PanelLayout.Rect button) {
+    private void buildMenuGlyph(UiTree.Scope scope, UiRect button) {
         Color lineColor = MD3Theme.TEXT_PRIMARY;
         float glyphWidth = 12.0f;
         float glyphHeight = 10.0f;
@@ -250,7 +250,7 @@ public class CategoryRailPanel {
         scope.rect(x, y + 8.0f, 12.0f, 1.6f, lineColor);
     }
 
-    private void buildCategoryItem(PanelUiTree.Scope scope, PanelLayout.Rect menuButton, PanelLayout.Rect itemRect, Category category, int count,
+    private void buildCategoryItem(UiTree.Scope scope, UiRect menuButton, UiRect itemRect, Category category, int count,
                                    boolean hovered, boolean selected, float contentProgress,
                                    float itemIconScale, float itemLabelScale, float itemCountScale) {
         Color background = selected ? MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 0)
@@ -281,7 +281,7 @@ public class CategoryRailPanel {
         });
     }
 
-    private void buildSettingsItem(PanelUiTree.Scope scope, PanelLayout.Rect menuButton, PanelLayout.Rect settingsRect,
+    private void buildSettingsItem(UiTree.Scope scope, UiRect menuButton, UiRect settingsRect,
                                    boolean settingsHovered, boolean settingsSelected, float contentProgress, float settingsHover,
                                    float itemIconScale, float itemLabelScale) {
         Color settingsBg = settingsSelected ? MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 0)
@@ -305,7 +305,7 @@ public class CategoryRailPanel {
         });
     }
 
-    private float getRailIconCenterX(PanelLayout.Rect railButton) {
+    private float getRailIconCenterX(UiRect railButton) {
         return railButton.x() + railButton.width() / 2.0f;
     }
 

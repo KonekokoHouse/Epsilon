@@ -2,15 +2,15 @@ package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.ColorWidget;
 import com.github.epsilon.gui.dropdown.widget.KeybindWidget;
 import com.github.epsilon.gui.dropdown.widget.SettingWidget;
 import com.github.epsilon.gui.dropdown.widget.StringWidget;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.settings.Setting;
 
@@ -52,7 +52,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
     }
 
     @Override
-    protected void drawPanelContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
+    protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         float currentY = y + DropdownTheme.PANEL_HEADER_HEIGHT + PADDING - scroll;
         float contentX = x + PADDING;
         float contentW = width - PADDING * 2.0f;
@@ -91,7 +91,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             scope.text(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
             return;
         }
-        var stack = scope.stack(new PanelLayout.Rect(contentX, currentY, contentW, computeWidgetsHeight()));
+        var stack = scope.stack(new UiRect(contentX, currentY, contentW, computeWidgetsHeight()));
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,

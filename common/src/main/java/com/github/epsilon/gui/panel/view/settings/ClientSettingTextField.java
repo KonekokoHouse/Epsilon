@@ -1,10 +1,10 @@
-package com.github.epsilon.gui.panel.panel.clientsettings;
+package com.github.epsilon.gui.panel.view.settings;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -33,7 +33,7 @@ public class ClientSettingTextField {
         focusAnimation.setStartValue(0.0f);
     }
 
-    public void buildUi(PanelUiTree.Scope scope, PanelLayout.Rect bounds, int mouseX, int mouseY,
+    public void buildUi(UiTree.Scope scope, UiRect bounds, int mouseX, int mouseY,
                         TextRenderer textRenderer, String placeholder, float textScale, String trailingHint) {
         boolean hovered = bounds.contains(mouseX, mouseY);
         float hoverProgress = scope.animate(hoverAnimation, hovered);
@@ -62,7 +62,7 @@ public class ClientSettingTextField {
         }
     }
 
-    public boolean focusIfContains(PanelLayout.Rect bounds, double mouseX, double mouseY) {
+    public boolean focusIfContains(UiRect bounds, double mouseX, double mouseY) {
         if (!bounds.contains(mouseX, mouseY)) {
             return false;
         }

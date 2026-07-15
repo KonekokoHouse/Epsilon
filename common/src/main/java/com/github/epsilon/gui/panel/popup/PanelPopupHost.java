@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.popup;
 
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
@@ -17,8 +17,8 @@ import net.minecraft.client.input.MouseButtonEvent;
 public class PanelPopupHost {
 
     private Popup activePopup;
-    private PanelLayout.Rect overlayBounds;
-    private PanelRenderBatch pendingBatch;
+    private UiRect overlayBounds;
+    private UiRenderBatch pendingBatch;
 
     /**
      * 打开一个新的活动弹窗。
@@ -52,7 +52,7 @@ public class PanelPopupHost {
         return activePopup;
     }
 
-    public void setOverlayBounds(PanelLayout.Rect overlayBounds) {
+    public void setOverlayBounds(UiRect overlayBounds) {
         this.overlayBounds = overlayBounds;
     }
 
@@ -63,13 +63,13 @@ public class PanelPopupHost {
      * @param height 期望高度
      * @return 限制在宿主覆盖区域内的居中弹窗区域
      */
-    public PanelLayout.Rect getCenteredBounds(float width, float height) {
-        PanelLayout.Rect baseBounds = overlayBounds != null
+    public UiRect getCenteredBounds(float width, float height) {
+        UiRect baseBounds = overlayBounds != null
                 ? overlayBounds
-                : new PanelLayout.Rect(0.0f, 0.0f, width, height);
+                : new UiRect(0.0f, 0.0f, width, height);
         float popupWidth = Math.min(width, baseBounds.width());
         float popupHeight = Math.min(height, baseBounds.height());
-        return new PanelLayout.Rect(
+        return new UiRect(
                 baseBounds.x() + (baseBounds.width() - popupWidth) / 2.0f,
                 baseBounds.y() + (baseBounds.height() - popupHeight) / 2.0f,
                 popupWidth,
@@ -82,7 +82,7 @@ public class PanelPopupHost {
      * <p>
      * 该阶段只做 extract，不直接 flush；真正的输出由主屏幕统一调度。
      */
-    public void render(GuiGraphicsExtractor guiGraphics, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         if (activePopup == null) {
             pendingBatch = null;
             return;
@@ -94,7 +94,7 @@ public class PanelPopupHost {
     /**
      * 输出当前活动弹窗的批次内容。
      * <p>
-     * 若弹窗拥有额外的 viewport 或私有缓冲，也会在其 {@link Popup#flush(PanelRenderBatch)}
+     * 若弹窗拥有额外的 viewport 或私有缓冲，也会在其 {@link Popup#flush(UiRenderBatch)}
      * 中一并处理。
      */
     public void flush() {
@@ -187,7 +187,7 @@ public class PanelPopupHost {
      * 面板弹窗协议。
      * <p>
      * 弹窗需要实现几何区域、UI 提取以及输入事件处理；普通图元进入主 scene，
-     * 私有视口缓冲或原版物品预览等额外输出可以在 {@link #flush(PanelRenderBatch)} 中补充。
+     * 私有视口缓冲或原版物品预览等额外输出可以在 {@link #flush(UiRenderBatch)} 中补充。
      */
     public interface Popup extends AutoCloseable {
         float POPUP_SHADOW_RADIUS = 2.5f;
@@ -195,7 +195,7 @@ public class PanelPopupHost {
         /**
          * 返回当前弹窗的命中与布局区域。
          */
-        PanelLayout.Rect getBounds();
+        UiRect getBounds();
 
         /**
          * 将当前弹窗的 UI 内容提取到给定批次中。
@@ -206,14 +206,14 @@ public class PanelPopupHost {
          * @param mouseY               鼠标 Y 坐标
          * @param partialTick          局部时间
          */
-        void extractGui(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, int mouseX, int mouseY, float partialTick);
+        void extractGui(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick);
 
         /**
          * 输出弹窗的私有附加缓冲。
          * <p>
          * 普通弹窗图元已经写入主 scene，会在帧尾统一 flush；这里仅留给 viewport、物品预览等私有资源做补充输出。
          */
-        default void flush(PanelRenderBatch renderBatch) {
+        default void flush(UiRenderBatch renderBatch) {
         }
 
         default void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {

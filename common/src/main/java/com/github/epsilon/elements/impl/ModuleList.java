@@ -4,7 +4,7 @@ import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.shaders.BlurShader;
 import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.dsl.PanelUiTree;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
@@ -16,8 +16,8 @@ import net.minecraft.util.Mth;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 import java.util.function.Supplier;
+import java.util.List;
 
 public class ModuleList extends HudModule {
 
@@ -118,7 +118,7 @@ public class ModuleList extends HudModule {
     }
 
     private void renderCompact(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
-        PanelUiTree.Scope scope = renderScope();
+        UiTree.Scope scope = renderScope();
         float lineHeight = textRenderer.getHeight(textScale) + 2.0f * s;
         float paddingX = 2.0f * s;
         float tagWidth = mode.is(Mode.FRAME) ? 0.0f : 2.0f * s;
@@ -162,7 +162,7 @@ public class ModuleList extends HudModule {
     }
 
     private void renderOpen(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
-        PanelUiTree.Scope scope = renderScope();
+        UiTree.Scope scope = renderScope();
 
         float rowHeight = OPEN_ROW_HEIGHT * s;
         float spacing = OPEN_ROW_SPACING * s;
@@ -253,7 +253,7 @@ public class ModuleList extends HudModule {
     }
 
     private void drawCompactRow(
-            PanelUiTree.Scope scope,
+            UiTree.Scope scope,
             TextRenderer textRenderer,
             RenderRow row,
             float rowX,
@@ -282,7 +282,7 @@ public class ModuleList extends HudModule {
     }
 
     private void drawOpenRow(
-            PanelUiTree.Scope scope,
+            UiTree.Scope scope,
             TextRenderer textRenderer,
             RenderRow row,
             float rowX,
@@ -342,7 +342,7 @@ public class ModuleList extends HudModule {
         scope.text(row.line.name, textX, textY, textScale, withAlpha(accent, alpha));
     }
 
-    private void drawOpenBox(PanelUiTree.Scope scope, float x, float y, float width, float height, float radius, float alpha) {
+    private void drawOpenBox(UiTree.Scope scope, float x, float y, float width, float height, float radius, float alpha) {
         Color background = withAlpha(backgroundColor.getValue(), alpha);
         if (openBackgroundBlur.getValue()) {
             BlurShader.INSTANCE.render(x, y, width, height, radius, openBlurStrength.getValue());
@@ -353,7 +353,7 @@ public class ModuleList extends HudModule {
         scope.roundRect(x, y, width, height, radius, background);
     }
 
-    private void drawCompactLine(PanelUiTree.Scope scope, ModuleLine line, float x, float y, float textScale, Color nameColor, float alpha) {
+    private void drawCompactLine(UiTree.Scope scope, ModuleLine line, float x, float y, float textScale, Color nameColor, float alpha) {
         scope.text(line.name, x, y, textScale, nameColor);
         float cursorX = x + line.nameWidth;
 

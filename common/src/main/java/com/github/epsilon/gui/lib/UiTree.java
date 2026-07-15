@@ -1,31 +1,31 @@
-package com.github.epsilon.gui.dsl;
+package com.github.epsilon.gui.lib;
 
 import com.github.epsilon.graphics.LuminTexture;
 import com.github.epsilon.graphics.schedulers.render2d.Render2DTexture;
 import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.utils.PanelContentBuffer;
+import com.github.epsilon.gui.lib.render.LuminUiRenderer;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
 import com.github.epsilon.utils.render.animation.Animation;
 import net.minecraft.resources.Identifier;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.List;
 
 /**
- * 面板 UI 的声明式节点树。
+ * 与具体 Screen 无关的声明式 UI 节点树。
  * <p>
  * 调用方通过 {@link #build(Consumer)} 在一个 {@link Scope} 中描述本帧需要绘制的内容，
- * 然后再由 {@link PanelUiCompiler} 将树结构编译进调度器命令或视口缓冲。
+ * 然后再由 {@link LuminUiRenderer} 将树结构编译进调度器命令或视口缓冲。
  */
-public class PanelUiTree {
+public final class UiTree {
 
     private final List<UiNode> nodes;
     private final boolean hasActiveAnimations;
 
-    private PanelUiTree(List<UiNode> nodes, boolean hasActiveAnimations) {
+    private UiTree(List<UiNode> nodes, boolean hasActiveAnimations) {
         this.nodes = nodes;
         this.hasActiveAnimations = hasActiveAnimations;
     }
@@ -36,13 +36,13 @@ public class PanelUiTree {
      * @param content 用于向 {@link Scope} 写入节点的 DSL 构建函数
      * @return 当前帧的 UI 树快照
      */
-    public static PanelUiTree build(Consumer<Scope> content) {
+    public static UiTree build(Consumer<Scope> content) {
         Scope scope = new Scope();
         content.accept(scope);
-        return new PanelUiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
+        return new UiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
     }
 
-    public static PanelUiTree from(Scope scope) {
+    public static UiTree from(Scope scope) {
         return scope.snapshot();
     }
 
@@ -51,13 +51,13 @@ public class PanelUiTree {
      * <p>
      * 新 GUI 优先通过该入口描述 row/column/slot，布局作用域会自动推进游标并把结果写入底层绘制节点。
      */
-    public static PanelUiTree layout(PanelLayout.Rect bounds, Consumer<LayoutScope> content) {
+    public static UiTree layout(UiRect bounds, Consumer<LayoutScope> content) {
         Scope scope = new Scope();
         content.accept(new LayoutScope(scope, bounds));
-        return new PanelUiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
+        return new UiTree(List.copyOf(scope.nodes), scope.hasActiveAnimations);
     }
 
-    List<UiNode> nodes() {
+    public List<UiNode> nodes() {
         return nodes;
     }
 
@@ -81,7 +81,7 @@ public class PanelUiTree {
 
         private List<UiNode> nodes = new ArrayList<>();
         private boolean hasActiveAnimations;
-        private final List<PanelLayout.Rect> boundStack = new ArrayList<>(List.of(new PanelLayout.Rect(0.0f, 0.0f, 0.0f, 0.0f)));
+        private final List<UiRect> boundStack = new ArrayList<>(List.of(new UiRect(0.0f, 0.0f, 0.0f, 0.0f)));
 
         /**
          * 向当前作用域追加单个节点，并在需要时绑定到相对 layer。
@@ -103,8 +103,8 @@ public class PanelUiTree {
          * 长生命周期绘制上下文会复用同一个 {@link Scope} 收集整帧内容，
          * 快照用于把当帧节点稳定地交给批次编译。
          */
-        public PanelUiTree snapshot() {
-            return new PanelUiTree(List.copyOf(nodes), hasActiveAnimations);
+        public UiTree snapshot() {
+            return new UiTree(List.copyOf(nodes), hasActiveAnimations);
         }
 
         /**
@@ -114,22 +114,22 @@ public class PanelUiTree {
             nodes.clear();
             hasActiveAnimations = false;
             boundStack.clear();
-            boundStack.add(new PanelLayout.Rect(0.0f, 0.0f, 0.0f, 0.0f));
+            boundStack.add(new UiRect(0.0f, 0.0f, 0.0f, 0.0f));
         }
 
-        public PanelLayout.Rect bound() {
+        public UiRect bound() {
             return currentBound();
         }
 
-        public Stack stack(PanelLayout.Rect bounds) {
+        public Stack stack(UiRect bounds) {
             return new Stack(resolveRect(bounds));
         }
 
         public Stack stack(float x, float y, float width, float height) {
-            return stack(new PanelLayout.Rect(x, y, width, height));
+            return stack(new UiRect(x, y, width, height));
         }
 
-        public void push(PanelLayout.Rect bounds, Consumer<Scope> content) {
+        public void push(UiRect bounds, Consumer<Scope> content) {
             pushRelative(bounds, content);
         }
 
@@ -137,24 +137,24 @@ public class PanelUiTree {
             pushRelative(x, y, content);
         }
 
-        public void pushRelative(PanelLayout.Rect bounds, Consumer<Scope> content) {
+        public void pushRelative(UiRect bounds, Consumer<Scope> content) {
             withBound(resolveRect(bounds), content);
         }
 
         public void pushRelative(float x, float y, Consumer<Scope> content) {
-            PanelLayout.Rect current = currentBound();
-            withBound(new PanelLayout.Rect(current.x() + x, current.y() + y, 0.0f, 0.0f), content);
+            UiRect current = currentBound();
+            withBound(new UiRect(current.x() + x, current.y() + y, 0.0f, 0.0f), content);
         }
 
-        public void pushAbsolute(PanelLayout.Rect bounds, Consumer<Scope> content) {
+        public void pushAbsolute(UiRect bounds, Consumer<Scope> content) {
             withBound(bounds, content);
         }
 
         public void pushAbsolute(float x, float y, Consumer<Scope> content) {
-            withBound(new PanelLayout.Rect(x, y, 0.0f, 0.0f), content);
+            withBound(new UiRect(x, y, 0.0f, 0.0f), content);
         }
 
-        public void stackPush(PanelLayout.Rect bounds) {
+        public void stackPush(UiRect bounds) {
             stackPushRelative(bounds);
         }
 
@@ -162,31 +162,31 @@ public class PanelUiTree {
             stackPushRelative(x, y);
         }
 
-        public void stackPushRelative(PanelLayout.Rect bounds) {
+        public void stackPushRelative(UiRect bounds) {
             boundStack.add(resolveRect(bounds));
         }
 
         public void stackPushRelative(float x, float y) {
-            PanelLayout.Rect current = currentBound();
-            boundStack.add(new PanelLayout.Rect(current.x() + x, current.y() + y, 0.0f, 0.0f));
+            UiRect current = currentBound();
+            boundStack.add(new UiRect(current.x() + x, current.y() + y, 0.0f, 0.0f));
         }
 
-        public void stackPushAbsolute(PanelLayout.Rect bounds) {
+        public void stackPushAbsolute(UiRect bounds) {
             boundStack.add(bounds);
         }
 
         public void stackPushAbsolute(float x, float y) {
-            boundStack.add(new PanelLayout.Rect(x, y, 0.0f, 0.0f));
+            boundStack.add(new UiRect(x, y, 0.0f, 0.0f));
         }
 
         public void stackPop() {
             if (boundStack.size() <= 1) {
-                throw new IllegalStateException("Cannot pop the root PanelUiTree bound.");
+                throw new IllegalStateException("Cannot pop the root UiTree bound.");
             }
             boundStack.removeLast();
         }
 
-        private void withBound(PanelLayout.Rect bounds, Consumer<Scope> content) {
+        private void withBound(UiRect bounds, Consumer<Scope> content) {
             boundStack.add(bounds);
             try {
                 content.accept(this);
@@ -195,7 +195,7 @@ public class PanelUiTree {
             }
         }
 
-        private PanelLayout.Rect currentBound() {
+        private UiRect currentBound() {
             return boundStack.getLast();
         }
 
@@ -207,8 +207,8 @@ public class PanelUiTree {
             return currentBound().y() + y;
         }
 
-        private PanelLayout.Rect resolveRect(PanelLayout.Rect rect) {
-            return new PanelLayout.Rect(resolveX(rect.x()), resolveY(rect.y()), rect.width(), rect.height());
+        private UiRect resolveRect(UiRect rect) {
+            return new UiRect(resolveX(rect.x()), resolveY(rect.y()), rect.width(), rect.height());
         }
 
         private ButtonElement resolveButton(ButtonElement element) {
@@ -243,15 +243,15 @@ public class PanelUiTree {
             nodes.add(new LayerNode(layer, capture.nodes()));
         }
 
-        public void scissor(PanelLayout.Rect clip, Consumer<Scope> content) {
-            PanelLayout.Rect resolvedClip = resolveRect(clip);
+        public void scissor(UiRect clip, Consumer<Scope> content) {
+            UiRect resolvedClip = resolveRect(clip);
             CaptureResult capture = capture(content);
             hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
             nodes.add(new ScissorNode(resolvedClip, capture.nodes()));
         }
 
         public void scissor(float x, float y, float width, float height, Consumer<Scope> content) {
-            scissor(new PanelLayout.Rect(x, y, width, height), content);
+            scissor(new UiRect(x, y, width, height), content);
         }
 
         /**
@@ -438,11 +438,11 @@ public class PanelUiTree {
          * <p>
          * 仅在 viewport 上下文中生效；装入主批次后，会与视口区域取交集后单独以 scissor 输出。
          */
-        public void marqueeText(String text, float x, float y, float scale, Color color, PanelLayout.Rect clip) {
+        public void marqueeText(String text, float x, float y, float scale, Color color, UiRect clip) {
             marqueeText(text, x, y, scale, color, null, clip);
         }
 
-        public void marqueeText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, PanelLayout.Rect clip) {
+        public void marqueeText(String text, float x, float y, float scale, Color color, TtfFontLoader fontLoader, UiRect clip) {
             nodes.add(new MarqueeTextNode(text, resolveX(x), resolveY(y), scale, color, fontLoader, resolveRect(clip)));
         }
 
@@ -507,7 +507,7 @@ public class PanelUiTree {
 
         public void button(float x, float y, float width, float height, float radius, Color background,
                            String label, float labelScale, Color labelColor) {
-            button(new ButtonElement(new PanelLayout.Rect(x, y, width, height), radius, background, label, labelScale, labelColor));
+            button(new ButtonElement(new UiRect(x, y, width, height), radius, background, label, labelScale, labelColor));
         }
 
         /**
@@ -520,19 +520,19 @@ public class PanelUiTree {
          * @param labelScale 文本缩放
          * @param labelColor 文本颜色
          */
-        public void button(PanelLayout.Rect bounds, float radius, Color background,
+        public void button(UiRect bounds, float radius, Color background,
                            String label, float labelScale, Color labelColor) {
             button(new ButtonElement(bounds, radius, background, label, labelScale, labelColor));
         }
 
         public void button(ButtonElement element) {
             ButtonElement resolved = resolveButton(element);
-            PanelLayout.Rect bounds = resolved.bounds();
+            UiRect bounds = resolved.bounds();
             nodes.add(new ButtonNode(bounds.x(), bounds.y(), bounds.width(), bounds.height(), element.radius(),
                     resolved.background(), resolved.label(), resolved.labelScale(), resolved.labelColor()));
         }
 
-        public void switchControl(PanelLayout.Rect bounds, float toggleProgress, float hoverProgress) {
+        public void switchControl(UiRect bounds, float toggleProgress, float hoverProgress) {
             toggleSwitch(new SwitchElement(bounds, toggleProgress, hoverProgress));
         }
 
@@ -543,7 +543,7 @@ public class PanelUiTree {
          * @param toggleProgress 开关开启进度
          * @param hoverProgress  悬停高亮进度
          */
-        public void toggle(PanelLayout.Rect bounds, float toggleProgress, float hoverProgress) {
+        public void toggle(UiRect bounds, float toggleProgress, float hoverProgress) {
             toggleSwitch(new SwitchElement(bounds, toggleProgress, hoverProgress));
         }
 
@@ -556,7 +556,7 @@ public class PanelUiTree {
             toggleSwitch(element);
         }
 
-        public void filledField(PanelLayout.Rect bounds, boolean focused, float hoverProgress) {
+        public void filledField(UiRect bounds, boolean focused, float hoverProgress) {
             input(new InputElement(bounds, focused, hoverProgress,
                     0.0f, new Color(0, 0, 0, 0), 0.0f,
                     6.0f, null, 0.0f, new Color(0, 0, 0, 0),
@@ -592,7 +592,7 @@ public class PanelUiTree {
          * @param trailingHintScale 提示文字缩放
          * @param trailingHintColor 提示文字颜色，可为空
          */
-        public void input(PanelLayout.Rect bounds, boolean focused, float hoverProgress,
+        public void input(UiRect bounds, boolean focused, float hoverProgress,
                           float textInset, String text, float textScale, Color textColor,
                           Integer caretIndex, Color caretColor,
                           String trailingHint, float trailingHintScale, Color trailingHintColor) {
@@ -625,7 +625,7 @@ public class PanelUiTree {
          * @param trailingHintScale 提示文字缩放
          * @param trailingHintColor 提示文字颜色，可为空
          */
-        public void input(PanelLayout.Rect bounds, boolean focused, float hoverProgress,
+        public void input(UiRect bounds, boolean focused, float hoverProgress,
                           float focusRingProgress, Color focusRingColor, float focusRingInset,
                           float textInset, String text, float textScale, Color textColor,
                           SelectionRange selection, Color selectionColor,
@@ -639,27 +639,27 @@ public class PanelUiTree {
                     trailingHint, trailingHintScale, trailingHintColor));
         }
 
-        public void assistChip(PanelLayout.Rect bounds, String label, float textScale, Color background, Color foreground,
+        public void assistChip(UiRect bounds, String label, float textScale, Color background, Color foreground,
                                String trailingIcon, float trailingIconScale, TtfFontLoader trailingIconFont) {
             nodes.add(new AssistChipNode(resolveRect(bounds), label, textScale, background, foreground, trailingIcon, trailingIconScale, trailingIconFont));
         }
 
-        public void chip(PanelLayout.Rect bounds, String label, float textScale, Color background, Color foreground,
+        public void chip(UiRect bounds, String label, float textScale, Color background, Color foreground,
                          String trailingIcon, float trailingIconScale, TtfFontLoader trailingIconFont) {
             assistChip(bounds, label, textScale, background, foreground, trailingIcon, trailingIconScale, trailingIconFont);
         }
 
-        public void segmentedControl(PanelLayout.Rect bounds, String leadingLabel, String trailingLabel,
+        public void segmentedControl(UiRect bounds, String leadingLabel, String trailingLabel,
                                      float progress, float hoverProgress) {
             nodes.add(new SegmentedControlNode(resolveRect(bounds), leadingLabel, trailingLabel, progress, hoverProgress));
         }
 
-        public void segmented(PanelLayout.Rect bounds, String leadingLabel, String trailingLabel,
+        public void segmented(UiRect bounds, String leadingLabel, String trailingLabel,
                               float progress, float hoverProgress) {
             segmentedControl(bounds, leadingLabel, trailingLabel, progress, hoverProgress);
         }
 
-        public void iconButton(PanelLayout.Rect bounds, String label, float scale, Color tone, float hoverProgress) {
+        public void iconButton(UiRect bounds, String label, float scale, Color tone, float hoverProgress) {
             nodes.add(new IconButtonNode(resolveRect(bounds), label, scale, tone, hoverProgress));
         }
 
@@ -672,7 +672,7 @@ public class PanelUiTree {
          * @param shadowColor  阴影颜色
          * @param surfaceColor 面颜色
          */
-        public void popupCard(PanelLayout.Rect bounds, float radius, float blurRadius, Color shadowColor, Color surfaceColor) {
+        public void popupCard(UiRect bounds, float radius, float blurRadius, Color shadowColor, Color surfaceColor) {
             nodes.add(new PopupCardNode(resolveRect(bounds), radius, blurRadius, shadowColor, surfaceColor));
         }
 
@@ -693,7 +693,7 @@ public class PanelUiTree {
          * @param handleRadius   拖柄圆角
          * @param handleColor    拖柄颜色
          */
-        public void slider(PanelLayout.Rect bounds, float progress, float trackRadius,
+        public void slider(UiRect bounds, float progress, float trackRadius,
                            Color trackColor, float activeEndInset, float activeMinWidth, Color activeColor,
                            float handleWidth, float handleHeight, float handleRadius, Color handleColor) {
             nodes.add(new SliderNode(resolveRect(bounds), progress, trackRadius, trackColor, activeEndInset, activeMinWidth, activeColor,
@@ -720,33 +720,33 @@ public class PanelUiTree {
         /**
          * 在独立视口缓冲中构建一个可裁剪子树。
          * <p>
-         * 子树会先被编译进 {@link PanelContentBuffer}，稍后在统一 flush 阶段按视口裁剪后输出。
+         * 子树会先被编译进 {@link UiContentBuffer}，稍后在统一 flush 阶段按视口裁剪后输出。
          *
          * @param buffer        目标内容缓冲
          * @param viewport      视口区域
-         * @param guiHeight     当前 GUI 高度，用于换算 scissor 坐标
          * @param scroll        当前滚动偏移
          * @param maxScroll     最大滚动偏移
          * @param contentHeight 内容总高度
          * @param content       视口内部的子树内容
          */
-        public void viewport(PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight,
+        public void viewport(UiContentBuffer buffer, UiRect viewport,
                              float scroll, float maxScroll, float contentHeight,
                              Consumer<Scope> content) {
-            viewport(buffer, viewport, guiHeight, scroll, maxScroll, contentHeight,
+            viewport(buffer, viewport, scroll, maxScroll, contentHeight,
                     Integer.MIN_VALUE, Integer.MIN_VALUE, content);
         }
 
-        public void viewport(PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight,
+        public void viewport(UiContentBuffer buffer, UiRect viewport,
                              float scroll, float maxScroll, float contentHeight,
                              int mouseX, int mouseY, Consumer<Scope> content) {
-            PanelLayout.Rect resolvedViewport = resolveRect(viewport);
+            UiRect resolvedViewport = resolveRect(viewport);
             CaptureResult capture = capture(scope -> scope.pushAbsolute(
-                    new PanelLayout.Rect(resolvedViewport.x(), resolvedViewport.y() - scroll,
+                    new UiRect(resolvedViewport.x(), resolvedViewport.y() - scroll,
                             resolvedViewport.width(), contentHeight),
                     content));
             hasActiveAnimations = hasActiveAnimations || capture.hasActiveAnimations();
-            nodes.add(new ViewportNode(buffer, resolvedViewport, guiHeight, scroll, maxScroll, contentHeight, mouseX, mouseY, capture.nodes()));
+            nodes.add(new ViewportNode(buffer, resolvedViewport, scroll, maxScroll, contentHeight,
+                    mouseX, mouseY, capture.nodes()));
         }
 
         private CaptureResult capture(Consumer<Scope> content) {
@@ -774,47 +774,47 @@ public class PanelUiTree {
          * Stack 会按 item 高度推进游标，并可直接在每个 item 的矩形内下传同一个 {@link Scope}。
          */
         public final class Stack {
-            private final PanelLayout.Rect bounds;
+            private final UiRect bounds;
             private float cursor;
 
-            private Stack(PanelLayout.Rect bounds) {
+            private Stack(UiRect bounds) {
                 this.bounds = bounds;
                 this.cursor = bounds.y();
             }
 
-            public PanelLayout.Rect bounds() {
+            public UiRect bounds() {
                 return bounds;
             }
 
-            public PanelLayout.Rect item(float height) {
-                PanelLayout.Rect rect = new PanelLayout.Rect(bounds.x(), cursor, bounds.width(), Math.max(0.0f, height));
+            public UiRect item(float height) {
+                UiRect rect = new UiRect(bounds.x(), cursor, bounds.width(), Math.max(0.0f, height));
                 cursor += Math.max(0.0f, height);
                 return rect;
             }
 
-            public PanelLayout.Rect item(float height, float gapAfter) {
-                PanelLayout.Rect rect = item(height);
+            public UiRect item(float height, float gapAfter) {
+                UiRect rect = item(height);
                 gap(gapAfter);
                 return rect;
             }
 
             public void item(float height, Consumer<Scope> content) {
-                PanelLayout.Rect rect = item(height);
+                UiRect rect = item(height);
                 pushAbsolute(rect, content);
             }
 
             public void item(float height, float gapAfter, Consumer<Scope> content) {
-                PanelLayout.Rect rect = item(height, gapAfter);
+                UiRect rect = item(height, gapAfter);
                 pushAbsolute(rect, content);
             }
 
-            public void item(float height, BiConsumer<PanelLayout.Rect, Scope> content) {
-                PanelLayout.Rect rect = item(height);
+            public void item(float height, BiConsumer<UiRect, Scope> content) {
+                UiRect rect = item(height);
                 pushAbsolute(rect, scope -> content.accept(rect, scope));
             }
 
-            public void item(float height, float gapAfter, BiConsumer<PanelLayout.Rect, Scope> content) {
-                PanelLayout.Rect rect = item(height, gapAfter);
+            public void item(float height, float gapAfter, BiConsumer<UiRect, Scope> content) {
+                UiRect rect = item(height, gapAfter);
                 pushAbsolute(rect, scope -> content.accept(rect, scope));
             }
 
@@ -822,8 +822,8 @@ public class PanelUiTree {
                 cursor += Math.max(0.0f, gap);
             }
 
-            public PanelLayout.Rect offset(float xOffset, float yOffset, float widthOffset, float heightOffset) {
-                return new PanelLayout.Rect(
+            public UiRect offset(float xOffset, float yOffset, float widthOffset, float heightOffset) {
+                return new UiRect(
                         bounds.x() + xOffset,
                         cursor + yOffset,
                         Math.max(0.0f, bounds.width() + widthOffset),
@@ -848,14 +848,14 @@ public class PanelUiTree {
      */
     public static final class LayoutScope {
         private final Scope draw;
-        private final PanelLayout.Rect bounds;
+        private final UiRect bounds;
 
-        private LayoutScope(Scope draw, PanelLayout.Rect bounds) {
+        private LayoutScope(Scope draw, UiRect bounds) {
             this.draw = draw;
             this.bounds = bounds;
         }
 
-        public PanelLayout.Rect bounds() {
+        public UiRect bounds() {
             return bounds;
         }
 
@@ -911,12 +911,12 @@ public class PanelUiTree {
      */
     public static final class LinearScope {
         private final Scope draw;
-        private final PanelLayout.Rect bounds;
+        private final UiRect bounds;
         private final Axis axis;
         private final float gap;
         private float cursor;
 
-        private LinearScope(Scope draw, PanelLayout.Rect bounds, Axis axis, float gap) {
+        private LinearScope(Scope draw, UiRect bounds, Axis axis, float gap) {
             this.draw = draw;
             this.bounds = bounds;
             this.axis = axis;
@@ -925,7 +925,7 @@ public class PanelUiTree {
         }
 
         public void item(float size, Consumer<LayoutScope> content) {
-            PanelLayout.Rect rect = nextRect(Math.max(0.0f, size));
+            UiRect rect = nextRect(Math.max(0.0f, size));
             content.accept(new LayoutScope(draw, rect));
             cursor += size + gap;
         }
@@ -939,11 +939,11 @@ public class PanelUiTree {
             cursor += Math.max(0.0f, size) + gap;
         }
 
-        private PanelLayout.Rect nextRect(float size) {
+        private UiRect nextRect(float size) {
             if (axis == Axis.VERTICAL) {
-                return new PanelLayout.Rect(bounds.x(), cursor, bounds.width(), size);
+                return new UiRect(bounds.x(), cursor, bounds.width(), size);
             }
-            return new PanelLayout.Rect(cursor, bounds.y(), size, bounds.height());
+            return new UiRect(cursor, bounds.y(), size, bounds.height());
         }
     }
 
@@ -961,8 +961,8 @@ public class PanelUiTree {
             return new Insets(horizontal, vertical, horizontal, vertical);
         }
 
-        public PanelLayout.Rect apply(PanelLayout.Rect rect) {
-            return new PanelLayout.Rect(
+        public UiRect apply(UiRect rect) {
+            return new UiRect(
                     rect.x() + left,
                     rect.y() + top,
                     Math.max(0.0f, rect.width() - left - right),
@@ -980,20 +980,20 @@ public class PanelUiTree {
      * <p>
      * 编译阶段会按节点类型把它们分发到调度器命令或视口缓冲。
      */
-    sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
+    public sealed interface UiNode permits LayerNode, LayeredNode, ScissorNode, ShadowNode, RoundRectNode, RoundRectGradientNode, RectNode, RectGradientNode, RectOutlineNode, OutlineNode, TextNode, RotatedTextNode, MarqueeTextNode, TextureNode, RotatedTextureNode, ButtonNode, SwitchNode, FilledFieldNode, InputNode, AssistChipNode, SegmentedControlNode, IconButtonNode, PopupCardNode, SliderNode, TriangleNode, ViewportNode {
     }
 
     /**
      * 按钮节点的语义描述。
      */
-    public record ButtonElement(PanelLayout.Rect bounds, float radius, Color background,
+    public record ButtonElement(UiRect bounds, float radius, Color background,
                                 String label, float labelScale, Color labelColor) {
     }
 
     /**
      * 开关节点的语义描述。
      */
-    public record SwitchElement(PanelLayout.Rect bounds, float toggleProgress, float hoverProgress) {
+    public record SwitchElement(UiRect bounds, float toggleProgress, float hoverProgress) {
     }
 
     /**
@@ -1007,7 +1007,7 @@ public class PanelUiTree {
      * <p>
      * 用于承载文本、焦点、选区、光标与尾部提示等输入态信息。
      */
-    public record InputElement(PanelLayout.Rect bounds, boolean focused, float hoverProgress,
+    public record InputElement(UiRect bounds, boolean focused, float hoverProgress,
                                float focusRingProgress, Color focusRingColor, float focusRingInset,
                                float textInset, String text, float textScale, Color textColor,
                                SelectionRange selection, Color selectionColor,
@@ -1019,114 +1019,114 @@ public class PanelUiTree {
     /**
      * 子树级 layer 偏移；适合一组节点整体提升或下沉。
      */
-    record LayerNode(int layer, List<UiNode> children) implements UiNode {
+    public record LayerNode(int layer, List<UiNode> children) implements UiNode {
     }
 
     /**
      * 单节点 layer 包装；供高频图元入口使用，减少小列表分配。
      */
-    record LayeredNode(int layer, UiNode child) implements UiNode {
+    public record LayeredNode(int layer, UiNode child) implements UiNode {
     }
 
-    record ScissorNode(PanelLayout.Rect clip, List<UiNode> children) implements UiNode {
+    public record ScissorNode(UiRect clip, List<UiNode> children) implements UiNode {
     }
 
-    record ShadowNode(float x, float y, float width, float height,
+    public record ShadowNode(float x, float y, float width, float height,
                       float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                       float blurRadius, Color color) implements UiNode {
     }
 
-    record RoundRectNode(float x, float y, float width, float height,
+    public record RoundRectNode(float x, float y, float width, float height,
                          float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                          Color color) implements UiNode {
     }
 
-    record RoundRectGradientNode(float x, float y, float width, float height,
+    public record RoundRectGradientNode(float x, float y, float width, float height,
                                  float radiusTopLeft, float radiusTopRight, float radiusBottomRight,
                                  float radiusBottomLeft,
                                  Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) implements UiNode {
     }
 
-    record RectNode(float x, float y, float width, float height, Color color) implements UiNode {
+    public record RectNode(float x, float y, float width, float height, Color color) implements UiNode {
     }
 
-    record RectGradientNode(float x, float y, float width, float height,
+    public record RectGradientNode(float x, float y, float width, float height,
                             Color topLeft, Color bottomLeft, Color bottomRight, Color topRight) implements UiNode {
     }
 
-    record RectOutlineNode(float x, float y, float width, float height, float outlineWidth,
+    public record RectOutlineNode(float x, float y, float width, float height, float outlineWidth,
                            Color color) implements UiNode {
     }
 
-    record OutlineNode(float x, float y, float width, float height,
+    public record OutlineNode(float x, float y, float width, float height,
                        float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                        float outlineWidth, Color color) implements UiNode {
     }
 
-    record TextNode(String text, float x, float y, float scale, Color color,
+    public record TextNode(String text, float x, float y, float scale, Color color,
                     TtfFontLoader fontLoader) implements UiNode {
     }
 
-    record RotatedTextNode(String text, float x, float y, float scale, Color color,
+    public record RotatedTextNode(String text, float x, float y, float scale, Color color,
                            TtfFontLoader fontLoader, float originX, float originY,
                            float rotationDegrees) implements UiNode {
     }
 
-    record MarqueeTextNode(String text, float x, float y, float scale, Color color,
-                           TtfFontLoader fontLoader, PanelLayout.Rect clip) implements UiNode {
+    public record MarqueeTextNode(String text, float x, float y, float scale, Color color,
+                           TtfFontLoader fontLoader, UiRect clip) implements UiNode {
     }
 
-    record TextureNode(Render2DTexture texture, float x, float y, float width, float height,
+    public record TextureNode(Render2DTexture texture, float x, float y, float width, float height,
                        float radiusTopLeft, float radiusTopRight, float radiusBottomRight, float radiusBottomLeft,
                        float u0, float v0, float u1, float v1, Color color) implements UiNode {
     }
 
-    record RotatedTextureNode(Render2DTexture texture, float x, float y, float width, float height,
+    public record RotatedTextureNode(Render2DTexture texture, float x, float y, float width, float height,
                               float u0, float v0, float u1, float v1, Color color,
                               float originX, float originY, float rotationDegrees) implements UiNode {
     }
 
-    record ButtonNode(float x, float y, float width, float height, float radius, Color background,
+    public record ButtonNode(float x, float y, float width, float height, float radius, Color background,
                       String label, float labelScale, Color labelColor) implements UiNode {
     }
 
-    record SwitchNode(PanelLayout.Rect bounds, float toggleProgress, float hoverProgress) implements UiNode {
+    public record SwitchNode(UiRect bounds, float toggleProgress, float hoverProgress) implements UiNode {
     }
 
-    record FilledFieldNode(PanelLayout.Rect bounds, boolean focused, float hoverProgress) implements UiNode {
+    public record FilledFieldNode(UiRect bounds, boolean focused, float hoverProgress) implements UiNode {
     }
 
-    record InputNode(InputElement element) implements UiNode {
+    public record InputNode(InputElement element) implements UiNode {
     }
 
-    record AssistChipNode(PanelLayout.Rect bounds, String label, float textScale, Color background, Color foreground,
+    public record AssistChipNode(UiRect bounds, String label, float textScale, Color background, Color foreground,
                           String trailingIcon, float trailingIconScale,
                           TtfFontLoader trailingIconFont) implements UiNode {
     }
 
-    record SegmentedControlNode(PanelLayout.Rect bounds, String leadingLabel, String trailingLabel,
+    public record SegmentedControlNode(UiRect bounds, String leadingLabel, String trailingLabel,
                                 float progress, float hoverProgress) implements UiNode {
     }
 
-    record IconButtonNode(PanelLayout.Rect bounds, String label, float scale, Color tone,
+    public record IconButtonNode(UiRect bounds, String label, float scale, Color tone,
                           float hoverProgress) implements UiNode {
     }
 
-    record PopupCardNode(PanelLayout.Rect bounds, float radius, float blurRadius, Color shadowColor,
+    public record PopupCardNode(UiRect bounds, float radius, float blurRadius, Color shadowColor,
                          Color surfaceColor) implements UiNode {
     }
 
-    record SliderNode(PanelLayout.Rect bounds, float progress, float trackRadius, Color trackColor,
+    public record SliderNode(UiRect bounds, float progress, float trackRadius, Color trackColor,
                       float activeEndInset, float activeMinWidth, Color activeColor,
                       float handleWidth, float handleHeight, float handleRadius, Color handleColor) implements UiNode {
     }
 
-    record TriangleNode(float centerX, float centerY, float size, float progress, Color color) implements UiNode {
+    public record TriangleNode(float centerX, float centerY, float size, float progress, Color color) implements UiNode {
     }
 
-    record ViewportNode(PanelContentBuffer buffer, PanelLayout.Rect viewport, int guiHeight,
-                        float scroll, float maxScroll, float contentHeight,
-                        int mouseX, int mouseY, List<UiNode> children) implements UiNode {
+    public record ViewportNode(UiContentBuffer buffer, UiRect viewport,
+                               float scroll, float maxScroll, float contentHeight,
+                               int mouseX, int mouseY, List<UiNode> children) implements UiNode {
     }
 
 }

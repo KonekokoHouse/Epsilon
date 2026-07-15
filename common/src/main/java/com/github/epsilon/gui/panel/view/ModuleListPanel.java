@@ -1,18 +1,21 @@
-package com.github.epsilon.gui.panel.panel;
+package com.github.epsilon.gui.panel.view;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelRenderBatch;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
-import com.github.epsilon.gui.panel.PanelState;
+import com.github.epsilon.gui.lib.render.UiContentBuffer;
+import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.lib.state.UiInvalidationState;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.adapter.ModuleViewModel;
 import com.github.epsilon.gui.panel.component.ModuleRow;
+import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.utils.*;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.TranslateHolder;
-import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -35,9 +38,9 @@ public class ModuleListPanel implements AutoCloseable {
 
     protected final PanelState state;
     private final TextRenderer textRenderer;
-    private final PanelContentBuffer contentBuffer = new PanelContentBuffer();
-    private final PanelContentInvalidationState contentState = new PanelContentInvalidationState();
-    private PanelLayout.Rect bounds;
+    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+    private final UiInvalidationState contentState = new UiInvalidationState();
+    private UiRect bounds;
     private int guiHeight;
     private final List<ModuleRow> rows = new ArrayList<>();
     private final Map<Module, Animation> hoverAnimations = new HashMap<>();
@@ -70,7 +73,7 @@ public class ModuleListPanel implements AutoCloseable {
      * 面板标题与搜索框会直接写入主批次；滚动列表内容则写入独立的 viewport 缓冲，
      * 并在之后的统一 flush 阶段输出。
      */
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, PanelRenderBatch renderBatch, PanelLayout.Rect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
         this.guiHeight = GuiGraphicsExtractor.guiHeight();
 
@@ -83,7 +86,7 @@ public class ModuleListPanel implements AutoCloseable {
             markDirty();
         }
 
-        PanelLayout.Rect viewport = getViewport();
+        UiRect viewport = getViewport();
         List<Module> modules = state.getVisibleModules();
         float contentHeight = modules.size() * (ModuleRow.HEIGHT + MD3Theme.ROW_GAP);
         state.setMaxModuleScroll(contentHeight - viewport.height());
@@ -99,19 +102,19 @@ public class ModuleListPanel implements AutoCloseable {
             contentState.beginRebuild();
         }
 
-        PanelUiTree tree = PanelUiTree.build(scope -> {
+        UiTree tree = UiTree.build(scope -> {
             scope.pushAbsolute(bounds, panel -> {
                 panel.text(state.getSelectedCategory().getName(), MD3Theme.PANEL_TITLE_INSET, 10.0f, 0.78f, MD3Theme.TEXT_PRIMARY);
                 panel.text(EpsilonTranslations.Gui.MODULES.getTranslatedName(), MD3Theme.PANEL_TITLE_INSET, 21.0f, 0.56f, MD3Theme.TEXT_SECONDARY);
             });
             buildSearchField(scope, mouseX, mouseY);
-            scope.viewport(contentBuffer, viewport, guiHeight, state.getModuleScroll(), maxModuleScroll, contentHeight, mouseX, mouseY, content -> {
+            scope.viewport(contentBuffer, viewport, state.getModuleScroll(), maxModuleScroll, contentHeight, mouseX, mouseY, content -> {
                 if (!rebuildContent) {
                     return;
                 }
                 float y = viewport.y() - state.getModuleScroll();
                 for (Module module : modules) {
-                    ModuleRow row = new ModuleRow(ModuleViewModel.from(module), new PanelLayout.Rect(viewport.x(), y, rowWidth, ModuleRow.HEIGHT));
+                    ModuleRow row = new ModuleRow(ModuleViewModel.from(module), new UiRect(viewport.x(), y, rowWidth, ModuleRow.HEIGHT));
                     rows.add(row);
                     Animation hoverAnimation = hoverAnimations.computeIfAbsent(module, ignored -> new Animation(Easing.EASE_OUT_CUBIC, 120L));
                     Animation selectionAnimation = selectionAnimations.computeIfAbsent(module, ignored -> new Animation(Easing.EASE_OUT_CUBIC, 160L));
@@ -182,7 +185,7 @@ public class ModuleListPanel implements AutoCloseable {
         }
         scrollVelocity = 0;
         // Scrollbar drag
-        PanelLayout.Rect viewport = getViewport();
+        UiRect viewport = getViewport();
         float maxScroll = state.getMaxModuleScroll();
         if (scrollBarDrag.mouseClicked(event.x(), event.y(), viewport, state.getModuleScroll(), maxScroll)) {
             float newScroll = scrollBarDrag.mouseDragged(event.y(), viewport, maxScroll);
@@ -192,7 +195,7 @@ public class ModuleListPanel implements AutoCloseable {
             markDirty();
             return true;
         }
-        PanelLayout.Rect searchBounds = getSearchBounds();
+        UiRect searchBounds = getSearchBounds();
         if (searchBounds.contains(event.x(), event.y())) {
             searchFocused = true;
             searchCursorIndex = state.getSearchQuery().length();
@@ -226,7 +229,7 @@ public class ModuleListPanel implements AutoCloseable {
 
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
         if (scrollBarDrag.isDragging()) {
-            PanelLayout.Rect viewport = getViewport();
+            UiRect viewport = getViewport();
             float newScroll = scrollBarDrag.mouseDragged(event.y(), viewport, state.getMaxModuleScroll());
             if (newScroll >= 0) {
                 state.setModuleScroll(newScroll);
@@ -241,7 +244,7 @@ public class ModuleListPanel implements AutoCloseable {
      * 当鼠标位于列表视口内时，处理滚轮滚动。
      */
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        PanelLayout.Rect viewport = getViewport();
+        UiRect viewport = getViewport();
         if (bounds != null && viewport.contains(mouseX, mouseY)) {
             scrollVelocity -= (float) scrollY * 24f;
             markDirty();
@@ -325,7 +328,7 @@ public class ModuleListPanel implements AutoCloseable {
         }
     }
 
-    private boolean shouldRebuildContent(PanelLayout.Rect bounds, int mouseX, int mouseY, List<Module> modules, int currentGuiHeight, long contentSignature) {
+    private boolean shouldRebuildContent(UiRect bounds, int mouseX, int mouseY, List<Module> modules, int currentGuiHeight, long contentSignature) {
         if (contentState.needsRebuild(bounds, mouseX, mouseY, currentGuiHeight, contentSignature)) {
             return true;
         }
@@ -345,7 +348,7 @@ public class ModuleListPanel implements AutoCloseable {
         return lastContentSignature != contentSignature;
     }
 
-    private void rememberSnapshot(PanelLayout.Rect bounds, int mouseX, int mouseY, List<Module> modules, int currentGuiHeight, long contentSignature) {
+    private void rememberSnapshot(UiRect bounds, int mouseX, int mouseY, List<Module> modules, int currentGuiHeight, long contentSignature) {
         contentState.rememberSnapshot(bounds, mouseX, mouseY, currentGuiHeight, contentSignature);
         lastModuleScroll = state.getModuleScroll();
         lastSearchQuery = state.getSearchQuery();
@@ -378,16 +381,16 @@ public class ModuleListPanel implements AutoCloseable {
         }
     }
 
-    private PanelLayout.Rect getViewport() {
-        return new PanelLayout.Rect(bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET, bounds.y() + 34.0f, bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, bounds.height() - 40.0f);
+    private UiRect getViewport() {
+        return new UiRect(bounds.x() + MD3Theme.PANEL_VIEWPORT_INSET, bounds.y() + 34.0f, bounds.width() - MD3Theme.PANEL_VIEWPORT_INSET * 2.0f, bounds.height() - 40.0f);
     }
 
-    private PanelLayout.Rect getSearchBounds() {
-        return new PanelLayout.Rect(bounds.right() - MD3Theme.PANEL_TITLE_INSET - 76.0f, bounds.y() + 8.0f, 76.0f, 18.0f);
+    private UiRect getSearchBounds() {
+        return new UiRect(bounds.right() - MD3Theme.PANEL_TITLE_INSET - 76.0f, bounds.y() + 8.0f, 76.0f, 18.0f);
     }
 
-    private void buildSearchField(PanelUiTree.Scope scope, int mouseX, int mouseY) {
-        PanelLayout.Rect searchBounds = getSearchBounds();
+    private void buildSearchField(UiTree.Scope scope, int mouseX, int mouseY) {
+        UiRect searchBounds = getSearchBounds();
         float hoverProgress = scope.animate(searchHoverAnimation, searchBounds.contains(mouseX, mouseY));
         float focusProgress = scope.animate(searchFocusAnimation, searchFocused);
         float fieldHover = Math.max(hoverProgress, focusProgress * 0.85f);

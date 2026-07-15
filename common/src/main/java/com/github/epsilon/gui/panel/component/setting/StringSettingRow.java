@@ -1,11 +1,11 @@
 package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.StringSetting;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -35,25 +35,25 @@ public class StringSettingRow extends SettingRow<StringSetting> {
     }
 
     @Override
-    public void buildUi(PanelUiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, PanelLayout.Rect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         this.textMetrics = textRenderer;
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
         scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
-        PanelLayout.Rect fieldBounds = getFieldBounds(bounds);
+        UiRect fieldBounds = getFieldBounds(bounds);
         boolean hovered = fieldBounds.contains(mouseX, mouseY);
         float fieldHover = hovered ? 1.0f : hoverProgress * 0.55f;
 
         String displaySource = focused ? getDisplayBuffer() : normalize(setting.getValue());
         DisplaySlice slice = buildDisplaySlice(displaySource, fieldBounds, focused);
-        PanelUiTree.SelectionRange selection = null;
+        UiTree.SelectionRange selection = null;
         if (focused && hasSelection()) {
             int selectionStart = Math.max(slice.start(), getSelectionStart());
             int selectionEnd = Math.min(slice.end(), getSelectionEnd());
             if (selectionEnd > selectionStart) {
-                selection = new PanelUiTree.SelectionRange(selectionStart - slice.start(), selectionEnd - slice.start());
+                selection = new UiTree.SelectionRange(selectionStart - slice.start(), selectionEnd - slice.start());
             }
         }
         scope.input(fieldBounds.relativeTo(bounds), focused, fieldHover,
@@ -71,11 +71,11 @@ public class StringSettingRow extends SettingRow<StringSetting> {
     }
 
     @Override
-    public boolean mouseClicked(PanelLayout.Rect bounds, MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(UiRect bounds, MouseButtonEvent event, boolean isDoubleClick) {
         if (event.button() != 0) {
             return false;
         }
-        PanelLayout.Rect fieldBounds = getFieldBounds(bounds);
+        UiRect fieldBounds = getFieldBounds(bounds);
         if (!fieldBounds.contains(event.x(), event.y())) {
             return false;
         }
@@ -186,8 +186,8 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         return focused;
     }
 
-    private PanelLayout.Rect getFieldBounds(PanelLayout.Rect bounds) {
-        return new PanelLayout.Rect(bounds.right() - MD3Theme.ROW_TRAILING_INSET - FIELD_WIDTH, bounds.y() + 4.0f, FIELD_WIDTH, 18.0f);
+    private UiRect getFieldBounds(UiRect bounds) {
+        return new UiRect(bounds.right() - MD3Theme.ROW_TRAILING_INSET - FIELD_WIDTH, bounds.y() + 4.0f, FIELD_WIDTH, 18.0f);
     }
 
     private String getDisplayBuffer() {
@@ -203,7 +203,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         clearSelection();
     }
 
-    private int getCursorIndex(double mouseX, PanelLayout.Rect fieldBounds) {
+    private int getCursorIndex(double mouseX, UiRect fieldBounds) {
         String text = getDisplayBuffer();
         DisplaySlice slice = buildDisplaySlice(text, fieldBounds, true);
         TextRenderer metrics = textMetrics();
@@ -216,7 +216,7 @@ public class StringSettingRow extends SettingRow<StringSetting> {
         return slice.start() + slice.text().length();
     }
 
-    private DisplaySlice buildDisplaySlice(String value, PanelLayout.Rect fieldBounds, boolean editing) {
+    private DisplaySlice buildDisplaySlice(String value, UiRect fieldBounds, boolean editing) {
         String safeValue = value == null ? "" : value;
         float horizontalInset = 6.0f;
         float availableWidth = Math.max(8.0f, fieldBounds.width() - horizontalInset * 2.0f);

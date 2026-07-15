@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 
 public interface DropdownPanel {
 
@@ -14,9 +14,9 @@ public interface DropdownPanel {
 
     float getIntroValue();
 
-    void drawBackground(PanelUiTree.Scope scope, UiTextMetrics textMetrics);
+    void drawBackground(UiTree.Scope scope, UiTextMetrics textMetrics);
 
-    void drawContent(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY);
+    void drawContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY);
 
     float getContentClipY();
 

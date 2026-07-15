@@ -1,11 +1,11 @@
 package com.github.epsilon.gui.dropdown.widget;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.panel.MD3Theme;
-import com.github.epsilon.managers.Managers;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
+import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.impl.sound.SoundKey;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -42,7 +42,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     }
 
     @Override
-    public void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
+    public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
         float expand = updateExpandProgress();
         float hover = updateHoverProgress(isFieldHovered(mouseX, mouseY));
         float fieldX = getLocalFieldX();
@@ -86,7 +86,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return false;
     }
 
-    private void drawCurrentValueField(PanelUiTree.Scope scope, UiTextMetrics textMetrics, float fieldX, float fieldY, float fieldW, float hover, float expand) {
+    private void drawCurrentValueField(UiTree.Scope scope, UiTextMetrics textMetrics, float fieldX, float fieldY, float fieldW, float hover, float expand) {
         Color background = MD3Theme.filledFieldSurface(expanded, hover);
         Color outline = MD3Theme.filledFieldIndicator(expanded, hover);
         float textY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(FIELD_TEXT_SCALE)) * 0.5f;
@@ -105,7 +105,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         scope.triangle(arrowCenterX, arrowCenterY, FIELD_ARROW_SIZE, expand, DropdownTheme.expandArrow(expand));
     }
 
-    private void drawExpandedOptions(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
+    private void drawExpandedOptions(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float fieldX, float fieldW, float expand) {
         float listX = fieldX;
         float listY = getLocalListY();
         float listH = getListHeight();
@@ -163,12 +163,12 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         return hoverAnim.getValue();
     }
 
-    private void drawExpandedBackground(PanelUiTree.Scope scope, float listX, float listY, float fieldW, float clipH) {
+    private void drawExpandedBackground(UiTree.Scope scope, float listX, float listY, float fieldW, float clipH) {
         scope.roundRect(listX, listY, fieldW, clipH, FIELD_RADIUS, DropdownTheme.settingSurface());
         scope.outline(listX, listY, fieldW, clipH, FIELD_RADIUS, 0.7f, MD3Theme.withAlpha(MD3Theme.OUTLINE, 96));
     }
 
-    private void drawOption(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
+    private void drawOption(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float listX, float fieldW, float visibleBottom, int optionIndex, Enum<?> mode) {
         float optionY = getLocalOptionY(optionIndex);
         if (optionY >= visibleBottom) {
             return;

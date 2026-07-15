@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.component;
 
-import com.github.epsilon.gui.dsl.PanelUiTree;
-import com.github.epsilon.gui.dsl.UiTextMetrics;
-import com.github.epsilon.gui.panel.PanelLayout;
+import com.github.epsilon.gui.lib.UiRect;
+import com.github.epsilon.gui.lib.UiTextMetrics;
+import com.github.epsilon.gui.lib.UiTree;
 
 public abstract class Component {
 
@@ -12,15 +12,15 @@ public abstract class Component {
 
     public abstract float getHeight();
 
-    public abstract void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY);
+    public abstract void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY);
 
-    public final void draw(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, PanelLayout.Rect bounds) {
-        // 组件只缓存本帧命中区域，位置由 PanelUiTree/stack 在调用侧统一计算。
+    public final void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, UiRect bounds) {
+        // 组件只缓存本帧命中区域，位置由 UiTree/stack 在调用侧统一计算。
         scope.pushAbsolute(bounds, child -> drawInScope(child, textMetrics, mouseX, mouseY, bounds));
     }
 
-    public final void drawInScope(PanelUiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY,
-                                  PanelLayout.Rect bounds) {
+    public final void drawInScope(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY,
+                                  UiRect bounds) {
         setPosition(bounds.x(), bounds.y(), bounds.width());
         draw(scope, textMetrics, mouseX, mouseY);
     }
