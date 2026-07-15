@@ -3,19 +3,25 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
+import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.ChatUtils;
+import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
+import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.client.CameraType;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
@@ -36,7 +42,7 @@ public class FreeCamera extends Module {
     private final BoolSetting toggleOnLog = boolSetting("Toggle On Log", true);
     private final BoolSetting reloadChunks = boolSetting("Reload Chunks", true);
     private final BoolSetting renderHands = boolSetting("Show Hands", true);
-    //    private final BoolSetting rotate = boolSetting("Rotate", false);
+    private final BoolSetting rotate = boolSetting("Rotate", false);
     private final BoolSetting staticView = boolSetting("Static", true);
 
     public final Vector3d pos = new Vector3d();
@@ -144,22 +150,22 @@ public class FreeCamera extends Module {
         double velY = 0;
         double velZ = 0;
 
-//        if (rotate.getValue()) {
-//            BlockPos crossHairPos;
-//            Vec3 crossHairPosition;
-//
-//            if (mc.hitResult instanceof EntityHitResult ehr) {
-//                crossHairPos = ehr.getEntity().blockPosition();
-//                rotation = RotationUtils.calculate(crossHairPos);
-//            } else {
-//                crossHairPosition = mc.hitResult.getLocation();
-//                crossHairPos = ((BlockHitResult) mc.hitResult).getBlockPos();
-//
-//                if (!mc.level.getBlockState(crossHairPos).isAir()) {
-//                    rotation = RotationUtils.calculate(crossHairPosition);
-//                }
-//            }
-//        }
+        if (rotate.getValue()) {
+            rotation = null;
+
+            if (mc.hitResult instanceof EntityHitResult ehr) {
+                rotation = RotationUtils.calculate(ehr.getEntity().blockPosition());
+            } else if (mc.hitResult instanceof BlockHitResult bhr) {
+                BlockPos crossHairPos = bhr.getBlockPos();
+                if (!mc.level.getBlockState(crossHairPos).isAir()) {
+                    rotation = RotationUtils.calculate(bhr.getLocation());
+                }
+            }
+
+            if (rotation != null) {
+                Managers.ROTATION.setRotations(rotation, 180, Priority.Highest);
+            }
+        }
 
         double s = 0.5;
         if (KeybindUtils.isPressed(mc.options.keySprint)) s = 1;

@@ -5,6 +5,7 @@ import com.github.epsilon.events.bus.EventPriority;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.movement.MovementFix;
+import com.github.epsilon.modules.impl.render.FreeCamera;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -31,7 +32,7 @@ public class SilentRotationManager extends RotationManager {
 
     @EventHandler
     private void onRaytrace(RaytraceEvent event) {
-        if (ClientSetting.INSTANCE.modifyCrosshair.getValue() && active && rotations != null) {
+        if (ClientSetting.INSTANCE.modifyCrosshair.getValue() && active && rotations != null && !FreeCamera.INSTANCE.isEnabled()) {
             event.setYaw(rotations.getYaw());
             event.setPitch(rotations.getPitch());
         }
