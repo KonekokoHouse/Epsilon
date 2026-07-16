@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.modules.impl.render.MasEffects;
+import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
 import com.github.epsilon.modules.impl.render.NoRender;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;

@@ -1,6 +1,6 @@
 package com.github.epsilon.mixins;
 
-import com.github.epsilon.modules.impl.render.MasEffects;
+import com.github.epsilon.modules.impl.render.maseffects.MasEffects;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
