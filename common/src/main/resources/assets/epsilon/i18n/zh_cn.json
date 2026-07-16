@@ -17,6 +17,7 @@
       "hidden": "隐藏",
       "from": "来自:",
       "state": {
+        "prefix": "",
         "enabled": "开启",
         "disabled": "关闭"
       }
@@ -130,168 +131,6 @@
         "all": "全部",
         "available": "可用",
         "selected_header": "已选"
-      }
-    },
-    "elements": {
-      "notifications hud": {
-        "enabled": "已开启",
-        "disabled": "已关闭"
-      },
-      "notifications": {
-        "_value": "通知",
-        "scale": "缩放",
-        "font scale": "字体缩放",
-        "subtitle y offset": "副标题纵向偏移",
-        "width": "长度",
-        "height": "高度",
-        "background alpha": "背景透明度",
-        "display time": "显示时间"
-      },
-      "bps hud": {
-        "_value": "BPS HUD",
-        "scale": "缩放",
-        "corner radius": "圆角半径",
-        "background color": "背景颜色",
-        "accent color": "强调颜色",
-        "text color": "文本颜色",
-        "text secondary": "次要文本颜色",
-        "text muted": "弱化文本颜色",
-        "graph height": "图表高度",
-        "graph background": "图表背景颜色",
-        "graph midline": "图表中线颜色",
-        "graph line color": "图表线条颜色",
-        "graph glow color": "图表发光颜色",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度",
-        "smooth number": "平滑数字",
-        "number delay": "数字延迟"
-      },
-      "mtf": {
-        "_value": "补佳乐",
-        "size": "大小",
-        "speed": "速度",
-        "color": "颜色"
-      },
-      "inventory hud": {
-        "_value": "背包 HUD",
-        "scale": "缩放",
-        "corner radius": "圆角半径",
-        "background color": "背景颜色",
-        "slot color": "槽位颜色",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度",
-        "show count": "显示数量"
-      },
-      "module list": {
-        "_value": "模块列表",
-        "style": {
-          "_value": "样式",
-          "compact": "紧凑",
-          "open": "展开"
-        },
-        "mode": {
-          "_value": "模式",
-          "left_tag": "左标签",
-          "right_tag": "右标签",
-          "frame": "框架"
-        },
-        "sorting mode": {
-          "_value": "排序模式",
-          "length": "长度",
-          "alphabet": "字母",
-          "category": "分类"
-        },
-        "show hidden": "显示隐藏",
-        "bind only": "仅绑定",
-        "rainbow": "彩虹",
-        "rainbow length": "彩虹长度",
-        "indexed hue": "索引色相",
-        "saturation": "饱和度",
-        "brightness": "亮度",
-        "scale": "缩放",
-        "text color": "文本颜色",
-        "background color": "背景颜色",
-        "info color": "信息颜色",
-        "bracket color": "括号颜色",
-        "show category": "显示分类",
-        "show icon": "显示图标",
-        "text scale offset": "文本缩放偏移",
-        "corner radius": "圆角半径",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度"
-      },
-      "potions": {
-        "_value": "药水效果",
-        "scale": "缩放",
-        "name text scale": "名称文本缩放",
-        "duration text scale": "持续时间文本缩放",
-        "corner radius": "圆角半径",
-        "animation speed": "动画速度",
-        "background color": "背景颜色",
-        "show icon": "显示图标",
-        "show progress bar": "显示进度条",
-        "tint name with effect color": "名称着色",
-        "hide ambient": "隐藏环境效果",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度"
-      },
-      "scaffold block": {
-        "_value": "搭路方块",
-        "scale": "缩放",
-        "corner radius": "圆角半径",
-        "background color": "背景颜色",
-        "text color": "文本颜色",
-        "text secondary": "次要文本颜色",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色",
-        "background blur": "背景模糊",
-        "blur strength": "模糊强度",
-        "smooth number": "平滑数字",
-        "number delay": "数字延迟"
-      },
-      "target hud": {
-        "_value": "目标 HUD",
-        "scale": "缩放",
-        "width": "宽度",
-        "height": "高度",
-        "radius": "半径",
-        "blur strength": "模糊强度",
-        "bar height": "条高度",
-        "bar radius": "条半径",
-        "name size": "名称大小",
-        "delay bar": "延迟条",
-        "delay wait": "延迟等待",
-        "delay time": "延迟时间",
-        "delay speed": "延迟速度",
-        "bar outline": "条边框",
-        "bar outline width": "条边框宽度",
-        "background color": "背景颜色",
-        "bar background color": "条背景颜色",
-        "bar fill color": "条填充颜色",
-        "delay bar color": "延迟条颜色",
-        "bar outline color": "条边框颜色",
-        "text color": "文本颜色",
-        "drop shadow": "投影",
-        "shadow blur": "阴影模糊",
-        "shadow color": "阴影颜色"
-      },
-      "watermark": {
-        "_value": "水印",
-        "scale": "缩放",
-        "text color": "文本颜色"
       }
     },
     "modules": {
@@ -923,12 +762,6 @@
           "normal": "普通",
           "mace": "重锤"
         },
-        "priority": {
-          "_value": "优先级",
-          "distance": "距离",
-          "angle": "角度",
-          "health": "生命值"
-        },
         "range": "范围",
         "move distance": "移动距离",
         "paper server": "Paper 服务端",
@@ -942,8 +775,7 @@
         "players": "玩家",
         "animals": "动物",
         "mobs": "怪物",
-        "villagers": "村民",
-        "slimes": "史莱姆"
+        "villagers": "村民"
       },
       "packet mine": {
         "_value": "数据包挖掘",
@@ -1966,6 +1798,164 @@
         "quartz": "石英",
         "water": "水",
         "lava": "岩浆"
+      }
+    },
+    "elements": {
+      "notifications": {
+        "_value": "通知",
+        "scale": "缩放",
+        "font scale": "字体缩放",
+        "subtitle y offset": "副标题纵向偏移",
+        "width": "长度",
+        "height": "高度",
+        "background alpha": "背景透明度",
+        "display time": "显示时间"
+      },
+      "bps hud": {
+        "_value": "BPS HUD",
+        "scale": "缩放",
+        "corner radius": "圆角半径",
+        "background color": "背景颜色",
+        "accent color": "强调颜色",
+        "text color": "文本颜色",
+        "text secondary": "次要文本颜色",
+        "text muted": "弱化文本颜色",
+        "graph height": "图表高度",
+        "graph background": "图表背景颜色",
+        "graph midline": "图表中线颜色",
+        "graph line color": "图表线条颜色",
+        "graph glow color": "图表发光颜色",
+        "drop shadow": "投影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "smooth number": "平滑数字",
+        "number delay": "数字延迟"
+      },
+      "mtf": {
+        "_value": "补佳乐",
+        "size": "大小",
+        "speed": "速度",
+        "color": "颜色"
+      },
+      "inventory hud": {
+        "_value": "背包 HUD",
+        "scale": "缩放",
+        "corner radius": "圆角半径",
+        "background color": "背景颜色",
+        "slot color": "槽位颜色",
+        "drop shadow": "投影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "show count": "显示数量"
+      },
+      "module list": {
+        "_value": "模块列表",
+        "style": {
+          "_value": "样式",
+          "compact": "紧凑",
+          "open": "展开"
+        },
+        "mode": {
+          "_value": "模式",
+          "left_tag": "左标签",
+          "right_tag": "右标签",
+          "frame": "框架"
+        },
+        "sorting mode": {
+          "_value": "排序模式",
+          "length": "长度",
+          "alphabet": "字母",
+          "category": "分类"
+        },
+        "show hidden": "显示隐藏",
+        "bind only": "仅绑定",
+        "rainbow": "彩虹",
+        "rainbow length": "彩虹长度",
+        "indexed hue": "索引色相",
+        "saturation": "饱和度",
+        "brightness": "亮度",
+        "scale": "缩放",
+        "text color": "文本颜色",
+        "background color": "背景颜色",
+        "info color": "信息颜色",
+        "bracket color": "括号颜色",
+        "show category": "显示分类",
+        "show icon": "显示图标",
+        "text scale offset": "文本缩放偏移",
+        "corner radius": "圆角半径",
+        "drop shadow": "投影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度"
+      },
+      "potions": {
+        "_value": "药水效果",
+        "scale": "缩放",
+        "name text scale": "名称文本缩放",
+        "duration text scale": "持续时间文本缩放",
+        "corner radius": "圆角半径",
+        "animation speed": "动画速度",
+        "background color": "背景颜色",
+        "show icon": "显示图标",
+        "show progress bar": "显示进度条",
+        "tint name with effect color": "名称着色",
+        "hide ambient": "隐藏环境效果",
+        "drop shadow": "投影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度"
+      },
+      "scaffold block": {
+        "_value": "搭路方块",
+        "scale": "缩放",
+        "corner radius": "圆角半径",
+        "background color": "背景颜色",
+        "text color": "文本颜色",
+        "text secondary": "次要文本颜色",
+        "drop shadow": "投影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色",
+        "background blur": "背景模糊",
+        "blur strength": "模糊强度",
+        "smooth number": "平滑数字",
+        "number delay": "数字延迟"
+      },
+      "target hud": {
+        "_value": "目标 HUD",
+        "scale": "缩放",
+        "width": "宽度",
+        "height": "高度",
+        "radius": "半径",
+        "blur strength": "模糊强度",
+        "bar height": "条高度",
+        "bar radius": "条半径",
+        "name size": "名称大小",
+        "delay bar": "延迟条",
+        "delay wait": "延迟等待",
+        "delay time": "延迟时间",
+        "delay speed": "延迟速度",
+        "bar outline": "条边框",
+        "bar outline width": "条边框宽度",
+        "background color": "背景颜色",
+        "bar background color": "条背景颜色",
+        "bar fill color": "条填充颜色",
+        "delay bar color": "延迟条颜色",
+        "bar outline color": "条边框颜色",
+        "text color": "文本颜色",
+        "drop shadow": "投影",
+        "shadow blur": "阴影模糊",
+        "shadow color": "阴影颜色"
+      },
+      "watermark": {
+        "_value": "水印",
+        "scale": "缩放",
+        "text color": "文本颜色"
       }
     }
   }

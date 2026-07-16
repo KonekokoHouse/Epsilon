@@ -7,8 +7,8 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.player.ChatUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -52,11 +52,14 @@ public class NotificationManager {
     }
 
     public void moduleState(String moduleName, int hash, boolean enabled) {
-        String subTitle = (enabled ? EpsilonTranslations.Notifications.ENABLED : EpsilonTranslations.Notifications.DISABLED).getTranslatedName();
+        String stateText = (enabled
+                ? EpsilonTranslations.Module.STATE_ENABLED
+                : EpsilonTranslations.Module.STATE_DISABLED
+        ).getTranslatedName();
         NotificationMode mode = NotificationMode.fromEnabled(enabled);
 
-        notifyReplaceable(hash, moduleName, subTitle, mode);
-        sendChatMessage(createModuleStateMessage(moduleName, subTitle, enabled), hash);
+        notifyReplaceable(hash, moduleName, StringUtils.capitalize(stateText), mode);
+        sendChatMessage(createModuleStateMessage(moduleName, stateText, enabled), hash);
     }
 
     public FormattedCharSequence applyAnimatedPrefix(FormattedCharSequence original) {
@@ -129,18 +132,11 @@ public class NotificationManager {
                 .append(Component.literal(subTitle).withStyle(chatColor));
     }
 
-    private Component createModuleStateMessage(String title, String subTitle, boolean enabled) {
-        String stateText = (enabled ? EpsilonTranslations.Module.STATE_ENABLED : EpsilonTranslations.Module.STATE_DISABLED).getTranslatedName();
-        int stateIndex = subTitle.lastIndexOf(stateText);
-        MutableComponent message = Component.literal(title).append(" ");
-        if (stateIndex < 0) {
-            return message.append(subTitle);
-        }
-
-        return message
-                .append(subTitle.substring(0, stateIndex))
-                .append(Component.literal(stateText).withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED))
-                .append(subTitle.substring(stateIndex + stateText.length()));
+    private Component createModuleStateMessage(String moduleName, String stateText, boolean enabled) {
+        return Component.literal(moduleName)
+                .append(" ")
+                .append(EpsilonTranslations.Module.STATE_PREFIX.getTranslatedName())
+                .append(Component.literal(stateText).withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED));
     }
 
     private void sendChatMessage(Component message, Integer hash) {

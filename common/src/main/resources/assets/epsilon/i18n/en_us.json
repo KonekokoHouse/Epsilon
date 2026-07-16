@@ -17,6 +17,7 @@
       "hidden": "Hidden",
       "from": "From:",
       "state": {
+        "prefix": "has been ",
         "enabled": "enabled",
         "disabled": "disabled"
       }
@@ -130,168 +131,6 @@
         "all": "All",
         "available": "Available",
         "selected_header": "Selected"
-      }
-    },
-    "elements": {
-      "notifications hud": {
-        "enabled": "has been enabled",
-        "disabled": "has been disabled"
-      },
-      "notifications": {
-        "_value": "Notifications",
-        "scale": "Scale",
-        "font scale": "Font Scale",
-        "subtitle y offset": "Subtitle Y Offset",
-        "width": "Width",
-        "height": "Height",
-        "background alpha": "Background Alpha",
-        "display time": "Display Time"
-      },
-      "bps hud": {
-        "_value": "BPS HUD",
-        "scale": "Scale",
-        "corner radius": "Corner Radius",
-        "background color": "Background Color",
-        "accent color": "Accent Color",
-        "text color": "Text Color",
-        "text secondary": "Text Secondary",
-        "text muted": "Text Muted",
-        "graph height": "Graph Height",
-        "graph background": "Graph Background",
-        "graph midline": "Graph Midline",
-        "graph line color": "Graph Line Color",
-        "graph glow color": "Graph Glow Color",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength",
-        "smooth number": "Smooth Number",
-        "number delay": "Number Delay"
-      },
-      "mtf": {
-        "_value": "MTF",
-        "size": "Size",
-        "speed": "Speed",
-        "color": "Color"
-      },
-      "inventory hud": {
-        "_value": "Inventory HUD",
-        "scale": "Scale",
-        "corner radius": "Corner Radius",
-        "background color": "Background Color",
-        "slot color": "Slot Color",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength",
-        "show count": "Show Count"
-      },
-      "module list": {
-        "_value": "Module List",
-        "style": {
-          "_value": "Style",
-          "compact": "Compact",
-          "open": "Open"
-        },
-        "mode": {
-          "_value": "Mode",
-          "left_tag": "Left Tag",
-          "right_tag": "Right Tag",
-          "frame": "Frame"
-        },
-        "sorting mode": {
-          "_value": "Sorting Mode",
-          "length": "Length",
-          "alphabet": "Alphabet",
-          "category": "Category"
-        },
-        "show hidden": "Show Hidden",
-        "bind only": "Bind Only",
-        "rainbow": "Rainbow",
-        "rainbow length": "Rainbow Length",
-        "indexed hue": "Indexed Hue",
-        "saturation": "Saturation",
-        "brightness": "Brightness",
-        "scale": "Scale",
-        "text color": "Text Color",
-        "background color": "Background Color",
-        "info color": "Info Color",
-        "bracket color": "Bracket Color",
-        "show category": "Show Category",
-        "show icon": "Show Icon",
-        "text scale offset": "Text Scale Offset",
-        "corner radius": "Corner Radius",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength"
-      },
-      "potions": {
-        "_value": "Potions",
-        "scale": "Scale",
-        "name text scale": "Name Text Scale",
-        "duration text scale": "Duration Text Scale",
-        "corner radius": "Corner Radius",
-        "animation speed": "Animation Speed",
-        "background color": "Background Color",
-        "show icon": "Show Icon",
-        "show progress bar": "Show Progress Bar",
-        "tint name with effect color": "Tint Name With Effect Color",
-        "hide ambient": "Hide Ambient",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength"
-      },
-      "scaffold block": {
-        "_value": "Scaffold Block",
-        "scale": "Scale",
-        "corner radius": "Corner Radius",
-        "background color": "Background Color",
-        "text color": "Text Color",
-        "text secondary": "Text Secondary",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color",
-        "background blur": "Background Blur",
-        "blur strength": "Blur Strength",
-        "smooth number": "Smooth Number",
-        "number delay": "Number Delay"
-      },
-      "target hud": {
-        "_value": "Target HUD",
-        "scale": "Scale",
-        "width": "Width",
-        "height": "Height",
-        "radius": "Radius",
-        "blur strength": "Blur Strength",
-        "bar height": "Bar Height",
-        "bar radius": "Bar Radius",
-        "name size": "Name Size",
-        "delay bar": "Delay Bar",
-        "delay wait": "Delay Wait",
-        "delay time": "Delay Time",
-        "delay speed": "Delay Speed",
-        "bar outline": "Bar Outline",
-        "bar outline width": "Bar Outline Width",
-        "background color": "Background Color",
-        "bar background color": "Bar Background Color",
-        "bar fill color": "Bar Fill Color",
-        "delay bar color": "Delay Bar Color",
-        "bar outline color": "Bar Outline Color",
-        "text color": "Text Color",
-        "drop shadow": "Drop Shadow",
-        "shadow blur": "Shadow Blur",
-        "shadow color": "Shadow Color"
-      },
-      "watermark": {
-        "_value": "Watermark",
-        "scale": "Scale",
-        "text color": "Text Color"
       }
     },
     "modules": {
@@ -923,12 +762,6 @@
           "normal": "Normal",
           "mace": "Mace"
         },
-        "priority": {
-          "_value": "Priority",
-          "distance": "Distance",
-          "angle": "Angle",
-          "health": "Health"
-        },
         "range": "Range",
         "move distance": "Move Distance",
         "paper server": "Paper Server",
@@ -942,8 +775,7 @@
         "players": "Players",
         "animals": "Animals",
         "mobs": "Mobs",
-        "villagers": "Villagers",
-        "slimes": "Slimes"
+        "villagers": "Villagers"
       },
       "packet mine": {
         "_value": "Packet Mine",
@@ -1966,6 +1798,164 @@
         "quartz": "Quartz",
         "water": "Water",
         "lava": "Lava"
+      }
+    },
+    "elements": {
+      "notifications": {
+        "_value": "Notifications",
+        "scale": "Scale",
+        "font scale": "Font Scale",
+        "subtitle y offset": "Subtitle Y Offset",
+        "width": "Width",
+        "height": "Height",
+        "background alpha": "Background Alpha",
+        "display time": "Display Time"
+      },
+      "bps hud": {
+        "_value": "BPS HUD",
+        "scale": "Scale",
+        "corner radius": "Corner Radius",
+        "background color": "Background Color",
+        "accent color": "Accent Color",
+        "text color": "Text Color",
+        "text secondary": "Text Secondary",
+        "text muted": "Text Muted",
+        "graph height": "Graph Height",
+        "graph background": "Graph Background",
+        "graph midline": "Graph Midline",
+        "graph line color": "Graph Line Color",
+        "graph glow color": "Graph Glow Color",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "smooth number": "Smooth Number",
+        "number delay": "Number Delay"
+      },
+      "mtf": {
+        "_value": "MTF",
+        "size": "Size",
+        "speed": "Speed",
+        "color": "Color"
+      },
+      "inventory hud": {
+        "_value": "Inventory HUD",
+        "scale": "Scale",
+        "corner radius": "Corner Radius",
+        "background color": "Background Color",
+        "slot color": "Slot Color",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "show count": "Show Count"
+      },
+      "module list": {
+        "_value": "Module List",
+        "style": {
+          "_value": "Style",
+          "compact": "Compact",
+          "open": "Open"
+        },
+        "mode": {
+          "_value": "Mode",
+          "left_tag": "Left Tag",
+          "right_tag": "Right Tag",
+          "frame": "Frame"
+        },
+        "sorting mode": {
+          "_value": "Sorting Mode",
+          "length": "Length",
+          "alphabet": "Alphabet",
+          "category": "Category"
+        },
+        "show hidden": "Show Hidden",
+        "bind only": "Bind Only",
+        "rainbow": "Rainbow",
+        "rainbow length": "Rainbow Length",
+        "indexed hue": "Indexed Hue",
+        "saturation": "Saturation",
+        "brightness": "Brightness",
+        "scale": "Scale",
+        "text color": "Text Color",
+        "background color": "Background Color",
+        "info color": "Info Color",
+        "bracket color": "Bracket Color",
+        "show category": "Show Category",
+        "show icon": "Show Icon",
+        "text scale offset": "Text Scale Offset",
+        "corner radius": "Corner Radius",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength"
+      },
+      "potions": {
+        "_value": "Potions",
+        "scale": "Scale",
+        "name text scale": "Name Text Scale",
+        "duration text scale": "Duration Text Scale",
+        "corner radius": "Corner Radius",
+        "animation speed": "Animation Speed",
+        "background color": "Background Color",
+        "show icon": "Show Icon",
+        "show progress bar": "Show Progress Bar",
+        "tint name with effect color": "Tint Name With Effect Color",
+        "hide ambient": "Hide Ambient",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength"
+      },
+      "scaffold block": {
+        "_value": "Scaffold Block",
+        "scale": "Scale",
+        "corner radius": "Corner Radius",
+        "background color": "Background Color",
+        "text color": "Text Color",
+        "text secondary": "Text Secondary",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color",
+        "background blur": "Background Blur",
+        "blur strength": "Blur Strength",
+        "smooth number": "Smooth Number",
+        "number delay": "Number Delay"
+      },
+      "target hud": {
+        "_value": "Target HUD",
+        "scale": "Scale",
+        "width": "Width",
+        "height": "Height",
+        "radius": "Radius",
+        "blur strength": "Blur Strength",
+        "bar height": "Bar Height",
+        "bar radius": "Bar Radius",
+        "name size": "Name Size",
+        "delay bar": "Delay Bar",
+        "delay wait": "Delay Wait",
+        "delay time": "Delay Time",
+        "delay speed": "Delay Speed",
+        "bar outline": "Bar Outline",
+        "bar outline width": "Bar Outline Width",
+        "background color": "Background Color",
+        "bar background color": "Bar Background Color",
+        "bar fill color": "Bar Fill Color",
+        "delay bar color": "Delay Bar Color",
+        "bar outline color": "Bar Outline Color",
+        "text color": "Text Color",
+        "drop shadow": "Drop Shadow",
+        "shadow blur": "Shadow Blur",
+        "shadow color": "Shadow Color"
+      },
+      "watermark": {
+        "_value": "Watermark",
+        "scale": "Scale",
+        "text color": "Text Color"
       }
     }
   }
