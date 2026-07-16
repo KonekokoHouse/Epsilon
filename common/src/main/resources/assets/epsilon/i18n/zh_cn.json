@@ -1274,14 +1274,14 @@
         "fake player": "假人"
       },
       "eagle": {
-        "_value": "雄鹰",
+        "_value": "自动潜行",
         "min delay": "最小延迟",
         "max delay": "最大延迟",
-        "direction check": "方向检测",
-        "jump check": "跳跃检测",
-        "pitch check": "俯仰角检测",
-        "blocks only": "仅方块",
-        "sneaking only": "仅潜行"
+        "direction check": "方向检查",
+        "jump check": "跳跃检查",
+        "pitch check": "俯仰角检查",
+        "blocks only": "仅手持方块",
+        "sneaking only": "仅潜行时"
       },
       "auto map": {
         "_value": "自动扫图",
@@ -1401,8 +1401,13 @@
       },
       "safe walk": {
         "_value": "安全行走",
-        "only holding block": "仅手持方块",
-        "only backward": "仅后退"
+        "motion": "移动倍率",
+        "speed motion": "速度效果移动倍率",
+        "air": "空中",
+        "direction check": "方向检查",
+        "pitch check": "俯仰角检查",
+        "require press": "需要按住使用键",
+        "blocks only": "仅手持方块"
       },
       "scaffold": {
         "_value": "自动搭路",

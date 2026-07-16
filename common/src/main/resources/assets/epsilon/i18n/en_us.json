@@ -1401,8 +1401,13 @@
       },
       "safe walk": {
         "_value": "Safe Walk",
-        "only holding block": "Only Holding Block",
-        "only backward": "Only Backward"
+        "motion": "Motion",
+        "speed motion": "Speed Motion",
+        "air": "Air",
+        "direction check": "Direction Check",
+        "pitch check": "Pitch Check",
+        "require press": "Require Press",
+        "blocks only": "Blocks Only"
       },
       "scaffold": {
         "_value": "Scaffold",
