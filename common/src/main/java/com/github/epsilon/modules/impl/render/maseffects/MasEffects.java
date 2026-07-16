@@ -2,15 +2,9 @@ package com.github.epsilon.modules.impl.render.maseffects;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.events.bus.EventHandler;
-import com.github.epsilon.events.impl.AttackEntityEvent;
-import com.github.epsilon.events.impl.LevelUpdateEvent;
-import com.github.epsilon.events.impl.PacketEvent;
-import com.github.epsilon.events.impl.PlayerTickEvent;
-import com.github.epsilon.events.impl.Render2DEvent;
-import com.github.epsilon.events.impl.Render3DEvent;
+import com.github.epsilon.events.impl.*;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
-import com.github.epsilon.modules.impl.render.maseffects.MasEffectsParticleRenderer;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -37,7 +31,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.phys.Vec3;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.List;
 
 public class MasEffects extends Module {
@@ -134,7 +128,7 @@ public class MasEffects extends Module {
     private void onPacket(PacketEvent.Receive event) {
         if (
                 !(event.getPacket() instanceof ClientboundEntityEventPacket packet)
-                || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH || !customTotemEffect.getValue()
+                        || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH || !customTotemEffect.getValue()
         ) {
             return;
         }
@@ -150,7 +144,7 @@ public class MasEffects extends Module {
 
     @EventHandler
     private void onRender3D(Render3DEvent event) {
-            particleRenderer.render(event.getPoseStack());
+        particleRenderer.render(event.getPoseStack());
     }
 
     @EventHandler

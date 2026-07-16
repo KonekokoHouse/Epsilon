@@ -18,4 +18,5 @@ public abstract class MixinClientLevel {
     private void onLevelEvent(@Nullable Entity source, int type, BlockPos pos, int data, CallbackInfo ci) {
         MasEffects.INSTANCE.onLevelEvent(type, Vec3.atCenterOf(pos).add(0.0, 0.5, 0.0));
     }
+
 }
