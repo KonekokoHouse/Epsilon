@@ -7,6 +7,7 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.player.ChatUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.*;
@@ -47,28 +48,15 @@ public class NotificationManager {
     }
 
     public void notifyHud(String title, String subTitle, NotificationMode mode, int hash) {
-        Notification existing = hashCodeMap.get(hash);
-        if (existing != null && !existing.isExiting()) {
-            existing.refresh(title, subTitle, mode);
-            return;
-        }
-        remove(existing);
-        Notification notification = new Notification(hash, title, subTitle, mode, true);
-        enqueue(notification);
-        hashCodeMap.put(hash, notification);
-    }
-
-    public void moduleState(String moduleName, boolean enabled) {
-        moduleState(moduleName, moduleName.hashCode(), enabled);
+        notifyReplaceable(hash, title, subTitle, mode);
     }
 
     public void moduleState(String moduleName, int hash, boolean enabled) {
-        String subTitle = getModuleStateText(enabled);
+        String subTitle = (enabled ? EpsilonTranslations.Notifications.ENABLED : EpsilonTranslations.Notifications.DISABLED).getTranslatedName();
         NotificationMode mode = NotificationMode.fromEnabled(enabled);
 
         notifyReplaceable(hash, moduleName, subTitle, mode);
-
-        sendNotificationMessage(moduleName, subTitle, enabled ? ChatFormatting.GREEN : ChatFormatting.RED, hash);
+        sendChatMessage(createModuleStateMessage(moduleName, subTitle, enabled), hash);
     }
 
     public FormattedCharSequence applyAnimatedPrefix(FormattedCharSequence original) {
@@ -101,22 +89,23 @@ public class NotificationManager {
 
     private void notify(String title, String subTitle, NotificationMode mode, ChatFormatting chatColor) {
         enqueue(new Notification(title, subTitle, mode, false));
-        sendNotificationMessage(title, subTitle, chatColor);
+        sendChatMessage(createNotificationMessage(title, subTitle, chatColor), null);
     }
 
     private void notify(String title, String subTitle, NotificationMode mode, ChatFormatting chatColor, int hash) {
         notifyReplaceable(hash, title, subTitle, mode);
-        sendNotificationMessage(title, subTitle, chatColor, hash);
+        sendChatMessage(createNotificationMessage(title, subTitle, chatColor), hash);
     }
 
     private void notifyReplaceable(int hash, String title, String subTitle, NotificationMode mode) {
         Notification existing = hashCodeMap.get(hash);
-        if (existing != null && !existing.isExiting()) {
-            existing.refresh(title, subTitle, mode);
-            return;
+        if (existing != null) {
+            if (!existing.isExiting()) {
+                existing.refresh(title, subTitle, mode);
+                return;
+            }
+            notifications.remove(existing);
         }
-
-        remove(existing);
 
         Notification notification = new Notification(hash, title, subTitle, mode, true);
         enqueue(notification);
@@ -128,34 +117,9 @@ public class NotificationManager {
         notifications.add(notification);
     }
 
-    private void remove(Notification notification) {
-        if (notification == null) {
-            return;
-        }
-
-        notifications.remove(notification);
-        unregister(notification);
-    }
-
     private void unregister(Notification notification) {
         if (notification != null && notification.isReplaceable()) {
-            hashCodeMap.remove(notification.getId());
-        }
-    }
-
-    private String getModuleStateText(boolean enabled) {
-        return enabled ? EpsilonTranslations.Notifications.ENABLED.getTranslatedName() : EpsilonTranslations.Notifications.DISABLED.getTranslatedName();
-    }
-
-    private void sendNotificationMessage(String title, String subTitle, ChatFormatting chatColor) {
-        if (ClientSetting.INSTANCE.chatNotify.getValue()) {
-            sendChatMessage(createNotificationMessage(title, subTitle, chatColor));
-        }
-    }
-
-    private void sendNotificationMessage(String title, String subTitle, ChatFormatting chatColor, int hash) {
-        if (ClientSetting.INSTANCE.chatNotify.getValue()) {
-            sendChatMessage(createNotificationMessage(title, subTitle, chatColor), hash);
+            hashCodeMap.remove(notification.getId(), notification);
         }
     }
 
@@ -165,12 +129,24 @@ public class NotificationManager {
                 .append(Component.literal(subTitle).withStyle(chatColor));
     }
 
-    private void sendChatMessage(Component message) {
-        ChatUtils.addChatMessage(message);
+    private Component createModuleStateMessage(String title, String subTitle, boolean enabled) {
+        String stateText = (enabled ? EpsilonTranslations.Module.STATE_ENABLED : EpsilonTranslations.Module.STATE_DISABLED).getTranslatedName();
+        int stateIndex = subTitle.lastIndexOf(stateText);
+        MutableComponent message = Component.literal(title).append(" ");
+        if (stateIndex < 0) {
+            return message.append(subTitle);
+        }
+
+        return message
+                .append(subTitle.substring(0, stateIndex))
+                .append(Component.literal(stateText).withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED))
+                .append(subTitle.substring(stateIndex + stateText.length()));
     }
 
-    private void sendChatMessage(Component message, int hash) {
-        ChatUtils.addChatMessage(message, hash);
+    private void sendChatMessage(Component message, Integer hash) {
+        if (!ClientSetting.INSTANCE.chatNotify.getValue()) return;
+        if (hash == null) ChatUtils.addChatMessage(message);
+        else ChatUtils.addChatMessage(message, hash);
     }
 
     private void makeRoomIfNeeded() {
