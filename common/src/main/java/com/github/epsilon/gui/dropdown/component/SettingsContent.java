@@ -132,7 +132,7 @@ public class SettingsContent {
             SettingSection section = sections.get(index);
             float sectionHeight = cachedSectionHeights.get(index);
             if (section.hasHeader()) {
-                drawSection(scope, textMetrics, mouseX, mouseY, section, panelX, currentY, panelWidth, sectionHeight);
+                drawSection(scope, textMetrics, mouseX, mouseY, section, panelX, currentY, panelWidth);
             } else {
                 var stack = scope.stack(new UiRect(
                         panelX + DropdownTheme.SETTING_INDENT,
@@ -158,10 +158,13 @@ public class SettingsContent {
                 float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
                 if (isHovered(mouseX, mouseY, headerX, currentY, headerW, DropdownTheme.GROUP_HEADER_HEIGHT)) {
                     section.toggleCollapsed();
+                    if (section.isCollapsed()) {
+                        blurInputs(section);
+                    }
                     Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                     return true;
                 }
-                if (!section.isCollapsed()) {
+                if (canInteractWith(section)) {
                     for (SettingWidget<?> widget : section.widgets()) {
                         if (!widget.isVisible()) continue;
                         if (widget.mouseClicked(mouseX, mouseY, button)) {
@@ -185,22 +188,27 @@ public class SettingsContent {
 
     private void blurAllInputs() {
         for (SettingSection section : sections) {
-            for (SettingWidget<?> widget : section.widgets()) {
-                if (widget instanceof StringWidget sw && sw.isFocused()) {
-                    sw.blurInput();
-                } else if (widget instanceof IntSliderWidget iw && iw.isFocused()) {
-                    iw.blurInput();
-                } else if (widget instanceof DoubleSliderWidget dw && dw.isFocused()) {
-                    dw.blurInput();
-                } else if (widget instanceof ColorWidget cw && cw.hasFocusedInput()) {
-                    cw.blurAllInputs();
-                }
+            blurInputs(section);
+        }
+    }
+
+    private void blurInputs(SettingSection section) {
+        for (SettingWidget<?> widget : section.widgets()) {
+            if (widget instanceof StringWidget sw && sw.isFocused()) {
+                sw.blurInput();
+            } else if (widget instanceof IntSliderWidget iw && iw.isFocused()) {
+                iw.blurInput();
+            } else if (widget instanceof DoubleSliderWidget dw && dw.isFocused()) {
+                dw.blurInput();
+            } else if (widget instanceof ColorWidget cw && cw.hasFocusedInput()) {
+                cw.blurAllInputs();
             }
         }
     }
 
     public boolean mouseReleased(double mouseX, double mouseY, int button, float panelX, float contentY, float panelWidth) {
         for (SettingSection section : sections) {
+            if (section.hasHeader() && section.isCollapsed()) continue;
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.mouseReleased(mouseX, mouseY, button)) {
@@ -213,6 +221,7 @@ public class SettingsContent {
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         for (SettingSection section : sections) {
+            if (section.hasHeader() && section.isCollapsed()) continue;
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.keyPressed(keyCode, scanCode, modifiers)) {
@@ -225,6 +234,7 @@ public class SettingsContent {
 
     public boolean charTyped(String typedText) {
         for (SettingSection section : sections) {
+            if (section.hasHeader() && section.isCollapsed()) continue;
             for (SettingWidget<?> widget : section.widgets()) {
                 if (!widget.isVisible()) continue;
                 if (widget.charTyped(typedText)) {
@@ -259,11 +269,12 @@ public class SettingsContent {
             return h;
         }
 
-        if (section.isCollapsed()) {
-            return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP;
-        }
+        return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
+                + getGroupContentHeight(section) * getGroupExpandProgress(section);
+    }
 
-        float h = DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
+    private float getGroupContentHeight(SettingSection section) {
+        float h = DropdownTheme.GROUP_INSET;
         for (SettingWidget<?> widget : section.widgets()) {
             if (widget.isVisible()) {
                 h += widget.getHeight() + DropdownTheme.SETTING_GAP;
@@ -272,17 +283,26 @@ public class SettingsContent {
         return h;
     }
 
-    private void drawSection(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth, float sectionHeight) {
-        Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(section.isCollapsed() ? 0.0f : 1.0f));
+    private float getGroupExpandProgress(SettingSection section) {
+        Animation animation = getGroupExpandAnimation(section);
+        animation.run(section.isCollapsed() ? 0.0f : 1.0f);
+        return animation.getValue();
+    }
+
+    private Animation getGroupExpandAnimation(SettingSection section) {
+        return sectionExpandAnimations.computeIfAbsent(section.key(),
+                ignored -> createGroupAnimation(section.isCollapsed() ? 0.0f : 1.0f));
+    }
+
+    private void drawSection(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, SettingSection section, float panelX, float sectionY, float panelWidth) {
         Animation hoverAnim = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createGroupAnimation(0.0f));
         float headerW = panelWidth - DropdownTheme.SETTING_INDENT * 2.0f;
         float headerX = panelX + DropdownTheme.SETTING_INDENT;
         float headerH = DropdownTheme.GROUP_HEADER_HEIGHT;
         hoverAnim.run(isHovered(mouseX, mouseY, headerX, sectionY, headerW, headerH) ? 1.0f : 0.0f);
-        expandAnimG.run(section.isCollapsed() ? 0.0f : 1.0f);
 
         float hoverProgress = hoverAnim.getValue();
-        float expandProgress = expandAnimG.getValue();
+        float expandProgress = scope.animate(getGroupExpandAnimation(section), !section.isCollapsed());
         scope.roundRect(headerX, sectionY, headerW, headerH, DropdownTheme.BUTTON_RADIUS,
                 MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress));
 
@@ -302,16 +322,21 @@ public class SettingsContent {
         scope.triangle(headerX + headerW - DropdownTheme.SETTING_PADDING_X - 2.5f,
                 sectionY + headerH * 0.5f, 2.5f, expandProgress, DropdownTheme.groupChevron(hoverProgress));
 
-        if (!section.isCollapsed()) {
-            float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
+        if (expandProgress > 0.001f) {
+            float contentY = sectionY + headerH + DropdownTheme.SETTING_GAP;
+            float contentHeight = getGroupContentHeight(section);
+            float childY = contentY + DropdownTheme.GROUP_INSET;
             float childX = panelX + DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = panelWidth - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            var stack = scope.stack(new UiRect(childX, childY, childW, sectionHeight));
-            for (SettingWidget<?> widget : section.widgets()) {
-                if (!widget.isVisible()) continue;
-                stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
-                        (bounds, itemScope) -> widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds));
-            }
+            scope.scissorIf(expandProgress < 1.0f,
+                    childX, contentY, childW, contentHeight * expandProgress, clippedScope -> {
+                        var stack = clippedScope.stack(new UiRect(childX, childY, childW, contentHeight - DropdownTheme.GROUP_INSET));
+                        for (SettingWidget<?> widget : section.widgets()) {
+                            if (!widget.isVisible()) continue;
+                            stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                                    (bounds, itemScope) -> widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds));
+                        }
+                    });
         }
     }
 
@@ -319,6 +344,10 @@ public class SettingsContent {
         Animation anim = new Animation(Easing.EASE_OUT_CUBIC, DropdownTheme.ANIM_GROUP);
         anim.setStartValue(startValue);
         return anim;
+    }
+
+    private boolean canInteractWith(SettingSection section) {
+        return !section.isCollapsed() && getGroupExpandProgress(section) >= 0.999f;
     }
 
     private boolean isHovered(double mouseX, double mouseY, float x, float y, float w, float h) {

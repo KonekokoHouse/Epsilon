@@ -176,7 +176,7 @@ public class HudEditorScreen extends Screen {
             float revealedH = panelH * intro;
 
             beginEditorLayer(10);
-            withEditorScissor(
+            withEditorScissor(intro < 1.0f,
                     hudPanel.getX() - shadowPad,
                     hudPanel.getY() - shadowPad,
                     hudPanel.getWidth() + shadowPad * 2.0f,
@@ -191,7 +191,8 @@ public class HudEditorScreen extends Screen {
             float actualClipH = Math.min(clipH, revealedBottom - clipY);
             if (actualClipH > 0.5f) {
                 beginEditorLayer(10);
-                withEditorScissor(hudPanel.getX(), clipY, hudPanel.getWidth(), actualClipH,
+                boolean requiresContentScissor = intro < 1.0f || hudPanel.requiresContentScissor();
+                withEditorScissor(requiresContentScissor, hudPanel.getX(), clipY, hudPanel.getWidth(), actualClipH,
                         scope -> hudPanel.drawContent(scope, uiTextMetrics, mouseX, mouseY));
                 flushEditorLayer();
             }
@@ -285,9 +286,9 @@ public class HudEditorScreen extends Screen {
         editorBatch.render(UiTree.from(editorScope), editorLayer);
     }
 
-    private void withEditorScissor(float guiX, float guiY, float guiW, float guiH,
+    private void withEditorScissor(boolean required, float guiX, float guiY, float guiW, float guiH,
                                    Consumer<UiTree.Scope> content) {
-        editorScope.scissor(new UiRect(guiX, guiY, guiW, guiH), content);
+        editorScope.scissorIf(required, new UiRect(guiX, guiY, guiW, guiH), content);
     }
 
     private final class EditorTextMetrics implements UiTextMetrics {

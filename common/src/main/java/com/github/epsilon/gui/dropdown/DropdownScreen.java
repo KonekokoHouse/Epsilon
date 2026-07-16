@@ -160,7 +160,7 @@ public class DropdownScreen extends Screen {
             float revealedH = panelH * intro;
 
             beginDropdownLayer();
-            withDropdownScissor(
+            withDropdownScissor(intro < 1.0f,
                     panel.getX() - shadowPad,
                     panel.getY() - shadowPad,
                     panel.getWidth() + shadowPad * 2,
@@ -176,7 +176,8 @@ public class DropdownScreen extends Screen {
                 beginDropdownLayer();
                 int hoverMouseX = panel == topmostHovered ? backgroundMouseX : -1;
                 int hoverMouseY = panel == topmostHovered ? backgroundMouseY : -1;
-                withDropdownScissor(panel.getX(), clipY, panel.getWidth(), actualClipH,
+                boolean requiresContentScissor = intro < 1.0f || panel.requiresContentScissor();
+                withDropdownScissor(requiresContentScissor, panel.getX(), clipY, panel.getWidth(), actualClipH,
                         scope -> panel.drawContent(scope, uiTextMetrics, hoverMouseX, hoverMouseY));
                 flushDropdownLayer();
             }
@@ -234,9 +235,9 @@ public class DropdownScreen extends Screen {
         dropdownBatch.render(UiTree.from(dropdownScope), dropdownLayer);
     }
 
-    private void withDropdownScissor(float guiX, float guiY, float guiW, float guiH,
+    private void withDropdownScissor(boolean required, float guiX, float guiY, float guiW, float guiH,
                                      Consumer<UiTree.Scope> content) {
-        dropdownScope.scissor(new UiRect(guiX, guiY, guiW, guiH), content);
+        dropdownScope.scissorIf(required, new UiRect(guiX, guiY, guiW, guiH), content);
     }
 
     private final class DropdownTextMetrics implements UiTextMetrics {
