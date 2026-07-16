@@ -1273,16 +1273,6 @@
         "slow move tick": "Slow Move Tick",
         "fake player": "Fake Player"
       },
-      "eagle": {
-        "_value": "Eagle",
-        "min delay": "Min Delay",
-        "max delay": "Max Delay",
-        "direction check": "Direction Check",
-        "jump check": "Jump Check",
-        "pitch check": "Pitch Check",
-        "blocks only": "Blocks Only",
-        "sneaking only": "Sneaking Only"
-      },
       "auto map": {
         "_value": "Auto Map",
         "auto launch": "Auto Launch",
@@ -1398,11 +1388,6 @@
         "pearl timeout": "Pearl Timeout",
         "pitch": "Pitch",
         "strict": "Strict"
-      },
-      "safe walk": {
-        "_value": "Safe Walk",
-        "only holding block": "Only Holding Block",
-        "only backward": "Only Backward"
       },
       "scaffold": {
         "_value": "Scaffold",
