@@ -150,6 +150,12 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     }
 
     @Override
+    public boolean requiresContentScissor() {
+        ensureFrameMetrics();
+        return cachedExpand < 1.0f || cachedContentHeight > cachedVisibleContentHeight;
+    }
+
+    @Override
     public float getPanelHeight() {
         ensureFrameMetrics();
         return cachedPanelHeight;

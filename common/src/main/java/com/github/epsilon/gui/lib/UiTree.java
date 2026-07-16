@@ -254,6 +254,19 @@ public final class UiTree {
             scissor(new UiRect(x, y, width, height), content);
         }
 
+        public void scissorIf(boolean required, UiRect clip, Consumer<Scope> content) {
+            if (required) {
+                scissor(clip, content);
+            } else {
+                content.accept(this);
+            }
+        }
+
+        public void scissorIf(boolean required, float x, float y, float width, float height,
+                              Consumer<Scope> content) {
+            scissorIf(required, new UiRect(x, y, width, height), content);
+        }
+
         /**
          * 推进一个布尔目标动画，并返回当前值。
          *

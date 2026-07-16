@@ -22,6 +22,8 @@ public interface DropdownPanel {
 
     float getContentClipHeight();
 
+    boolean requiresContentScissor();
+
     float getPanelHeight();
 
     boolean mouseClicked(double mouseX, double mouseY, int button);

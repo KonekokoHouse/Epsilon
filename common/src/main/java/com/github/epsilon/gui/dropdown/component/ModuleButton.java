@@ -105,14 +105,7 @@ public class ModuleButton extends Component {
         for (SettingSection section : sections) {
             if (section.hasHeader()) {
                 height += DropdownTheme.GROUP_HEADER_HEIGHT;
-                if (!section.isCollapsed()) {
-                    height += DropdownTheme.GROUP_INSET;
-                    for (SettingWidget<?> widget : section.widgets()) {
-                        if (widget.isVisible()) {
-                            height += widget.getHeight() + DropdownTheme.SETTING_GAP;
-                        }
-                    }
-                }
+                height += getGroupContentHeight(section) * getGroupExpandProgress(section);
                 height += DropdownTheme.SETTING_GAP;
             } else {
                 for (SettingWidget<?> widget : section.widgets()) {
@@ -136,17 +129,29 @@ public class ModuleButton extends Component {
             return h;
         }
 
-        if (section.isCollapsed()) {
-            return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP;
-        }
+        return DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP
+                + getGroupContentHeight(section) * getGroupExpandProgress(section);
+    }
 
-        float h = DropdownTheme.GROUP_HEADER_HEIGHT + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
+    private float getGroupContentHeight(SettingSection section) {
+        float h = DropdownTheme.GROUP_INSET;
         for (SettingWidget<?> widget : section.widgets()) {
             if (widget.isVisible()) {
                 h += widget.getHeight() + DropdownTheme.SETTING_GAP;
             }
         }
         return h;
+    }
+
+    private float getGroupExpandProgress(SettingSection section) {
+        Animation animation = getGroupExpandAnimation(section);
+        animation.run(section.isCollapsed() ? 0.0f : 1.0f);
+        return animation.getValue();
+    }
+
+    private Animation getGroupExpandAnimation(SettingSection section) {
+        return sectionExpandAnimations.computeIfAbsent(section.key(),
+                k -> createGroupAnimation(DropdownTheme.ANIM_GROUP, section.isCollapsed() ? 0.0f : 1.0f));
     }
 
     @Override
@@ -172,12 +177,6 @@ public class ModuleButton extends Component {
         drawHiddenButton(scope, textMetrics, mouseX, mouseY);
 
         float expand = expandAnim.getValue();
-
-        for (SettingSection section : sections) {
-            if (section.hasHeader()) {
-                runGroupAnimations(section);
-            }
-        }
 
         if (expand > 0.01f) {
             float settingY = DropdownTheme.MODULE_HEIGHT + DropdownTheme.SETTING_GAP;
@@ -213,11 +212,6 @@ public class ModuleButton extends Component {
         }
     }
 
-    private void runGroupAnimations(SettingSection section) {
-        Animation expandAnimG = sectionExpandAnimations.computeIfAbsent(section.key(), k -> createGroupAnimation(180L, section.isCollapsed() ? 0.0f : 1.0f));
-        expandAnimG.run(section.isCollapsed() ? 0.0f : 1.0f);
-    }
-
     private void drawAddonInfo(UiTree.Scope scope, UiTextMetrics textMetrics, float infoY) {
         float infoX = DropdownTheme.SETTING_INDENT;
         float infoH = DropdownTheme.MODULE_ADDON_INFO_HEIGHT;
@@ -237,8 +231,7 @@ public class ModuleButton extends Component {
         hoverAnim.run(isHovered(mouseX, mouseY, absoluteX(headerX), absoluteY(sectionY), headerW, headerH) ? 1.0f : 0.0f);
         float hoverProgress = hoverAnim.getValue();
 
-        Animation expandAnimG = sectionExpandAnimations.get(section.key());
-        float expandProgress = expandAnimG != null ? expandAnimG.getValue() : (section.isCollapsed() ? 0.0f : 1.0f);
+        float expandProgress = scope.animate(getGroupExpandAnimation(section), !section.isCollapsed());
 
         Color headerBg = MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress);
         float headerRadius = DropdownTheme.BUTTON_RADIUS;
@@ -262,16 +255,21 @@ public class ModuleButton extends Component {
         float chevronCenterY = sectionY + headerH * 0.5f;
         scope.triangle(chevronCenterX, chevronCenterY, chevronSize, expandProgress, DropdownTheme.groupChevron(hoverProgress));
 
-        if (!section.isCollapsed()) {
-            float childY = sectionY + headerH + DropdownTheme.SETTING_GAP + DropdownTheme.GROUP_INSET;
+        if (expandProgress > 0.001f) {
+            float contentY = sectionY + headerH + DropdownTheme.SETTING_GAP;
+            float contentHeight = getGroupContentHeight(section);
+            float childY = contentY + DropdownTheme.GROUP_INSET;
             float childX = DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET;
             float childW = width - (DropdownTheme.SETTING_INDENT + DropdownTheme.GROUP_INSET) * 2.0f;
-            var stack = scope.stack(new UiRect(childX, childY, childW, getSectionHeight(section)));
-            for (SettingWidget<?> widget : section.widgets()) {
-                if (!widget.isVisible()) continue;
-                stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
-                        (bounds, itemScope) -> widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds));
-            }
+            scope.scissorIf(expandProgress < 1.0f,
+                    childX, contentY, childW, contentHeight * expandProgress, clippedScope -> {
+                        var stack = clippedScope.stack(new UiRect(childX, childY, childW, contentHeight - DropdownTheme.GROUP_INSET));
+                        for (SettingWidget<?> widget : section.widgets()) {
+                            if (!widget.isVisible()) continue;
+                            stack.item(widget.getHeight(), DropdownTheme.SETTING_GAP,
+                                    (bounds, itemScope) -> widget.drawInScope(itemScope, textMetrics, mouseX, mouseY, bounds));
+                        }
+                    });
         }
     }
 
@@ -431,10 +429,13 @@ public class ModuleButton extends Component {
                     float headerX = absoluteX(DropdownTheme.SETTING_INDENT);
                     if (isGroupHeaderHovered(mouseX, mouseY, headerX, settingY)) {
                         section.toggleCollapsed();
+                        if (section.isCollapsed()) {
+                            blurInputs(section);
+                        }
                         Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
                         return true;
                     }
-                    if (!section.isCollapsed()) {
+                    if (!section.isCollapsed() && getGroupExpandProgress(section) >= 0.999f) {
                         for (SettingWidget<?> widget : section.widgets()) {
                             if (!widget.isVisible()) continue;
                             if (widget.mouseClicked(mouseX, mouseY, button)) {
@@ -481,6 +482,7 @@ public class ModuleButton extends Component {
 
         if (expanded) {
             for (SettingSection section : sections) {
+                if (section.hasHeader() && section.isCollapsed()) continue;
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
                     if (widget.keyPressed(keyCode, scanCode, modifiers)) {
@@ -496,6 +498,7 @@ public class ModuleButton extends Component {
     public boolean charTyped(String typedText) {
         if (expanded) {
             for (SettingSection section : sections) {
+                if (section.hasHeader() && section.isCollapsed()) continue;
                 for (SettingWidget<?> widget : section.widgets()) {
                     if (!widget.isVisible()) continue;
                     if (widget.charTyped(typedText)) {
@@ -509,6 +512,20 @@ public class ModuleButton extends Component {
 
     public Module getModule() {
         return module;
+    }
+
+    private void blurInputs(SettingSection section) {
+        for (SettingWidget<?> widget : section.widgets()) {
+            if (widget instanceof StringWidget sw && sw.isFocused()) {
+                sw.blurInput();
+            } else if (widget instanceof IntSliderWidget iw && iw.isFocused()) {
+                iw.blurInput();
+            } else if (widget instanceof DoubleSliderWidget dw && dw.isFocused()) {
+                dw.blurInput();
+            } else if (widget instanceof ColorWidget cw && cw.hasFocusedInput()) {
+                cw.blurAllInputs();
+            }
+        }
     }
 
     public boolean isExpanded() {

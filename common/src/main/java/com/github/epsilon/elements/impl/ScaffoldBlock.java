@@ -153,7 +153,9 @@ public class ScaffoldBlock extends HudModule {
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
 
-        scope.scissor(new UiRect(animatedX, this.y, animatedWidth, layout.height()), clipped -> {
+        boolean requiresScissor = animation.panelProgress() < 1.0f
+                || smoothNumber.getValue() && numberAnimProgress < 1.0f;
+        scope.scissorIf(requiresScissor, new UiRect(animatedX, this.y, animatedWidth, layout.height()), clipped -> {
             if (smoothNumber.getValue()) {
                 drawRollingNumber(clipped, textRenderer, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
             } else {

@@ -155,7 +155,10 @@ public class Notifications extends HudModule {
 
     private void renderStage2(UiTree.Scope scope, TextRenderer metrics, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha, float progress) {
         scope.rect(x, y, boxWidth, boxHeight, new Color(0, 0, 0, bgAlpha));
-        scope.scissor(x, y, boxWidth, boxHeight, textScope -> renderText(textScope, metrics, notification, x, y, boxWidth, boxHeight, scale, textScale, Math.round(255.0f * progress)));
+        boolean requiresScissor = textExceedsBox(metrics, notification, boxWidth, boxHeight, scale, textScale);
+        scope.scissorIf(requiresScissor, x, y, boxWidth, boxHeight,
+                textScope -> renderText(textScope, metrics, notification, x, y, boxWidth, boxHeight,
+                        scale, textScale, Math.round(255.0f * progress)));
         float accentWidth = ACCENT_BAR_WIDTH * scale + (boxWidth - ACCENT_BAR_WIDTH * scale) * (1.0f - progress);
         float accentX = isLeftDocked() ? x + boxWidth - accentWidth : x;
         scope.rect(accentX, y, accentWidth, boxHeight, notification.getMode().getColor());
@@ -190,6 +193,30 @@ public class Notifications extends HudModule {
         float widthFit = maxWidth > availableWidth ? availableWidth / maxWidth : 1.0f;
 
         return Math.max(0.35f, desiredTextScale * widthFit);
+    }
+
+    private boolean textExceedsBox(TextRenderer metrics, Notification notification, float boxWidth,
+                                   float boxHeight, float scale, float desiredTextScale) {
+        float textScale = getFittedTextScale(metrics, notification, boxWidth, scale, desiredTextScale);
+        float subTitleScale = getSubTitleScale(textScale);
+        float maxWidth = Math.max(metrics.getWidth(notification.getTitle(), textScale),
+                metrics.getWidth(notification.getSubTitle(), subTitleScale));
+        float availableWidth = Math.max(1.0f,
+                boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale);
+
+        float titleHeight = metrics.getHeight(textScale);
+        if (notification.getSubTitle().isEmpty()) {
+            return maxWidth > availableWidth || titleHeight > boxHeight;
+        }
+
+        float subTitleHeight = metrics.getHeight(subTitleScale);
+        float lineGap = getLineGap(textScale, scale);
+        float contentHeight = titleHeight + lineGap + subTitleHeight;
+        float titleY = (boxHeight - contentHeight) * 0.5f;
+        float subTitleY = titleY + titleHeight + lineGap;
+        float contentTop = Math.min(titleY, subTitleY);
+        float contentBottom = Math.max(titleY + titleHeight, subTitleY + subTitleHeight);
+        return maxWidth > availableWidth || contentTop < 0.0f || contentBottom > boxHeight;
     }
 
     private boolean isLeftDocked() {
