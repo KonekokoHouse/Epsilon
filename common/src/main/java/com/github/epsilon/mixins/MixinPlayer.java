@@ -61,10 +61,5 @@ public class MixinPlayer {
             }
         }
     }
-
-    @Inject(method = "isStayingOnGroundSurface", at = @At("HEAD"), cancellable = true)
-    private void hookIsStayingOnGroundSurface(CallbackInfoReturnable<Boolean> ci) {
-        if ((Player) (Object) this == mc.player) ci.setReturnValue(SafeWalk.INSTANCE.shouldSafeWalk());
-    }
-
+    
 }
