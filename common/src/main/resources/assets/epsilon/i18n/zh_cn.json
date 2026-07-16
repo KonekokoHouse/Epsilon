@@ -1273,6 +1273,16 @@
         "slow move tick": "慢移动刻数",
         "fake player": "假人"
       },
+      "eagle": {
+        "_value": "自动潜行",
+        "min delay": "最小延迟",
+        "max delay": "最大延迟",
+        "direction check": "方向检查",
+        "jump check": "跳跃检查",
+        "pitch check": "俯仰角检查",
+        "blocks only": "仅手持方块",
+        "sneaking only": "仅潜行时"
+      },
       "auto map": {
         "_value": "自动扫图",
         "auto launch": "自动起飞",
@@ -1388,6 +1398,16 @@
         "pearl timeout": "珍珠超时",
         "pitch": "俯仰角",
         "strict": "严格"
+      },
+      "safe walk": {
+        "_value": "安全行走",
+        "motion": "移动倍率",
+        "speed motion": "速度效果移动倍率",
+        "air": "空中",
+        "direction check": "方向检查",
+        "pitch check": "俯仰角检查",
+        "require press": "需要按住使用键",
+        "blocks only": "仅手持方块"
       },
       "scaffold": {
         "_value": "自动搭路",
