@@ -6,12 +6,15 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.StagedVertexBuffer;
 import net.minecraft.client.renderer.rendertype.LayeringTransform;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
+import net.minecraft.client.renderer.rendertype.PreparedRenderType;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
@@ -30,6 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -89,9 +93,13 @@ public final class MasEffectsParticleRenderer {
     private final RandomSource random = RandomSource.create();
     private final List<EffectParticle> particles = new ArrayList<>();
     private final ConcurrentLinkedQueue<EffectParticle> pendingParticles = new ConcurrentLinkedQueue<>();
+    private final StagedVertexBuffer vertexBuffer = new StagedVertexBuffer(() -> "Epsilon Mas Effects Particles", RenderType.SMALL_BUFFER_SIZE);
 
     public MasEffectsParticleRenderer(MasEffects module) {
         this.module = module;
+    }
+
+    private record ParticleBatch(PreparedRenderType renderType, StagedVertexBuffer.Draw draw) {
     }
 
     public void tick() {
@@ -110,16 +118,31 @@ public final class MasEffectsParticleRenderer {
             batches.computeIfAbsent(particle.texture(), ignored -> new ArrayList<>()).add(particle);
         }
 
-        for (Map.Entry<Identifier, List<EffectParticle>> entry : batches.entrySet()) {
-            BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            for (EffectParticle particle : entry.getValue()) {
-                particle.render(poseStack, buffer, partialTick);
+        List<ParticleBatch> particleBatches = new ArrayList<>(batches.size());
+        try {
+            for (Map.Entry<Identifier, List<EffectParticle>> entry : batches.entrySet()) {
+                RenderType renderType = PARTICLE_LAYER.apply(entry.getKey());
+                StagedVertexBuffer.Draw draw = vertexBuffer.appendDraw(
+                        renderType.format(),
+                        renderType.primitiveTopology(),
+                        renderType.sortOnUpload() ? RenderSystem.getProjectionType().vertexSorting() : null
+                );
+                VertexConsumer buffer = vertexBuffer.getVertexBuilder(draw);
+                for (EffectParticle particle : entry.getValue()) {
+                    particle.render(poseStack, buffer, partialTick);
+                }
+                particleBatches.add(new ParticleBatch(renderType.prepare(), draw));
             }
 
-            MeshData mesh = buffer.build();
-            if (mesh != null) {
-                PARTICLE_LAYER.apply(entry.getKey()).draw(mesh);
+            vertexBuffer.upload();
+            for (ParticleBatch batch : particleBatches) {
+                StagedVertexBuffer.ExecuteInfo executeInfo = vertexBuffer.getExecuteInfo(batch.draw());
+                if (executeInfo != null) {
+                    batch.renderType().drawFromBuffer(executeInfo);
+                }
             }
+        } finally {
+            vertexBuffer.endFrame();
         }
     }
 
@@ -348,12 +371,12 @@ public final class MasEffectsParticleRenderer {
             return lifetime;
         }
 
-        protected void render(PoseStack poseStack, BufferBuilder buffer, float partialTick) {
-            renderPlane(poseStack, buffer, partialTick, mc.gameRenderer.getMainCamera().rotation());
+        protected void render(PoseStack poseStack, VertexConsumer buffer, float partialTick) {
+            renderPlane(poseStack, buffer, partialTick, mc.gameRenderer.mainCamera().rotation());
         }
 
-        protected void renderPlane(PoseStack poseStack, BufferBuilder buffer, float partialTick, Quaternionf rotation) {
-            Camera camera = mc.gameRenderer.getMainCamera();
+        protected void renderPlane(PoseStack poseStack, VertexConsumer buffer, float partialTick, Quaternionf rotation) {
+            Camera camera = mc.gameRenderer.mainCamera();
             double renderX = Mth.lerp(partialTick, xo, x) - camera.position().x;
             double renderY = Mth.lerp(partialTick, yo, y) - camera.position().y;
             double renderZ = Mth.lerp(partialTick, zo, z) - camera.position().z;
@@ -395,7 +418,7 @@ public final class MasEffectsParticleRenderer {
             }
 
             AABB box = new AABB(x - 0.1, y, z - 0.1, x + 0.1, y + 0.2, z + 0.1);
-            Vec3 adjusted = Entity.collideBoundingBox(null, movement, box, mc.level, List.of());
+            Vec3 adjusted = Entity.collideBoundingBox(CollisionContext.empty(), movement, box, mc.level, List.of());
             x += adjusted.x;
             y += adjusted.y;
             z += adjusted.z;
@@ -444,7 +467,7 @@ public final class MasEffectsParticleRenderer {
         }
 
         @Override
-        protected void render(PoseStack poseStack, BufferBuilder buffer, float partialTick) {
+        protected void render(PoseStack poseStack, VertexConsumer buffer, float partialTick) {
             renderPlane(poseStack, buffer, partialTick, new Quaternionf().rotateX((float) Math.PI / 2.0F));
             if (crossed) {
                 renderPlane(poseStack, buffer, partialTick, new Quaternionf().rotateY((float) Math.PI / 4.0F).rotateX((float) Math.PI / 2.0F));
@@ -574,7 +597,7 @@ public final class MasEffectsParticleRenderer {
         }
 
         @Override
-        protected void render(PoseStack poseStack, BufferBuilder buffer, float partialTick) {
+        protected void render(PoseStack poseStack, VertexConsumer buffer, float partialTick) {
             Quaternionf rotation = euler(rotZ, rotX, -rotZ).mul(euler(0.0F, 0.0F, rotY));
             renderPlane(poseStack, buffer, partialTick, rotation);
         }
