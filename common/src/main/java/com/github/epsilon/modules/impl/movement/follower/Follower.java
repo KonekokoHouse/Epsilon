@@ -93,7 +93,8 @@ public class Follower extends Module {
                 1
         ));
 
-        if (target == null || mc.player.distanceTo(target) <= stopDistance.getValue()) {
+        if (target == null
+                || (mode.is(Mode.Straight) && mc.player.distanceTo(target) <= stopDistance.getValue())) {
             controlInput = null;
             pathPoints = List.of();
             return;

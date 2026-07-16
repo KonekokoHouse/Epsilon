@@ -14,8 +14,13 @@ import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 
 public class ControlElytraFlightMode extends ElytraFlightMode {
+
+    private static final double CEILING_PROBE_DISTANCE = 0.75;
+    private static final double CEILING_PROBE_EPSILON = 1.0E-4;
+    private static final float CEILING_ESCAPE_PITCH = 5.0f;
 
     private boolean hasFirstFirework;
     private boolean shouldJump;
@@ -171,16 +176,26 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
     }
 
     private float applyCeilingPitchGuard(float pitch) {
-        if (shouldAvoidCeilingLift() && pitch < 0.0f) {
-            return 0.0f;
+        if (shouldAvoidCeilingLift()) {
+            return Math.max(pitch, CEILING_ESCAPE_PITCH);
         }
         return Mth.clamp(pitch, -90f, 90f);
     }
 
     private boolean shouldAvoidCeilingLift() {
-        return elytraFly.armored.getValue()
-                && mc.player.isFallFlying()
-                && !mc.level.noBlockCollision(mc.player, mc.player.getBoundingBox().move(0.0, 0.08, 0.0));
+        if (!mc.player.isFallFlying()) return false;
+
+        AABB box = mc.player.getBoundingBox();
+        double probeDistance = CEILING_PROBE_DISTANCE + Math.max(0.0, mc.player.getDeltaMovement().y);
+        AABB ceilingProbe = new AABB(
+                box.minX + CEILING_PROBE_EPSILON,
+                box.maxY - CEILING_PROBE_EPSILON,
+                box.minZ + CEILING_PROBE_EPSILON,
+                box.maxX - CEILING_PROBE_EPSILON,
+                box.maxY + probeDistance,
+                box.maxZ - CEILING_PROBE_EPSILON
+        );
+        return !mc.level.noBlockCollision(mc.player, ceilingProbe);
     }
 
     private boolean hasMoveInput() {
