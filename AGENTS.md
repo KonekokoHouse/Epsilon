@@ -74,7 +74,7 @@ mkdir -p reference && unzip common/build/moddev/artifacts/vanilla-*-sources.jar 
 | `interfaces/` | Mixin 用的 accessor 接口（`ChatComponentAccessor`、`EntityRenderStateAccessor`、`WalkAnimationStateAccessor`） |
 | `managers/` | 各种管理器（Rotation、Target、Health、Friend、Sound、Notification、Packet 等） |
 | `mixins/` | Mixin 注入类 |
-| `modules/` | Module 基类、Category 枚举、`ClientSetting`、94 个内置模块（combat/movement/player/render 四大类） |
+| `modules/` | Module 基类、Category 枚举、`ClientSetting`、若干个内置模块（combat/movement/player/render 四大类） |
 | `settings/` | Setting 基类与 10 种设置类型（Bool、Button、Color、Double、Enum、Int、Keybind、RegistryList、StringList、String） |
 | `utils/` | 工具类（client、combat、math、network、player、render、rotation、timer、world） |
 
