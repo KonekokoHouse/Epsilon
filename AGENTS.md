@@ -22,6 +22,7 @@ Epsilon/
 - 需要加载器 API 时，在 `fabric/` 或 `neoforge/` 子项目中实现，通过 compat 接口传入 common
 - `common/` 中的 Java 源码会被 Gradle 自动共享到 fabric/ 和 neoforge/ 的编译路径
 - 编写前必须查阅 Minecraft 源码！
+- 修改本文档已说明的架构、API、开发约定、文件格式或工作流时，必须在同一次修改中同步更新 `AGENTS.md`
 
 ### 查阅 Minecraft 源代码
 
@@ -65,16 +66,16 @@ mkdir -p reference && unzip common/build/moddev/artifacts/vanilla-*-sources.jar 
 |------|------|
 | `addon/` | Addon 基类、注册事件、Bootstrap 工具 |
 | `assets/` | i18n 翻译、配置文件迁移、资源持有者 |
-| `elements/` | HUD 元素基类 `HudModule` 与具体实现（`Watermark`、`BPS`、`ModuleList`、`Potions`、`Inventory`、`TargetHud`、`ScaffoldBlock`） |
-| `events/` | 自定义事件总线、33 种事件类型 |
+| `elements/` | HUD 元素基类 `HudModule` 与具体实现（`Notifications`、`BPS`、`MTF`、`Inventory`、`ModuleList`、`Potions`、`ScaffoldBlock`、`TargetHUD`、`Watermark`） |
+| `events/` | 自定义事件总线与事件类型 |
 | `graphics/` | Lumin Graphics 渲染框架（含 `renderers/`、`shaders/`、`text/`、`buffer/`、`immediate/`、`schedulers/` 子包） |
 | `gui/` | 点击 GUI（Panel、Dropdown、HUD 编辑器、Scene 系统） |
 | `holders/` | 各种持有者（`ModuleHolder`、`ConfigHolder`、`AddonHolder`、`HudElementHolder`、`RendererHolder`、`ShaderHolder` 等，负责初始化与生命周期） |
 | `interfaces/` | Mixin 用的 accessor 接口（`ChatComponentAccessor`、`EntityRenderStateAccessor`、`WalkAnimationStateAccessor`） |
 | `managers/` | 各种管理器（Rotation、Target、Health、Friend、Sound、Notification、Packet 等） |
-| `mixins/` | 51 个 Mixin 注入类 |
-| `modules/` | Module 基类、Category 枚举、`ClientSetting`、83 个内置模块（combat/movement/player/render 四大类） |
-| `settings/` | Setting 基类与 8 种设置类型 |
+| `mixins/` | Mixin 注入类 |
+| `modules/` | Module 基类、Category 枚举、`ClientSetting`、94 个内置模块（combat/movement/player/render 四大类） |
+| `settings/` | Setting 基类与 10 种设置类型（Bool、Button、Color、Double、Enum、Int、Keybind、RegistryList、StringList、String） |
 | `utils/` | 工具类（client、combat、math、network、player、render、rotation、timer、world） |
 
 ## Module 开发
@@ -162,7 +163,7 @@ public class MyModule extends Module {
 4. **Setting 字段**：Setting 必须声明为类的**实例字段**，构造时初始化
 5. **@EventHandler 注解**：事件监听方法必须用 `@EventHandler` 标记，且必须是**实例方法**（非 static），访问修饰符任意
 6. **事件方法签名**：必须 `void` 返回，只有一个参数（事件类型），参数类型不能是原始类型
-7. **注册**：内部模块在 `ModuleManager.initModules()` 列表中注册；Addon 模块通过 `EpsilonAddon.registerModule()` 注册
+7. **注册**：内部模块在 `ModuleHolder.initModules()` 列表中注册；Addon 模块通过 `EpsilonAddon.registerModule()` 注册
 8. **i18n 翻译**：需要为模块名称和设置名称添加 i18n 翻译，详见后文 i18n 章节
 
 ### Module.Setting 可见性依赖（Dependency）
@@ -230,15 +231,14 @@ Module 启用时自动 `subscribe(this)`，禁用时自动 `unsubscribe(this)`�
 | `StrafeEvent` / `MoveEvent` / `TravelEvent` | 侧移 / 移动 / 行进 |
 | `KeyboardInputEvent` | 键盘输入 |
 | `RotationAnimationEvent` | 旋转动画（可设置渲染用的 yaw/pitch） |
-| `AfterRotationEvent` | 旋转更新标记事件（无字段，通过 `Managers.ROTATION.getYaw()/getPitch()` 获取角度） |
 | `AttackYawEvent` | 攻击偏航角 |
 | `SendPositionEvent` | 发送位置包（RotationManager 在此写入旋转） |
 | `SwingHandEvent` | 挥手 |
 | `RaytraceEvent` / `UseItemRaytraceEvent` | 射线追踪 / 使用物品射线追踪 |
 | `UseItemEvent` / `StartUseItemEvent` | 使用物品 |
-| `FallFlyingEvent` / `FireworkUpdateEvent` | 鞘翅飞行 / 烟花更新 |
+| `FallFlyingEvent` / `FireworkRotationEvent` | 鞘翅飞行 / 烟花旋转 |
 | `LevelUpdateEvent` / `RespawnEvent` | 世界切换 / 重生 |
-| ... | 共 33 个事件类（部分含 Pre/Post 内部类） |
+| ... | 其余事件及字段以 `common/src/main/java/com/github/epsilon/events/impl/` 中的当前源码为准 |
 
 ### 事件优先级
 
@@ -286,7 +286,7 @@ Epsilon 把"持有者"（Holders，负责初始化与生命周期）和"管理�
 
 ### ModuleHolder (`common/.../holders/ModuleHolder.java`)
 
-- `initModules()` — 注册所有内置模块（在 `EpsilonCommon.init()` 中调用，注册了 83 个内置模块）
+- `initModules()` — 注册所有内置模块（在 `EpsilonCommon.init()` 中调用，当前注册 94 个内置模块）
 - `registerAddonModule(addonId, module, translateComponent)` — 注册 Addon 的模块
 - `getModules()` — 获取所有已注册模块列表
 - 内部订阅 `KeyPressEvent` / `MousePressEvent`，负责把键位分发到对应模块（Toggle / Hold 模式）
@@ -315,7 +315,7 @@ Epsilon 把"持有者"（Holders，负责初始化与生命周期）和"管理�
 
 > 注意：Rotation / Target / Health / C2SPacket / S2CPacket / Friend / Sound / Notification 这些管理器实例通过 `Managers.ROTATION`、`Managers.TARGET` 等静态字段访问，而非各自类的 `INSTANCE`。
 
-### RotationManager (`common/.../managers/rotations/RotationManager.java`)
+### RotationManager (`common/.../managers/impl/rotations/RotationManager.java`)
 
 RotationManager 是**抽象基类**，管理玩家视角旋转，支持优先级队列、平滑插值和射线追踪偏移。有两种实现：
 
@@ -328,8 +328,8 @@ RotationManager 是**抽象基类**，管理玩家视角旋转，支持优先级
 - `setRotations()` 设置目标旋转角度后，RotationManager 每 tick 自动平滑旋转，并在 `SendPositionEvent` 中将旋转角度写入发包
 - 旋转完成后（与真实角度差值 < 1 度）自动 `active = false`
 - 多个模块可同时调用 `setRotations()`，高优先级覆盖低优先级（仅当新 priority 数值 ≥ 当前 priority 时才接受）
-- 旋转过程中每 tick 发布 `AfterRotationEvent`（无字段，纯标记事件），仅供需要知道旋转已更新的模块订阅
 - 收到 `ClientboundPlayerPositionPacket` / `ClientboundPlayerRotationPacket`（S08 旋转包）时自动重置状态以避免与服务端冲突
+- RotationManager 不提供 callback 或旋转完成事件；旋转后的攻击、放置等操作必须由模块自己的事件监听与状态字段驱动
 
 **主要 API**：
 
@@ -353,13 +353,6 @@ Managers.ROTATION.setRotations(new Rot2f(yaw, pitch), rotationSpeed, Priority.Hi
 // 设置旋转 + 射线追踪偏移（用于绕过反作弊）
 Managers.ROTATION.setRotations(rotations, rotationSpeed, rayTraceFunction, Priority.High);
 
-// 设置旋转 + 回调（旋转每 tick 平滑后执行，用于 raycast 检测 + 实际操作）
-Managers.ROTATION.setRotations(rotations, rotationSpeed, null, Priority.High, () -> {
-    if (RaytraceUtils.overBlock(new Rot2f(Managers.ROTATION.getYaw(), Managers.ROTATION.getPitch()), side, blockPos, true)) {
-        // 执行放置/攻击操作
-    }
-});
-
 // 检查旋转是否激活（注意：没有 isDone() 方法，用 !isActive() 判断完成）
 boolean active = Managers.ROTATION.isActive();
 ```
@@ -378,27 +371,28 @@ boolean active = Managers.ROTATION.isActive();
 
 > 注意：Priority 枚举的数值与 EventBus 的 `EventPriority` 是**两套独立的系统**，不要混淆。EventPriority 的 HIGHEST=200、HIGH=100、MEDIUM=0、LOW=-100、LOWEST=-200。
 
-**回调使用模式**：
+**旋转后操作模式**：
 
-推荐通过 `setRotations` 的 callback 参数实现「旋转→瞄准→操作」的解耦流程，无需手动订阅 `AfterRotationEvent`。
+`setRotations` 只负责更新旋转状态。需要等待 raycast 命中后再操作时，由模块保存 pending 状态，并在自己的 tick 等事件中持续设置旋转、检查当前角度和执行操作。
 
 ```java
-// 设置旋转 + callback，在旋转对准后执行操作
-Managers.ROTATION.setRotations(rotation, speed, null, Priority.High, () -> {
-    // 使用 Managers.ROTATION.getYaw() / getPitch() 获取当前平滑后的旋转角度
-    if (RaytraceUtils.overBlock(
-            new Rot2f(Managers.ROTATION.getYaw(), Managers.ROTATION.getPitch()),
-            side, blockPos, true)) {
+@EventHandler
+private void onTick(PlayerTickEvent.Pre event) {
+    if (nullCheck() || !pendingPlace) return;
+
+    Managers.ROTATION.setRotations(targetRotation, rotationSpeed.getValue(), Priority.High);
+    Rot2f current = Managers.ROTATION.getRotation();
+    if (RaytraceUtils.overBlock(current, side, blockPos, true)) {
         mc.gameMode.useItemOn(mc.player, hand, hitResult);
+        pendingPlace = false;
     }
-});
+}
 ```
 
 **关键设计要点**：
-- callback 在 `RotationManager.onPlayerTick(PlayerTickEvent.Pre)`（`@EventHandler(priority = -1000)`）中每 tick 执行一次。**注意：callback 只执行一次**就被置 null（见 `runCallback()` 实现），不是每 tick 重复执行，所以若需要持续轮询直到 raycast 命中，应在外部用 boolean 标记控制并在 callback 中重新 `setRotations` 或直接执行
-- callback 内使用 `Managers.ROTATION.getYaw()` / `getPitch()` 获取当前平滑后的旋转角度，而非使用 `AfterRotationEvent` 的字段（该事件已无字段）
-- `AfterRotationEvent` 是纯标记事件（无字段），仅供需要知道旋转已更新的模块订阅
-- raytrace 函数（`Function<Rot2f, Boolean>`）用于在平滑旋转时加入随机偏移绕过反作弊，如果偏移后射线被遮挡则重新计算偏移方向
+- `setRotations` 的可用重载只有 `(rotations, speed)`、`(rotations, speed, priority)`、`(rotations, speed, raytrace)` 和 `(rotations, speed, raytrace, priority)`
+- raytrace 函数（`Function<Rot2f, Boolean>`）仅用于在平滑旋转时校验随机偏移；它可能被多次调用，必须无副作用，不能在其中执行攻击或放置
+- 需要基于当前平滑角度判断时，使用 `Managers.ROTATION.getRotation()`，或通过 `getYaw()` / `getPitch()` 读取
 - `Managers.switchRotationManager()` 切换实现时会通过 `copyStateFrom()` 把当前状态迁移到新实例
 - 模块禁用时应清理 pending 状态并 `InvUtils.swapBack()` 恢复物品栏
 
@@ -479,17 +473,52 @@ textRenderer.drawAndClear();
 ## i18n 翻译系统
 
 - `TranslateComponent` — 翻译组件接口
-- `EpsilonTranslateComponent.create("modules", "kill_aura")` → key: `epsilon.modules.kill_aura`
+- `EpsilonTranslateComponent.create("modules", "kill aura")` → key: `epsilon.modules.kill aura`
 - `DefaultTranslateComponent.create("example_addon.settings.enable_particles")` → key: `example_addon.settings.enable_particles`
-- 翻译 key 生成在 `I18NFileGenerator.generate("epsilon-empty-i18n.json")` 输出空模板
+- 本体语言文件位于 `common/src/main/resources/assets/epsilon/i18n/{languageCode}.json`
+- `I18NFileGenerator.generate("epsilon-empty-i18n.json")` 生成全部 owner 的空模板；传入第二个参数（如 `"epsilon"` 或 Addon ID）可只生成指定 owner
+
+### i18n JSON 格式
+
+语言文件使用与 dotted key 对应的**嵌套 JSON object**，不再把完整 key 直接写成根节点属性。叶节点的翻译值必须是字符串。
+
+当一个 key 既有自己的翻译，又有子 key 时，使用保留属性 `_value` 保存该 key 自身的翻译。例如下列 JSON 同时定义 `epsilon`、`epsilon.modules.kill aura`、`epsilon.modules.kill aura.mode` 和枚举选项 `epsilon.modules.kill aura.mode.single`：
+
+```json
+{
+  "epsilon": {
+    "_value": "Epsilon",
+    "modules": {
+      "kill aura": {
+        "_value": "Kill Aura",
+        "range": "Range",
+        "mode": {
+          "_value": "Mode",
+          "single": "Single",
+          "switch": "Switch"
+        }
+      }
+    }
+  }
+}
+```
+
+- `_value` 只能用于 object 内保存父 key 的字符串值，不能作为翻译 key 的普通路径段
+- object 中除 `_value` 外的属性会按层级用 `.` 拼接为运行时 key
+- 不允许数组、数字、布尔值或 null；翻译叶节点和 `_value` 都必须是字符串
+- 新增或删除模块、HUD 元素、Setting、SettingGroup、Enum 选项或静态 `EpsilonTranslations` 时，应重新生成空模板并同步语言文件
+- 使用 `python scripts/complete_i18n.py` 可按模板补全、排序并删除多余 key；用 `--owner epsilon` 或 `--owner <addonId>` 可只同步指定 owner
 
 ### Module 翻译 key 约定
 
-- 内置模块：`epsilon.modules.{moduleNameLowerCase}`（如 `epsilon.modules.kill_aura`）
-- Addon 模块：`{addonId}.modules.{moduleNameLowerCase}`（如 `example_addon.modules.my_module`）
+- 名称通过 `toLowerCase()` 生成 key 段，空格会保留，不会自动转换为下划线
+- 内置模块：`epsilon.modules.{moduleNameLowerCase}`（如 `epsilon.modules.kill aura`）
+- 内置 HUD 元素：`epsilon.elements.{elementNameLowerCase}`
+- Addon 模块：`{addonId}.modules.{moduleNameLowerCase}`（如 `example_addon.modules.my module`）
 - `Module.getTranslatedName()` — 获取翻译后的显示名称
-- Setting 翻译：`{addonId}.settings.{settingNameLowerCase}`
-- SettingGroup 翻译：`{addonId}.settings.{groupNameLowerCase}`
+- 模块/HUD 内的 Setting 与 SettingGroup：直接作为所属模块 key 的子 key，如 `epsilon.modules.kill aura.range`
+- EnumSetting 选项：直接作为 Setting key 的子 key，如 `epsilon.modules.kill aura.mode.single`
+- Addon 自身的 Setting 与 SettingGroup（不属于模块）：`{addonId}.settings.{nameLowerCase}`
 
 ## 代码规范
 
