@@ -76,9 +76,8 @@ setting, rotation, and event systems.
 ## Blue Archive - Uzawa Reisa Assets
 
 - Character: Uzawa Reisa (宇沢レイサ)
-- Artwork sources: Blue Archive Wiki expression sprites
-  [Reisa_00.png](https://bluearchive.wiki/wiki/File:Reisa_00.png) and
-  [Reisa_09.png](https://bluearchive.wiki/wiki/File:Reisa_09.png)
+- Artwork sources: [Blue Archive Wiki standard Reisa expression sprites](https://bluearchive.wiki/wiki/Special:PrefixIndex?prefix=Reisa_&namespace=6),
+  `Reisa_00.png` through `Reisa_18.png` and `Reisa_99.png`
 - Voice sources: [Reisa LogIn 1](https://bluearchive.wiki/wiki/File:Reisa_LogIn_1.ogg) and [Reisa Relationship Up 4](https://bluearchive.wiki/wiki/File:Reisa_Relationship_Up_4.ogg)
 - Used in Epsilon: animated main-menu greeting and client shutdown voice.
 

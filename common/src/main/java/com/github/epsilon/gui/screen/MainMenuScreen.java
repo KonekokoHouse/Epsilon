@@ -51,7 +51,7 @@ public class MainMenuScreen extends Screen {
     private static final long REISA_EXIT_BASE_DURATION_MS = 500L;
     private static final long REISA_EXIT_DURATION_MS = 900L;
 
-    private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_01.png");
+    private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_00.png");
     private static final Identifier REISA_EXIT_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_09.png");
 
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
@@ -359,10 +359,10 @@ public class MainMenuScreen extends Screen {
         if (alpha <= 0.001f || widthProgress <= 0.001f) return;
 
         float centerX = imageX + imageWidth * 0.55f;
-        float lineWidth = imageWidth * 0.52f * widthProgress;
+        float lineWidth = imageWidth * widthProgress;
         float lineHeight = Math.max(1.0f, 1.15f * scale);
         float lineY = height - lineHeight;
-        float glowHeight = 22.0f * scale;
+        float glowHeight = 34.0f * scale;
 
         Color transparent = applyAlpha(new Color(213, 177, 255), 0.0f);
         Color glow = applyAlpha(new Color(205, 162, 255), alpha * 0.30f);
