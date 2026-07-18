@@ -513,7 +513,7 @@ public class MainMenuScreen extends Screen {
 
         float topPadding = 7.5f * scale;
         float rowGap = 5.0f * scale;
-        float bottomPadding = 9.5f * scale;
+        float bottomPadding = 9.0f * scale;
         float nameHeight = scene.scheduler().textMetrics().getHeight(nameScale, StaticFontLoader.JURA_LIGHT);
         float messageHeight = scene.scheduler().textMetrics().getHeight(messageScale);
         float bubbleHeight = topPadding + nameHeight + rowGap + messageHeight + bottomPadding;
@@ -534,7 +534,7 @@ public class MainMenuScreen extends Screen {
         float nameY = bubbleY + topPadding + contentOffsetY;
         float messageY = nameY + nameHeight + rowGap;
         float progressBarHeight = Math.max(3.0f, 3.0f * scale);
-        float progressBarY = bubbleY + bubbleHeight - 5.0f * scale;
+        float progressBarY = bubbleY + bubbleHeight - 8.0f * scale;
 
         scope.layer(20, layer -> {
             layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius,
