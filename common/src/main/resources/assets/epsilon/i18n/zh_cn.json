@@ -31,7 +31,8 @@
         "singleplayer": "单人游戏",
         "multiplayer": "多人游戏",
         "options": "选项",
-        "quit": "退出游戏"
+        "quit": "退出游戏",
+        "reisa_greeting": "嗨，老师！玲纱前来报到！"
       },
       "tab": {
         "general": "常规",

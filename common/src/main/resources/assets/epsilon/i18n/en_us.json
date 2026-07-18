@@ -31,7 +31,8 @@
         "singleplayer": "Singleplayer",
         "multiplayer": "Multiplayer",
         "options": "Options",
-        "quit": "Quit"
+        "quit": "Quit",
+        "reisa_greeting": "Hi, Sensei! Reisa reporting in!"
       },
       "tab": {
         "general": "General",

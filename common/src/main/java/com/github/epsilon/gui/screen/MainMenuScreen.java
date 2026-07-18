@@ -2,6 +2,7 @@ package com.github.epsilon.gui.screen;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.shaders.GlslSandBox;
 import com.github.epsilon.graphics.text.StaticFontLoader;
@@ -12,7 +13,10 @@ import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
@@ -20,7 +24,9 @@ import net.minecraft.client.gui.screens.multiplayer.SafetyScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 
@@ -32,6 +38,17 @@ public class MainMenuScreen extends Screen {
 
     public static final MainMenuScreen INSTANCE = new MainMenuScreen();
 
+    private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa.png");
+    private static final Identifier REISA_EXIT_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_09.png");
+    private static final float REISA_ASPECT_RATIO = 710.0f / 1280.0f;
+    private static final int REISA_PAGE_SLICES = 12;
+    private static final long REISA_ENTRANCE_DURATION_MS = 900L;
+    private static final long REISA_BUBBLE_DELAY_MS = 620L;
+    private static final long REISA_FALLBACK_VISIBLE_MS = 3_800L;
+    private static final long REISA_EXIT_PAGE_DELAY_MS = 180L;
+    private static final long REISA_EXIT_PAGE_DURATION_MS = 700L;
+    private static final long REISA_EXIT_DURATION_MS = 900L;
+
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
 
     private final List<MenuEntry> entries = new ArrayList<>();
@@ -41,6 +58,10 @@ public class MainMenuScreen extends Screen {
 
     private long introStartMs;
     private boolean initialized;
+    private boolean reisaGreetingQueued;
+    private long reisaGreetingStartMs = -1L;
+    private long reisaExitStartMs = -1L;
+    private SoundInstance reisaWelcomeSound;
 
     private MainMenuScreen() {
         super(Component.literal("MainMenuScreen"));
@@ -68,6 +89,44 @@ public class MainMenuScreen extends Screen {
                 entry.hoverProgress = 0.0f;
                 entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f);
             }
+        }
+        if (reisaGreetingQueued) {
+            startReisaGreeting();
+        }
+    }
+
+    public void queueReisaGreeting() {
+        reisaGreetingQueued = true;
+        if (initialized && minecraft.screen == this) {
+            startReisaGreeting();
+        }
+    }
+
+    private void startReisaGreeting() {
+        reisaGreetingQueued = false;
+        reisaGreetingStartMs = Util.getMillis();
+        reisaExitStartMs = -1L;
+        reisaWelcomeSound = Managers.SOUND.playTracked(SoundKey.REISA_WELCOME, 1.0f).orElse(null);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (reisaGreetingStartMs < 0L) return;
+
+        long now = Util.getMillis();
+        if (reisaExitStartMs >= 0L) {
+            if (now - reisaExitStartMs >= REISA_EXIT_DURATION_MS) {
+                clearReisaGreeting();
+            }
+            return;
+        }
+
+        boolean welcomeFinished = reisaWelcomeSound != null && !minecraft.getSoundManager().isActive(reisaWelcomeSound);
+        boolean fallbackFinished = reisaWelcomeSound == null && now - reisaGreetingStartMs >= REISA_FALLBACK_VISIBLE_MS;
+        if (welcomeFinished || fallbackFinished) {
+            reisaWelcomeSound = null;
+            reisaExitStartMs = now;
         }
     }
 
@@ -115,7 +174,8 @@ public class MainMenuScreen extends Screen {
     }
 
     private void drawMenu(int mouseX, int mouseY) {
-        float introProgress = easeOutCubic(Mth.clamp((Util.getMillis() - introStartMs) / 650.0f, 0.0f, 1.0f));
+        float introProgress = Easing.EASE_OUT_CUBIC.getFunction()
+                .apply(Mth.clamp((Util.getMillis() - introStartMs) / 650.0f, 0.0f, 1.0f));
         int width = LuminRenderSystem.getScaledWidthInt();
         int height = LuminRenderSystem.getScaledHeightInt();
         int buttonCount = entries.size();
@@ -160,6 +220,7 @@ public class MainMenuScreen extends Screen {
         float subtitleY = titleY + titleHeight + titleSubtitleGap;
 
         UiTree tree = UiTree.build(scope -> {
+            drawReisaGreeting(scope, width, height, scale);
             scope.layer(0, layer -> layer.rect(titleX, titleY + titleHeight + titleAccentGap,
                     titleAccentWidth, titleAccentHeight, accentColor));
             scope.layer(10, layer -> {
@@ -169,7 +230,7 @@ public class MainMenuScreen extends Screen {
             for (int index = 0; index < entries.size(); index++) {
                 MenuEntry entry = entries.get(index);
                 float staged = Mth.clamp((introProgress - index * 0.08f) / 0.52f, 0.0f, 1.0f);
-                float appear = easeOutCubic(staged);
+                float appear = Easing.EASE_OUT_CUBIC.getFunction().apply(staged);
                 if (appear <= 0.001f) {
                     entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f);
                     continue;
@@ -216,6 +277,177 @@ public class MainMenuScreen extends Screen {
         scene.submit(UiLayer.CONTENT, tree);
     }
 
+    private void drawReisaGreeting(UiTree.Scope scope, int width, int height, float scale) {
+        if (reisaGreetingStartMs < 0L) return;
+
+        long now = Util.getMillis();
+        long elapsed = Math.max(0L, now - reisaGreetingStartMs);
+        long exitElapsed = reisaExitStartMs < 0L ? -1L : Math.max(0L, now - reisaExitStartMs);
+        float entrance = Mth.clamp(elapsed / (float) REISA_ENTRANCE_DURATION_MS, 0.0f, 1.0f);
+        float slide = Easing.EASE_OUT_BACK.getFunction().apply(entrance);
+        float entranceUnfold = 0.04f + 0.96f * Easing.EASE_OUT_CUBIC.getFunction()
+                .apply(Mth.clamp((elapsed - 60.0f) / 760.0f, 0.0f, 1.0f));
+        float exit = exitElapsed < 0L
+                ? 0.0f
+                : Mth.clamp((exitElapsed - REISA_EXIT_PAGE_DELAY_MS) / (float) REISA_EXIT_PAGE_DURATION_MS, 0.0f, 1.0f);
+        float exitEase = Easing.EASE_IN_CUBIC.getFunction().apply(exit);
+        float imageHeight = Math.min(height * 0.96f, width * 0.72f);
+        float imageWidth = imageHeight * REISA_ASPECT_RATIO;
+        float targetX = width - imageWidth - Math.max(4.0f, 10.0f * scale);
+        float entranceX = Mth.lerp(slide, width + imageWidth * 0.08f, targetX);
+        float imageX = Mth.lerp(exitEase, entranceX, width + imageWidth * 0.08f);
+        float bob = entrance >= 1.0f && exitElapsed < 0L
+                ? (float) Math.sin((elapsed - REISA_ENTRANCE_DURATION_MS) * 0.0024f) * 1.4f * scale
+                : 0.0f;
+        float baseImageY = height - imageHeight + 4.0f * scale;
+        float imageY = baseImageY + bob;
+        float imageAlpha = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(elapsed / 240.0f, 0.0f, 1.0f))
+                * (1.0f - Easing.EASE_IN_CUBIC.getFunction()
+                .apply(Mth.clamp((exit - 0.72f) / 0.28f, 0.0f, 1.0f)));
+        float baseAlpha = imageAlpha * (exitElapsed < 0L ? entranceUnfold : 1.0f - exitEase);
+
+        drawReisaFloatingBase(scope, height, imageX, baseImageY, imageWidth, imageHeight, baseAlpha, scale);
+
+        if (exitElapsed >= 0L) {
+            drawReisaFoldedPage(scope, REISA_EXIT_TEXTURE, imageX, imageY,
+                    imageWidth, imageHeight, 1.0f - exitEase, imageAlpha, scale);
+        } else {
+            drawReisaFoldedPage(scope, REISA_WELCOME_TEXTURE, imageX, imageY,
+                    imageWidth, imageHeight, entranceUnfold, imageAlpha, scale);
+        }
+
+        drawReisaGreetingBubble(scope, elapsed, exitElapsed, width, imageX, imageY, imageWidth, imageHeight, scale);
+    }
+
+    private void drawReisaFloatingBase(UiTree.Scope scope, int height, float imageX, float baseImageY,
+                                       float imageWidth, float imageHeight, float alpha, float scale) {
+        if (alpha <= 0.001f) return;
+
+        float centerX = imageX + imageWidth * 0.55f;
+        float lineWidth = imageWidth * 0.52f;
+        float lineHeight = Math.max(1.0f, 1.15f * scale);
+        float lineY = Math.min(height - 4.0f * scale, baseImageY + imageHeight - 5.0f * scale);
+        float glowWidth = imageWidth * 0.58f;
+        float glowHeight = 22.0f * scale;
+
+        Color transparent = applyAlpha(new Color(213, 177, 255), 0.0f);
+        Color glow = applyAlpha(new Color(205, 162, 255), alpha * 0.30f);
+        Color line = applyAlpha(new Color(239, 220, 255), alpha * 0.78f);
+
+        scope.layer(-24, layer -> layer.rectVerticalGradient(
+                centerX - glowWidth * 0.5f, lineY - glowHeight,
+                glowWidth, glowHeight, transparent, glow
+        ));
+        scope.layer(-23, layer -> layer.roundRect(
+                centerX - lineWidth * 0.5f, lineY,
+                lineWidth, lineHeight, lineHeight * 0.5f, line
+        ));
+    }
+
+    private void drawReisaPage(UiTree.Scope scope, Identifier texture, float imageX, float imageY,
+                               float imageWidth, float imageHeight, float alpha) {
+        scope.layer(-22, layer -> layer.texture(texture, imageX + 2.0f, imageY + 3.0f, imageWidth, imageHeight,
+                0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.BLACK, alpha * 0.24f), true));
+        scope.layer(-21, layer -> layer.texture(texture, imageX, imageY, imageWidth, imageHeight,
+                0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.WHITE, alpha), true));
+    }
+
+    private void drawReisaFoldedPage(UiTree.Scope scope, Identifier texture, float imageX, float imageY,
+                                     float imageWidth, float imageHeight, float unfold, float alpha, float scale) {
+        if (unfold >= 0.999f) {
+            drawReisaPage(scope, texture, imageX, imageY, imageWidth, imageHeight, alpha);
+            return;
+        }
+
+        float hingeX = imageX + imageWidth;
+        for (int index = 0; index < REISA_PAGE_SLICES; index++) {
+            float u0 = index / (float) REISA_PAGE_SLICES;
+            float u1 = (index + 1.0f) / REISA_PAGE_SLICES;
+            float center = (u0 + u1) * 0.5f;
+            float sliceX = hingeX - imageWidth * (1.0f - u0) * unfold;
+            float sliceRight = hingeX - imageWidth * (1.0f - u1) * unfold;
+            float curl = (float) Math.sin(center * Math.PI) * (1.0f - unfold) * 13.0f * scale;
+            float shade = 1.0f - (1.0f - unfold) * (0.18f + 0.38f * (float) Math.sin(center * Math.PI));
+            Color sliceColor = applyAlpha(Color.WHITE, alpha * shade);
+            scope.layer(-20, layer -> layer.texture(texture, sliceX, imageY + curl,
+                    Math.max(0.5f, sliceRight - sliceX + 0.35f), imageHeight - curl * 0.25f,
+                    u0, 0.0f, u1, 1.0f, sliceColor, true));
+        }
+
+        float foldEdgeX = hingeX - imageWidth * unfold;
+        float edgeAlpha = alpha * (1.0f - unfold) * 0.72f;
+        scope.layer(-19, layer -> layer.rect(foldEdgeX, imageY + imageHeight * 0.05f,
+                Math.max(1.0f, 2.5f * scale), imageHeight * 0.90f,
+                applyAlpha(new Color(245, 224, 255), edgeAlpha)));
+    }
+
+    private void drawReisaGreetingBubble(UiTree.Scope scope, long elapsed, long exitElapsed, int width, float imageX,
+                                         float imageY, float imageWidth, float imageHeight, float scale) {
+        float bubbleIn = Easing.EASE_OUT_CUBIC.getFunction()
+                .apply(Mth.clamp((elapsed - REISA_BUBBLE_DELAY_MS) / 380.0f, 0.0f, 1.0f));
+        float bubbleExit = exitElapsed < 0L
+                ? 0.0f
+                : Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(exitElapsed / 260.0f, 0.0f, 1.0f));
+        float bubbleOut = 1.0f - bubbleExit;
+        float visibility = Math.min(bubbleIn, bubbleOut);
+        if (visibility <= 0.001f) return;
+
+        String name = "UZAWA REISA";
+        String greeting = EpsilonTranslations.Gui.MAINMENU_REISA_GREETING.getTranslatedName();
+        float contentInset = 13.0f * scale;
+        float maxBubbleWidth = Math.max(96.0f * scale, Math.min(205.0f * scale, width * 0.40f));
+        float minBubbleWidth = Math.min(145.0f * scale, maxBubbleWidth);
+        float availableTextWidth = Math.max(1.0f, maxBubbleWidth - contentInset * 2.0f);
+        float nameScale = 0.62f * scale;
+        float messageScale = fitTextScale(greeting, 0.68f * scale, availableTextWidth);
+        float nameWidth = scene.scheduler().textMetrics().getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT);
+        float messageWidth = scene.scheduler().textMetrics().getWidth(greeting, messageScale);
+        float bubbleWidth = Mth.clamp(Math.max(nameWidth, messageWidth) + contentInset * 2.0f,
+                minBubbleWidth, maxBubbleWidth);
+
+        float topPadding = 7.5f * scale;
+        float rowGap = 5.0f * scale;
+        float bottomPadding = 8.0f * scale;
+        float nameHeight = scene.scheduler().textMetrics().getHeight(nameScale, StaticFontLoader.JURA_LIGHT);
+        float messageHeight = scene.scheduler().textMetrics().getHeight(messageScale);
+        float bubbleHeight = topPadding + nameHeight + rowGap + messageHeight + bottomPadding;
+        float bubbleX = Mth.clamp(imageX - bubbleWidth * 0.72f, 12.0f * scale, width - bubbleWidth - 12.0f * scale);
+        float bubbleY = imageY + imageHeight * 0.23f + (1.0f - bubbleIn) * 12.0f * scale
+                - bubbleExit * 10.0f * scale;
+        float radius = 6.0f * scale;
+        float alpha = visibility * 0.96f;
+
+        Color surface = applyAlpha(new Color(29, 31, 42), alpha);
+        Color outline = applyAlpha(new Color(229, 194, 255), visibility * 0.78f);
+        Color nameColor = applyAlpha(new Color(252, 224, 255), visibility);
+        Color accentColor = applyAlpha(new Color(222, 169, 255), visibility * 0.96f);
+        Color textColor = applyAlpha(new Color(244, 241, 250), visibility);
+
+        float textX = bubbleX + contentInset;
+        float nameY = bubbleY + topPadding;
+        float messageY = nameY + nameHeight + rowGap;
+
+        scope.layer(20, layer -> {
+            layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, 10.0f * scale,
+                    applyAlpha(new Color(0, 0, 0), visibility * 0.42f));
+            layer.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, surface);
+            layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, Math.max(1.0f, scale), outline);
+            layer.roundRect(bubbleX + 6.5f * scale, nameY, 2.0f * scale, nameHeight,
+                    1.0f * scale, accentColor);
+            layer.roundRect(bubbleX + bubbleWidth - 13.0f * scale, bubbleY + bubbleHeight - 2.0f * scale,
+                    10.0f * scale, 9.0f * scale, 2.5f * scale, surface);
+        });
+        scope.layer(21, layer -> {
+            layer.text(name, textX, nameY, nameScale, nameColor, StaticFontLoader.JURA_LIGHT);
+            layer.text(greeting, textX, messageY, messageScale, textColor);
+        });
+    }
+
+    private float fitTextScale(String text, float preferredScale, float maxWidth) {
+        float textWidth = scene.scheduler().textMetrics().getWidth(text, preferredScale);
+        return textWidth > maxWidth && textWidth > 0.0f ? preferredScale * maxWidth / textWidth : preferredScale;
+    }
+
     private static String localizedTitle(String title) {
         return switch (title) {
             case "Singleplayer" -> EpsilonTranslations.Gui.MAINMENU_SINGLEPLAYER.getTranslatedName();
@@ -224,12 +456,6 @@ public class MainMenuScreen extends Screen {
             case "Quit" -> EpsilonTranslations.Gui.MAINMENU_QUIT.getTranslatedName();
             default -> title;
         };
-    }
-
-    private static float easeOutCubic(float value) {
-        float t = Mth.clamp(value, 0.0f, 1.0f);
-        float inv = 1.0f - t;
-        return 1.0f - inv * inv * inv;
     }
 
     private static Color applyAlpha(Color color, float alphaFactor) {
@@ -255,6 +481,10 @@ public class MainMenuScreen extends Screen {
     public void removed() {
         super.removed();
         initialized = false;
+        if (reisaWelcomeSound != null) {
+            minecraft.getSoundManager().stop(reisaWelcomeSound);
+        }
+        clearReisaGreeting();
         if (backgroundRenderTarget != null) {
             backgroundRenderTarget.close();
             backgroundRenderTarget = null;
@@ -264,6 +494,12 @@ public class MainMenuScreen extends Screen {
             uiRenderTarget = null;
         }
         scene.close();
+    }
+
+    private void clearReisaGreeting() {
+        reisaGreetingStartMs = -1L;
+        reisaExitStartMs = -1L;
+        reisaWelcomeSound = null;
     }
 
     @Override

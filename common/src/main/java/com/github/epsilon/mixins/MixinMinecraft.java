@@ -4,6 +4,7 @@ import com.github.epsilon.Constants;
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -61,7 +62,11 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "onGameLoadFinished", at = @At("TAIL"))
     private void onGameLoadFinished(CallbackInfo ci) {
-        Managers.SOUND.playSound(SoundKey.REISA_WELCOME, 1.0f);
+        if (ClientSetting.INSTANCE.useMainMenu.getValue()) {
+            MainMenuScreen.INSTANCE.queueReisaGreeting();
+        } else {
+            Managers.SOUND.playSound(SoundKey.REISA_WELCOME, 1.0f);
+        }
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
