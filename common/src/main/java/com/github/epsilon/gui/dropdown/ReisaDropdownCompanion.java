@@ -99,16 +99,16 @@ public final class ReisaDropdownCompanion {
                 shownAction.texture(), drawX + 2.0f, drawY + 3.0f, drawWidth, drawHeight,
                 0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.BLACK, alpha * 0.15f), true
         ));
+        scope.layer(-1, layer -> layer.texture(
+                shownAction.texture(), drawX, drawY, drawWidth, drawHeight,
+                0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), true
+        ));
         if (previousAction != shownAction && expression < 0.999f) {
-            scope.layer(-1, layer -> layer.texture(
+            scope.layer(0, layer -> layer.texture(
                     previousAction.texture(), drawX, drawY, drawWidth, drawHeight,
                     0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha * (1.0f - expression)), true
             ));
         }
-        scope.layer(0, layer -> layer.texture(
-                shownAction.texture(), drawX, drawY, drawWidth, drawHeight,
-                0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha * expression), true
-        ));
     }
 
     public float getLeftEdge(float screenWidth, float screenHeight) {
