@@ -524,8 +524,11 @@ public class MainMenuScreen extends Screen {
         Color accentColor = applyAlpha(new Color(222, 169, 255), visibility * 0.98f);
         Color textColor = applyAlpha(new Color(244, 241, 250), visibility);
         float textX = bubbleX + contentInset;
-        float nameY = bubbleY + topPadding;
+        float contentOffsetY = -2.0f * scale;
+        float nameY = bubbleY + topPadding + contentOffsetY;
         float messageY = nameY + nameHeight + rowGap;
+        float progressBarHeight = Math.max(3.0f, 3.0f * scale);
+        float progressBarY = bubbleY + bubbleHeight - 5.0f * scale;
 
         scope.layer(20, layer -> {
             layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius,
@@ -535,9 +538,9 @@ public class MainMenuScreen extends Screen {
                     Math.max(1.0f, scale), outline);
             layer.roundRect(bubbleX + 6.5f * scale, nameY, 2.0f * scale, nameHeight,
                     1.0f * scale, accentColor);
-            layer.roundRect(bubbleX + contentInset, bubbleY + bubbleHeight - 3.0f * scale,
-                    (bubbleWidth - contentInset * 2.0f) * speechProgress, Math.max(1.0f, scale),
-                    Math.max(0.5f, scale * 0.5f), applyAlpha(accentColor, 0.62f));
+            layer.roundRect(bubbleX + contentInset, progressBarY,
+                    (bubbleWidth - contentInset * 2.0f) * speechProgress, progressBarHeight,
+                    progressBarHeight * 0.5f, applyAlpha(accentColor, 0.62f));
         });
         scope.layer(21, layer -> {
             layer.text(name, textX, nameY, nameScale, nameColor, StaticFontLoader.JURA_LIGHT);
