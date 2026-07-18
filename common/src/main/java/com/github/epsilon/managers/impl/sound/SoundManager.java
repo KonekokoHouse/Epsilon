@@ -2,8 +2,11 @@ package com.github.epsilon.managers.impl.sound;
 
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+
+import java.util.Optional;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -26,7 +29,17 @@ public class SoundManager {
         if (now - lastUiPlayTimeMs < UI_DEBOUNCE_MS) return;
         lastUiPlayTimeMs = now;
 
-        SimpleSoundInstance instance = new SimpleSoundInstance(
+        mc.getSoundManager().play(createSoundInstance(key, pitch, volume));
+    }
+
+    public Optional<SoundInstance> playTracked(SoundKey key, float volume) {
+        SimpleSoundInstance instance = createSoundInstance(key, 1.0f, volume);
+        SoundEngine.PlayResult result = mc.getSoundManager().play(instance);
+        return result == SoundEngine.PlayResult.NOT_STARTED ? Optional.empty() : Optional.of(instance);
+    }
+
+    private SimpleSoundInstance createSoundInstance(SoundKey key, float pitch, float volume) {
+        return new SimpleSoundInstance(
                 key.id(),
                 SoundSource.UI,
                 Math.max(0.0f, volume),
@@ -40,8 +53,6 @@ public class SoundManager {
                 0.0,
                 true
         );
-
-        mc.getSoundManager().play(instance);
     }
 
     public void stop(SoundKey key) {

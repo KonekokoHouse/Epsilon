@@ -192,12 +192,4 @@ public class ClientSetting extends Module {
         TtfFontLoader.setMaxGlyphUploadsPerFrame(budget);
     }
 
-    public boolean snapRotation() {
-        return rotationMode.is(RotationManager.RotationMode.SNAP);
-    }
-
-    public boolean silentRotation() {
-        return rotationMode.is(RotationManager.RotationMode.SILENT);
-    }
-
 }
