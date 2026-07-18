@@ -1,7 +1,9 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.dropdown.widget.*;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
@@ -162,6 +164,9 @@ public class SettingsContent {
                         blurInputs(section);
                     }
                     Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                    DropdownScreen.INSTANCE.react(section.isCollapsed()
+                            ? ReisaDropdownCompanion.Action.PANEL_CLOSE
+                            : ReisaDropdownCompanion.Action.PANEL_OPEN);
                     return true;
                 }
                 if (canInteractWith(section)) {

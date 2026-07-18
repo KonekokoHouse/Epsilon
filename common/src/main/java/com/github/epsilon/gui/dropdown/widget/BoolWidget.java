@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.DropdownScreen;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
@@ -98,6 +100,9 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
                 boolean newValue = !setting.getValue();
                 setting.setValue(newValue);
                 Managers.SOUND.playInUi(newValue ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+                DropdownScreen.INSTANCE.react(newValue
+                        ? ReisaDropdownCompanion.Action.TOGGLE_ON
+                        : ReisaDropdownCompanion.Action.TOGGLE_OFF);
                 return true;
             }
         }

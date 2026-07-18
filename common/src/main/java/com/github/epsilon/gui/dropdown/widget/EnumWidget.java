@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
@@ -81,6 +83,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
         if (expanded && keyCode == GLFW.GLFW_KEY_ESCAPE) {
             expanded = false;
             Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CANCEL);
             return true;
         }
         return false;
@@ -135,6 +138,9 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
                 && getHiddenModeCount() > 0) {
             expanded = !expanded;
             Managers.SOUND.playInUi(expanded ? SoundKey.SETTINGS_OPEN : SoundKey.SETTINGS_CLOSE);
+            DropdownScreen.INSTANCE.react(expanded
+                    ? ReisaDropdownCompanion.Action.PANEL_OPEN
+                    : ReisaDropdownCompanion.Action.PANEL_CLOSE);
             return true;
         }
         return expanded;
@@ -146,6 +152,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
             setting.setMode(mode.name());
             expanded = false;
             Managers.SOUND.playInUi(SoundKey.SETTINGS_CLOSE);
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
         expanded = false;

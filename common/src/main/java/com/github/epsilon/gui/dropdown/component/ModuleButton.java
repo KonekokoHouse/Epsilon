@@ -3,7 +3,9 @@ package com.github.epsilon.gui.dropdown.component;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.graphics.text.IconChars;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.dropdown.widget.*;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
@@ -393,30 +395,40 @@ public class ModuleButton extends Component {
         if (listeningKeybind) {
             module.setKeyBind(KeybindUtils.encodeMouseButton(button));
             listeningKeybind = false;
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
 
         if (isHovered(mouseX, mouseY, x, y, width, DropdownTheme.MODULE_HEIGHT)) {
             if (isHiddenButtonHovered(mouseX, mouseY)) {
                 module.setHidden(!module.isHidden());
+                DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.MODULE_HIDDEN);
                 return true;
             }
             if (isKeybindButtonHovered(mouseX, mouseY)) {
                 if (button == 0) {
                     listeningKeybind = true;
+                    DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.KEY_BIND);
                     return true;
                 }
                 if (button == 2) {
                     module.setBindMode(module.getBindMode() == Module.BindMode.Toggle ? Module.BindMode.Hold : Module.BindMode.Toggle);
+                    DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.KEY_BIND);
                     return true;
                 }
             }
             if (button == 0) {
                 module.toggle();
+                DropdownScreen.INSTANCE.react(module.isEnabled()
+                        ? ReisaDropdownCompanion.Action.TOGGLE_ON
+                        : ReisaDropdownCompanion.Action.TOGGLE_OFF);
                 return true;
             }
             if (button == 1) {
                 expanded = !expanded;
+                DropdownScreen.INSTANCE.react(expanded
+                        ? ReisaDropdownCompanion.Action.PANEL_OPEN
+                        : ReisaDropdownCompanion.Action.PANEL_CLOSE);
                 return true;
             }
         }
@@ -433,6 +445,9 @@ public class ModuleButton extends Component {
                             blurInputs(section);
                         }
                         Managers.SOUND.playInUi(section.isCollapsed() ? SoundKey.SETTINGS_CLOSE : SoundKey.SETTINGS_OPEN);
+                        DropdownScreen.INSTANCE.react(section.isCollapsed()
+                                ? ReisaDropdownCompanion.Action.PANEL_CLOSE
+                                : ReisaDropdownCompanion.Action.PANEL_OPEN);
                         return true;
                     }
                     if (!section.isCollapsed() && getGroupExpandProgress(section) >= 0.999f) {
@@ -477,6 +492,9 @@ public class ModuleButton extends Component {
         if (listeningKeybind) {
             module.setKeyBind(keyCode == 256 || keyCode == 259 ? KeybindUtils.NONE : keyCode);
             listeningKeybind = false;
+            DropdownScreen.INSTANCE.react(keyCode == 256
+                    ? ReisaDropdownCompanion.Action.CANCEL
+                    : ReisaDropdownCompanion.Action.CONFIRM);
             return true;
         }
 

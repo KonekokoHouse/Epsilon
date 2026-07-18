@@ -1,6 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
@@ -79,6 +81,7 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
         if (button != 0 || !isFieldHovered(mouseX, mouseY)) return false;
         openPopup();
         Managers.SOUND.playInUi(SoundKey.SETTINGS_OPEN);
+        DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.PANEL_OPEN);
         return true;
     }
 

@@ -334,15 +334,12 @@ public class MainMenuScreen extends Screen {
             drawReisaExitAfterimages(scope, drawX, drawY, drawWidth, drawHeight,
                     imageAlpha, poseEase, moveProgress, scale);
             if (poseEase < 0.999f) {
-                drawReisaPage(scope, REISA_WELCOME_TEXTURE, drawX, drawY,
-                        drawWidth, drawHeight, imageAlpha);
+                drawReisa(scope, REISA_WELCOME_TEXTURE, drawX, drawY, drawWidth, drawHeight, imageAlpha);
                 if (poseEase > 0.001f) {
-                    drawReisaPoseOverlay(scope, drawX, drawY, drawWidth, drawHeight,
-                            imageAlpha * poseEase);
+                    drawReisaPoseOverlay(scope, drawX, drawY, drawWidth, drawHeight, imageAlpha * poseEase);
                 }
             } else {
-                drawReisaPage(scope, REISA_EXIT_TEXTURE, drawX, drawY,
-                        drawWidth, drawHeight, imageAlpha);
+                drawReisa(scope, REISA_EXIT_TEXTURE, drawX, drawY, drawWidth, drawHeight, imageAlpha);
             }
         } else {
             if (elapsed <= REISA_ENTRANCE_DURATION_MS) {
@@ -407,16 +404,13 @@ public class MainMenuScreen extends Screen {
                 applyAlpha(Color.WHITE, 0.0f), true));
     }
 
-    private void drawReisaPage(UiTree.Scope scope, Identifier texture, float imageX, float imageY, float imageWidth, float imageHeight, float alpha) {
-        scope.layer(-22, layer -> layer.texture(texture, imageX + 2.0f, imageY + 3.0f, imageWidth, imageHeight,
-                0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.BLACK, alpha * 0.24f), true));
-        scope.layer(-21, layer -> layer.texture(texture, imageX, imageY, imageWidth, imageHeight,
-                0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.WHITE, alpha), true));
+    private void drawReisa(UiTree.Scope scope, Identifier texture, float imageX, float imageY, float imageWidth, float imageHeight, float alpha) {
+        scope.layer(-21, layer -> layer.texture(texture, imageX, imageY, imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.WHITE, alpha), true));
     }
 
     private void drawReisaFoldedPage(UiTree.Scope scope, float imageX, float imageY, float imageWidth, float imageHeight, float unfold, float alpha, float scale) {
         if (unfold >= 0.999f) {
-            drawReisaPage(scope, MainMenuScreen.REISA_WELCOME_TEXTURE, imageX, imageY, imageWidth, imageHeight, alpha);
+            drawReisa(scope, MainMenuScreen.REISA_WELCOME_TEXTURE, imageX, imageY, imageWidth, imageHeight, alpha);
             return;
         }
 

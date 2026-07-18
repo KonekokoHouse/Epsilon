@@ -2,7 +2,9 @@ package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
 import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
+import com.github.epsilon.gui.dropdown.ReisaDropdownCompanion;
 import com.github.epsilon.gui.lib.UiRect;
 import com.github.epsilon.gui.lib.UiTextMetrics;
 import com.github.epsilon.gui.lib.UiTree;
@@ -171,10 +173,14 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
                 dragging = true;
                 dragOffsetX = (float) (x - mouseX);
                 dragOffsetY = (float) (y - mouseY);
+                DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.DRAG);
                 return true;
             }
             if (button == 1) {
                 opened = !opened;
+                DropdownScreen.INSTANCE.react(opened
+                        ? ReisaDropdownCompanion.Action.PANEL_OPEN
+                        : ReisaDropdownCompanion.Action.PANEL_CLOSE);
                 return true;
             }
         }
@@ -184,6 +190,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
             if (newScroll >= 0.0f) {
                 setScrollImmediate(newScroll);
             }
+            DropdownScreen.INSTANCE.react(ReisaDropdownCompanion.Action.SLIDER_ADJUST);
             return true;
         }
 
