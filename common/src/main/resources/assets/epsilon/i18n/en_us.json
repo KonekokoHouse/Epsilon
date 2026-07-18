@@ -32,7 +32,8 @@
         "multiplayer": "Multiplayer",
         "options": "Options",
         "quit": "Quit",
-        "reisa_greeting": "Hi, Sensei! Reisa reporting in!"
+        "reisa_greeting": "Hi, Sensei! Reisa reporting in!",
+        "reisa_farewell": "Sensei, see you tomorrow! Reisa is signing off!"
       },
       "tab": {
         "general": "General",

@@ -100,8 +100,18 @@ public abstract class MixinMinecraft {
     private void delayShutdown(CallbackInfo ci) {
         if (epsilon$shutdownReady) return;
 
+        Minecraft minecraft = (Minecraft) (Object) this;
+        if (minecraft.screen == MainMenuScreen.INSTANCE) {
+            if (MainMenuScreen.INSTANCE.requestShutdown()) {
+                ci.cancel();
+                return;
+            }
+            epsilon$shutdownReady = true;
+            return;
+        }
+
         if (epsilon$shutdownSound == null) {
-            ((Minecraft) (Object) this).getSoundManager().stop();
+            minecraft.getSoundManager().stop();
             epsilon$shutdownSound = Managers.SOUND.playTracked(SoundKey.REISA_BYE, 1.0f).orElse(null);
             if (epsilon$shutdownSound == null) {
                 epsilon$shutdownReady = true;

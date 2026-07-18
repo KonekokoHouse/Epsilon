@@ -51,8 +51,17 @@ public class MainMenuScreen extends Screen {
     private static final long REISA_EXIT_BASE_DURATION_MS = 500L;
     private static final long REISA_EXIT_DURATION_MS = 900L;
 
+    private static final long REISA_SHUTDOWN_ENTRANCE_DELAY_MS = 220L;
+    private static final long REISA_SHUTDOWN_ENTRANCE_DURATION_MS = 760L;
+    private static final long REISA_SHUTDOWN_BUBBLE_DELAY_MS = 1_150L;
+    private static final long REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS = 7_666L;
+    private static final long REISA_SHUTDOWN_EXIT_DURATION_MS = 900L;
+    private static final long REISA_SHUTDOWN_MENU_FADE_DURATION_MS = 2_200L;
+
     private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_00.png");
     private static final Identifier REISA_EXIT_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_09.png");
+    private static final Identifier REISA_SHUTDOWN_ENTRANCE_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_10.png");
+    private static final Identifier REISA_SHUTDOWN_FINAL_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_18.png");
 
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
 
@@ -67,6 +76,11 @@ public class MainMenuScreen extends Screen {
     private long reisaGreetingStartMs = -1L;
     private long reisaExitStartMs = -1L;
     private SoundInstance reisaWelcomeSound;
+    private long reisaShutdownStartMs = -1L;
+    private long reisaShutdownExitStartMs = -1L;
+    private SoundInstance reisaShutdownSound;
+    private boolean reisaShutdownCommitted;
+    private boolean reisaShutdownTexturesPrewarmed;
 
     private MainMenuScreen() {
         super(Component.literal("MainMenuScreen"));
@@ -114,9 +128,44 @@ public class MainMenuScreen extends Screen {
         reisaWelcomeSound = Managers.SOUND.playTracked(SoundKey.REISA_WELCOME, 1.0f).orElse(null);
     }
 
+    public boolean requestShutdown() {
+        if (!initialized || minecraft.screen != this || reisaShutdownCommitted) return false;
+        if (reisaShutdownStartMs >= 0L) return true;
+
+        if (reisaWelcomeSound != null) {
+            minecraft.getSoundManager().stop(reisaWelcomeSound);
+        }
+        clearReisaGreeting();
+        minecraft.getSoundManager().stop();
+        reisaShutdownStartMs = Util.getMillis();
+        reisaShutdownExitStartMs = -1L;
+        reisaShutdownSound = Managers.SOUND.playTracked(SoundKey.REISA_BYE, 1.0f).orElse(null);
+        return true;
+    }
+
     @Override
     public void tick() {
         super.tick();
+        if (reisaShutdownStartMs >= 0L) {
+            long now = Util.getMillis();
+            if (reisaShutdownExitStartMs < 0L) {
+                boolean soundFinished = reisaShutdownSound != null
+                        && !minecraft.getSoundManager().isActive(reisaShutdownSound);
+                boolean fallbackFinished = reisaShutdownSound == null
+                        && now - reisaShutdownStartMs >= REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS;
+                if (soundFinished || fallbackFinished) {
+                    reisaShutdownSound = null;
+                    reisaShutdownExitStartMs = now;
+                }
+                return;
+            }
+
+            if (now - reisaShutdownExitStartMs >= REISA_SHUTDOWN_EXIT_DURATION_MS) {
+                reisaShutdownCommitted = true;
+                minecraft.stop();
+            }
+            return;
+        }
         if (reisaGreetingStartMs < 0L) return;
 
         long now = Util.getMillis();
@@ -179,9 +228,15 @@ public class MainMenuScreen extends Screen {
     }
 
     private void drawMenu(int mouseX, int mouseY) {
-        float introProgress = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp((Util.getMillis() - introStartMs) / 650.0f, 0.0f, 1.0f));
+        long now = Util.getMillis();
+        float introProgress = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp((now - introStartMs) / 650.0f, 0.0f, 1.0f));
         int width = LuminRenderSystem.getScaledWidthInt();
         int height = LuminRenderSystem.getScaledHeightInt();
+        float shutdownElapsed = reisaShutdownStartMs < 0L
+                ? 0.0f
+                : now - reisaShutdownStartMs;
+        float menuVisibility = 1.0f - Easing.EASE_OUT_CUBIC.getFunction()
+                .apply(Mth.clamp(shutdownElapsed / REISA_SHUTDOWN_MENU_FADE_DURATION_MS, 0.0f, 1.0f));
         int buttonCount = entries.size();
         int gapCount = Math.max(0, buttonCount - 1);
         float scale = Mth.clamp((width * 2.0f + height) / 900.0f + 0.08f, 0.72f, 1.24f);
@@ -213,9 +268,9 @@ public class MainMenuScreen extends Screen {
         float targetButtonsY = height - Math.min((width + height * 2.0f) / 25.0f, 54.0f * scale);
         float buttonsY = Math.min(targetButtonsY, height - buttonHitHeight + buttonHitPaddingTop);
 
-        Color titleColor = applyAlpha(new Color(230, 224, 233), 0.96f);
-        Color subtitleColor = applyAlpha(new Color(202, 196, 208), 0.90f);
-        Color accentColor = applyAlpha(new Color(208, 188, 255), 0.95f);
+        Color titleColor = applyAlpha(new Color(230, 224, 233), 0.96f * menuVisibility);
+        Color subtitleColor = applyAlpha(new Color(202, 196, 208), 0.90f * menuVisibility);
+        Color accentColor = applyAlpha(new Color(208, 188, 255), 0.95f * menuVisibility);
 
         String title = "EPSILON";
         String subtitle = Constants.VERSION;
@@ -224,7 +279,15 @@ public class MainMenuScreen extends Screen {
         float subtitleY = titleY + titleHeight + titleSubtitleGap;
 
         UiTree tree = UiTree.build(scope -> {
-            drawReisaGreeting(scope, width, height, scale);
+            if (!reisaShutdownTexturesPrewarmed) {
+                prewarmReisaShutdownTextures(scope);
+                reisaShutdownTexturesPrewarmed = true;
+            }
+            if (reisaShutdownStartMs >= 0L) {
+                drawReisaShutdown(scope, width, height, scale, now);
+            } else {
+                drawReisaGreeting(scope, width, height, scale);
+            }
             scope.layer(0, layer -> layer.rect(titleX, titleY + titleHeight + titleAccentGap, titleAccentWidth, titleAccentHeight, accentColor));
             scope.layer(10, layer -> {
                 layer.text(title, titleX, titleY, titleScale, titleColor, StaticFontLoader.JURA_LIGHT);
@@ -233,7 +296,7 @@ public class MainMenuScreen extends Screen {
             for (int index = 0; index < entries.size(); index++) {
                 MenuEntry entry = entries.get(index);
                 float staged = Mth.clamp((introProgress - index * 0.08f) / 0.52f, 0.0f, 1.0f);
-                float appear = Easing.EASE_OUT_CUBIC.getFunction().apply(staged);
+                float appear = Easing.EASE_OUT_CUBIC.getFunction().apply(staged) * menuVisibility;
                 if (appear <= 0.001f) {
                     entry.setBounds(0.0f, 0.0f, 0.0f, 0.0f);
                     continue;
@@ -351,6 +414,140 @@ public class MainMenuScreen extends Screen {
         drawReisaGreetingBubble(scope, elapsed, exitElapsed, width, drawX, drawY, drawWidth, drawHeight, scale);
     }
 
+    private void drawReisaShutdown(UiTree.Scope scope, int width, int height, float scale, long now) {
+        long elapsed = Math.max(0L, now - reisaShutdownStartMs);
+        long exitElapsed = reisaShutdownExitStartMs < 0L ? -1L : Math.max(0L, now - reisaShutdownExitStartMs);
+        float entranceProgress = Mth.clamp((elapsed - REISA_SHUTDOWN_ENTRANCE_DELAY_MS)
+                / (float) REISA_SHUTDOWN_ENTRANCE_DURATION_MS, 0.0f, 1.0f);
+        float entranceEase = Easing.EASE_OUT_BACK.getFunction().apply(entranceProgress);
+        float exitProgress = exitElapsed < 0L
+                ? 0.0f
+                : Mth.clamp(exitElapsed / (float) REISA_SHUTDOWN_EXIT_DURATION_MS, 0.0f, 1.0f);
+        float exitEase = Easing.EASE_IN_CUBIC.getFunction().apply(exitProgress);
+        float dim = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(elapsed / 620.0f, 0.0f, 1.0f));
+
+        scope.layer(-40, layer -> layer.rect(0.0f, 0.0f, width, height,
+                applyAlpha(new Color(8, 9, 16), dim * 0.62f)));
+
+        float imageHeight = Math.min(height * 0.98f, width * 0.74f);
+        float imageWidth = imageHeight * REISA_ASPECT_RATIO;
+        float targetX = width - imageWidth - Math.max(4.0f, 10.0f * scale);
+        float imageX = Mth.lerp(entranceEase, width + imageWidth * 0.12f, targetX)
+                + exitEase * (imageWidth * 0.56f + 42.0f * scale);
+        float bob = entranceProgress >= 1.0f && exitProgress <= 0.0f
+                ? (float) Math.sin((elapsed - REISA_SHUTDOWN_ENTRANCE_DURATION_MS) * 0.0031f) * 1.6f * scale
+                : 0.0f;
+        float imageY = height - imageHeight + 4.0f * scale + bob - exitEase * 28.0f * scale;
+        float imageScale = Mth.lerp(exitEase, 1.0f, 0.94f);
+        float drawWidth = imageWidth * imageScale;
+        float drawHeight = imageHeight * imageScale;
+        float drawX = imageX + (imageWidth - drawWidth) * 0.5f;
+        float drawY = imageY + (imageHeight - drawHeight) * 0.5f;
+        float imageAlpha = Easing.EASE_OUT_CUBIC.getFunction().apply(entranceProgress) * (1.0f - exitEase);
+
+        drawReisaShutdownTrails(scope, drawX, drawY, drawWidth, drawHeight, exitProgress, scale);
+        drawReisa(scope, reisaShutdownTexture(elapsed, exitElapsed >= 0L), drawX, drawY, drawWidth, drawHeight, imageAlpha);
+        drawReisaShutdownBubble(scope, elapsed, exitElapsed, width, drawX, drawY, drawWidth, drawHeight, scale);
+    }
+
+    private void drawReisaShutdownTrails(UiTree.Scope scope, float imageX, float imageY,
+                                         float imageWidth, float imageHeight, float exitProgress, float scale) {
+        float trailEnvelope = (float) Math.sin(exitProgress * Math.PI);
+        if (trailEnvelope <= 0.001f) return;
+
+        float startX = imageX + imageWidth * 0.34f;
+        float maxWidth = Math.max(0.0f, LuminRenderSystem.getScaledWidth() - startX);
+        Color bright = applyAlpha(new Color(235, 211, 255), trailEnvelope * 0.62f);
+        Color soft = applyAlpha(new Color(183, 146, 245), 0.0f);
+        scope.layer(-22, layer -> {
+            layer.rectHorizontalGradient(startX, imageY + imageHeight * 0.24f,
+                    maxWidth, Math.max(1.0f, 1.5f * scale), bright, soft);
+            layer.rectHorizontalGradient(startX + imageWidth * 0.08f, imageY + imageHeight * 0.49f,
+                    maxWidth * 0.78f, Math.max(1.0f, scale), applyAlpha(bright, 0.68f), soft);
+            layer.rectHorizontalGradient(startX - imageWidth * 0.03f, imageY + imageHeight * 0.71f,
+                    maxWidth * 0.88f, Math.max(1.0f, 1.2f * scale), applyAlpha(bright, 0.48f), soft);
+        });
+    }
+
+    private void drawReisaShutdownBubble(UiTree.Scope scope, long elapsed, long exitElapsed, int width, float imageX,
+                                         float imageY, float imageWidth, float imageHeight, float scale) {
+        float bubbleIn = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(
+                (elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS) / 320.0f, 0.0f, 1.0f));
+        float bubbleOut = exitElapsed < 0L
+                ? 1.0f
+                : 1.0f - Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(exitElapsed / 300.0f, 0.0f, 1.0f));
+        float visibility = Math.min(bubbleIn, bubbleOut);
+        if (visibility <= 0.001f) return;
+
+        String name = "UZAWA REISA";
+        String farewell = EpsilonTranslations.Gui.MAINMENU_REISA_FAREWELL.getTranslatedName();
+        float contentInset = 13.0f * scale;
+        float maxBubbleWidth = Math.clamp(225.0f * scale, 104.0f * scale, width * 0.44f);
+        float availableTextWidth = Math.max(1.0f, maxBubbleWidth - contentInset * 2.0f);
+        float nameScale = 0.62f * scale;
+        float messageScale = fitTextScale(farewell, 0.68f * scale, availableTextWidth);
+        float bubbleWidth = Math.min(maxBubbleWidth, Math.max(
+                scene.scheduler().textMetrics().getWidth(name, nameScale, StaticFontLoader.JURA_LIGHT),
+                scene.scheduler().textMetrics().getWidth(farewell, messageScale)) + contentInset * 2.0f);
+
+        float topPadding = 7.5f * scale;
+        float rowGap = 5.0f * scale;
+        float bottomPadding = 9.5f * scale;
+        float nameHeight = scene.scheduler().textMetrics().getHeight(nameScale, StaticFontLoader.JURA_LIGHT);
+        float messageHeight = scene.scheduler().textMetrics().getHeight(messageScale);
+        float bubbleHeight = topPadding + nameHeight + rowGap + messageHeight + bottomPadding;
+        float bubbleX = Mth.clamp(imageX - bubbleWidth * 0.72f,
+                12.0f * scale, width - bubbleWidth - 12.0f * scale);
+        float bubbleY = imageY + imageHeight * 0.22f + (1.0f - bubbleIn) * 12.0f * scale;
+        float radius = 6.0f * scale;
+        float speechProgress = Mth.clamp((elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS)
+                / (float) (REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS - REISA_SHUTDOWN_BUBBLE_DELAY_MS), 0.0f, 1.0f);
+
+        Color surface = applyAlpha(new Color(29, 31, 42), visibility * 0.97f);
+        Color outline = applyAlpha(new Color(229, 194, 255), visibility * 0.54f);
+        Color nameColor = applyAlpha(new Color(252, 224, 255), visibility);
+        Color accentColor = applyAlpha(new Color(222, 169, 255), visibility * 0.98f);
+        Color textColor = applyAlpha(new Color(244, 241, 250), visibility);
+        float textX = bubbleX + contentInset;
+        float nameY = bubbleY + topPadding;
+        float messageY = nameY + nameHeight + rowGap;
+
+        scope.layer(20, layer -> {
+            layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius,
+                    10.0f * scale, applyAlpha(new Color(0, 0, 0), visibility * 0.44f));
+            layer.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, surface);
+            layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius,
+                    Math.max(1.0f, scale), outline);
+            layer.roundRect(bubbleX + 6.5f * scale, nameY, 2.0f * scale, nameHeight,
+                    1.0f * scale, accentColor);
+            layer.roundRect(bubbleX + contentInset, bubbleY + bubbleHeight - 3.0f * scale,
+                    (bubbleWidth - contentInset * 2.0f) * speechProgress, Math.max(1.0f, scale),
+                    Math.max(0.5f, scale * 0.5f), applyAlpha(accentColor, 0.62f));
+        });
+        scope.layer(21, layer -> {
+            layer.text(name, textX, nameY, nameScale, nameColor, StaticFontLoader.JURA_LIGHT);
+            layer.text(farewell, textX, messageY, messageScale, textColor);
+        });
+    }
+
+    private Identifier reisaShutdownTexture(long elapsed, boolean exiting) {
+        if (exiting) return REISA_SHUTDOWN_FINAL_TEXTURE;
+        if (elapsed < REISA_SHUTDOWN_BUBBLE_DELAY_MS) return REISA_SHUTDOWN_ENTRANCE_TEXTURE;
+
+        long speechElapsed = elapsed - REISA_SHUTDOWN_BUBBLE_DELAY_MS;
+        return (speechElapsed / 145L & 1L) == 0L ? REISA_WELCOME_TEXTURE : REISA_EXIT_TEXTURE;
+    }
+
+    private void prewarmReisaShutdownTextures(UiTree.Scope scope) {
+        Color transparent = applyAlpha(Color.WHITE, 0.0f);
+        scope.layer(-60, layer -> {
+            layer.texture(REISA_SHUTDOWN_ENTRANCE_TEXTURE, -1.0f, -1.0f, 1.0f, 1.0f,
+                    0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
+            layer.texture(REISA_SHUTDOWN_FINAL_TEXTURE, -1.0f, -1.0f, 1.0f, 1.0f,
+                    0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
+        });
+    }
+
     private void drawReisaFloatingBase(UiTree.Scope scope, int height, float imageX, float imageWidth,
                                        float alpha, float widthProgress, float scale) {
         if (alpha <= 0.001f || widthProgress <= 0.001f) return;
@@ -390,8 +587,7 @@ public class MainMenuScreen extends Screen {
         });
     }
 
-    private void drawReisaPoseOverlay(UiTree.Scope scope, float imageX, float imageY,
-                                      float imageWidth, float imageHeight, float alpha) {
+    private void drawReisaPoseOverlay(UiTree.Scope scope, float imageX, float imageY, float imageWidth, float imageHeight, float alpha) {
         scope.layer(-20, layer -> layer.texture(REISA_EXIT_TEXTURE, imageX, imageY,
                 imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f,
                 applyAlpha(Color.WHITE, alpha), true));
@@ -517,6 +713,7 @@ public class MainMenuScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (reisaShutdownStartMs >= 0L) return true;
         if (event.button() == 0) {
             for (MenuEntry entry : entries) {
                 MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
@@ -536,7 +733,11 @@ public class MainMenuScreen extends Screen {
         if (reisaWelcomeSound != null) {
             minecraft.getSoundManager().stop(reisaWelcomeSound);
         }
+        if (reisaShutdownSound != null) {
+            minecraft.getSoundManager().stop(reisaShutdownSound);
+        }
         clearReisaGreeting();
+        clearReisaShutdown();
         if (backgroundRenderTarget != null) {
             backgroundRenderTarget.close();
             backgroundRenderTarget = null;
@@ -552,6 +753,14 @@ public class MainMenuScreen extends Screen {
         reisaGreetingStartMs = -1L;
         reisaExitStartMs = -1L;
         reisaWelcomeSound = null;
+    }
+
+    private void clearReisaShutdown() {
+        reisaShutdownStartMs = -1L;
+        reisaShutdownExitStartMs = -1L;
+        reisaShutdownSound = null;
+        reisaShutdownCommitted = false;
+        reisaShutdownTexturesPrewarmed = false;
     }
 
     @Override

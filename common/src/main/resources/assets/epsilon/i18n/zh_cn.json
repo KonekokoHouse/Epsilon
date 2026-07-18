@@ -32,7 +32,8 @@
         "multiplayer": "多人游戏",
         "options": "选项",
         "quit": "退出游戏",
-        "reisa_greeting": "嗨，老师！玲纱前来报到！"
+        "reisa_greeting": "嗨，老师！玲纱前来报到！",
+        "reisa_farewell": "老师，明天也要再见！玲纱收队啦！"
       },
       "tab": {
         "general": "常规",

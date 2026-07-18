@@ -146,6 +146,7 @@ public final class EpsilonTranslations {
         public static final TranslateComponent MAINMENU_OPTIONS = create("gui", "mainmenu.options");
         public static final TranslateComponent MAINMENU_QUIT = create("gui", "mainmenu.quit");
         public static final TranslateComponent MAINMENU_REISA_GREETING = create("gui", "mainmenu.reisa_greeting");
+        public static final TranslateComponent MAINMENU_REISA_FAREWELL = create("gui", "mainmenu.reisa_farewell");
 
         public static final TranslateComponent TAB_GENERAL = create("gui", "tab.general");
         public static final TranslateComponent TAB_FRIEND = create("gui", "tab.friend");
