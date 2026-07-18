@@ -38,16 +38,21 @@ public class MainMenuScreen extends Screen {
 
     public static final MainMenuScreen INSTANCE = new MainMenuScreen();
 
-    private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa.png");
-    private static final Identifier REISA_EXIT_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_09.png");
     private static final float REISA_ASPECT_RATIO = 710.0f / 1280.0f;
     private static final int REISA_PAGE_SLICES = 12;
     private static final long REISA_ENTRANCE_DURATION_MS = 900L;
     private static final long REISA_BUBBLE_DELAY_MS = 620L;
     private static final long REISA_FALLBACK_VISIBLE_MS = 3_800L;
-    private static final long REISA_EXIT_PAGE_DELAY_MS = 180L;
-    private static final long REISA_EXIT_PAGE_DURATION_MS = 700L;
+    private static final long REISA_EXIT_POSE_DELAY_MS = 60L;
+    private static final long REISA_EXIT_POSE_DURATION_MS = 240L;
+    private static final long REISA_EXIT_MOVE_DELAY_MS = 180L;
+    private static final long REISA_EXIT_MOVE_DURATION_MS = 670L;
+    private static final long REISA_EXIT_BASE_DELAY_MS = 120L;
+    private static final long REISA_EXIT_BASE_DURATION_MS = 500L;
     private static final long REISA_EXIT_DURATION_MS = 900L;
+
+    private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_01.png");
+    private static final Identifier REISA_EXIT_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_09.png");
 
     private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
 
@@ -174,8 +179,7 @@ public class MainMenuScreen extends Screen {
     }
 
     private void drawMenu(int mouseX, int mouseY) {
-        float introProgress = Easing.EASE_OUT_CUBIC.getFunction()
-                .apply(Mth.clamp((Util.getMillis() - introStartMs) / 650.0f, 0.0f, 1.0f));
+        float introProgress = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp((Util.getMillis() - introStartMs) / 650.0f, 0.0f, 1.0f));
         int width = LuminRenderSystem.getScaledWidthInt();
         int height = LuminRenderSystem.getScaledHeightInt();
         int buttonCount = entries.size();
@@ -221,8 +225,7 @@ public class MainMenuScreen extends Screen {
 
         UiTree tree = UiTree.build(scope -> {
             drawReisaGreeting(scope, width, height, scale);
-            scope.layer(0, layer -> layer.rect(titleX, titleY + titleHeight + titleAccentGap,
-                    titleAccentWidth, titleAccentHeight, accentColor));
+            scope.layer(0, layer -> layer.rect(titleX, titleY + titleHeight + titleAccentGap, titleAccentWidth, titleAccentHeight, accentColor));
             scope.layer(10, layer -> {
                 layer.text(title, titleX, titleY, titleScale, titleColor, StaticFontLoader.JURA_LIGHT);
                 layer.text(subtitle, titleX, subtitleY, subtitleScale, subtitleColor);
@@ -259,8 +262,7 @@ public class MainMenuScreen extends Screen {
                 );
 
                 scope.layer(0, layer -> {
-                    layer.rect(drawX + scale, buttonY + scale, buttonWidth + scale * 0.5f,
-                            buttonLineHeight + scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear));
+                    layer.rect(drawX + scale, buttonY + scale, buttonWidth + scale * 0.5f, buttonLineHeight + scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear));
                     layer.rect(drawX, buttonY, buttonWidth, buttonLineHeight, MD3Theme.lerp(lineBase, lineHover, hover));
                 });
 
@@ -287,47 +289,79 @@ public class MainMenuScreen extends Screen {
         float slide = Easing.EASE_OUT_BACK.getFunction().apply(entrance);
         float entranceUnfold = 0.04f + 0.96f * Easing.EASE_OUT_CUBIC.getFunction()
                 .apply(Mth.clamp((elapsed - 60.0f) / 760.0f, 0.0f, 1.0f));
-        float exit = exitElapsed < 0L
+        float poseProgress = exitElapsed < 0L
                 ? 0.0f
-                : Mth.clamp((exitElapsed - REISA_EXIT_PAGE_DELAY_MS) / (float) REISA_EXIT_PAGE_DURATION_MS, 0.0f, 1.0f);
-        float exitEase = Easing.EASE_IN_CUBIC.getFunction().apply(exit);
+                : Mth.clamp((exitElapsed - REISA_EXIT_POSE_DELAY_MS) / (float) REISA_EXIT_POSE_DURATION_MS, 0.0f, 1.0f);
+        float poseEase = Easing.EASE_IN_OUT_CUBIC.getFunction().apply(poseProgress);
+        float moveProgress = exitElapsed < 0L
+                ? 0.0f
+                : Mth.clamp((exitElapsed - REISA_EXIT_MOVE_DELAY_MS) / (float) REISA_EXIT_MOVE_DURATION_MS, 0.0f, 1.0f);
+        float moveEase = Easing.EASE_IN_CUBIC.getFunction().apply(moveProgress);
+        float liftEase = Easing.EASE_IN_OUT_CUBIC.getFunction().apply(moveProgress);
+        float fadeProgress = Mth.clamp((moveProgress - 0.25f) / 0.75f, 0.0f, 1.0f);
+        float fadeEase = Easing.EASE_OUT_CUBIC.getFunction().apply(fadeProgress);
         float imageHeight = Math.min(height * 0.96f, width * 0.72f);
         float imageWidth = imageHeight * REISA_ASPECT_RATIO;
         float targetX = width - imageWidth - Math.max(4.0f, 10.0f * scale);
         float entranceX = Mth.lerp(slide, width + imageWidth * 0.08f, targetX);
-        float imageX = Mth.lerp(exitEase, entranceX, width + imageWidth * 0.08f);
+        float exitDistance = Math.max(72.0f * scale, imageWidth * 0.34f);
+        float imageX = entranceX + exitDistance * moveEase;
         float bob = entrance >= 1.0f && exitElapsed < 0L
                 ? (float) Math.sin((elapsed - REISA_ENTRANCE_DURATION_MS) * 0.0024f) * 1.4f * scale
                 : 0.0f;
         float baseImageY = height - imageHeight + 4.0f * scale;
-        float imageY = baseImageY + bob;
-        float imageAlpha = Easing.EASE_OUT_CUBIC.getFunction().apply(Mth.clamp(elapsed / 240.0f, 0.0f, 1.0f))
-                * (1.0f - Easing.EASE_IN_CUBIC.getFunction()
-                .apply(Mth.clamp((exit - 0.72f) / 0.28f, 0.0f, 1.0f)));
-        float baseAlpha = imageAlpha * (exitElapsed < 0L ? entranceUnfold : 1.0f - exitEase);
+        float imageY = baseImageY + bob - 12.0f * scale * liftEase;
+        float entranceAlpha = Easing.EASE_OUT_CUBIC.getFunction()
+                .apply(Mth.clamp(elapsed / 240.0f, 0.0f, 1.0f));
+        float imageAlpha = entranceAlpha * (1.0f - fadeEase);
+        float uniformScale = Mth.lerp(liftEase, 1.0f, 0.97f);
+        float drawWidth = imageWidth * uniformScale;
+        float drawHeight = imageHeight * uniformScale;
+        float drawX = imageX + (imageWidth - drawWidth) * 0.5f;
+        float drawY = imageY + (imageHeight - drawHeight) * 0.5f;
 
-        drawReisaFloatingBase(scope, height, imageX, baseImageY, imageWidth, imageHeight, baseAlpha, scale);
+        float baseProgress = exitElapsed < 0L
+                ? 0.0f
+                : Mth.clamp((exitElapsed - REISA_EXIT_BASE_DELAY_MS) / (float) REISA_EXIT_BASE_DURATION_MS, 0.0f, 1.0f);
+        float baseWidth = 1.0f - Easing.EASE_IN_CUBIC.getFunction().apply(baseProgress);
+        float baseAlpha = entranceAlpha * (exitElapsed < 0L
+                ? entranceUnfold
+                : 1.0f - Easing.EASE_OUT_CUBIC.getFunction().apply(baseProgress));
+
+        drawReisaFloatingBase(scope, height, drawX, drawWidth, baseAlpha, baseWidth, scale);
 
         if (exitElapsed >= 0L) {
-            drawReisaFoldedPage(scope, REISA_EXIT_TEXTURE, imageX, imageY,
-                    imageWidth, imageHeight, 1.0f - exitEase, imageAlpha, scale);
+            drawReisaExitAfterimages(scope, drawX, drawY, drawWidth, drawHeight,
+                    imageAlpha, poseEase, moveProgress, scale);
+            if (poseEase < 0.999f) {
+                drawReisaPage(scope, REISA_WELCOME_TEXTURE, drawX, drawY,
+                        drawWidth, drawHeight, imageAlpha);
+                if (poseEase > 0.001f) {
+                    drawReisaPoseOverlay(scope, drawX, drawY, drawWidth, drawHeight,
+                            imageAlpha * poseEase);
+                }
+            } else {
+                drawReisaPage(scope, REISA_EXIT_TEXTURE, drawX, drawY,
+                        drawWidth, drawHeight, imageAlpha);
+            }
         } else {
-            drawReisaFoldedPage(scope, REISA_WELCOME_TEXTURE, imageX, imageY,
-                    imageWidth, imageHeight, entranceUnfold, imageAlpha, scale);
+            if (elapsed <= REISA_ENTRANCE_DURATION_MS) {
+                prewarmReisaExitTexture(scope);
+            }
+            drawReisaFoldedPage(scope, imageX, imageY, imageWidth, imageHeight, entranceUnfold, imageAlpha, scale);
         }
 
-        drawReisaGreetingBubble(scope, elapsed, exitElapsed, width, imageX, imageY, imageWidth, imageHeight, scale);
+        drawReisaGreetingBubble(scope, elapsed, exitElapsed, width, drawX, drawY, drawWidth, drawHeight, scale);
     }
 
-    private void drawReisaFloatingBase(UiTree.Scope scope, int height, float imageX, float baseImageY,
-                                       float imageWidth, float imageHeight, float alpha, float scale) {
-        if (alpha <= 0.001f) return;
+    private void drawReisaFloatingBase(UiTree.Scope scope, int height, float imageX, float imageWidth,
+                                       float alpha, float widthProgress, float scale) {
+        if (alpha <= 0.001f || widthProgress <= 0.001f) return;
 
         float centerX = imageX + imageWidth * 0.55f;
-        float lineWidth = imageWidth * 0.52f;
+        float lineWidth = imageWidth * 0.52f * widthProgress;
         float lineHeight = Math.max(1.0f, 1.15f * scale);
-        float lineY = Math.min(height - 4.0f * scale, baseImageY + imageHeight - 5.0f * scale);
-        float glowWidth = imageWidth * 0.58f;
+        float lineY = height - lineHeight;
         float glowHeight = 22.0f * scale;
 
         Color transparent = applyAlpha(new Color(213, 177, 255), 0.0f);
@@ -335,8 +369,8 @@ public class MainMenuScreen extends Screen {
         Color line = applyAlpha(new Color(239, 220, 255), alpha * 0.78f);
 
         scope.layer(-24, layer -> layer.rectVerticalGradient(
-                centerX - glowWidth * 0.5f, lineY - glowHeight,
-                glowWidth, glowHeight, transparent, glow
+                centerX - lineWidth * 0.5f, lineY - glowHeight,
+                lineWidth, glowHeight, transparent, glow
         ));
         scope.layer(-23, layer -> layer.roundRect(
                 centerX - lineWidth * 0.5f, lineY,
@@ -344,18 +378,45 @@ public class MainMenuScreen extends Screen {
         ));
     }
 
-    private void drawReisaPage(UiTree.Scope scope, Identifier texture, float imageX, float imageY,
-                               float imageWidth, float imageHeight, float alpha) {
+    private void drawReisaExitAfterimages(UiTree.Scope scope, float imageX, float imageY, float imageWidth, float imageHeight, float alpha, float poseProgress, float moveProgress, float scale) {
+        float trailEnvelope = (float) Math.sin(moveProgress * Math.PI);
+        float trailAlpha = alpha * poseProgress * trailEnvelope;
+        if (trailAlpha <= 0.001f) return;
+
+        Color farTrail = applyAlpha(new Color(216, 185, 255), trailAlpha * 0.08f);
+        Color nearTrail = applyAlpha(new Color(228, 205, 255), trailAlpha * 0.14f);
+        scope.layer(-22, layer -> {
+            layer.texture(REISA_EXIT_TEXTURE, imageX - 16.0f * scale, imageY + 1.5f * scale,
+                    imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f, farTrail, true);
+            layer.texture(REISA_EXIT_TEXTURE, imageX - 8.0f * scale, imageY + 0.75f * scale,
+                    imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f, nearTrail, true);
+        });
+    }
+
+    private void drawReisaPoseOverlay(UiTree.Scope scope, float imageX, float imageY,
+                                      float imageWidth, float imageHeight, float alpha) {
+        scope.layer(-20, layer -> layer.texture(REISA_EXIT_TEXTURE, imageX, imageY,
+                imageWidth, imageHeight, 0.0f, 0.0f, 1.0f, 1.0f,
+                applyAlpha(Color.WHITE, alpha), true));
+    }
+
+    private void prewarmReisaExitTexture(UiTree.Scope scope) {
+        scope.layer(-30, layer -> layer.texture(REISA_EXIT_TEXTURE,
+                -1.0f, -1.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 1.0f, 1.0f,
+                applyAlpha(Color.WHITE, 0.0f), true));
+    }
+
+    private void drawReisaPage(UiTree.Scope scope, Identifier texture, float imageX, float imageY, float imageWidth, float imageHeight, float alpha) {
         scope.layer(-22, layer -> layer.texture(texture, imageX + 2.0f, imageY + 3.0f, imageWidth, imageHeight,
                 0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.BLACK, alpha * 0.24f), true));
         scope.layer(-21, layer -> layer.texture(texture, imageX, imageY, imageWidth, imageHeight,
                 0.0f, 0.0f, 1.0f, 1.0f, applyAlpha(Color.WHITE, alpha), true));
     }
 
-    private void drawReisaFoldedPage(UiTree.Scope scope, Identifier texture, float imageX, float imageY,
-                                     float imageWidth, float imageHeight, float unfold, float alpha, float scale) {
+    private void drawReisaFoldedPage(UiTree.Scope scope, float imageX, float imageY, float imageWidth, float imageHeight, float unfold, float alpha, float scale) {
         if (unfold >= 0.999f) {
-            drawReisaPage(scope, texture, imageX, imageY, imageWidth, imageHeight, alpha);
+            drawReisaPage(scope, MainMenuScreen.REISA_WELCOME_TEXTURE, imageX, imageY, imageWidth, imageHeight, alpha);
             return;
         }
 
@@ -369,7 +430,7 @@ public class MainMenuScreen extends Screen {
             float curl = (float) Math.sin(center * Math.PI) * (1.0f - unfold) * 13.0f * scale;
             float shade = 1.0f - (1.0f - unfold) * (0.18f + 0.38f * (float) Math.sin(center * Math.PI));
             Color sliceColor = applyAlpha(Color.WHITE, alpha * shade);
-            scope.layer(-20, layer -> layer.texture(texture, sliceX, imageY + curl,
+            scope.layer(-20, layer -> layer.texture(MainMenuScreen.REISA_WELCOME_TEXTURE, sliceX, imageY + curl,
                     Math.max(0.5f, sliceRight - sliceX + 0.35f), imageHeight - curl * 0.25f,
                     u0, 0.0f, u1, 1.0f, sliceColor, true));
         }
@@ -395,7 +456,7 @@ public class MainMenuScreen extends Screen {
         String name = "UZAWA REISA";
         String greeting = EpsilonTranslations.Gui.MAINMENU_REISA_GREETING.getTranslatedName();
         float contentInset = 13.0f * scale;
-        float maxBubbleWidth = Math.max(96.0f * scale, Math.min(205.0f * scale, width * 0.40f));
+        float maxBubbleWidth = Math.clamp(205.0f * scale, 96.0f * scale, width * 0.40f);
         float minBubbleWidth = Math.min(145.0f * scale, maxBubbleWidth);
         float availableTextWidth = Math.max(1.0f, maxBubbleWidth - contentInset * 2.0f);
         float nameScale = 0.62f * scale;
@@ -418,7 +479,7 @@ public class MainMenuScreen extends Screen {
         float alpha = visibility * 0.96f;
 
         Color surface = applyAlpha(new Color(29, 31, 42), alpha);
-        Color outline = applyAlpha(new Color(229, 194, 255), visibility * 0.78f);
+        Color outline = applyAlpha(new Color(229, 194, 255), visibility * 0.48f);
         Color nameColor = applyAlpha(new Color(252, 224, 255), visibility);
         Color accentColor = applyAlpha(new Color(222, 169, 255), visibility * 0.96f);
         Color textColor = applyAlpha(new Color(244, 241, 250), visibility);
@@ -428,14 +489,11 @@ public class MainMenuScreen extends Screen {
         float messageY = nameY + nameHeight + rowGap;
 
         scope.layer(20, layer -> {
-            layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, 10.0f * scale,
-                    applyAlpha(new Color(0, 0, 0), visibility * 0.42f));
+            layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, 10.0f * scale, applyAlpha(new Color(0, 0, 0), visibility * 0.42f));
             layer.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, surface);
             layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, Math.max(1.0f, scale), outline);
-            layer.roundRect(bubbleX + 6.5f * scale, nameY, 2.0f * scale, nameHeight,
-                    1.0f * scale, accentColor);
-            layer.roundRect(bubbleX + bubbleWidth - 13.0f * scale, bubbleY + bubbleHeight - 2.0f * scale,
-                    10.0f * scale, 9.0f * scale, 2.5f * scale, surface);
+            layer.roundRect(bubbleX + 6.5f * scale, nameY, 2.0f * scale, nameHeight, 1.0f * scale, accentColor);
+            layer.roundRect(bubbleX + bubbleWidth - 13.0f * scale, bubbleY + bubbleHeight - 2.0f * scale, 10.0f * scale, 9.0f * scale, 2.5f * scale, surface);
         });
         scope.layer(21, layer -> {
             layer.text(name, textX, nameY, nameScale, nameColor, StaticFontLoader.JURA_LIGHT);
