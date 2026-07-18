@@ -81,7 +81,7 @@ public void renderFrame() {
 
     UiTree tree = UiTree.build(scope -> {
         scope.shadow(20.0f, 20.0f, 160.0f, 80.0f,
-                8.0f, 12.0f, new Color(0, 0, 0, 80));
+                8.0f, 16.0f, new Color(0, 0, 0, 120));
         scope.roundRect(20.0f, 20.0f, 160.0f, 80.0f,
                 8.0f, new Color(32, 32, 36, 240));
         scope.text("Hello", 32.0f, 36.0f, 0.7f, Color.WHITE);

@@ -220,7 +220,8 @@ public class HudEditorScreen extends Screen {
         float subtitleY = titleY + titleH + middlePadding;
 
         beginEditorLayer(10);
-        editorScope.shadow(labelX, labelY, boxW, boxH, radius, 8.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, 38));
+        editorScope.shadow(labelX, labelY, boxW, boxH, radius, MD3Theme.FLOATING_LABEL_SHADOW_BLUR,
+                MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.FLOATING_LABEL_SHADOW_ALPHA));
         editorScope.roundRect(labelX, labelY, boxW, boxH, radius, MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER, 238));
         editorScope.text(title, labelX + 12.0f, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
         editorScope.text(subtitle, labelX + 12.0f, subtitleY, subtitleScale, MD3Theme.TEXT_MUTED);

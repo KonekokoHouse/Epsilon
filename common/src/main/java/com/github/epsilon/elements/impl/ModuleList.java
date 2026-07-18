@@ -65,8 +65,8 @@ public class ModuleList extends HudModule {
     private final DoubleSetting openTextScaleOffset = doubleSetting("Text Scale Offset", -0.2, -0.5, 0.5, 0.05, () -> style.is(Style.Open));
     private final DoubleSetting openCornerRadius = doubleSetting("Corner Radius", 4.0, 0.0, 14.0, 0.5, () -> style.is(Style.Open));
     private final BoolSetting drawOpenShadow = boolSetting("Drop Shadow", true, () -> style.is(Style.Open));
-    private final DoubleSetting openShadowBlur = doubleSetting("Shadow Blur", 2.2, 0.1, 32.0, 0.5, () -> style.is(Style.Open) && drawOpenShadow.getValue());
-    private final ColorSetting openShadowColor = colorSetting("Shadow Color", new Color(0, 0, 0, 70), () -> style.is(Style.Open) && drawOpenShadow.getValue());
+    private final DoubleSetting openShadowBlur = doubleSetting("Shadow Blur", DEFAULT_SHADOW_BLUR, MIN_SHADOW_BLUR, MAX_SHADOW_BLUR, SHADOW_BLUR_STEP, () -> style.is(Style.Open) && drawOpenShadow.getValue());
+    private final ColorSetting openShadowColor = colorSetting("Shadow Color", DEFAULT_SHADOW_COLOR, () -> style.is(Style.Open) && drawOpenShadow.getValue());
     private final BoolSetting openBackgroundBlur = boolSetting("Background Blur", false, () -> style.is(Style.Open));
     private final IntSetting openBlurStrength = intSetting("Blur Strength", 5, 1, 16, 1, () -> style.is(Style.Open) && openBackgroundBlur.getValue());
 

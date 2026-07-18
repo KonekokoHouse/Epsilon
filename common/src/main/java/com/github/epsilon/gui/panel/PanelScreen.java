@@ -177,7 +177,8 @@ public class PanelScreen extends Screen {
         UiTree tree = UiTree.build(scope -> {
             scope.pushAbsolute(layout.panel(), panel -> {
                 panel.shadow(0.0f, 0.0f, layout.panel().width(), layout.panel().height(),
-                        MD3Theme.PANEL_RADIUS, 18.0f, MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
+                        MD3Theme.PANEL_RADIUS, MD3Theme.PANEL_SHADOW_BLUR,
+                        MD3Theme.withAlpha(MD3Theme.SHADOW, MD3Theme.PANEL_SHADOW_ALPHA));
                 panel.roundRect(0.0f, 0.0f, layout.panel().width(), layout.panel().height(),
                         MD3Theme.PANEL_RADIUS, MD3Theme.SURFACE);
             });

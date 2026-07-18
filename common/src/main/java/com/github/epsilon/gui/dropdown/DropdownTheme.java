@@ -12,7 +12,8 @@ public class DropdownTheme {
     public static final float PANEL_GAP = 14.0f;
     public static final float PANEL_MARGIN_X = 20.0f;
     public static final float PANEL_MARGIN_Y = 20.0f;
-    public static final float PANEL_SHADOW_BLUR = 16.0f;
+    public static final float PANEL_SHADOW_BLUR = 20.0f;
+    public static final int PANEL_SHADOW_ALPHA = 96;
 
     public static final float GROUP_HEADER_HEIGHT = 18.0f;
     public static final float GROUP_INSET = 4.0f;
@@ -75,7 +76,7 @@ public class DropdownTheme {
     }
 
     public static Color panelShadow() {
-        return MD3Theme.withAlpha(MD3Theme.SHADOW, 48);
+        return MD3Theme.withAlpha(MD3Theme.SHADOW, PANEL_SHADOW_ALPHA);
     }
 
     public static Color moduleDivider() {

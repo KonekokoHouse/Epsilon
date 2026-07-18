@@ -57,6 +57,9 @@ public class MainMenuScreen extends Screen {
     private static final long REISA_SHUTDOWN_SOUND_FALLBACK_DURATION_MS = 7_666L;
     private static final long REISA_SHUTDOWN_EXIT_DURATION_MS = 900L;
     private static final long REISA_SHUTDOWN_MENU_FADE_DURATION_MS = 2_200L;
+    private static final float REISA_BUBBLE_SHADOW_BLUR = 14.0f;
+    private static final float REISA_SHUTDOWN_BUBBLE_SHADOW_ALPHA = 0.60f;
+    private static final float REISA_GREETING_BUBBLE_SHADOW_ALPHA = 0.58f;
 
     private static final Identifier REISA_WELCOME_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_00.png");
     private static final Identifier REISA_EXIT_TEXTURE = ResourceLocationUtils.getIdentifier("textures/gui/galgame/reisa_09.png");
@@ -535,7 +538,8 @@ public class MainMenuScreen extends Screen {
 
         scope.layer(20, layer -> {
             layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius,
-                    10.0f * scale, applyAlpha(new Color(0, 0, 0), visibility * 0.44f));
+                    REISA_BUBBLE_SHADOW_BLUR * scale,
+                    applyAlpha(new Color(0, 0, 0), visibility * REISA_SHUTDOWN_BUBBLE_SHADOW_ALPHA));
             layer.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, surface);
             layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius,
                     Math.max(1.0f, scale), outline);
@@ -700,7 +704,9 @@ public class MainMenuScreen extends Screen {
         float messageY = nameY + nameHeight + rowGap;
 
         scope.layer(20, layer -> {
-            layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, 10.0f * scale, applyAlpha(new Color(0, 0, 0), visibility * 0.42f));
+            layer.shadow(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius,
+                    REISA_BUBBLE_SHADOW_BLUR * scale,
+                    applyAlpha(new Color(0, 0, 0), visibility * REISA_GREETING_BUBBLE_SHADOW_ALPHA));
             layer.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, surface);
             layer.outline(bubbleX, bubbleY, bubbleWidth, bubbleHeight, radius, Math.max(1.0f, scale), outline);
             layer.roundRect(bubbleX + 6.5f * scale, nameY, 2.0f * scale, nameHeight, 1.0f * scale, accentColor);
