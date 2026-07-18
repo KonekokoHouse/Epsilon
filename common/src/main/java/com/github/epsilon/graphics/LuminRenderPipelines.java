@@ -59,11 +59,6 @@ public class LuminRenderPipelines {
 
     public final static RenderPipeline SHADOW = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipelines/shadow"))
-            .withVertexFormat(LuminVertexFormats.ROUND_RECT, VertexFormat.Mode.QUADS)
-            .withVertexShader(ResourceLocationUtils.getIdentifier("shadow"))
-            .withFragmentShader(ResourceLocationUtils.getIdentifier("shadow"))
-            .withCull(false)
-            .build();
 
     public final static RenderPipeline TEXTURE = RenderPipeline.builder(NO_BLEND_DEPTH_SNIPPET)
             .withLocation(ResourceLocationUtils.getIdentifier("pipelines/texture"))
