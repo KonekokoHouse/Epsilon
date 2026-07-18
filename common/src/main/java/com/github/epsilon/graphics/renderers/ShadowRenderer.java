@@ -42,25 +42,12 @@ public class ShadowRenderer implements IRenderer {
     }
 
     public void addShadow(float x, float y, float width, float height, float rTL, float rTR, float rBR, float rBL, float blurRadius, Color color) {
-        if (color == null || color.getAlpha() == 0 || width <= 0.0f || height <= 0.0f || blurRadius <= 0.0f) {
-            return;
-        }
-        if (!Float.isFinite(x) || !Float.isFinite(y) || !Float.isFinite(width) || !Float.isFinite(height)
-                || !Float.isFinite(rTL) || !Float.isFinite(rTR) || !Float.isFinite(rBR) || !Float.isFinite(rBL)
-                || !Float.isFinite(blurRadius)) {
-            return;
-        }
-
         float x2 = x + width;
         float y2 = y + height;
         float left = x - blurRadius;
         float top = y - blurRadius;
         float right = x2 + blurRadius;
         float bottom = y2 + blurRadius;
-        if (!Float.isFinite(x2) || !Float.isFinite(y2) || !Float.isFinite(left) || !Float.isFinite(top)
-                || !Float.isFinite(right) || !Float.isFinite(bottom)) {
-            return;
-        }
 
         buffer.ensureCapacity(currentOffset + SHADOW_BYTES);
         buffer.tryMap();
