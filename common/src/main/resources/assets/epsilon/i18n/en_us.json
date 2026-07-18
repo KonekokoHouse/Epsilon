@@ -314,6 +314,11 @@
           "minecraft": "Minecraft"
         },
         "show welcome screen": "Show Welcome Screen",
+        "uzawa reisa": "Uzawa Reisa",
+        "show reisa in dropdown": "Show Reisa In Dropdown",
+        "show reisa on startup": "Show Reisa On Startup",
+        "show reisa on shutdown": "Show Reisa On Shutdown",
+        "reisa volume": "Reisa Volume",
         "sound notify": "Sound Notify",
         "chat notify": "Chat Notify",
         "animated chat prefix": "Animated Chat Prefix",

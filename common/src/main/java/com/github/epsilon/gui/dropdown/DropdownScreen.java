@@ -74,7 +74,9 @@ public class DropdownScreen extends Screen {
     protected void init() {
         super.init();
         sessionId++;
-        reisaCompanion.open(sessionId);
+        if (isReisaCompanionEnabled()) {
+            reisaCompanion.open(sessionId);
+        }
         scrimAnim.setStartValue(0.0f);
         scrimAnim.run(0.0f);
         scrimAnim.run(1.0f);
@@ -149,16 +151,19 @@ public class DropdownScreen extends Screen {
             }
         }
 
-        beginDropdownLayer();
-        reisaCompanion.draw(
-                dropdownScope,
-                LuminRenderSystem.getScaledWidth(),
-                LuminRenderSystem.getScaledHeight(),
-                mouseX,
-                mouseY,
-                popupHovered || topmostHovered != null
-        );
-        flushDropdownLayer();
+        if (isReisaCompanionEnabled()) {
+            reisaCompanion.open(sessionId);
+            beginDropdownLayer();
+            reisaCompanion.draw(
+                    dropdownScope,
+                    LuminRenderSystem.getScaledWidth(),
+                    LuminRenderSystem.getScaledHeight(),
+                    mouseX,
+                    mouseY,
+                    popupHovered || topmostHovered != null
+            );
+            flushDropdownLayer();
+        }
 
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
@@ -224,8 +229,11 @@ public class DropdownScreen extends Screen {
                     EpsilonTranslations.Gui.DROPDOWN_HINT_DRAG.getTranslatedName()
             };
             float screenWidth = LuminRenderSystem.getScaledWidth();
-            float companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight());
-            float xRight = Math.min(screenWidth - DropdownTheme.PANEL_MARGIN_X, companionLeft - 8.0f);
+            float xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X;
+            if (isReisaCompanionEnabled()) {
+                float companionLeft = reisaCompanion.getLeftEdge(screenWidth, LuminRenderSystem.getScaledHeight());
+                xRight = Math.min(xRight, companionLeft - 8.0f);
+            }
             xRight = Math.max(getSearchX() + getSearchWidth(), xRight);
             float y = LuminRenderSystem.getScaledHeight() - DropdownTheme.PANEL_MARGIN_Y - hints.length * lineHeight - (hints.length - 1) * lineGap;
             int alpha = (int) (255 * scrimAnim.getValue());
@@ -611,7 +619,14 @@ public class DropdownScreen extends Screen {
     }
 
     public void react(ReisaDropdownCompanion.Action action) {
-        reisaCompanion.react(action);
+        if (isReisaCompanionEnabled()) {
+            reisaCompanion.open(sessionId);
+            reisaCompanion.react(action);
+        }
+    }
+
+    private boolean isReisaCompanionEnabled() {
+        return ClientSetting.INSTANCE.showReisaInDropdown.getValue();
     }
 
     public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {

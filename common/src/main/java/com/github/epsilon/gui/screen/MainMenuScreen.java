@@ -115,6 +115,10 @@ public class MainMenuScreen extends Screen {
     }
 
     public void queueReisaGreeting() {
+        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue()) {
+            reisaGreetingQueued = false;
+            return;
+        }
         reisaGreetingQueued = true;
         if (initialized && minecraft.screen == this) {
             startReisaGreeting();
@@ -122,13 +126,21 @@ public class MainMenuScreen extends Screen {
     }
 
     private void startReisaGreeting() {
+        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue()) {
+            clearReisaGreeting();
+            return;
+        }
         reisaGreetingQueued = false;
         reisaGreetingStartMs = Util.getMillis();
         reisaExitStartMs = -1L;
-        reisaWelcomeSound = Managers.SOUND.playTracked(SoundKey.REISA_WELCOME, 1.0f).orElse(null);
+        reisaWelcomeSound = Managers.SOUND.playTracked(
+                SoundKey.REISA_WELCOME,
+                ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
+        ).orElse(null);
     }
 
     public boolean requestShutdown() {
+        if (!ClientSetting.INSTANCE.showReisaOnShutdown.getValue()) return false;
         if (!initialized || minecraft.screen != this || reisaShutdownCommitted) return false;
         if (reisaShutdownStartMs >= 0L) return true;
 
@@ -139,7 +151,10 @@ public class MainMenuScreen extends Screen {
         minecraft.getSoundManager().stop();
         reisaShutdownStartMs = Util.getMillis();
         reisaShutdownExitStartMs = -1L;
-        reisaShutdownSound = Managers.SOUND.playTracked(SoundKey.REISA_BYE, 1.0f).orElse(null);
+        reisaShutdownSound = Managers.SOUND.playTracked(
+                SoundKey.REISA_BYE,
+                ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
+        ).orElse(null);
         return true;
     }
 

@@ -62,10 +62,15 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "onGameLoadFinished", at = @At("TAIL"))
     private void onGameLoadFinished(CallbackInfo ci) {
+        if (!ClientSetting.INSTANCE.showReisaOnStartup.getValue()) return;
+
         if (ClientSetting.INSTANCE.useMainMenu.getValue()) {
             MainMenuScreen.INSTANCE.queueReisaGreeting();
         } else {
-            Managers.SOUND.playSound(SoundKey.REISA_WELCOME, 1.0f);
+            Managers.SOUND.playSound(
+                    SoundKey.REISA_WELCOME,
+                    ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
+            );
         }
     }
 
@@ -100,6 +105,11 @@ public abstract class MixinMinecraft {
     private void delayShutdown(CallbackInfo ci) {
         if (epsilon$shutdownReady) return;
 
+        if (!ClientSetting.INSTANCE.showReisaOnShutdown.getValue()) {
+            epsilon$shutdownReady = true;
+            return;
+        }
+
         Minecraft minecraft = (Minecraft) (Object) this;
         if (minecraft.screen == MainMenuScreen.INSTANCE) {
             if (MainMenuScreen.INSTANCE.requestShutdown()) {
@@ -112,7 +122,10 @@ public abstract class MixinMinecraft {
 
         if (epsilon$shutdownSound == null) {
             minecraft.getSoundManager().stop();
-            epsilon$shutdownSound = Managers.SOUND.playTracked(SoundKey.REISA_BYE, 1.0f).orElse(null);
+            epsilon$shutdownSound = Managers.SOUND.playTracked(
+                    SoundKey.REISA_BYE,
+                    ClientSetting.INSTANCE.reisaVolume.getValue().floatValue()
+            ).orElse(null);
             if (epsilon$shutdownSound == null) {
                 epsilon$shutdownReady = true;
                 return;

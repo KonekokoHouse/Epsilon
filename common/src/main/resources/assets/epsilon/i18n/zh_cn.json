@@ -314,6 +314,11 @@
           "minecraft": "Minecraft"
         },
         "show welcome screen": "启动时显示欢迎页",
+        "uzawa reisa": "宇泽玲纱",
+        "show reisa in dropdown": "在瀑布式界面显示玲纱",
+        "show reisa on startup": "启动游戏时显示玲纱",
+        "show reisa on shutdown": "关闭游戏时显示玲纱",
+        "reisa volume": "玲纱音量",
         "sound notify": "声音通知",
         "chat notify": "聊天通知",
         "animated chat prefix": "聊天前缀动画",
