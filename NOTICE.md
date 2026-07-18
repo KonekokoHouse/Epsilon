@@ -72,3 +72,14 @@ required by that license.
 
 The original code has been modified and adapted for Epsilon's module,
 setting, rotation, and event systems.
+
+## Blue Archive - Uzawa Reisa Assets
+
+- Character: Uzawa Reisa (宇沢レイサ)
+- Artwork source: [Blue Archive Wiki - Reisa_00.png](https://bluearchive.wiki/wiki/File:Reisa_00.png)
+- Voice sources: [Reisa LogIn 1](https://bluearchive.wiki/wiki/File:Reisa_LogIn_1.ogg) and [Reisa Relationship Up 4](https://bluearchive.wiki/wiki/File:Reisa_Relationship_Up_4.ogg)
+- Used in Epsilon: Galgame-style world join and disconnect dialogue overlay.
+
+Blue Archive and the character artwork/voice recordings are properties of
+their respective rights holders. They are not covered by Epsilon's GPLv3
+license.
