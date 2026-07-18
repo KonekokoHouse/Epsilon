@@ -212,6 +212,9 @@ public class MainMenuScreen extends Screen {
 
         final var background = switch (ClientSetting.INSTANCE.mainMenuBackground.getValue()) {
             case SEA_LEVEL -> GlslSandBox.SEA_LEVEL;
+            case CLOUDS -> GlslSandBox.CLOUDS;
+            case ALIEN_TERRAIN -> GlslSandBox.ALIEN_TERRAIN;
+            case INFERNO -> GlslSandBox.INFERNO;
             case PLANET -> GlslSandBox.PLANET;
             case BLACK_HOLE -> GlslSandBox.BLACK_HOLE;
             case MINECRAFT -> GlslSandBox.MINECRAFT;
@@ -820,6 +823,9 @@ public class MainMenuScreen extends Screen {
 
     public enum Background {
         SEA_LEVEL,
+        CLOUDS,
+        ALIEN_TERRAIN,
+        INFERNO,
         PLANET,
         BLACK_HOLE,
         MINECRAFT

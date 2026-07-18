@@ -230,6 +230,7 @@
         "general": "常规",
         "anti cheat": "反作弊",
         "appearance": "外观",
+        "uzawa reisa": "宇泽玲纱",
         "notification": "通知",
         "open hud editor": "打开 HUD 编辑器",
         "gui keybind": "GUI 按键绑定",
@@ -309,12 +310,14 @@
         "mainmenu background": {
           "_value": "主菜单背景",
           "sea_level": "海平面",
+          "clouds": "云海",
+          "alien_terrain": "异星荒原",
+          "inferno": "烈焰烟云",
           "planet": "行星",
           "black_hole": "黑洞",
           "minecraft": "Minecraft"
         },
         "show welcome screen": "启动时显示欢迎页",
-        "uzawa reisa": "宇泽玲纱",
         "show reisa in dropdown": "在瀑布式界面显示玲纱",
         "show reisa on startup": "启动游戏时显示玲纱",
         "show reisa on shutdown": "关闭游戏时显示玲纱",
@@ -1707,6 +1710,7 @@
           "sigmoid": "S形",
           "ease_out_elastic": "弹性缓出",
           "ease_in_back": "回退缓入",
+          "ease_out_back": "回退缓出",
           "dynamic_island": "灵动岛"
         },
         "scale modifier": "缩放修正",

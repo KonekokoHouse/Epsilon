@@ -230,6 +230,7 @@
         "general": "General",
         "anti cheat": "Anti Cheat",
         "appearance": "Appearance",
+        "uzawa reisa": "Uzawa Reisa",
         "notification": "Notification",
         "open hud editor": "Open HUD Editor",
         "gui keybind": "Gui Keybind",
@@ -309,12 +310,14 @@
         "mainmenu background": {
           "_value": "Main Menu Background",
           "sea_level": "Sea Level",
+          "clouds": "Clouds",
+          "alien_terrain": "Alien Terrain",
+          "inferno": "Inferno",
           "planet": "Planet",
           "black_hole": "Black Hole",
           "minecraft": "Minecraft"
         },
         "show welcome screen": "Show Welcome Screen",
-        "uzawa reisa": "Uzawa Reisa",
         "show reisa in dropdown": "Show Reisa In Dropdown",
         "show reisa on startup": "Show Reisa On Startup",
         "show reisa on shutdown": "Show Reisa On Shutdown",
@@ -1707,6 +1710,7 @@
           "sigmoid": "Sigmoid",
           "ease_out_elastic": "Ease Out Elastic",
           "ease_in_back": "Ease In Back",
+          "ease_out_back": "Ease Out Back",
           "dynamic_island": "Dynamic Island"
         },
         "scale modifier": "Scale Modifier",
