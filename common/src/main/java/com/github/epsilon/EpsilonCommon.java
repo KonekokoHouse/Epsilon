@@ -3,6 +3,7 @@ package com.github.epsilon;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
 import com.github.epsilon.assets.i18n.I18NFileGenerator;
 import com.github.epsilon.events.bus.EventBus;
+import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
 import com.github.epsilon.holders.AddonHolder;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.holders.HudElementHolder;
@@ -28,6 +29,9 @@ public class EpsilonCommon {
 
         // 初始化 Managers
         Managers.initManagers();
+
+        // 初始化 Render3DScheduler 里的 RenderPipeline
+        Render3DScheduler.init();
 
         // 生成空的 i18n 文件
         I18NFileGenerator.generate("epsilon-empty-i18n.json");

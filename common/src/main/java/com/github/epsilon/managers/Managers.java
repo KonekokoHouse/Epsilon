@@ -37,7 +37,6 @@ public class Managers {
         SOUND = new SoundManager();
         NOTIFICATION = new NotificationManager();
         TIMER = new TimerManager();
-        Render3DScheduler.init();
     }
 
     public static void switchRotationManager(RotationManager.RotationMode mode) {
