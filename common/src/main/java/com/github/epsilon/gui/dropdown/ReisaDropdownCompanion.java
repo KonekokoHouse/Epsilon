@@ -13,19 +13,17 @@ import java.awt.*;
 public final class ReisaDropdownCompanion {
 
     private static final float IMAGE_ASPECT_RATIO = 710.0f / 1280.0f;
-    private static final long EXPRESSION_TRANSITION_MS = 135L;
 
     private final Animation entranceAnim = new Animation(Easing.EASE_OUT_BACK, 520L);
-    private final Animation expressionAnim = new Animation(Easing.EASE_OUT_CUBIC, EXPRESSION_TRANSITION_MS);
 
     private Action shownAction = Action.IDLE;
-    private Action previousAction = Action.IDLE;
     private Action activeAction;
     private long actionStartedMs;
     private long actionEndsMs;
     private long nextBlinkMs;
     private long blinkEndsMs;
     private long reactionRevision;
+    private boolean texturesPrewarmed;
     private int sessionId = -1;
 
     public void open(int newSessionId) {
@@ -35,9 +33,8 @@ public final class ReisaDropdownCompanion {
 
         sessionId = newSessionId;
         shownAction = Action.IDLE;
-        previousAction = Action.IDLE;
         activeAction = null;
-        expressionAnim.setStartValue(1.0f);
+        texturesPrewarmed = false;
         entranceAnim.setStartValue(0.0f);
         entranceAnim.run(0.0f);
         entranceAnim.run(1.0f);
@@ -76,12 +73,14 @@ public final class ReisaDropdownCompanion {
         Layout layout = resolveLayout(screenWidth, screenHeight);
         Action desiredAction = resolveAction(now, layout, mouseX, mouseY, mouseBlockedByGui);
         switchExpression(desiredAction);
+        if (!texturesPrewarmed) {
+            prewarmTextures(scope);
+            texturesPrewarmed = true;
+        }
 
         entranceAnim.run(1.0f);
-        expressionAnim.run(1.0f);
 
         float entrance = Mth.clamp(entranceAnim.getValue(), 0.0f, 1.0f);
-        float expression = Mth.clamp(expressionAnim.getValue(), 0.0f, 1.0f);
         float pulse = resolveActionPulse(now);
         float bob = (float) Math.sin((now % 3_896L) / 620.0) * 1.15f;
         float motionX = resolveMotionX(now, pulse);
@@ -103,12 +102,6 @@ public final class ReisaDropdownCompanion {
                 shownAction.texture(), drawX, drawY, drawWidth, drawHeight,
                 0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha), true
         ));
-        if (previousAction != shownAction && expression < 0.999f) {
-            scope.layer(0, layer -> layer.texture(
-                    previousAction.texture(), drawX, drawY, drawWidth, drawHeight,
-                    0.0f, 0.0f, 1.0f, 1.0f, withAlpha(Color.WHITE, alpha * (1.0f - expression)), true
-            ));
-        }
     }
 
     public float getLeftEdge(float screenWidth, float screenHeight) {
@@ -135,15 +128,17 @@ public final class ReisaDropdownCompanion {
     }
 
     private void switchExpression(Action desiredAction) {
-        if (desiredAction == shownAction) {
-            return;
-        }
-
-        previousAction = shownAction;
         shownAction = desiredAction;
-        expressionAnim.setStartValue(0.0f);
-        expressionAnim.run(0.0f);
-        expressionAnim.run(1.0f);
+    }
+
+    private void prewarmTextures(UiTree.Scope scope) {
+        Color transparent = withAlpha(Color.WHITE, 0.0f);
+        scope.layer(-3, layer -> {
+            for (Action action : Action.values()) {
+                layer.texture(action.texture(), -1.0f, -1.0f, 1.0f, 1.0f,
+                        0.0f, 0.0f, 1.0f, 1.0f, transparent, true);
+            }
+        });
     }
 
     private float resolveActionPulse(long now) {
