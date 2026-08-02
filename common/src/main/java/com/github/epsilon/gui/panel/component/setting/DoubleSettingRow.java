@@ -1,10 +1,12 @@
 package com.github.epsilon.gui.panel.component.setting;
 
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -21,7 +23,7 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     private final Animation hoverAnimation = new Animation(Easing.EASE_OUT_QUART, 150L);
     private final Animation pressAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private final Animation indicatorAnimation = new Animation(Easing.EASE_OUT_QUART, 150L);
-    private TextRenderer textMetrics;
+    private UiTextMetrics textMetrics;
     private boolean dragging;
     private boolean focused;
     private String inputBuffer;
@@ -36,10 +38,10 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
     }
 
     @Override
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         this.textMetrics = textRenderer;
         float labelScale = 0.68f;
-        float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
+        float labelY = (bounds.height() - textRenderer.textHeight(labelScale, null)) / 2.0f;
         hoverAnimation.run(dragging ? 1.0f : hoverProgress);
         pressAnimation.run(dragging ? 1.0f : 0.0f);
         indicatorAnimation.run((dragging || hoverProgress > 0.01f) ? 1.0f : 0.0f);
@@ -61,22 +63,22 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         float handleGap = 2.5f;
 
         scope.slider(trackBounds.relativeTo(bounds), visualProgress, 3.0f,
-                MD3Theme.SECONDARY_CONTAINER,
-                handleGap, 2.0f, MD3Theme.PRIMARY,
-                handleWidth, handleHeight, 1.0f, MD3Theme.PRIMARY);
+                EpsilonUiTheme.lumin(MD3Theme.SECONDARY_CONTAINER),
+                handleGap, 2.0f, EpsilonUiTheme.lumin(MD3Theme.PRIMARY),
+                handleWidth, handleHeight, 1.0f, EpsilonUiTheme.lumin(MD3Theme.PRIMARY));
 
         if (indicatorProgress > 0.01f) {
             String label = formatValue();
             float textScale = 0.62f;
-            float bubbleWidth = textRenderer.getWidth(label, textScale) + 16.0f;
+            float bubbleWidth = textRenderer.textWidth(label, textScale, null) + 16.0f;
             float bubbleHeight = 18.0f;
             float bubbleX = handleX + handleWidth / 2.0f - bubbleWidth / 2.0f;
             float bubbleY = bounds.y() - 22.0f;
             int bubbleAlpha = (int) (255 * indicatorProgress);
             scope.pushAbsolute(new UiRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight), bubble -> {
                 bubble.roundRect(0.0f, 0.0f, bubbleWidth, bubbleHeight, 9.0f, MD3Theme.withAlpha(MD3Theme.INVERSE_SURFACE, bubbleAlpha));
-                float textWidth = textRenderer.getWidth(label, textScale);
-                float textHeight = textRenderer.getHeight(textScale);
+                float textWidth = textRenderer.textWidth(label, textScale, null);
+                float textHeight = textRenderer.textHeight(textScale, null);
                 float textX = (bubbleWidth - textWidth) / 2.0f;
                 float textY = (bubbleHeight - textHeight) / 2.0f;
                 bubble.text(label, textX, textY, textScale, MD3Theme.withAlpha(MD3Theme.INVERSE_ON_SURFACE, bubbleAlpha));
@@ -86,11 +88,12 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         float fieldHover = animatedHover * 0.85f;
         String display = focused ? getDisplayBuffer() : formatValue();
         float displayScale = getFieldTextScale(textRenderer, display, fieldBounds);
-        float displayWidth = textRenderer.getWidth(display, displayScale);
+        float displayWidth = textRenderer.textWidth(display, displayScale, null);
         float displayX = fieldBounds.x() + (fieldBounds.width() - displayWidth) / 2.0f;
         scope.input(fieldBounds.relativeTo(bounds), focused, fieldHover,
-                displayX - fieldBounds.x(), display, displayScale, MD3Theme.filledFieldContent(focused),
-                focused ? Math.min(cursorIndex, display.length()) : null, focused ? MD3Theme.filledFieldCaret(focused) : null,
+                displayX - fieldBounds.x(), display, displayScale, EpsilonUiTheme.lumin(MD3Theme.filledFieldContent(focused)),
+                focused ? Math.min(cursorIndex, display.length()) : null,
+                focused ? EpsilonUiTheme.lumin(MD3Theme.filledFieldCaret(focused)) : null,
                 null, 0.0f, null);
     }
 
@@ -293,12 +296,12 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
 
     private int getCursorIndex(double mouseX, UiRect fieldBounds) {
         String text = getDisplayBuffer();
-        TextRenderer metrics = textMetrics();
+        UiTextMetrics metrics = textMetrics();
         float scale = getFieldTextScale(metrics, text, fieldBounds);
-        float textWidth = metrics.getWidth(text, scale);
+        float textWidth = metrics.textWidth(text, scale, null);
         float textStart = fieldBounds.x() + (fieldBounds.width() - textWidth) / 2.0f;
         for (int i = 0; i <= text.length(); i++) {
-            float width = metrics.getWidth(text.substring(0, i), scale);
+            float width = metrics.textWidth(text.substring(0, i), scale, null);
             if (mouseX <= textStart + width) {
                 return i;
             }
@@ -306,8 +309,8 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         return text.length();
     }
 
-    private float getFieldTextScale(TextRenderer textRenderer, String text, UiRect fieldBounds) {
-        float textWidth = textRenderer.getWidth(text, FIELD_TEXT_SCALE);
+    private float getFieldTextScale(UiTextMetrics textRenderer, String text, UiRect fieldBounds) {
+        float textWidth = textRenderer.textWidth(text, FIELD_TEXT_SCALE, null);
         float maxTextWidth = Math.max(1.0f, fieldBounds.width() - FIELD_TEXT_PADDING * 2.0f);
         if (textWidth <= maxTextWidth || textWidth <= 0.0f) {
             return FIELD_TEXT_SCALE;
@@ -315,8 +318,8 @@ public class DoubleSettingRow extends SettingRow<DoubleSetting> {
         return FIELD_TEXT_SCALE * maxTextWidth / textWidth;
     }
 
-    private TextRenderer textMetrics() {
-        return textMetrics == null ? FALLBACK_TEXT_METRICS : textMetrics;
+    private UiTextMetrics textMetrics() {
+        return textMetrics == null ? MinecraftUiRuntime2612.current().textMetrics() : textMetrics;
     }
 
 }

@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
@@ -105,6 +105,6 @@ public abstract class AbstractSetSettingWidget<S extends Setting<?>> extends Set
     }
 
     private float centeredTextY(UiTextMetrics textMetrics, float boxY, float boxHeight, float scale) {
-        return boxY + (boxHeight - textMetrics.textHeight(scale)) * 0.5f;
+        return boxY + (boxHeight - textMetrics.textHeight(scale, null)) * 0.5f;
     }
 }

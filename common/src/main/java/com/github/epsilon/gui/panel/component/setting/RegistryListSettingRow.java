@@ -1,13 +1,15 @@
 package com.github.epsilon.gui.panel.component.setting;
 
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.text.IconChars;
-import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.text.icon.IconChars;
+
+
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.utils.RegistryListUi;
 import com.github.epsilon.settings.impl.RegistryListSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -20,10 +22,10 @@ public class RegistryListSettingRow extends SettingRow<RegistryListSetting<?>> {
     }
 
     @Override
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer,
+    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer,
                         UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
-        float labelY = (bounds.height() - textRenderer.getHeight(labelScale)) / 2.0f;
+        float labelY = (bounds.height() - textRenderer.textHeight(labelScale, null)) / 2.0f;
         String summary = setting.size() + RegistryListUi.labelText(setting.getRegistryType());
         float chipTextScale = 0.58f;
 
@@ -32,8 +34,9 @@ public class RegistryListSettingRow extends SettingRow<RegistryListSetting<?>> {
 
         UiRect chipBounds = PanelElements.measureAssistChipBounds(textRenderer, bounds, summary,
                 chipTextScale, 8.0f, 12.0f, 94.0f).relativeTo(bounds);
-        scope.chip(chipBounds, summary, chipTextScale, MD3Theme.SECONDARY_CONTAINER, MD3Theme.ON_SECONDARY_CONTAINER,
-                IconChars.ADD, 0.58f, StaticFontLoader.ICONS);
+        scope.chip(chipBounds, summary, chipTextScale, EpsilonUiTheme.lumin(MD3Theme.SECONDARY_CONTAINER),
+                EpsilonUiTheme.lumin(MD3Theme.ON_SECONDARY_CONTAINER),
+                IconChars.ADD, 0.58f, "epsilon-icons");
     }
 
     @Override

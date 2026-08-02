@@ -2,25 +2,26 @@ package com.github.epsilon.modules.impl;
 
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class ClientSetting extends Module {
 
@@ -85,6 +86,9 @@ public class ClientSetting extends Module {
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgNotification = settingGroup("Notification");
+    private MinecraftUiRuntime2612 fontRuntime;
+    private FontMode appliedFontMode;
+    private String appliedCustomFont;
 
     @SuppressWarnings("unused")
     private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.setScreen(HudEditorScreen.INSTANCE));
@@ -111,7 +115,6 @@ public class ClientSetting extends Module {
 
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
         TranslateHolder.INSTANCE.refresh();
-        TextureCacheHolder.INSTANCE.clearCache();
     }).group(sgGeneral);
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
@@ -187,9 +190,39 @@ public class ClientSetting extends Module {
         applyFontGlyphUploadBudget(fontGlyphsPerFrame.getValue());
     }
 
+    /** 向 MC-owned UI runtime 注册 Epsilon 字体，并应用当前业务字体选择。 */
+    public synchronized void configureMinecraftFonts(MinecraftUiRuntime2612 runtime) {
+        if (fontRuntime != runtime) {
+            runtime.registerFont("epsilon-default", Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
+            runtime.registerFont("epsilon-icons", Identifier.fromNamespaceAndPath("epsilon", "fonts/icons.ttf"));
+            runtime.registerFont("epsilon-jura-light", Identifier.fromNamespaceAndPath("epsilon", "fonts/jura-light.ttf"));
+            runtime.registerFont("epsilon-osakachips", Identifier.fromNamespaceAndPath("epsilon", "fonts/osakachips.ttf"));
+            fontRuntime = runtime;
+            appliedFontMode = null;
+            appliedCustomFont = null;
+        }
+
+        FontMode nextMode = font.getValue();
+        String nextCustom = customFont.getValue();
+        if (nextMode == appliedFontMode && (nextMode != FontMode.Custom
+                || java.util.Objects.equals(nextCustom, appliedCustomFont))) return;
+        appliedFontMode = nextMode;
+        appliedCustomFont = nextCustom;
+        if (nextMode == FontMode.Custom) {
+            try {
+                runtime.useCustomDefaultFont("epsilon-custom", Path.of(nextCustom));
+                return;
+            } catch (RuntimeException failure) {
+                com.github.epsilon.Constants.LOGGER.error(
+                        "Failed to load custom Lumin font '{}'; using Epsilon default", nextCustom, failure);
+            }
+        }
+        runtime.useDefaultFont("epsilon-default");
+    }
+
     private void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
         int budget = Math.max(1, maxGlyphsPerFrame);
-        TtfFontLoader.setMaxGlyphUploadsPerFrame(budget);
+        // Lumin 按请求原子上传图集 revision，不再使用旧的逐帧全局上传预算。
     }
 
     public boolean snapRotation() {

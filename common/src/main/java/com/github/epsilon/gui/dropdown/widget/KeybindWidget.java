@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
@@ -31,12 +31,12 @@ public class KeybindWidget extends SettingWidget<KeybindSetting> {
 
     @Override
     public void draw(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY) {
-        float lineHeight = textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE);
+        float lineHeight = textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE, null);
         float labelTextY = (getHeight() - lineHeight) * 0.5f;
         scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X, labelTextY, DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         String keyText = listening ? "..." : KeybindUtils.format(setting.getValue());
-        float textW = textMetrics.textWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE);
+        float textW = textMetrics.textWidth(keyText, DropdownTheme.SETTING_TEXT_SCALE, null);
         buttonW = Math.max(DropdownTheme.KEYBIND_WIDTH, textW + 8.0f);
         buttonH = DropdownTheme.KEYBIND_HEIGHT;
         float localButtonX = width - DropdownTheme.SETTING_PADDING_X - buttonW;

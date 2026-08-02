@@ -1,23 +1,21 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.shaders.BlurShader;
-import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.render.animation.Easing;
-import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class ModuleList extends HudModule {
 
@@ -70,8 +68,6 @@ public class ModuleList extends HudModule {
     private final BoolSetting openBackgroundBlur = boolSetting("Background Blur", false, () -> style.is(Style.Open));
     private final IntSetting openBlurStrength = intSetting("Blur Strength", 5, 1, 16, 1, () -> style.is(Style.Open) && openBackgroundBlur.getValue());
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-
     private final Map<Module, ModuleToggleFlag> toggleFlags = new HashMap<>();
 
     private static final float MIN_BOUNDS = 20.0f;
@@ -85,18 +81,17 @@ public class ModuleList extends HudModule {
 
     @Override
     public void render(DeltaTracker deltaTracker) {
-        TextRenderer textRenderer = textRendererSupplier.get();
         float s = scale.getValue().floatValue();
         float textScale = style.is(Style.Open) ? Math.max(0.1f, s + openTextScaleOffset.getValue().floatValue()) : 0.72f * s;
-        List<RenderRow> rows = collectRows(textRenderer, textScale);
+        List<RenderRow> rows = collectRows(textScale);
 
         switch (style.getValue()) {
-            case Compact -> renderCompact(textRenderer, rows, s, textScale);
-            case Open -> renderOpen(textRenderer, rows, s, textScale);
+            case Compact -> renderCompact(rows, s, textScale);
+            case Open -> renderOpen(rows, s, textScale);
         }
     }
 
-    private List<RenderRow> collectRows(TextRenderer textRenderer, float textScale) {
+    private List<RenderRow> collectRows(float textScale) {
         List<Module> modules = ModuleHolder.INSTANCE.getModules();
         Set<Module> liveModules = new HashSet<>(modules);
         toggleFlags.keySet().removeIf(module -> !liveModules.contains(module));
@@ -109,7 +104,7 @@ public class ModuleList extends HudModule {
             float progress = flag.update(state, now);
             if (progress <= 0.001f) continue;
 
-            ModuleLine line = ModuleLine.create(module, textRenderer, textScale, showOpenCategory.getValue() && style.is(Style.Open));
+            ModuleLine line = ModuleLine.create(module, textScale, showOpenCategory.getValue() && style.is(Style.Open));
             rows.add(new RenderRow(module, line, progress, 0.0f));
         }
 
@@ -117,9 +112,9 @@ public class ModuleList extends HudModule {
         return rows;
     }
 
-    private void renderCompact(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
+    private void renderCompact(List<RenderRow> rows, float s, float textScale) {
         UiTree.Scope scope = renderScope();
-        float lineHeight = textRenderer.getHeight(textScale) + 2.0f * s;
+        float lineHeight = textHeight(textScale, "epsilon-default") + 2.0f * s;
         float paddingX = 2.0f * s;
         float tagWidth = mode.is(Mode.FRAME) ? 0.0f : 2.0f * s;
 
@@ -150,7 +145,7 @@ public class ModuleList extends HudModule {
             float rowX = rightAligned ? targetX + slideOffset : targetX - slideOffset;
             Color accent = rainbow.getValue() ? rainbowColor(timedHue, i) : textColor.getValue();
 
-            drawCompactRow(scope, textRenderer, row, rowX, rowY, visibleHeight, paddingX, tagWidth, textScale, accent);
+            drawCompactRow(scope, row, rowX, rowY, visibleHeight, paddingX, tagWidth, textScale, accent);
 
             if (bottomAligned) {
                 currentY -= visibleHeight;
@@ -161,7 +156,7 @@ public class ModuleList extends HudModule {
 
     }
 
-    private void renderOpen(TextRenderer textRenderer, List<RenderRow> rows, float s, float textScale) {
+    private void renderOpen(List<RenderRow> rows, float s, float textScale) {
         UiTree.Scope scope = renderScope();
 
         float rowHeight = OPEN_ROW_HEIGHT * s;
@@ -217,7 +212,7 @@ public class ModuleList extends HudModule {
 
             float rowX = computeRowX(row.rowWidth);
             Color accent = rainbow.getValue() ? rainbowColor(timedHue, i) : textColor.getValue();
-            drawOpenRow(scope, textRenderer, row, rowX, currentY, rowHeight, radius, iconGap, iconOnLeft, textScale, accent);
+            drawOpenRow(scope, row, rowX, currentY, rowHeight, radius, iconGap, iconOnLeft, textScale, accent);
 
             if (!bottomAligned) {
                 currentY += rowStep;
@@ -254,7 +249,6 @@ public class ModuleList extends HudModule {
 
     private void drawCompactRow(
             UiTree.Scope scope,
-            TextRenderer textRenderer,
             RenderRow row,
             float rowX,
             float rowY,
@@ -268,22 +262,21 @@ public class ModuleList extends HudModule {
         float backgroundWidth = row.line.width + paddingX * 2.0f;
         Color rowBackground = withAlpha(backgroundColor.getValue(), row.progress);
 
-        scope.rect(backgroundX, rowY, backgroundWidth, rowHeight, rowBackground);
+        scope.rect(backgroundX, rowY, backgroundWidth, rowHeight, lumin(rowBackground));
 
         if (mode.is(Mode.LEFT_TAG)) {
-            scope.rect(rowX, rowY, tagWidth, rowHeight, withAlpha(accent, row.progress));
+            scope.rect(rowX, rowY, tagWidth, rowHeight, lumin(withAlpha(accent, row.progress)));
         } else if (mode.is(Mode.RIGHT_TAG)) {
-            scope.rect(backgroundX + backgroundWidth, rowY, tagWidth, rowHeight, withAlpha(accent, row.progress));
+            scope.rect(backgroundX + backgroundWidth, rowY, tagWidth, rowHeight, lumin(withAlpha(accent, row.progress)));
         }
 
         float textX = backgroundX + paddingX;
-        float textY = rowY + Math.max(0.0f, (rowHeight - textRenderer.getHeight(textScale)) / 2.0f);
+        float textY = rowY + Math.max(0.0f, (rowHeight - textHeight(textScale, "epsilon-default")) / 2.0f);
         drawCompactLine(scope, row.line, textX, textY, textScale, withAlpha(accent, row.progress), row.progress);
     }
 
     private void drawOpenRow(
             UiTree.Scope scope,
-            TextRenderer textRenderer,
             RenderRow row,
             float rowX,
             float rowY,
@@ -316,11 +309,11 @@ public class ModuleList extends HudModule {
             String iconChar = row.module.getCategory() == null ? "" : row.module.getCategory().icon;
             if (!iconChar.isEmpty()) {
                 float iconScale = scale.getValue().floatValue();
-                float iconWidth = textRenderer.getWidth(iconChar, iconScale, StaticFontLoader.ICONS);
-                float iconHeight = textRenderer.getHeight(iconScale, StaticFontLoader.ICONS);
+                float iconWidth = textWidth(iconChar, iconScale, "epsilon-icons");
+                float iconHeight = textHeight(iconScale, "epsilon-icons");
                 float iconX = iconBoxX + (rowHeight - iconWidth) / 2.0f;
                 float iconY = rowY + (visibleHeight - iconHeight) / 2.0f;
-                scope.text(iconChar, iconX, iconY, iconScale, withAlpha(accent, alpha * 0.82f), StaticFontLoader.ICONS);
+                scope.text(iconChar, iconX, iconY, iconScale, lumin(withAlpha(accent, alpha * 0.82f)), "epsilon-icons");
             }
 
             if (hasInfoBox) {
@@ -329,8 +322,8 @@ public class ModuleList extends HudModule {
                         : iconBoxX - iconGap - row.line.openInfoBoxWidth;
                 drawOpenBox(scope, infoBoxX, rowY, row.line.openInfoBoxWidth, visibleHeight, radius, alpha);
                 float infoX = infoBoxX + (row.line.openInfoBoxWidth - row.line.infoWidth) / 2.0f;
-                float infoY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
-                scope.text(row.line.info, infoX, infoY, textScale, withAlpha(infoColor.getValue(), alpha));
+                float infoY = rowY + (visibleHeight - textHeight(textScale, "epsilon-default")) / 2.0f;
+                scope.text(row.line.info, infoX, infoY, textScale, lumin(withAlpha(infoColor.getValue(), alpha)));
             }
         } else {
             textBoxX = rowX;
@@ -338,23 +331,29 @@ public class ModuleList extends HudModule {
 
         drawOpenBox(scope, textBoxX, rowY, row.line.openNameBoxWidth, visibleHeight, radius, alpha);
         float textX = textBoxX + (row.line.openNameBoxWidth - row.line.nameWidth) / 2.0f;
-        float textY = rowY + (visibleHeight - textRenderer.getHeight(textScale)) / 2.0f;
-        scope.text(row.line.name, textX, textY, textScale, withAlpha(accent, alpha));
+        float textY = rowY + (visibleHeight - textHeight(textScale, "epsilon-default")) / 2.0f;
+        scope.text(row.line.name, textX, textY, textScale, lumin(withAlpha(accent, alpha)));
     }
 
     private void drawOpenBox(UiTree.Scope scope, float x, float y, float width, float height, float radius, float alpha) {
         Color background = withAlpha(backgroundColor.getValue(), alpha);
         if (openBackgroundBlur.getValue()) {
-            BlurShader.INSTANCE.render(x, y, width, height, radius, openBlurStrength.getValue());
+            MinecraftUiRuntime2612.current().applyBlur(new MinecraftBlurRegion2612(
+                    new UiRect(x, y, width, height),
+                    MinecraftBlurRegion2612.CornerRadii.uniform(radius),
+                    openBlurStrength.getValue(),
+                    List.of()
+            ));
         }
         if (drawOpenShadow.getValue()) {
-            scope.shadow(x, y, width, height, radius, openShadowBlur.getValue().floatValue(), withAlpha(openShadowColor.getValue(), alpha));
+            scope.shadow(x, y, width, height, radius, openShadowBlur.getValue().floatValue(),
+                    lumin(withAlpha(openShadowColor.getValue(), alpha)));
         }
-        scope.roundRect(x, y, width, height, radius, background);
+        scope.roundRect(x, y, width, height, radius, lumin(background));
     }
 
     private void drawCompactLine(UiTree.Scope scope, ModuleLine line, float x, float y, float textScale, Color nameColor, float alpha) {
-        scope.text(line.name, x, y, textScale, nameColor);
+        scope.text(line.name, x, y, textScale, lumin(nameColor));
         float cursorX = x + line.nameWidth;
 
         if (line.info.isEmpty()) return;
@@ -362,11 +361,11 @@ public class ModuleList extends HudModule {
         Color bracket = withAlpha(bracketColor.getValue(), alpha);
         Color info = withAlpha(infoColor.getValue(), alpha);
 
-        scope.text(" [", cursorX, y, textScale, bracket);
+        scope.text(" [", cursorX, y, textScale, lumin(bracket));
         cursorX += line.openBracketWidth;
-        scope.text(line.info, cursorX, y, textScale, info);
+        scope.text(line.info, cursorX, y, textScale, lumin(info));
         cursorX += line.infoWidth;
-        scope.text("]", cursorX, y, textScale, bracket);
+        scope.text("]", cursorX, y, textScale, lumin(bracket));
     }
 
     private float timedHue() {
@@ -437,7 +436,7 @@ public class ModuleList extends HudModule {
             return new ModuleLine(name, info, nameWidth, openBracketWidth, infoWidth, width, openNameBoxWidth, openInfoBoxWidth);
         }
 
-        private static ModuleLine create(Module module, TextRenderer textRenderer, float textScale, boolean showCategory) {
+        private static ModuleLine create(Module module, float textScale, boolean showCategory) {
             String name = module.getTranslatedName();
             if (showCategory && module.getCategory() != null) {
                 name += " [" + module.getCategory().getName() + "]";
@@ -448,10 +447,10 @@ public class ModuleList extends HudModule {
                 info = "";
             }
 
-            float nameWidth = textRenderer.getWidth(name, textScale);
-            float openBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(" [", textScale);
-            float infoWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth(info, textScale);
-            float closeBracketWidth = info.isEmpty() ? 0.0f : textRenderer.getWidth("]", textScale);
+            float nameWidth = textWidth(name, textScale, "epsilon-default");
+            float openBracketWidth = info.isEmpty() ? 0.0f : textWidth(" [", textScale, "epsilon-default");
+            float infoWidth = info.isEmpty() ? 0.0f : textWidth(info, textScale, "epsilon-default");
+            float closeBracketWidth = info.isEmpty() ? 0.0f : textWidth("]", textScale, "epsilon-default");
             return new ModuleLine(name, info, nameWidth, openBracketWidth, infoWidth, closeBracketWidth);
         }
     }

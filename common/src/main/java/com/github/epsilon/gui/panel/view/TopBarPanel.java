@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel.view;
 
-import com.github.epsilon.gui.lib.UiRect;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.epsilon.gui.panel.PanelState;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;

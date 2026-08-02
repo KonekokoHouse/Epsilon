@@ -1,15 +1,17 @@
 package com.github.epsilon.elements;
 
-import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.core.geometry.LuminColor;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.text.render.TextRenderer;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.modules.Module;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
-import java.awt.*;
+import java.awt.Color;
 
 public abstract class HudModule extends Module {
 
@@ -163,22 +165,25 @@ public abstract class HudModule extends Module {
         if (mc.getWindow() == null) {
             return 0;
         }
-        return LuminRenderSystem.getScaledWidthInt();
+        return mc.getWindow().getGuiScaledWidth();
     }
 
     private int getScreenHeight() {
         if (mc.getWindow() == null) {
             return 0;
         }
-        return LuminRenderSystem.getScaledHeightInt();
+        return mc.getWindow().getGuiScaledHeight();
     }
 
     public final void renderWithBatch(DeltaTracker deltaTracker, UiRenderBatch renderBatch) {
         UiTree.Scope previous = currentRenderScope;
         UiTree.Scope scope = new UiTree.Scope();
         currentRenderScope = scope;
-        render(deltaTracker);
-        currentRenderScope = previous;
+        try {
+            render(deltaTracker);
+        } finally {
+            currentRenderScope = previous;
+        }
         renderBatch.render(UiTree.from(scope));
     }
 
@@ -187,6 +192,35 @@ public abstract class HudModule extends Module {
             throw new IllegalStateException("HUD elements must render through renderWithBatch.");
         }
         return currentRenderScope;
+    }
+
+    protected static LuminColor lumin(Color color) {
+        return new LuminColor(color.getRed() / 255.0f, color.getGreen() / 255.0f,
+                color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
+    }
+
+    protected static float textWidth(TextRenderer renderer, String text, float scale) {
+        return textWidth(text, scale, "epsilon-default");
+    }
+
+    protected static float textWidth(TextRenderer renderer, String text, float scale, String fontId) {
+        return textWidth(text, scale, fontId);
+    }
+
+    protected static float textWidth(String text, float scale, String fontId) {
+        return MinecraftUiRuntime2612.current().textMetrics().textWidth(text, scale, fontId);
+    }
+
+    protected static float textHeight(TextRenderer renderer, float scale) {
+        return textHeight(scale, "epsilon-default");
+    }
+
+    protected static float textHeight(TextRenderer renderer, float scale, String fontId) {
+        return textHeight(scale, fontId);
+    }
+
+    protected static float textHeight(float scale, String fontId) {
+        return MinecraftUiRuntime2612.current().textMetrics().textHeight(scale, fontId);
     }
 
     public abstract void render(DeltaTracker deltaTracker);

@@ -36,6 +36,8 @@ val license = project.property("license").toString()
 val neoforgeVersion = project.property("neoforge_version").toString()
 val neoforgeLoaderVersionRange = project.property("neoforge_loader_version_range").toString()
 val credits = project.findProperty("credits")?.toString() ?: ""
+val luminMavenRepository = providers.gradleProperty("lumin_maven_repository")
+    .orElse("https://slmpc.github.io/maven-repository/")
 
 base {
     archivesName.set("${modId}-${project.name}-${minecraftVersion}")
@@ -60,6 +62,15 @@ repositories {
     mavenCentral()
     exclusiveContent {
         forRepository {
+                maven {
+                    name = "LuminGraphicsMc"
+                    url = uri(luminMavenRepository.get())
+                }
+        }
+        filter { includeGroupAndSubgroups("com.github.slmpc") }
+    }
+    exclusiveContent {
+        forRepository {
             maven {
                 name = "Sponge"
                 url = uri("https://repo.spongepowered.org/repository/maven-public")
@@ -76,6 +87,10 @@ repositories {
         }
         filter { includeGroup("net.caffeinemc") }
     }
+}
+
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 
 val licenseFileName = "LICENSE_${modName}"
@@ -120,10 +135,10 @@ tasks.named<ProcessResources>("processResources") {
         "mod_author" to modAuthor,
         "mod_id" to modId,
         "license" to license,
+        "credits" to credits,
         "description" to (project.findProperty("description")?.toString() ?: ""),
         "neoforge_version" to neoforgeVersion,
         "neoforge_loader_version_range" to neoforgeLoaderVersionRange,
-        "credits" to credits,
         "java_version" to javaVersion
     )
 

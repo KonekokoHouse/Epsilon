@@ -1,7 +1,8 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -9,6 +10,7 @@ import com.github.epsilon.settings.impl.IntSetting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 
 import java.awt.*;
 
@@ -53,19 +55,20 @@ public class Inventory extends HudModule {
         float totalHeight = padding * 2f + 3 * slotSize + (3 - 1) * gap;
 
         if (backgroundBlur.getValue()) {
-            BlurShader.INSTANCE.render(this.x, this.y, totalWidth, totalHeight, radius, blurStrength.getValue());
+            MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+                    new UiRect(this.x, this.y, totalWidth, totalHeight), radius, blurStrength.getValue()));
         }
 
         if (drawShadow.getValue()) {
-            scope.shadow(this.x, this.y, totalWidth, totalHeight, radius, shadowBlur.getValue().floatValue(), shadowColor.getValue());
+            scope.shadow(this.x, this.y, totalWidth, totalHeight, radius, shadowBlur.getValue().floatValue(), lumin(shadowColor.getValue()));
         }
-        scope.roundRect(this.x, this.y, totalWidth, totalHeight, radius, backgroundColor.getValue());
+        scope.roundRect(this.x, this.y, totalWidth, totalHeight, radius, lumin(backgroundColor.getValue()));
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 float slotX = this.x + padding + col * (slotSize + gap);
                 float slotY = this.y + padding + row * (slotSize + gap);
-                scope.roundRect(slotX, slotY, slotSize, slotSize, slotRadius, slotColor.getValue());
+                scope.roundRect(slotX, slotY, slotSize, slotSize, slotRadius, lumin(slotColor.getValue()));
             }
         }
 

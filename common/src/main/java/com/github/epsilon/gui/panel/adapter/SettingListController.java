@@ -1,8 +1,9 @@
 package com.github.epsilon.gui.panel.adapter;
 
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.panel.component.setting.*;
 import com.github.epsilon.gui.panel.popup.*;
@@ -32,7 +33,7 @@ public class SettingListController implements AutoCloseable {
     private static final float GROUP_COUNT_CHIP_HEIGHT = 14.0f;
 
     private final PanelPopupHost popupHost;
-    private final TextRenderer measureTextRenderer = TextRenderer.create();
+    private final UiTextMetrics measureTextRenderer = MinecraftUiRuntime2612.current().textMetrics();
     private final Map<Setting<?>, SettingRow<?>> rowCache = new HashMap<>();
     private final Map<String, Animation> sectionHoverAnimations = new HashMap<>();
     private final Map<String, Animation> sectionExpandAnimations = new HashMap<>();
@@ -96,13 +97,13 @@ public class SettingListController implements AutoCloseable {
     }
 
     public void layoutRows(List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
-                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+                           UiTree.Scope scope, UiTextMetrics textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         layoutRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
     }
 
     public void layoutRows(String ownerKey, List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
-                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+                           UiTree.Scope scope, UiTextMetrics textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         prepareLayout(ownerKey, settings);
 
@@ -115,13 +116,13 @@ public class SettingListController implements AutoCloseable {
     }
 
     public void appendRows(List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
-                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+                           UiTree.Scope scope, UiTextMetrics textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         appendRows(null, settings, viewport, scroll, rowWidth, scope, textRenderer, mouseX, mouseY, callback);
     }
 
     public void appendRows(String ownerKey, List<Setting<?>> settings, UiRect viewport, float scroll, float rowWidth,
-                           UiTree.Scope scope, TextRenderer textRenderer, int mouseX, int mouseY,
+                           UiTree.Scope scope, UiTextMetrics textRenderer, int mouseX, int mouseY,
                            RowRenderCallback callback) {
         float rowY = viewport.y() - scroll;
         for (SettingLayoutPlanner.Section section : buildSections(ownerKey, settings)) {
@@ -315,7 +316,6 @@ public class SettingListController implements AutoCloseable {
     @Override
     public void close() {
         clearAll();
-        measureTextRenderer.close();
     }
 
     public boolean hasActiveAnimations() {
@@ -323,7 +323,7 @@ public class SettingListController implements AutoCloseable {
                 || sectionExpandAnimations.values().stream().anyMatch(animation -> !animation.isFinished());
     }
 
-    private void buildSectionCard(UiTree.Scope scope, TextRenderer textRenderer, SettingLayoutPlanner.Section section,
+    private void buildSectionCard(UiTree.Scope scope, UiTextMetrics textRenderer, SettingLayoutPlanner.Section section,
                                   UiRect groupBounds, UiRect headerBounds, int mouseX, int mouseY) {
         Animation hoverAnimation = sectionHoverAnimations.computeIfAbsent(section.key(), ignored -> createAnimation(120L, 0.0f));
         Animation expandAnimation = sectionExpandAnimations.computeIfAbsent(section.key(), ignored -> createAnimation(180L, section.isCollapsed() ? 0.0f : 1.0f));
@@ -348,19 +348,19 @@ public class SettingListController implements AutoCloseable {
 
             float labelScale = 0.66f;
             String label = trimToWidth(section.title(), labelScale, headerBounds.width() - 74.0f, textRenderer);
-            float labelY = localHeader.y() + (GROUP_HEADER_HEIGHT - textRenderer.getHeight(labelScale)) / 2.0f;
+            float labelY = localHeader.y() + (GROUP_HEADER_HEIGHT - textRenderer.textHeight(labelScale, null)) / 2.0f;
             group.text(label, localHeader.x() + MD3Theme.ROW_CONTENT_INSET + 2.0f, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
 
             String countLabel = Integer.toString(section.settings().size());
             float countScale = 0.46f;
-            float countWidth = textRenderer.getWidth(countLabel, countScale) + 10.0f;
+            float countWidth = textRenderer.textWidth(countLabel, countScale, null) + 10.0f;
             float countX = localHeader.x() + localHeader.width() - MD3Theme.ROW_TRAILING_INSET - 20.0f - countWidth;
             float countY = localHeader.y() + (GROUP_HEADER_HEIGHT - GROUP_COUNT_CHIP_HEIGHT) / 2.0f;
             group.roundRect(countX, countY, countWidth, GROUP_COUNT_CHIP_HEIGHT, GROUP_COUNT_CHIP_HEIGHT / 2.0f,
                     MD3Theme.withAlpha(MD3Theme.SECONDARY_CONTAINER, 210));
             group.text(countLabel,
-                    countX + (countWidth - textRenderer.getWidth(countLabel, countScale)) / 2.0f,
-                    countY + (GROUP_COUNT_CHIP_HEIGHT - textRenderer.getHeight(countScale)) / 2.0f,
+                    countX + (countWidth - textRenderer.textWidth(countLabel, countScale, null)) / 2.0f,
+                    countY + (GROUP_COUNT_CHIP_HEIGHT - textRenderer.textHeight(countScale, null)) / 2.0f,
                     countScale,
                     MD3Theme.ON_SECONDARY_CONTAINER);
 
@@ -414,21 +414,21 @@ public class SettingListController implements AutoCloseable {
         });
     }
 
-    private String trimToWidth(String value, float scale, float width, TextRenderer textRenderer) {
+    private String trimToWidth(String value, float scale, float width, UiTextMetrics textRenderer) {
         if (value == null || value.isEmpty()) {
             return "";
         }
-        if (textRenderer.getWidth(value, scale) <= width) {
+        if (textRenderer.textWidth(value, scale, null) <= width) {
             return value;
         }
         String ellipsis = "...";
-        float ellipsisWidth = textRenderer.getWidth(ellipsis, scale);
+        float ellipsisWidth = textRenderer.textWidth(ellipsis, scale, null);
         if (ellipsisWidth >= width) {
             return ellipsis;
         }
         for (int length = value.length() - 1; length >= 0; length--) {
             String candidate = value.substring(0, length) + ellipsis;
-            if (textRenderer.getWidth(candidate, scale) <= width) {
+            if (textRenderer.textWidth(candidate, scale, null) <= width) {
                 return candidate;
             }
         }

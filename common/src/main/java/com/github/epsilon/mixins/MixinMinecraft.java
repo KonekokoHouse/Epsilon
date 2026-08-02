@@ -9,6 +9,7 @@ import com.github.epsilon.modules.impl.player.MultiTask;
 import com.github.epsilon.modules.impl.player.UseCooldown;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.HandsView;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
@@ -134,6 +135,10 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "close", at = @At("HEAD"))
     private void onClose(CallbackInfo ci) {
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.currentOrNull();
+        if (runtime != null) {
+            runtime.close();
+        }
         LuminRenderSystem.destroyAll();
     }
 

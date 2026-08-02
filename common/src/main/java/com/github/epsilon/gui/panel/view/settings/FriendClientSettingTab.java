@@ -1,12 +1,12 @@
 package com.github.epsilon.gui.panel.view.settings;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.render.UiContentBuffer;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
-import com.github.epsilon.gui.lib.state.UiInvalidationState;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.slmpc.lumingraphics.ui.render.UiContentBuffer;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.ui.state.UiInvalidationState;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.component.PanelElements;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
@@ -33,8 +33,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     private static final int MAX_FRIEND_NAME_LENGTH = 32;
 
     private final PanelState state;
-    private final TextRenderer textRenderer;
-    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
+    private final UiTextMetrics textRenderer;
     private final UiInvalidationState contentState = new UiInvalidationState();
     private final Map<String, Animation> rowHoverAnimations = new HashMap<>();
     private final Map<String, Animation> removeHoverAnimations = new HashMap<>();
@@ -48,13 +47,14 @@ public class FriendClientSettingTab implements ClientSettingTabView {
     private long lastContentSignature = Long.MIN_VALUE;
     private float scrollVelocity = 0;
 
-    public FriendClientSettingTab(PanelState state, TextRenderer textRenderer) {
+    public FriendClientSettingTab(PanelState state, UiTextMetrics textRenderer) {
         this.state = state;
         this.textRenderer = textRenderer;
     }
 
     @Override
     public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
+        UiContentBuffer contentBuffer = new UiContentBuffer(renderBatch);
         this.bounds = bounds;
 
         if (Math.abs(scrollVelocity) > 0.01f) {
@@ -75,10 +75,9 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         boolean hasScrollBar = maxScroll > 0.0f;
         float rowWidth = hasScrollBar ? listViewport.width() - ScrollBarUtils.TOTAL_WIDTH : listViewport.width();
         long contentSignature = buildContentSignature(friends);
-        boolean rebuildContent = shouldRebuild(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature);
+        boolean rebuildContent = true;
 
         if (rebuildContent) {
-            contentBuffer.clear();
             contentState.beginRebuild();
             rowEntries.clear();
             rowHoverAnimations.keySet().removeIf(name -> !friends.contains(name));
@@ -113,9 +112,9 @@ public class FriendClientSettingTab implements ClientSettingTabView {
                 if (friends.isEmpty()) {
                     float hintScale = 0.58f;
                     String hint = EpsilonTranslations.Gui.FRIEND_EMPTY.getTranslatedName();
-                    float hintWidth = textRenderer.getWidth(hint, hintScale);
+                    float hintWidth = textRenderer.textWidth(hint, hintScale, null);
                     float hintX = (listViewport.width() - hintWidth) / 2.0f;
-                    float hintY = state.getFriendScroll() + listViewport.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
+                    float hintY = state.getFriendScroll() + listViewport.height() / 2.0f - textRenderer.textHeight(hintScale, null) / 2.0f;
                     content.text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED);
                 }
             });
@@ -125,11 +124,6 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         if (rebuildContent) {
             rememberSnapshot(listViewport, mouseX, mouseY, friends, guiGraphics.guiHeight(), contentSignature);
         }
-    }
-
-    @Override
-    public void flushContent() {
-        contentBuffer.flush();
     }
 
     @Override
@@ -279,8 +273,8 @@ public class FriendClientSettingTab implements ClientSettingTabView {
         scope.roundRect(avatarX, avatarY, avatarSize, avatarSize, avatarSize / 2.0f, MD3Theme.SECONDARY_CONTAINER);
         String initial = name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase();
         float initialScale = 0.54f;
-        float initialWidth = textRenderer.getWidth(initial, initialScale);
-        float initialHeight = textRenderer.getHeight(initialScale);
+        float initialWidth = textRenderer.textWidth(initial, initialScale, null);
+        float initialHeight = textRenderer.textHeight(initialScale, null);
         scope.text(initial,
                 avatarX + (avatarSize - initialWidth) / 2.0f,
                 avatarY + (avatarSize - initialHeight) / 2.0f,
@@ -289,7 +283,7 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
         float nameScale = 0.66f;
         float nameX = avatarX + avatarSize + 8.0f;
-        float nameY = (bounds.height() - textRenderer.getHeight(nameScale)) / 2.0f;
+        float nameY = (bounds.height() - textRenderer.textHeight(nameScale, null)) / 2.0f;
         scope.text(name, nameX, nameY, nameScale, MD3Theme.TEXT_PRIMARY);
 
         PanelElements.buildIconButton(scope, textRenderer, removeBounds.relativeTo(bounds), "✕", 0.50f, MD3Theme.ERROR, removeHoverProgress);
@@ -361,7 +355,6 @@ public class FriendClientSettingTab implements ClientSettingTabView {
 
     @Override
     public void close() {
-        contentBuffer.close();
         markDirty();
     }
 

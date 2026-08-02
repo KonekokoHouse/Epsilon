@@ -32,7 +32,6 @@ public class EpsilonFabric implements ClientModInitializer {
         AddonBootstrap.registerAddons(addonEvent);
 
         EpsilonCommon.init();
-
         ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(
                 ResourceLocationUtils.getIdentifier("objects/reload_listener"),
                 new LanguageReloadListener()

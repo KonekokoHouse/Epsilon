@@ -7,12 +7,13 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.target.TargetRequest;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.combat.DamageUtils;
@@ -25,8 +26,11 @@ import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
+import com.github.slmpc.lumingraphics.ui.scene.UiScene;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.Packet;
@@ -196,7 +200,8 @@ public class ZealotCrystalPlus extends Module {
     private float renderSelfDamageValue;
     private boolean renderHasTarget;
 
-    private final Supplier<TextRenderer> textRenderer = Suppliers.memoize(() -> TextRenderer.create(128 * 1024));
+    private UiScene scene;
+    private MinecraftUiRuntime2612 sceneRuntime;
     private final Deque<Integer> explosionSamples = new ArrayDeque<>();
     private int explosionsThisWindow;
 
@@ -245,6 +250,7 @@ public class ZealotCrystalPlus extends Module {
         explosionSamples.clear();
         explosionsThisWindow = 0;
         resetRenderState();
+        releaseScene();
         signalWorker();
     }
 
@@ -347,13 +353,32 @@ public class ZealotCrystalPlus extends Module {
         }
         if (text.isEmpty()) return;
 
-        TextRenderer renderer = textRenderer.get();
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        UiTextMetrics textMetrics = runtime.textMetrics();
         float scale = 1.0f;
-        float width = renderer.getWidth(text.toString(), scale);
-        float height = renderer.getHeight(scale);
+        float width = textMetrics.textWidth(text.toString(), scale, null);
+        float height = textMetrics.textHeight(scale, null);
         Color color = new Color(255, 255, 255, Math.clamp((int) (220 * renderScale), 0, 255));
-        renderer.addText(text.toString(), screenPos.x - width / 2.0f, screenPos.y - height / 2.0f, scale, color);
-        renderer.drawAndClear();
+        UiTree tree = UiTree.build(scope -> scope.text(text.toString(),
+                screenPos.x - width / 2.0f, screenPos.y - height / 2.0f, scale, color));
+        runtime.render(scene(runtime), UiLayer.CONTENT, tree);
+    }
+
+    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+        if (scene == null || sceneRuntime != runtime) {
+            releaseScene();
+            scene = runtime.createScene(EpsilonUiTheme.lumin());
+            sceneRuntime = runtime;
+        }
+        return scene;
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        if (previous != null) previous.close();
     }
 
 

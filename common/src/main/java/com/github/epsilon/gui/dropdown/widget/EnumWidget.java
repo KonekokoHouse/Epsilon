@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
@@ -89,7 +89,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
     private void drawCurrentValueField(UiTree.Scope scope, UiTextMetrics textMetrics, float fieldX, float fieldY, float fieldW, float hover, float expand) {
         Color background = MD3Theme.filledFieldSurface(expanded, hover);
         Color outline = MD3Theme.filledFieldIndicator(expanded, hover);
-        float textY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(FIELD_TEXT_SCALE)) * 0.5f;
+        float textY = fieldY + (FIELD_HEIGHT - textMetrics.textHeight(FIELD_TEXT_SCALE, null)) * 0.5f;
         float arrowCenterX = fieldX + fieldW - 10.0f;
         float arrowCenterY = fieldY + FIELD_HEIGHT * 0.5f;
 
@@ -191,7 +191,7 @@ public class EnumWidget extends SettingWidget<EnumSetting<?>> {
             );
         }
 
-        float lineHeight = textMetrics.textHeight(OPTION_TEXT_SCALE);
+        float lineHeight = textMetrics.textHeight(OPTION_TEXT_SCALE, null);
         float textY = optionY + (OPTION_HEIGHT - lineHeight) * 0.5f;
         if (textY + lineHeight > visibleBottom) {
             return;

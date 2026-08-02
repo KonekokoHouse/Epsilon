@@ -1,6 +1,6 @@
 package com.github.epsilon.gui.panel;
 
-import com.github.epsilon.gui.lib.UiRect;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.epsilon.gui.theme.MD3Theme;
 
 public class PanelLayout {

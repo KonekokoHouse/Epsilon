@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -38,14 +38,14 @@ public class DropdownTextField {
 
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
-        float textY = y + (height - textMetrics.textHeight(textScale)) / 2.0f;
+        float textY = y + (height - textMetrics.textHeight(textScale, null)) / 2.0f;
         float textX = x + 4.0f;
         updateCursorLayout(textMetrics, textX, textScale);
         scope.text(trimToWidth(display, textScale, width - 8.0f, textMetrics), textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
 
         if (focused) {
             int safeCursor = Math.min(cursor, text.length());
-            float caretX = textX + textMetrics.textWidth(text.substring(0, safeCursor), textScale);
+            float caretX = textX + textMetrics.textWidth(text.substring(0, safeCursor), textScale, null);
             drawCaret(scope, textMetrics, caretX, textY, textScale);
             IMEFocusHelper.updateCursorPos(caretX, textY);
         }
@@ -58,17 +58,17 @@ public class DropdownTextField {
         boolean showPlaceholder = text.isEmpty() && !focused;
         String display = showPlaceholder ? placeholder : text;
 
-        float textY = y + (height - textMetrics.textHeight(textScale)) / 2.0f;
+        float textY = y + (height - textMetrics.textHeight(textScale, null)) / 2.0f;
         String visibleText = trimToWidth(display, textScale, width - 8.0f, textMetrics);
-        float textX = x + (width - textMetrics.textWidth(visibleText, textScale)) * 0.5f;
-        float caretBaseX = x + (width - textMetrics.textWidth(text, textScale)) * 0.5f;
+        float textX = x + (width - textMetrics.textWidth(visibleText, textScale, null)) * 0.5f;
+        float caretBaseX = x + (width - textMetrics.textWidth(text, textScale, null)) * 0.5f;
         updateCursorLayout(textMetrics, caretBaseX, textScale);
         scope.text(visibleText, textX, textY, textScale, showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY);
 
         if (focused) {
             int safeCursor = Math.min(cursor, text.length());
             String beforeCursor = text.substring(0, safeCursor);
-            float caretX = caretBaseX + textMetrics.textWidth(beforeCursor, textScale);
+            float caretX = caretBaseX + textMetrics.textWidth(beforeCursor, textScale, null);
             drawCaret(scope, textMetrics, caretX, textY, textScale);
             IMEFocusHelper.updateCursorPos(caretX, textY);
         }
@@ -229,7 +229,7 @@ public class DropdownTextField {
         }
         float left = 0.0f;
         for (int i = 0; i < text.length(); i++) {
-            float right = textMetrics.textWidth(text.substring(0, i + 1), textScale);
+            float right = textMetrics.textWidth(text.substring(0, i + 1), textScale, null);
             cursorMidpoints[i] = textX + (left + right) * 0.5f;
             left = right;
         }
@@ -246,22 +246,22 @@ public class DropdownTextField {
 
     private void drawCaret(UiTree.Scope scope, UiTextMetrics textMetrics, float x, float y, float textScale) {
         if (System.currentTimeMillis() % 1000 > 500) {
-            scope.rect(x, y, 0.8f, textMetrics.textHeight(textScale), MD3Theme.TEXT_PRIMARY);
+            scope.rect(x, y, 0.8f, textMetrics.textHeight(textScale, null), MD3Theme.TEXT_PRIMARY);
         }
     }
 
     private String trimToWidth(String value, float scale, float maxWidth, UiTextMetrics textMetrics) {
         if (value == null || value.isEmpty()) return "";
-        if (textMetrics.textWidth(value, scale) <= maxWidth) return value;
+        if (textMetrics.textWidth(value, scale, null) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale);
+        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale, null);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         int low = 0;
         int high = value.length();
         while (low < high) {
             int mid = (low + high + 1) / 2;
             String candidate = value.substring(0, mid) + ellipsis;
-            if (textMetrics.textWidth(candidate, scale) <= maxWidth) {
+            if (textMetrics.textWidth(candidate, scale, null) <= maxWidth) {
                 low = mid;
             } else {
                 high = mid - 1;

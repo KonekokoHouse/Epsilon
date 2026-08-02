@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.panel.utils;
 
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.control.UiScrollBar;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.slmpc.lumingraphics.ui.control.UiScrollBar;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 
 public class ScrollBarUtils {
@@ -16,7 +16,11 @@ public class ScrollBarUtils {
     }
 
     public static void draw(UiTree.Scope scope, UiRect viewport, float scroll, float maxScroll, float contentHeight) {
-        UiScrollBar.draw(scope, EpsilonUiTheme.INSTANCE, viewport, scroll, maxScroll, contentHeight);
+        UiScrollBar.Geometry geometry = UiScrollBar.computeGeometry(viewport, scroll, maxScroll, contentHeight);
+        if (geometry != null) {
+            scope.roundRect(geometry.thumbX(), geometry.thumbY(), geometry.thumbWidth(), geometry.thumbHeight(),
+                    geometry.thumbWidth() / 2.0f, EpsilonUiTheme.lumin().scrollBar(0.0f));
+        }
     }
 
     /**

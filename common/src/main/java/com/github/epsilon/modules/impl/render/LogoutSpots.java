@@ -6,12 +6,12 @@ import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.interfaces.WalkAnimationStateAccessor;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.player.FakePlayer;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
@@ -19,8 +19,12 @@ import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.render.WireframeEntityRenderer;
 import com.github.epsilon.utils.render.WorldToScreen;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
+import com.github.slmpc.lumingraphics.ui.scene.UiScene;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.RemotePlayer;
@@ -39,7 +43,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 public class LogoutSpots extends Module {
 
@@ -63,13 +66,18 @@ public class LogoutSpots extends Module {
     private final Map<UUID, Player> playerCache = Maps.newConcurrentMap();
     private final Map<UUID, LogoutPlayer> logoutCache = Maps.newConcurrentMap();
 
-    private final Supplier<RectRenderer> rectRendererSupplier = Suppliers.memoize(RectRenderer::create);
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
+    private UiScene scene;
+    private MinecraftUiRuntime2612 sceneRuntime;
 
     @Override
     protected void onEnable() {
         playerCache.clear();
         logoutCache.clear();
+    }
+
+    @Override
+    protected void onDisable() {
+        releaseScene();
     }
 
     @EventHandler
@@ -136,46 +144,66 @@ public class LogoutSpots extends Module {
 
     @EventHandler
     private void onRender2D(Render2DEvent.Level event) {
-        RectRenderer rectRenderer = rectRendererSupplier.get();
-        TextRenderer textRenderer = textRendererSupplier.get();
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        UiTextMetrics textMetrics = runtime.textMetrics();
 
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         float screenWidth = LuminRenderSystem.getScaledWidth();
         float screenHeight = LuminRenderSystem.getScaledHeight();
 
-        for (LogoutPlayer player : logoutCache.values()) {
-            Vec3 anchor = player.getPosition(partialTick)
-                    .add(0.0, player.getBbHeight() + (player.isCrouching() ? 0.1 : 0.2), 0.0);
-            Vector3f projectedAnchor = WorldToScreen.calcWorld2Screen(anchor);
-            if (projectedAnchor == null) continue;
+        UiTree tree = UiTree.build(scope -> {
+            for (LogoutPlayer player : logoutCache.values()) {
+                Vec3 anchor = player.getPosition(partialTick)
+                        .add(0.0, player.getBbHeight() + (player.isCrouching() ? 0.1 : 0.2), 0.0);
+                Vector3f projectedAnchor = WorldToScreen.calcWorld2Screen(anchor);
+                if (projectedAnchor == null) continue;
 
-            float textScale = WorldToScreen.calcScale(anchor) * 0.4f;
-            float padding = 2.0f * textScale;
-            String text = player.getName().getString() + " " + String.format(Locale.ROOT, "%.1f", player.getHealth() + player.getAbsorptionAmount())
-                    + " X: " + (int) player.getX() + " Z: " + (int) player.getZ();
+                float textScale = WorldToScreen.calcScale(anchor) * 0.4f;
+                float padding = 2.0f * textScale;
+                String text = player.getName().getString() + " " + String.format(Locale.ROOT, "%.1f", player.getHealth() + player.getAbsorptionAmount())
+                        + " X: " + (int) player.getX() + " Z: " + (int) player.getZ();
 
-            float textWidth = textRenderer.getWidth(text, textScale);
-            float textHeight = textRenderer.getHeight(textScale);
-            float boxWidth = textWidth + padding * 2.0f;
-            float boxHeight = textHeight + padding * 2.0f;
-            if (!Float.isFinite(projectedAnchor.x) || !Float.isFinite(projectedAnchor.y)) {
-                continue;
+                float textWidth = textMetrics.textWidth(text, textScale, null);
+                float textHeight = textMetrics.textHeight(textScale, null);
+                float boxWidth = textWidth + padding * 2.0f;
+                float boxHeight = textHeight + padding * 2.0f;
+                if (!Float.isFinite(projectedAnchor.x) || !Float.isFinite(projectedAnchor.y)) {
+                    continue;
+                }
+
+                float centerX = projectedAnchor.x;
+                float boxX = centerX - boxWidth * 0.5f;
+                float boxY = projectedAnchor.y - boxHeight - 2.0f * textScale;
+
+                if (boxX + boxWidth < 0.0f || boxY + boxHeight < 0.0f || boxX > screenWidth || boxY > screenHeight) {
+                    continue;
+                }
+
+                scope.rect(boxX, boxY, boxWidth, boxHeight, new Color(0, 0, 0, 153));
+                scope.text(text, boxX + padding, boxY + padding, textScale, Color.WHITE);
             }
+        });
 
-            float centerX = projectedAnchor.x;
-            float boxX = centerX - boxWidth * 0.5f;
-            float boxY = projectedAnchor.y - boxHeight - 2.0f * textScale;
-
-            if (boxX + boxWidth < 0.0f || boxY + boxHeight < 0.0f || boxX > screenWidth || boxY > screenHeight) {
-                continue;
-            }
-
-            rectRenderer.addRect(boxX, boxY, boxWidth, boxHeight, new Color(0, 0, 0, 153));
-            textRenderer.addText(text, boxX + padding, boxY + padding, textScale, Color.WHITE);
+        if (tree.nodeCount() > 0) {
+            runtime.render(scene(runtime), UiLayer.CONTENT, tree);
         }
+    }
 
-        rectRenderer.drawAndClear();
-        textRenderer.drawAndClear();
+    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+        if (scene == null || sceneRuntime != runtime) {
+            releaseScene();
+            scene = runtime.createScene(EpsilonUiTheme.lumin());
+            sceneRuntime = runtime;
+        }
+        return scene;
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        if (previous != null) previous.close();
     }
 
     private boolean isABot(Player ent) {

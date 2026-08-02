@@ -8,13 +8,17 @@ import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.gui.lib.scene.UiLayer;
-import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.client.ClientUtils;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
+import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.github.epsilon.Constants.LOGGER;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -27,7 +31,8 @@ public class HudElementHolder {
     }
 
     private final List<HudModule> elements = new ArrayList<>();
-    private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
+    private UiScene scene;
+    private MinecraftUiRuntime2612 sceneRuntime;
 
     public void initElements() {
         addElement(Notifications.INSTANCE);
@@ -55,21 +60,61 @@ public class HudElementHolder {
     private void onRender2D(Render2DEvent.HUD event) {
         if (ClientUtils.isLoading() || mc.level == null || mc.screen instanceof HudEditorScreen) return;
 
-        scene.beginFrame();
-        for (HudModule element : elements) {
-            if (element.isEnabled()) {
-                element.updateLayout();
-                // HUD chrome 统一提交到 scheduler；原版物品等 overlay 在 flush 后单独绘制。
-                element.renderWithBatch(mc.getDeltaTracker(), scene.batch(UiLayer.CONTENT));
-            }
+        try {
+            MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+            configureFonts(runtime);
+            runtime.render(scene(runtime), activeScene -> {
+                for (HudModule element : elements) {
+                    if (!element.isEnabled()) continue;
+                    try {
+                        renderElement(activeScene, element);
+                    } catch (RuntimeException failure) {
+                        LOGGER.error("HUD content '{}' failed", element.getName(), failure);
+                    }
+                }
+            });
+        } catch (RuntimeException failure) {
+            releaseScene(failure);
+            LOGGER.error("HUD frame failed", failure);
         }
-        scene.endFrame();
 
         for (HudModule element : elements) {
-            if (element.isEnabled()) {
+            if (!element.isEnabled()) continue;
+            try {
                 element.renderOverlay(event.getGuiGraphics(), mc.getDeltaTracker());
+            } catch (RuntimeException failure) {
+                LOGGER.error("HUD overlay '{}' failed", element.getName(), failure);
             }
         }
+    }
+
+    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+        if (scene == null || sceneRuntime != runtime) {
+            scene = runtime.createScene(EpsilonUiTheme.lumin());
+            sceneRuntime = runtime;
+        }
+        return scene;
+    }
+
+    private void releaseScene(RuntimeException frameFailure) {
+        UiScene failedScene = scene;
+        scene = null;
+        sceneRuntime = null;
+        if (failedScene == null) return;
+        try {
+            failedScene.close();
+        } catch (RuntimeException cleanupFailure) {
+            frameFailure.addSuppressed(cleanupFailure);
+        }
+    }
+
+    private void configureFonts(MinecraftUiRuntime2612 runtime) {
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+    }
+
+    private static void renderElement(UiScene scene, HudModule element) {
+        element.updateLayout();
+        element.renderWithBatch(mc.getDeltaTracker(), scene.batch(UiLayer.CONTENT));
     }
 
 }
