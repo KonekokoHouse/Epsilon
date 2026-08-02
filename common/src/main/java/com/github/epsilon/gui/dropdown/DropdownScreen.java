@@ -234,6 +234,7 @@ public class DropdownScreen extends Screen {
     }
 
     private void flushDropdownLayer() {
+        // 每个可遮挡 pass 使用独立 layer；不相交的批次仍可由 scheduler 跨 layer 合并。
         dropdownBatch.render(UiTree.from(dropdownScope), dropdownLayer);
     }
 
