@@ -7,6 +7,7 @@ import com.github.epsilon.gui.dropdown.component.CategoryPanel;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
@@ -77,8 +78,8 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        pendingMouseX = mouseX;
-        pendingMouseY = mouseY;
+        pendingMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        pendingMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         framePending = true;
         drawElementOverlays(graphics);
     }
@@ -106,8 +107,8 @@ public class HudEditorScreen extends Screen {
         editorBatch = activeScene.batch(UiLayer.CONTENT);
         editorLayer = -120;
 
-        float screenW = width;
-        float screenH = height;
+        float screenW = UiCoordinateMapper.getProjectionWidth();
+        float screenH = UiCoordinateMapper.getProjectionHeight();
 
         beginEditorLayer(10);
         editorScope.rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
@@ -152,6 +153,7 @@ public class HudEditorScreen extends Screen {
         if (!framePending || minecraft.screen != this) return;
         framePending = false;
         MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         prepareScene(runtime);
         runtime.render(scene, activeScene -> {
             drawEditor(activeScene, pendingMouseX, pendingMouseY);
@@ -223,7 +225,7 @@ public class HudEditorScreen extends Screen {
         float boxH = 32.0f;
         float radius = 8.0f;
         float middlePadding = 3.0f;
-        float labelX = (width - boxW) * 0.5f;
+        float labelX = (UiCoordinateMapper.getProjectionWidth() - boxW) * 0.5f;
         float labelY = DropdownTheme.PANEL_MARGIN_Y + 2.0f;
         float titleY = labelY + (boxH - titleH - middlePadding - subtitleH) * 0.5f;
         float subtitleY = titleY + titleH + middlePadding;
@@ -330,17 +332,18 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (hudPanel != null && hudPanel.mouseClicked(event.x(), event.y(), event.button())) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        if (hudPanel != null && hudPanel.mouseClicked(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
             validateSelection();
             return true;
         }
         if (event.button() == 0) {
-            HudModule element = findElementAt(event.x(), event.y(), false);
+            HudModule element = findElementAt(epsilonEvent.x(), epsilonEvent.y(), false);
             if (element != null) {
                 selectedElement = element;
                 draggingElement = element;
-                dragOffsetX = (float) event.x() - element.x;
-                dragOffsetY = (float) event.y() - element.y;
+                dragOffsetX = (float) epsilonEvent.x() - element.x;
+                dragOffsetY = (float) epsilonEvent.y() - element.y;
                 currentSnap = SnapInfo.none();
                 return true;
             }
@@ -348,40 +351,47 @@ public class HudEditorScreen extends Screen {
             currentSnap = SnapInfo.none();
             return true;
         }
-        return super.mouseClicked(event, isDoubleClick);
+        return super.mouseClicked(epsilonEvent, isDoubleClick);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (draggingElement != null && event.button() == 0) {
             draggingElement = null;
             currentSnap = SnapInfo.none();
             return true;
         }
-        if (hudPanel != null && hudPanel.mouseReleased(event.x(), event.y(), event.button())) {
+        if (hudPanel != null && hudPanel.mouseReleased(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
             return true;
         }
-        return super.mouseReleased(event);
+        return super.mouseReleased(epsilonEvent);
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(mouseY);
         if (draggingElement != null) {
-            moveElementTo(draggingElement, (float) event.x() - dragOffsetX, (float) event.y() - dragOffsetY, true);
+            moveElementTo(draggingElement, (float) epsilonEvent.x() - dragOffsetX,
+                    (float) epsilonEvent.y() - dragOffsetY, true);
             return true;
         }
         if (hudPanel != null) {
-            hudPanel.mouseDragged(event.x(), event.y());
+            hudPanel.mouseDragged(epsilonEvent.x(), epsilonEvent.y());
         }
-        return super.mouseDragged(event, mouseX, mouseY);
+        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (hudPanel != null && hudPanel.mouseScrolled(mouseX, mouseY, scrollY)) {
+        double epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
+        if (hudPanel != null && hudPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY)) {
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY);
     }
 
     private boolean handleEditorKey(KeyEvent event) {
@@ -423,8 +433,8 @@ public class HudEditorScreen extends Screen {
     }
 
     private SnapInfo computeSnap(HudModule element, float targetX, float targetY) {
-        float screenW = width;
-        float screenH = height;
+        float screenW = UiCoordinateMapper.getProjectionWidth();
+        float screenH = UiCoordinateMapper.getProjectionHeight();
         float snappedX = targetX;
         float snappedY = targetY;
         float verticalGuide = Float.NaN;
@@ -548,7 +558,7 @@ public class HudEditorScreen extends Screen {
     }
 
     private float resolveMaxPanelHeight() {
-        return Math.min(height * 0.72f, 350.0f);
+        return Math.min(UiCoordinateMapper.getProjectionHeight() * 0.72f, 350.0f);
     }
 
     private void ensureHudPanel() {

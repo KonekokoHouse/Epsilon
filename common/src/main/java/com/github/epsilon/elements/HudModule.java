@@ -1,6 +1,7 @@
 package com.github.epsilon.elements;
 
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.core.geometry.LuminColor;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.slmpc.lumingraphics.text.render.TextRenderer;
@@ -162,17 +163,11 @@ public abstract class HudModule extends Module {
     }
 
     private int getScreenWidth() {
-        if (mc.getWindow() == null) {
-            return 0;
-        }
-        return mc.getWindow().getGuiScaledWidth();
+        return UiCoordinateMapper.getProjectionWidthInt();
     }
 
     private int getScreenHeight() {
-        if (mc.getWindow() == null) {
-            return 0;
-        }
-        return mc.getWindow().getGuiScaledHeight();
+        return UiCoordinateMapper.getProjectionHeightInt();
     }
 
     public final void renderWithBatch(DeltaTracker deltaTracker, UiRenderBatch renderBatch) {

@@ -3,6 +3,7 @@ package com.github.epsilon.gui.dropdown;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.dropdown.component.*;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -89,13 +90,18 @@ public class DropdownScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        int epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        int epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         prepareScene(runtime);
-        runtime.render(scene, activeScene -> drawGui(graphics, activeScene, mouseX, mouseY, partialTick));
+        runtime.render(scene, activeScene -> drawGui(graphics, activeScene,
+                epsilonMouseX, epsilonMouseY, partialTick));
         if (preeditOverlay != null) {
-            preeditOverlay.updateInputPosition((int) IMEFocusHelper.activeCursorX, (int) IMEFocusHelper.activeCursorY);
+            preeditOverlay.updateInputPosition(
+                    (int) UiCoordinateMapper.toMinecraftX(IMEFocusHelper.activeCursorX),
+                    (int) UiCoordinateMapper.toMinecraftY(IMEFocusHelper.activeCursorY));
             graphics.setPreeditOverlay(preeditOverlay);
         }
-        popupHost.extractOverlay(graphics, mouseX, mouseY, partialTick);
+        popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
     private void prepareScene(MinecraftUiRuntime2612 runtime) {
@@ -107,10 +113,12 @@ public class DropdownScreen extends Screen {
     }
 
     private void drawGui(GuiGraphicsExtractor graphics, UiScene activeScene, int mouseX, int mouseY, float partialTick) {
+        float uiWidth = UiCoordinateMapper.getProjectionWidth();
+        float uiHeight = UiCoordinateMapper.getProjectionHeight();
         scrimAnim.run(1.0f);
         dropdownBatch = activeScene.batch(UiLayer.CONTENT);
         dropdownLayer = -10;
-        popupHost.setOverlayBounds(new UiRect(0.0f, 0.0f, width, height));
+        popupHost.setOverlayBounds(new UiRect(0.0f, 0.0f, uiWidth, uiHeight));
         updatePanelHeightLimits();
         updateVisiblePanelIds();
         beginPanelFrames();
@@ -118,7 +126,7 @@ public class DropdownScreen extends Screen {
         beginDropdownLayer();
         Color scrim = DropdownTheme.scrim();
         float scrimAlpha = scrimAnim.getValue();
-        dropdownScope.rect(0, 0, width, height, new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
+        dropdownScope.rect(0, 0, uiWidth, uiHeight, new Color(scrim.getRed(), scrim.getGreen(), scrim.getBlue(), (int) (scrim.getAlpha() * scrimAlpha)));
         flushDropdownLayer();
 
         float shadowPad = DropdownTheme.PANEL_SHADOW_BLUR + 4.0f;
@@ -201,10 +209,11 @@ public class DropdownScreen extends Screen {
                     EpsilonTranslations.Gui.DROPDOWN_HINT_PANELS.getTranslatedName(),
                     EpsilonTranslations.Gui.DROPDOWN_HINT_DRAG.getTranslatedName()
             };
-            float screenWidth = width;
+            float screenWidth = UiCoordinateMapper.getProjectionWidth();
             float xRight = screenWidth - DropdownTheme.PANEL_MARGIN_X;
             xRight = Math.max(getSearchX() + getSearchWidth(), xRight);
-            float y = height - DropdownTheme.PANEL_MARGIN_Y - hints.length * lineHeight - (hints.length - 1) * lineGap;
+            float y = UiCoordinateMapper.getProjectionHeight() - DropdownTheme.PANEL_MARGIN_Y
+                    - hints.length * lineHeight - (hints.length - 1) * lineGap;
             int alpha = (int) (255 * scrimAnim.getValue());
             if (alpha <= 0) {
                 return;
@@ -235,7 +244,7 @@ public class DropdownScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        MouseButtonEvent epsilonEvent = event;
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         double mx = epsilonEvent.x();
         double my = epsilonEvent.y();
         int button = epsilonEvent.button();
@@ -267,7 +276,7 @@ public class DropdownScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        MouseButtonEvent epsilonEvent = event;
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         double mx = epsilonEvent.x();
         double my = epsilonEvent.y();
         int button = epsilonEvent.button();
@@ -288,16 +297,16 @@ public class DropdownScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
-        MouseButtonEvent epsilonEvent = event;
-        double epsilonMouseX = mouseX;
-        double epsilonMouseY = mouseY;
-        if (popupHost.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY)) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(mouseY);
+        if (popupHost.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY)) {
             return true;
         }
         boolean handled = false;
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
-            if (panel.mouseDragged(event.x(), event.y())) {
+            if (panel.mouseDragged(epsilonEvent.x(), epsilonEvent.y())) {
                 handled = true;
             }
         }
@@ -305,13 +314,13 @@ public class DropdownScreen extends Screen {
             DropdownLayoutState.save(panels);
             return true;
         }
-        return super.mouseDragged(epsilonEvent, event.x(), event.y());
+        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        double epsilonMouseX = mouseX;
-        double epsilonMouseY = mouseY;
+        double epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             return true;
         }
@@ -486,7 +495,7 @@ public class DropdownScreen extends Screen {
     }
 
     private float resolveMaxPanelHeight(DropdownPanel panel) {
-        return resolveMaxPanelHeight(panel, height * 0.72f);
+        return resolveMaxPanelHeight(panel, UiCoordinateMapper.getProjectionHeight() * 0.72f);
     }
 
     private float resolveMaxPanelHeight(DropdownPanel panel, float screenLimited) {
@@ -498,7 +507,7 @@ public class DropdownScreen extends Screen {
     }
 
     private void updatePanelHeightLimits() {
-        float screenLimited = height * 0.72f;
+        float screenLimited = UiCoordinateMapper.getProjectionHeight() * 0.72f;
         for (DropdownPanel panel : panels) {
             panel.setMaxPanelHeight(resolveMaxPanelHeight(panel, screenLimited));
         }
@@ -525,11 +534,11 @@ public class DropdownScreen extends Screen {
     }
 
     private float getSearchY() {
-        return height - DropdownTheme.PANEL_MARGIN_Y - getSearchHeight();
+        return UiCoordinateMapper.getProjectionHeight() - DropdownTheme.PANEL_MARGIN_Y - getSearchHeight();
     }
 
     private float getSearchWidth() {
-        return Mth.clamp(width - DropdownTheme.PANEL_MARGIN_X * 2.0f, 140.0f, 200.0f);
+        return Mth.clamp(UiCoordinateMapper.getProjectionWidth() - DropdownTheme.PANEL_MARGIN_X * 2.0f, 140.0f, 200.0f);
     }
 
     private float getSearchHeight() {
@@ -542,16 +551,16 @@ public class DropdownScreen extends Screen {
 
     public void openRegistryListSettingPopup(RegistryListSetting<?> setting) {
         UiRect bounds = popupHost.getCenteredBounds(
-                Math.min(360.0f, width - 28.0f),
-                Math.min(300.0f, height - 28.0f)
+                Math.min(360.0f, UiCoordinateMapper.getProjectionWidth() - 28.0f),
+                Math.min(300.0f, UiCoordinateMapper.getProjectionHeight() - 28.0f)
         );
         popupHost.open(RegistryListSelectPopup.create(bounds, setting));
     }
 
     public void openStringListSettingPopup(StringListSetting setting) {
         UiRect bounds = popupHost.getCenteredBounds(
-                Math.min(300.0f, width - 28.0f),
-                Math.min(260.0f, height - 28.0f)
+                Math.min(300.0f, UiCoordinateMapper.getProjectionWidth() - 28.0f),
+                Math.min(260.0f, UiCoordinateMapper.getProjectionHeight() - 28.0f)
         );
         popupHost.open(new StringListSelectPopup(bounds, setting, setting::add, setting::remove));
     }

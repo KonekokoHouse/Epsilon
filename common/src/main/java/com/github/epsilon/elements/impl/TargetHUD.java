@@ -1,6 +1,7 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
@@ -270,9 +271,12 @@ public class TargetHUD extends HudModule {
     }
 
     private void drawItem(GuiGraphicsExtractor graphics, LivingEntity owner, ItemStack stack, float x, float y, float scale, int seed) {
+        float guiX = (float) UiCoordinateMapper.toMinecraftX(x);
+        float guiY = (float) UiCoordinateMapper.toMinecraftY(y);
+        float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
         graphics.pose().pushMatrix();
-        graphics.pose().translate(x + scale, y + scale);
-        graphics.pose().scale(scale, scale);
+        graphics.pose().translate(guiX + guiScale, guiY + guiScale);
+        graphics.pose().scale(guiScale, guiScale);
         graphics.item(owner, stack, 0, 0, seed);
         graphics.pose().popMatrix();
     }

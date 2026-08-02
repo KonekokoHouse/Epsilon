@@ -192,6 +192,7 @@ public class ClientSetting extends Module {
 
     /** 向 MC-owned UI runtime 注册 Epsilon 字体，并应用当前业务字体选择。 */
     public synchronized void configureMinecraftFonts(MinecraftUiRuntime2612 runtime) {
+        runtime.setProjectionScale(getScale());
         if (fontRuntime != runtime) {
             runtime.registerFont("epsilon-default", Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
             runtime.registerFont("epsilon-icons", Identifier.fromNamespaceAndPath("epsilon", "fonts/icons.ttf"));

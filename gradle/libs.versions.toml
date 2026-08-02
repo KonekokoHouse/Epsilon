@@ -21,7 +21,7 @@ junit = "5.13.4"
 junit-platform = "1.13.4"
 lumin-graphics-mc = "1.1.0-SNAPSHOT"
 lumin-graphics-ui = "1.1.0-SNAPSHOT"
-prism-rhi = "0.1.1"
+prism-rhi = "0.1.1-SNAPSHOT"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft" }

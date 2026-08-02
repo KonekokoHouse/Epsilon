@@ -1,5 +1,6 @@
 package com.github.epsilon.gui.panel;
 
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -79,6 +80,8 @@ public class PanelScreen extends Screen {
 
         MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        int epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        int epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         if (scene == null || sceneRuntime != runtime) {
             if (scene != null) scene.close();
             scene = runtime.createScene(EpsilonUiTheme.lumin());
@@ -90,13 +93,16 @@ public class PanelScreen extends Screen {
             clientSettingPanel = new ClientSettingPanel(state, textMetrics, popupHost);
         }
 
-        runtime.render(scene, activeScene -> extractPanelFrame(guiGraphics, activeScene, mouseX, mouseY, partialTick));
+        runtime.render(scene, activeScene -> extractPanelFrame(guiGraphics, activeScene,
+                epsilonMouseX, epsilonMouseY, partialTick));
 
         if (preeditOverlay != null) {
-            this.preeditOverlay.updateInputPosition((int) IMEFocusHelper.activeCursorX, (int) IMEFocusHelper.activeCursorY);
+            this.preeditOverlay.updateInputPosition(
+                    (int) UiCoordinateMapper.toMinecraftX(IMEFocusHelper.activeCursorX),
+                    (int) UiCoordinateMapper.toMinecraftY(IMEFocusHelper.activeCursorY));
             guiGraphics.setPreeditOverlay(this.preeditOverlay);
         }
-        popupHost.extractOverlay(guiGraphics, mouseX, mouseY, partialTick);
+        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
     private void extractPanelFrame(GuiGraphicsExtractor guiGraphics, UiScene scene, int mouseX, int mouseY, float partialTick) {
@@ -132,10 +138,12 @@ public class PanelScreen extends Screen {
             dirtyState.markAllDirty();
         }
 
-        if (width != lastWidth || height != lastHeight) {
+        int uiWidth = UiCoordinateMapper.getProjectionWidthInt();
+        int uiHeight = UiCoordinateMapper.getProjectionHeightInt();
+        if (uiWidth != lastWidth || uiHeight != lastHeight) {
             dirtyState.markLayoutDirty();
-            lastWidth = width;
-            lastHeight = height;
+            lastWidth = uiWidth;
+            lastHeight = uiHeight;
         }
 
         if (dirtyState.consumeModuleListDirty()) {
@@ -149,7 +157,7 @@ public class PanelScreen extends Screen {
         }
 
         float railWidth = categoryRailPanel.getAnimatedWidth();
-        PanelLayout.Layout layout = PanelLayout.compute(width, height, railWidth);
+        PanelLayout.Layout layout = PanelLayout.compute(uiWidth, uiHeight, railWidth);
         popupHost.setOverlayBounds(layout.panel());
 
         drawChrome(layout);
@@ -210,7 +218,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        MouseButtonEvent epsilonEvent = event;
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         double mouseX = epsilonEvent.x();
         double mouseY = epsilonEvent.y();
         if (event.button() != 0) {
@@ -233,7 +241,10 @@ public class PanelScreen extends Screen {
                     || super.mouseClicked(epsilonEvent, isDoubleClick);
         }
 
-        PanelLayout.Layout layout = PanelLayout.compute(width, height, categoryRailPanel.getAnimatedWidth());
+        PanelLayout.Layout layout = PanelLayout.compute(
+                UiCoordinateMapper.getProjectionWidthInt(),
+                UiCoordinateMapper.getProjectionHeightInt(),
+                categoryRailPanel.getAnimatedWidth());
         if (!layout.panel().contains(mouseX, mouseY)) {
             if (ClientSetting.INSTANCE.closeOnOutside.getValue()) minecraft.setScreen(null);
             return true;
@@ -250,8 +261,8 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        double epsilonMouseX = mouseX;
-        double epsilonMouseY = mouseY;
+        double epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             dirtyState.markAllDirty();
             return true;
@@ -276,7 +287,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        MouseButtonEvent epsilonEvent = event;
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (inputRouter.routeMouseReleased(epsilonEvent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
@@ -286,11 +297,15 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
-        if (inputRouter.routeMouseDragged(event, deltaX, deltaY, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(deltaX);
+        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(deltaY);
+        if (inputRouter.routeMouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY,
+                popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
         }
-        return super.mouseDragged(event, deltaX, deltaY);
+        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
@@ -684,7 +685,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private void drawItemPreview(GuiGraphicsExtractor guiGraphics, ItemPreview preview) {
         if (preview.stack().isEmpty()) return;
         float scale = preview.size() / 16.0f;
-        float guiScale = scale;
+        float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
         float guiX = toMinecraftGuiX(preview.x());
         float guiY = toMinecraftGuiY(preview.y());
         guiGraphics.pose().pushMatrix();
@@ -695,11 +696,11 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private float toMinecraftGuiX(float uiX) {
-        return uiX;
+        return (float) UiCoordinateMapper.toMinecraftX(uiX);
     }
 
     private float toMinecraftGuiY(float uiY) {
-        return uiY;
+        return (float) UiCoordinateMapper.toMinecraftY(uiY);
     }
 
     private int toMinecraftGuiXInt(float epsilonX) {

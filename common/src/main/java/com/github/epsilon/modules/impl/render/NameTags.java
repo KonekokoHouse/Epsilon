@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
@@ -220,9 +221,12 @@ public class NameTags extends Module {
     }
 
     private void drawItem(GuiGraphicsExtractor graphics, ItemStack stack, float x, float y, float scale) {
+        float guiX = (float) UiCoordinateMapper.toMinecraftX(x);
+        float guiY = (float) UiCoordinateMapper.toMinecraftY(y);
+        float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
         graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(scale, scale);
+        graphics.pose().translate(guiX, guiY);
+        graphics.pose().scale(guiScale, guiScale);
         graphics.item(stack, 0, 0);
         graphics.itemDecorations(mc.font, stack, 0, 0);
         graphics.pose().popMatrix();

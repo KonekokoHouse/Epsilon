@@ -8,6 +8,7 @@ import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
@@ -105,8 +106,8 @@ public class MainMenuScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        pendingMouseX = mouseX;
-        pendingMouseY = mouseY;
+        pendingMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        pendingMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         overlayPending = true;
     }
 
@@ -114,6 +115,7 @@ public class MainMenuScreen extends Screen {
         if (!overlayPending || minecraft.screen != this) return;
         overlayPending = false;
         MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         prepareScene(runtime);
         runtime.render(scene, activeScene -> drawMenu(activeScene, pendingMouseX, pendingMouseY));
     }
@@ -131,8 +133,8 @@ public class MainMenuScreen extends Screen {
 
     private void drawMenu(UiScene activeScene, int mouseX, int mouseY) {
         float introProgress = easeOutCubic(Mth.clamp((Util.getMillis() - introStartMs) / 650.0f, 0.0f, 1.0f));
-        int width = this.width;
-        int height = this.height;
+        int width = UiCoordinateMapper.getProjectionWidthInt();
+        int height = UiCoordinateMapper.getProjectionHeightInt();
         int buttonCount = entries.size();
         int gapCount = Math.max(0, buttonCount - 1);
         float scale = Mth.clamp((width * 2.0f + height) / 900.0f + 0.08f, 0.72f, 1.24f);
@@ -260,15 +262,16 @@ public class MainMenuScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (event.button() == 0) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        if (epsilonEvent.button() == 0) {
             for (MenuEntry entry : entries) {
-                if (entry.isHovered(event.x(), event.y())) {
+                if (entry.isHovered(epsilonEvent.x(), epsilonEvent.y())) {
                     entry.action.run();
                     return true;
                 }
             }
         }
-        return super.mouseClicked(event, doubleClick);
+        return super.mouseClicked(epsilonEvent, doubleClick);
     }
 
     @Override
