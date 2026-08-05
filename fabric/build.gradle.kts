@@ -7,10 +7,10 @@ val modId = project.property("mod_id").toString()
 
 dependencies {
     minecraft(libs.minecraft)
-    implementation(libs.lumin.graphics.mc.fabric.get2612()) {
+    implementation(libs.lumin.graphics.mc.fabric.v2612) {
         isTransitive = false
     }
-    include(libs.lumin.graphics.mc.fabric.get2612()) {
+    include(libs.lumin.graphics.mc.fabric.v2612) {
         isTransitive = false
     }
     compileOnly(libs.lumin.graphics.mc.bridge.contract) {

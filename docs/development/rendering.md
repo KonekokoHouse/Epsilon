@@ -11,16 +11,17 @@ Epsilon 业务代码直接构造公共 Lumin `UiTree` 与 `UiScene`（`com.githu
 HUD 帧共享一个 `UiScene`，在 `beginFrame()` 与 `endFrame()` 之间提交 UI layer、控件、scissor 和 popup
 层级；主题通过 Epsilon 的业务适配层转换为公共 Lumin 类型。
 
-Lumin 先在每个整数 layer 内按 pipeline、scissor 和采样纹理聚合命令，再只对批次组建立遮挡依赖。
+Lumin 先在每个整数 layer 内按 pipeline、scissor 和采样纹理建立批次组，再只对批次组建立遮挡依赖。
 同一 layer 不保证不同 pipeline 之间维持图元提交顺序：背景、内容、浮层等存在明确遮挡关系的 pass 必须
 使用 `UiRenderBatch.render(tree, relativeLayer)`、带相对层级的 `scene.batch(...)` 或
-`UiTree.Scope.layer(...)` 表达顺序。不同 layer 中互不相交的 Panel 与 Background 仍可被 scheduler
-跨层重排并合批，因此手动层级不会阻止无碰撞区域共享 pipeline。scissor 与采样纹理属于精确批次键，
-字体跨 Atlas 页面不会误合并。
+`UiTree.Scope.layer(...)` 表达顺序。批次组按 bounds 建立 painter-order 依赖，并在可安全重排时优先
+选择同 pipeline 的 ready group；layer 仍按递增顺序 flush，跨 layer 不重排。scissor 与采样纹理属于
+精确批次键，字体跨 Atlas 页面不会误合并，分段阴影保持独立批次。
 
 Dropdown 沿用 `26.1.2` 的递增局部 layer：scrim、伴随角色、每个 Panel 的 Background/Content 和搜索区
-分别提交，避免后提交的白色底覆盖已开启 Module 的内容。Panel Screen 使用 CHROME、CONTENT 相对层和
-POPUP 语义层；HUD Editor 的元素、编辑框与提示层也必须维持各自的显式层级。
+分别创建 scope 并调用 `UiRenderBatch.render(tree, relativeLayer)`，避免后提交的白色底覆盖已开启 Module
+的内容。popup 使用独立的 `POPUP` batch/layer；Panel Screen 的 CHROME、CONTENT 相对层和 POPUP 语义层，
+以及 HUD Editor 的元素、编辑框与提示层，仍必须维持各自的显式层级。
 
 `MinecraftGuiExtractionBridge2612` 负责把原版 `GuiGraphicsExtractor` 的 native state 提交给
 LuminGraphics-MC。原版物品等不能进入 UI batch 的内容继续在 `renderOverlay(GuiGraphicsExtractor,

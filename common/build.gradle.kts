@@ -41,21 +41,21 @@ val luminGraphicsMcNeoForge by configurations.creating {
 }
 
 dependencies {
-    luminGraphicsMcFabric(libs.lumin.graphics.mc.fabric.get2612()) {
+    luminGraphicsMcFabric(libs.lumin.graphics.mc.fabric.v2612) {
         isTransitive = false
     }
-    luminGraphicsMcNeoForge(libs.lumin.graphics.mc.neoforge.get2612()) {
+    luminGraphicsMcNeoForge(libs.lumin.graphics.mc.neoforge.v2612) {
         isTransitive = false
     }
     compileOnly(libs.lumin.graphics.ui)
-    compileOnly(libs.lumin.graphics.mc.common.get2612())
+    compileOnly(libs.lumin.graphics.mc.common.v2612)
     compileOnly(libs.lumin.graphics.mc.bridge.contract) {
         isTransitive = false
     }
     compileOnly(libs.prism.rhi.backend.opengl41) {
         isTransitive = false
     }
-    compileOnly(libs.prism.rhi.backend.opengl.dsa) {
+    compileOnly(libs.prism.rhi.backend.opengl46) {
         isTransitive = false
     }
     compileOnly(libs.mixin)
