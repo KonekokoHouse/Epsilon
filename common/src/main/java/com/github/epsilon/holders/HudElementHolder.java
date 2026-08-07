@@ -89,11 +89,21 @@ public class HudElementHolder {
     }
 
     private UiScene scene(MinecraftUiRuntime2612 runtime) {
-        if (scene == null || sceneRuntime != runtime) {
+        if (scene != null && sceneRuntime != runtime) {
+            releaseScene();
+        }
+        if (scene == null) {
             scene = runtime.createScene(EpsilonUiTheme.lumin());
             sceneRuntime = runtime;
         }
         return scene;
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        if (previous != null) previous.close();
     }
 
     private void releaseScene(RuntimeException frameFailure) {

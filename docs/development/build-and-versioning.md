@@ -19,7 +19,7 @@ Sodium 与 Iris 兼容代码只在对应平台编译；Iris 的 Fabric/NeoForge 
 ## 本地 Lumin 发布版本
 
 Epsilon 通过 Gradle `mavenLocal()` 解析 `com.github.slmpc` 依赖，不依赖仓库绝对路径。版本目录当前消费
-PrismRHI `0.2.1-SNAPSHOT`、LuminGraphics `1.2.0` 和 LuminGraphics-MC `1.2.1-SNAPSHOT`。先按顺序发布三个上游仓库到
+PrismRHI `0.2.1-SNAPSHOT`、LuminGraphics `1.2.1-SNAPSHOT` 和 LuminGraphics-MC `1.2.1-SNAPSHOT`。先按顺序发布三个上游仓库到
 默认 Maven Local，再运行 Epsilon 构建。
 
 ```powershell

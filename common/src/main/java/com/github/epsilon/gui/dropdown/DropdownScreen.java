@@ -106,10 +106,20 @@ public class DropdownScreen extends Screen {
 
     private void prepareScene(MinecraftUiRuntime2612 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
-        if (scene != null) scene.close();
+        releaseScene();
         scene = runtime.createScene(EpsilonUiTheme.lumin());
         sceneRuntime = runtime;
         uiTextMetrics = runtime.textMetrics();
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        uiTextMetrics = null;
+        dropdownBatch = null;
+        dropdownScope = null;
+        if (previous != null) previous.close();
     }
 
     private void drawGui(GuiGraphicsExtractor graphics, UiScene activeScene, int mouseX, int mouseY, float partialTick) {
@@ -419,6 +429,7 @@ public class DropdownScreen extends Screen {
         searchField.blur();
         IMEFocusHelper.forceDeactivate();
         preeditOverlay = null;
+        releaseScene();
     }
 
     @Override

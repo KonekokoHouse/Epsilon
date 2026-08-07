@@ -122,11 +122,19 @@ public class MainMenuScreen extends Screen {
 
     private void prepareScene(MinecraftUiRuntime2612 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
-        if (scene != null) scene.close();
+        releaseScene();
         runtime.useDefaultFont(DEFAULT_FONT_ID);
         scene = runtime.createScene(EpsilonUiTheme.lumin());
         sceneRuntime = runtime;
         textMetrics = runtime.textMetrics();
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        textMetrics = null;
+        if (previous != null) previous.close();
     }
 
     private void drawMenu(UiScene activeScene, int mouseX, int mouseY) {
@@ -275,6 +283,7 @@ public class MainMenuScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
+        releaseScene();
         initialized = false;
         overlayPending = false;
         if (backgroundRenderTarget != null) {

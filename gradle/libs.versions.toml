@@ -20,7 +20,7 @@ sodium = "0.8.12+mc26.1.2"
 junit = "5.13.4"
 junit-platform = "1.13.4"
 lumin-graphics-mc = "1.2.1-SNAPSHOT"
-lumin-graphics-ui = "1.2.0"
+lumin-graphics-ui = "1.2.1-SNAPSHOT"
 prism-rhi = "0.2.1-SNAPSHOT"
 
 [libraries]

@@ -83,7 +83,7 @@ public class PanelScreen extends Screen {
         int epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
         int epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         if (scene == null || sceneRuntime != runtime) {
-            if (scene != null) scene.close();
+            releaseScene();
             scene = runtime.createScene(EpsilonUiTheme.lumin());
             sceneRuntime = runtime;
             textMetrics = runtime.textMetrics();
@@ -259,6 +259,14 @@ public class PanelScreen extends Screen {
         return handled || super.mouseClicked(epsilonEvent, isDoubleClick);
     }
 
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        textMetrics = null;
+        if (previous != null) previous.close();
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         double epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
@@ -346,6 +354,7 @@ public class PanelScreen extends Screen {
     public void removed() {
         super.removed();
         popupHost.close();
+        releaseScene();
         moduleListPanel.resetTransientState();
         moduleDetailPanel.resetTransientState();
         clientSettingPanel.resetTransientState();

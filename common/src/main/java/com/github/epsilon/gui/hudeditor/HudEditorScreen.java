@@ -85,11 +85,21 @@ public class HudEditorScreen extends Screen {
 
     private void prepareScene(MinecraftUiRuntime2612 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
-        if (scene != null) scene.close();
+        releaseScene();
         runtime.useDefaultFont(DEFAULT_FONT_ID);
         scene = runtime.createScene(EpsilonUiTheme.lumin());
         sceneRuntime = runtime;
         textMetrics = runtime.textMetrics();
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        textMetrics = null;
+        editorBatch = null;
+        editorScope = null;
+        if (previous != null) previous.close();
     }
 
     private void drawEditor(UiScene activeScene, int mouseX, int mouseY) {
@@ -542,7 +552,7 @@ public class HudEditorScreen extends Screen {
     public void removed() {
         super.removed();
         framePending = false;
-        if (scene != null && scene.frameActive()) scene.abortFrame();
+        releaseScene();
         draggingElement = null;
         currentSnap = SnapInfo.none();
     }
