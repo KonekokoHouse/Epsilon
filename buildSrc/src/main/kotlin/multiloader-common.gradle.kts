@@ -36,9 +36,6 @@ val license = project.property("license").toString()
 val neoforgeVersion = project.property("neoforge_version").toString()
 val neoforgeLoaderVersionRange = project.property("neoforge_loader_version_range").toString()
 val credits = project.findProperty("credits")?.toString() ?: ""
-val luminMavenRepository = providers.gradleProperty("lumin_maven_repository")
-    .orElse("https://slmpc.github.io/maven-repository/")
-
 base {
     archivesName.set("${modId}-${project.name}-${minecraftVersion}")
 }
@@ -62,10 +59,7 @@ repositories {
     mavenCentral()
     exclusiveContent {
         forRepository {
-                maven {
-                    name = "LuminGraphicsMc"
-                    url = uri(luminMavenRepository.get())
-                }
+            mavenLocal()
         }
         filter { includeGroupAndSubgroups("com.github.slmpc") }
     }

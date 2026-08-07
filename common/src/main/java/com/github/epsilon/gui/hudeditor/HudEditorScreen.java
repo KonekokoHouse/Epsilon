@@ -25,7 +25,6 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -87,8 +86,6 @@ public class HudEditorScreen extends Screen {
     private void prepareScene(MinecraftUiRuntime2612 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
         if (scene != null) scene.close();
-        runtime.registerFont(DEFAULT_FONT_ID, Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
-        runtime.registerFont(ICON_FONT_ID, Identifier.fromNamespaceAndPath("epsilon", "fonts/icons.ttf"));
         runtime.useDefaultFont(DEFAULT_FONT_ID);
         scene = runtime.createScene(EpsilonUiTheme.lumin());
         sceneRuntime = runtime;

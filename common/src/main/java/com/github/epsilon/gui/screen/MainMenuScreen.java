@@ -123,8 +123,6 @@ public class MainMenuScreen extends Screen {
     private void prepareScene(MinecraftUiRuntime2612 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
         if (scene != null) scene.close();
-        runtime.registerFont(DEFAULT_FONT_ID, Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
-        runtime.registerFont(JURA_LIGHT_FONT_ID, Identifier.fromNamespaceAndPath("epsilon", "fonts/jura-light.ttf"));
         runtime.useDefaultFont(DEFAULT_FONT_ID);
         scene = runtime.createScene(EpsilonUiTheme.lumin());
         sceneRuntime = runtime;
