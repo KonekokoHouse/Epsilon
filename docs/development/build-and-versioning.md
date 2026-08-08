@@ -3,7 +3,7 @@
 ## 版本来源
 
 - `gradle.properties`：Epsilon 自身的 `version`、`group`、`mod_id`、`mod_name`、`mod_author`、许可证和描述。
-- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium 和测试库版本。
+- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium、LuminGraphics、PrismRHI 和测试库版本。
 - 根 `build.gradle.kts`：将版本目录中的值映射为各子项目使用的 Gradle 属性。
 - `common/build.gradle.kts`：生成 `com.github.epsilon.BuildConfig`，当前暴露 `MOD_ID` 和有效构建版本。
 
@@ -14,7 +14,7 @@
 - `multiloader-common.gradle.kts`：Java 25 工具链、仓库、资源展开、Jar 元数据、源码 Jar、发布和 `buildRelease`。
 - `multiloader-loader.gradle.kts`：将 `:common` 的 Java、资源和生成源码加入 Fabric/NeoForge 编译与打包流程。
 
-Sodium 与 Iris 兼容代码只在对应平台编译；Iris 的 Fabric/NeoForge Jar 从 Modrinth Maven 以 `compileOnly` 引入，不会打入 Epsilon 成品。
+Sodium 兼容代码只在对应平台编译，不会把 Sodium 打入 Epsilon 成品。
 
 ## Lumin 发布版本
 
@@ -24,7 +24,7 @@ Epsilon 优先从本机 `mavenLocal()` 解析 `com.github.slmpc` 依赖，未找
 仓库后，CI 可以直接构建；本地开发也可以用 `publishToMavenLocal` 覆盖同版本依赖。
 
 ```powershell
-cd D:\Dev\OpenEpsilon\Epsilon-Private
+cd D:\Dev\OpenEpsilon\Open-Epsilon
 .\gradlew.bat buildRelease --no-daemon --stacktrace
 ```
 
@@ -49,7 +49,9 @@ CI 使用 Java 25 执行：
 
 ## 测试
 
-仓库当前没有 Java 测试文件。新增可脱离游戏运行的配置、解析、排序或数学逻辑时，优先在 `common/src/test/java` 添加 JUnit 5 测试。构建验证范围必须遵循 [`AGENTS.md`](../../AGENTS.md) 的提交前检查。
+可脱离游戏运行的渲染契约、坐标、配置、解析、排序或数学逻辑优先在
+`common/src/test/java` 添加 JUnit 5 测试。构建验证范围必须遵循
+[`AGENTS.md`](../../AGENTS.md) 的提交前检查。
 
 ## 外部资料
 

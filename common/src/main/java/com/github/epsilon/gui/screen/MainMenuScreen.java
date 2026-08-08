@@ -234,12 +234,6 @@ public class MainMenuScreen extends Screen {
                     layer.rect(drawX + scale, buttonY + scale, buttonWidth + scale * 0.5f,
                             buttonLineHeight + scale, applyAlpha(MD3Theme.SURFACE, 0.70f * appear));
                     layer.rect(drawX, buttonY, buttonWidth, buttonLineHeight, MD3Theme.lerp(lineBase, lineHover, hover));
-    private static float easeOutCubic(float value) {
-        float t = Mth.clamp(value, 0.0f, 1.0f);
-        float inv = 1.0f - t;
-        return 1.0f - inv * inv * inv;
-    }
-
                 });
 
                 String label = labels[index];
@@ -249,6 +243,12 @@ public class MainMenuScreen extends Screen {
         });
 
         activeScene.submit(UiLayer.CONTENT, tree);
+    }
+
+    private static float easeOutCubic(float value) {
+        float t = Mth.clamp(value, 0.0f, 1.0f);
+        float inv = 1.0f - t;
+        return 1.0f - inv * inv * inv;
     }
 
     private static String localizedTitle(String title) {

@@ -129,11 +129,6 @@ public class HudEditorScreen extends Screen {
         editorScope.rect(centerX - 0.5f, 0.0f, 1.0f, screenH, centerGuide);
         editorScope.rect(0.0f, centerY - 0.5f, screenW, 1.0f, centerGuide);
         drawSnapGuides(editorScope, screenW, screenH);
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
-            if (!element.isEnabled()) continue;
-            element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
-        }
-
         flushEditorLayer();
 
         beginEditorLayer(100);

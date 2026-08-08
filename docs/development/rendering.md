@@ -27,7 +27,7 @@ Lumin 先在每个整数 layer 内按 pipeline、scissor 和采样纹理建立�
 选择同 pipeline 的 ready group；layer 仍按递增顺序 flush，跨 layer 不重排。scissor 与采样纹理属于
 精确批次键，字体跨 Atlas 页面不会误合并，分段阴影保持独立批次。
 
-Dropdown 沿用 `26.1.2` 的递增局部 layer：scrim、伴随角色、每个 Panel 的 Background/Content 和搜索区
+Dropdown 沿用 `26.1.2` 的递增局部 layer：scrim、每个 Panel 的 Background/Content 和搜索区
 分别创建 scope 并调用 `UiRenderBatch.render(tree, relativeLayer)`，避免后提交的白色底覆盖已开启 Module
 的内容。popup 使用独立的 `POPUP` batch/layer；Panel Screen 的 CHROME、CONTENT 相对层和 POPUP 语义层，
 以及 HUD Editor 的元素、编辑框与提示层，仍必须维持各自的显式层级。
@@ -58,7 +58,7 @@ priority 必须大于 `-999`。
 - `calcWorld2Screen(Vec3)`：默认入口；深度小于 `Camera.PROJECTION_Z_NEAR` 时返回 `null`。
 - `calcScale(Vec3)`：根据当前投影矩阵和前向深度返回透视 UI 缩放；每世界单位投影为 20 个 Lumin 像素时取 `1.0`。
 
-2D AABB 边界通过投影全部 8 个顶点并取屏幕空间最小/最大坐标计算；任一顶点位于摄像机后方或近裁面内时拒绝该边界。
+2D AABB 边界通过投影全部 8 个顶点并取有效屏幕坐标的最小/最大值计算；没有有效投影或边界完全位于屏幕外时拒绝该边界。
 
 ## 字体与原版桥接
 

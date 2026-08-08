@@ -16,7 +16,7 @@ class MainMenuTextScaleContractTest {
     void mainMenuUsesOneTextScaleWithoutPerLabelWidthShrinkage() throws IOException {
         String source = Files.readString(MAIN_MENU);
         int drawMenuStart = source.indexOf("private void drawMenu(");
-        int drawMenuEnd = source.indexOf("private void drawReisaGreeting(", drawMenuStart);
+        int drawMenuEnd = source.indexOf("private static float easeOutCubic(", drawMenuStart);
         assertTrue(drawMenuStart >= 0, "Main menu draw method must remain source-visible");
         assertTrue(drawMenuEnd > drawMenuStart, "Main menu draw method boundary must remain source-visible");
         String drawMenu = source.substring(drawMenuStart, drawMenuEnd);
