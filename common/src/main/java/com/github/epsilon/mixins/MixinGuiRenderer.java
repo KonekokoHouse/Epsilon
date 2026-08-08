@@ -38,9 +38,6 @@ public class MixinGuiRenderer {
     @Unique
     private MinecraftGuiExtractionBridge2612 epsilon$levelGuiBridge;
 
-    @Unique
-    private MinecraftGuiExtractionBridge2612 epsilon$guiBridge;
-
     @Inject(method = "draw", at = @At("HEAD"))
     private void onDrawHead(GpuBufferSlice fogBuffer, CallbackInfo ci) {
         // 只在原版主 GuiRenderer 上运行，避免被 MeteorClient 继承的自定义 GuiRenderer 重复触发
@@ -49,11 +46,10 @@ public class MixinGuiRenderer {
             return;
         }
 
-        if (epsilon$levelGuiBridge == null || epsilon$guiBridge == null) {
+        if (epsilon$levelGuiBridge == null) {
             var resources = new MinecraftGuiExtractionBridge2612.NativeResources(
                     this.bufferSource, this.submitNodeCollector, this.featureRenderDispatcher);
             this.epsilon$levelGuiBridge = new MinecraftGuiExtractionBridge2612(resources);
-            this.epsilon$guiBridge = new MinecraftGuiExtractionBridge2612(resources);
         }
 
         int mouseX = (int) mc.mouseHandler.getScaledXPos(mc.getWindow());
@@ -62,10 +58,6 @@ public class MixinGuiRenderer {
         GuiGraphicsExtractor levelGuiGraphics = epsilon$levelGuiBridge.extractor(mc, mouseX, mouseY);
         EventBus.INSTANCE.post(new Render2DEvent.Level(levelGuiGraphics));
         epsilon$levelGuiBridge.submit(fogBuffer);
-
-        GuiGraphicsExtractor guiGraphics = epsilon$guiBridge.extractor(mc, mouseX, mouseY);
-        EventBus.INSTANCE.post(new Render2DEvent.HUD(guiGraphics));
-        epsilon$guiBridge.submit(fogBuffer);
     }
 
     @Inject(method = "draw", at = @At("RETURN"))
@@ -83,10 +75,6 @@ public class MixinGuiRenderer {
         if (epsilon$levelGuiBridge != null) {
             epsilon$levelGuiBridge.close();
             epsilon$levelGuiBridge = null;
-        }
-        if (epsilon$guiBridge != null) {
-            epsilon$guiBridge.close();
-            epsilon$guiBridge = null;
         }
     }
 

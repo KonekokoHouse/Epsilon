@@ -13,6 +13,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 
 import java.awt.Color;
+import java.util.Objects;
 
 public abstract class HudModule extends Module {
 
@@ -171,15 +172,24 @@ public abstract class HudModule extends Module {
     }
 
     public final void renderWithBatch(DeltaTracker deltaTracker, UiRenderBatch renderBatch) {
-        UiTree.Scope previous = currentRenderScope;
         UiTree.Scope scope = new UiTree.Scope();
+        appendToTree(deltaTracker, scope);
+        renderBatch.render(UiTree.from(scope));
+    }
+
+    /**
+     * 将当前 HUD 元素追加到宿主持有的 HUD 树，不在元素内部提交渲染批次。
+     */
+    public final void appendToTree(DeltaTracker deltaTracker, UiTree.Scope scope) {
+        Objects.requireNonNull(deltaTracker, "deltaTracker");
+        Objects.requireNonNull(scope, "scope");
+        UiTree.Scope previous = currentRenderScope;
         currentRenderScope = scope;
         try {
             render(deltaTracker);
         } finally {
             currentRenderScope = previous;
         }
-        renderBatch.render(UiTree.from(scope));
     }
 
     protected final UiTree.Scope renderScope() {

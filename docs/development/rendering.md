@@ -11,6 +11,15 @@ Epsilon 业务代码直接构造公共 Lumin `UiTree` 与 `UiScene`（`com.githu
 HUD 帧共享一个 `UiScene`，在 `beginFrame()` 与 `endFrame()` 之间提交 UI layer、控件、scissor 和 popup
 层级；主题通过 Epsilon 的业务适配层转换为公共 Lumin 类型。
 
+`HudElementHolder` 每帧单独构建一棵 HUD `UiTree`：所有启用的 `HudModule` 只向该树追加节点，完成后
+整棵树一次提交到 HUD scene。Dropdown、Panel 和 HUD Editor chrome 维护各自的 GUI 树，不接收 HUD
+节点；HUD Editor 预览只在独立相对层提交 HUD 树。单个 HUD 元素使用子 layer 隔离构建失败，不能把
+未完成节点泄漏到同帧其他元素。
+
+常规 HUD 在 `Gui.extractRenderState` 完成原版 HUD 提取后提交，此时 `GameRenderer.extractGui` 尚未提取
+当前 Screen。Dropdown 与 Panel 的 GUI 树因此晚于 HUD 树录制并覆盖 HUD；不得把 HUD 提交移回
+`GuiRenderer.draw`，否则 Lumin command buffer 中的 HUD 会晚于 Screen GUI，重新出现在 GUI 上方。
+
 Lumin 先在每个整数 layer 内按 pipeline、scissor 和采样纹理建立批次组，再只对批次组建立遮挡依赖。
 同一 layer 不保证不同 pipeline 之间维持图元提交顺序：背景、内容、浮层等存在明确遮挡关系的 pass 必须
 使用 `UiRenderBatch.render(tree, relativeLayer)`、带相对层级的 `scene.batch(...)` 或
@@ -23,9 +32,10 @@ Dropdown 沿用 `26.1.2` 的递增局部 layer：scrim、伴随角色、每个 P
 的内容。popup 使用独立的 `POPUP` batch/layer；Panel Screen 的 CHROME、CONTENT 相对层和 POPUP 语义层，
 以及 HUD Editor 的元素、编辑框与提示层，仍必须维持各自的显式层级。
 
-`MinecraftGuiExtractionBridge2612` 负责把原版 `GuiGraphicsExtractor` 的 native state 提交给
-LuminGraphics-MC。原版物品等不能进入 UI batch 的内容继续在 `renderOverlay(GuiGraphicsExtractor,
-DeltaTracker)` 中提交。
+`MinecraftGuiExtractionBridge2612` 负责提交世界 2D overlay 使用的独立 `GuiGraphicsExtractor` native
+state。HUD 的原版物品等不能进入 UI batch 的内容继续在 `renderOverlay(GuiGraphicsExtractor,
+DeltaTracker)` 中提交，但直接复用 `GameRenderer.extractGui` 的主 extractor，从而保持 HUD 与 Screen
+之间的原版 painter order。
 
 资源重载在安全帧边界处理，避免活动提交引用已失效的 target、纹理或 atlas。GPU 资源仍只由创建它们的
 渲染线程释放；调用方不得在无活动帧时保留 command buffer 或 render-target lease。

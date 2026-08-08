@@ -22,6 +22,11 @@ class PublicLuminScreenMigrationTest {
             "src/main/java/com/github/epsilon/gui/hudeditor/HudEditorLuminTreeAdapter.java");
     private static final Path DROPDOWN = Path.of("src/main/java/com/github/epsilon/gui/dropdown/DropdownScreen.java");
     private static final Path PANEL = Path.of("src/main/java/com/github/epsilon/gui/panel/PanelScreen.java");
+    private static final Path HUD_HOLDER = Path.of("src/main/java/com/github/epsilon/holders/HudElementHolder.java");
+    private static final Path HUD_MODULE = Path.of("src/main/java/com/github/epsilon/elements/HudModule.java");
+    private static final Path GUI_MIXIN = Path.of("src/main/java/com/github/epsilon/mixins/MixinGui.java");
+    private static final Path GUI_RENDERER_MIXIN = Path.of(
+            "src/main/java/com/github/epsilon/mixins/MixinGuiRenderer.java");
 
     @Test
     void screensUseOnlyThePublicLuminUiRuntime() throws IOException {
@@ -72,6 +77,26 @@ class PublicLuminScreenMigrationTest {
                 () -> assertTrue(panel.contains("scene.batch(UiLayer.CONTENT, 0)")),
                 () -> assertTrue(panel.contains("scene.batch(UiLayer.CONTENT, 20)")),
                 () -> assertTrue(panel.contains("scene.batch(UiLayer.POPUP)"))
+        );
+    }
+
+    @Test
+    void hudBuildsOneDedicatedTreeOutsideGuiTrees() throws IOException {
+        String hudHolder = Files.readString(HUD_HOLDER);
+        String hudModule = Files.readString(HUD_MODULE);
+        String hudEditor = Files.readString(HUD_EDITOR);
+        String guiMixin = Files.readString(GUI_MIXIN);
+        String guiRendererMixin = Files.readString(GUI_RENDERER_MIXIN);
+
+        assertAll(
+                () -> assertTrue(hudHolder.contains("UiTree.Scope hudScope = new UiTree.Scope()")),
+                () -> assertTrue(hudHolder.contains("targetScene.submit(UiLayer.CONTENT, relativeLayer, buildHudTree(deltaTracker))")),
+                () -> assertTrue(hudHolder.contains("element.appendToTree(deltaTracker, elementScope)")),
+                () -> assertTrue(hudModule.contains("public final void appendToTree(")),
+                () -> assertTrue(hudEditor.contains("HudElementHolder.INSTANCE.submitHudTree(activeScene, -40")),
+                () -> assertFalse(hudEditor.contains("element.renderWithBatch(")),
+                () -> assertTrue(guiMixin.contains("new Render2DEvent.HUD(graphics)")),
+                () -> assertFalse(guiRendererMixin.contains("new Render2DEvent.HUD("))
         );
     }
 

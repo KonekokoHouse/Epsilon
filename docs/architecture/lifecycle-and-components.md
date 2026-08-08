@@ -34,7 +34,8 @@ target、native extraction bridge、资源重载处理和 2D frame resources；�
 
 Epsilon 业务 UI 直接使用公共 Lumin `UiTree`/`UiScene` 类型。`MinecraftGuiExtractionBridge2612` 把原版
 `GuiGraphicsExtractor` 的 native state 提交给 LuminGraphics-MC，原版 overlay 因此可以与声明式 UI
-共享同一帧。共享代码不导入 Fabric 或 NeoForge API。
+共享同一帧。常规 HUD 在原版 HUD 提取结束、当前 Screen 提取开始前构建并提交独立 `UiTree`，保证
+Dropdown/Panel GUI 的命令录制和原版节点都位于 HUD 之后。共享代码不导入 Fabric 或 NeoForge API。
 
 ## 保留的 3D 与共享组件
 
@@ -47,7 +48,7 @@ flush。2D runtime 的资源所有权和帧边界不得替代这些 3D 路径。
 | Holder | 职责 |
 |---|---|
 | `ModuleHolder` | 注册本体/Addon 模块，处理键盘与鼠标绑定 |
-| `HudElementHolder` | 注册 HUD，通过公共 Lumin `UiScene` 统一渲染并处理原版 overlay |
+| `HudElementHolder` | 注册 HUD，构建独立 `UiTree` 后通过公共 Lumin `UiScene` 统一提交，并处理原版 overlay |
 | `AddonHolder` | Addon 去重、一次性 setup 与查询 |
 | `ConfigHolder` | 多配置、导入导出、Setting/custom state、好友与迁移 |
 | `TranslateHolder` | 跟踪 `TranslateComponent`，切换语言时刷新缓存 |

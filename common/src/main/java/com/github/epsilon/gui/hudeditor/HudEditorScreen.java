@@ -164,11 +164,7 @@ public class HudEditorScreen extends Screen {
         prepareScene(runtime);
         runtime.render(scene, activeScene -> {
             drawEditor(activeScene, pendingMouseX, pendingMouseY);
-            for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
-                if (element.isEnabled()) {
-                    element.renderWithBatch(minecraft.getDeltaTracker(), activeScene.batch(UiLayer.CONTENT, -40));
-                }
-            }
+            HudElementHolder.INSTANCE.submitHudTree(activeScene, -40, minecraft.getDeltaTracker());
         });
     }
 
