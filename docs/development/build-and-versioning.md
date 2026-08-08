@@ -16,21 +16,16 @@
 
 Sodium 与 Iris 兼容代码只在对应平台编译；Iris 的 Fabric/NeoForge Jar 从 Modrinth Maven 以 `compileOnly` 引入，不会打入 Epsilon 成品。
 
-## 本地 Lumin 发布版本
+## Lumin 发布版本
 
-Epsilon 通过 Gradle `mavenLocal()` 解析 `com.github.slmpc` 依赖，不依赖仓库绝对路径。版本目录当前消费
-PrismRHI `0.2.1`、LuminGraphics `1.2.1` 和 LuminGraphics-MC `1.2.1`。先按顺序发布三个上游仓库到
-默认 Maven Local，再运行 Epsilon 构建。
+Epsilon 优先从本机 `mavenLocal()` 解析 `com.github.slmpc` 依赖，未找到时从
+`https://slmpc.github.io/maven-repository` 获取，不依赖仓库绝对路径。版本目录当前消费 PrismRHI
+`0.2.1`、LuminGraphics `1.2.1` 和 LuminGraphics-MC `1.2.1`。三个上游项目发布到远端 Maven
+仓库后，CI 可以直接构建；本地开发也可以用 `publishToMavenLocal` 覆盖同版本依赖。
 
 ```powershell
-cd D:\Dev\ChenMeng\PrismRHI
-.\gradlew.bat publishToMavenLocal
-cd D:\Dev\ChenMeng\LuminGraphics
-.\gradlew.bat publishToMavenLocal
-cd D:\Dev\ChenMeng\LuminGraphics-MC
-.\gradlew.bat publishToMavenLocal
 cd D:\Dev\OpenEpsilon\Epsilon-Private
-.\gradlew.bat :common:compileJava :fabric:compileJava :neoforge:compileJava
+.\gradlew.bat buildRelease --no-daemon --stacktrace
 ```
 
 ## 常用命令

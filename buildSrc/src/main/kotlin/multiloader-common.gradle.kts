@@ -56,13 +56,15 @@ java {
 }
 
 repositories {
-    mavenCentral()
-    exclusiveContent {
-        forRepository {
-            mavenLocal()
-        }
-        filter { includeGroupAndSubgroups("com.github.slmpc") }
+    mavenLocal {
+        content { includeGroupAndSubgroups("com.github.slmpc") }
     }
+    maven {
+        name = "SlmpcMaven"
+        url = uri("https://slmpc.github.io/maven-repository")
+        content { includeGroupAndSubgroups("com.github.slmpc") }
+    }
+    mavenCentral()
     exclusiveContent {
         forRepository {
             maven {
