@@ -11,6 +11,10 @@ Epsilon 业务代码直接构造公共 Lumin `UiTree` 与 `UiScene`（`com.githu
 HUD 帧共享一个 `UiScene`，在 `beginFrame()` 与 `endFrame()` 之间提交 UI layer、控件、scissor 和 popup
 层级；主题通过 Epsilon 的业务适配层转换为公共 Lumin 类型。
 
+LuminGraphics `1.2.4-SNAPSHOT` 的 `LuminRingBuffer` 会在当前帧耗尽可复用 slot 时按需追加 GPU buffer，
+并支持为超过初始 slot 大小的单次写入创建足够大的 slot。扩容后的资源保留到 Ring 关闭，已经提交的
+draw command 不会引用被替换或提前释放的 buffer。修改 Ring 生命周期时必须继续实测完整 Dropdown 帧。
+
 `HudElementHolder` 每帧单独构建一棵 HUD `UiTree`：所有启用的 `HudModule` 只向该树追加节点，完成后
 整棵树一次提交到 HUD scene。Dropdown、Panel 和 HUD Editor chrome 维护各自的 GUI 树，不接收 HUD
 节点；HUD Editor 预览只在独立相对层提交 HUD 树。单个 HUD 元素使用子 layer 隔离构建失败，不能把
