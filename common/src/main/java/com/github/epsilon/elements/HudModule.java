@@ -164,10 +164,16 @@ public abstract class HudModule extends Module {
     }
 
     private int getScreenWidth() {
+        if (mc.getWindow() == null) {
+            return 0;
+        }
         return UiCoordinateMapper.getProjectionWidthInt();
     }
 
     private int getScreenHeight() {
+        if (mc.getWindow() == null) {
+            return 0;
+        }
         return UiCoordinateMapper.getProjectionHeightInt();
     }
 
