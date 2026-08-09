@@ -13,6 +13,7 @@ import com.github.epsilon.managers.impl.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.utils.client.FontPathResolver;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
@@ -21,7 +22,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class ClientSetting extends Module {
 
@@ -125,6 +125,9 @@ public class ClientSetting extends Module {
             .group(sgGeneral)
             .applyWhenRelease();
 
+    public final DoubleSetting fontScale = doubleSetting("Font Scale", 1.0, 0.5, 2.0, 0.05,
+            this::applyUiTextScaleMultiplier).group(sgGeneral).applyWhenRelease();
+
     public final IntSetting fontGlyphsPerFrame = intSetting("Font Glyphs Per Frame", 8, 1, 64, 1, this::applyFontGlyphUploadBudget).group(sgGeneral);
 
     public final BoolSetting replaceMinecraftFont = boolSetting("Replace Minecraft Font", true).group(sgGeneral);
@@ -186,6 +189,10 @@ public class ClientSetting extends Module {
         return fontGlyphsPerFrame.getValue();
     }
 
+    public double getFontScale() {
+        return fontScale.getValue();
+    }
+
     public void syncFontGlyphUploadBudget() {
         applyFontGlyphUploadBudget(fontGlyphsPerFrame.getValue());
     }
@@ -193,6 +200,7 @@ public class ClientSetting extends Module {
     /** 向 MC-owned UI runtime 注册 Epsilon 字体，并应用当前业务字体选择。 */
     public synchronized void configureMinecraftFonts(MinecraftUiRuntime2612 runtime) {
         runtime.setProjectionScale(getScale());
+        runtime.setUiTextScaleMultiplier((float) getFontScale());
         runtime.setFontGlyphsPerFrame(getFontGlyphsPerFrame());
         if (fontRuntime != runtime) {
             runtime.registerFont("epsilon-default", Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
@@ -212,7 +220,9 @@ public class ClientSetting extends Module {
         appliedCustomFont = nextCustom;
         if (nextMode == FontMode.Custom) {
             try {
-                runtime.useCustomDefaultFont("epsilon-custom", Path.of(nextCustom));
+                runtime.useCustomDefaultFont("epsilon-custom", FontPathResolver.resolve(nextCustom));
+                // Lumin 延迟创建字体 loader；在这里强制读取和解析，确保失败仍处于回退边界内。
+                runtime.font("epsilon-custom");
                 return;
             } catch (RuntimeException failure) {
                 com.github.epsilon.Constants.LOGGER.error(
@@ -225,6 +235,12 @@ public class ClientSetting extends Module {
     private synchronized void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
         if (fontRuntime != null) {
             fontRuntime.setFontGlyphsPerFrame(Math.max(1, maxGlyphsPerFrame));
+        }
+    }
+
+    private synchronized void applyUiTextScaleMultiplier(double multiplier) {
+        if (fontRuntime != null) {
+            fontRuntime.setUiTextScaleMultiplier((float) multiplier);
         }
     }
 

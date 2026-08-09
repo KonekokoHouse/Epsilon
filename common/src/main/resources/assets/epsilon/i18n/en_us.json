@@ -258,6 +258,7 @@
           "custom": "Custom"
         },
         "custom font": "Custom Font",
+        "font scale": "Font Scale",
         "font glyphs per frame": "Font Glyphs Per Frame",
         "replace minecraft font": "Replace Minecraft Font",
         "close gui on outside": "Close Gui On Outside",

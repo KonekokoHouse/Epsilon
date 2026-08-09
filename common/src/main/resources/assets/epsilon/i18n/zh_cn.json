@@ -258,6 +258,7 @@
           "custom": "自定义"
         },
         "custom font": "自定义字体",
+        "font scale": "字体缩放",
         "font glyphs per frame": "每帧写入字形数",
         "replace minecraft font": "替换 Minecraft 字体",
         "close gui on outside": "点击空白关闭 GUI",

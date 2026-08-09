@@ -11,7 +11,7 @@ Epsilon 业务代码直接构造公共 Lumin `UiTree` 与 `UiScene`（`com.githu
 HUD 帧共享一个 `UiScene`，在 `beginFrame()` 与 `endFrame()` 之间提交 UI layer、控件、scissor 和 popup
 层级；主题通过 Epsilon 的业务适配层转换为公共 Lumin 类型。
 
-LuminGraphics `1.2.4-SNAPSHOT` 的 `LuminRingBuffer` 会在当前帧耗尽可复用 slot 时按需追加 GPU buffer，
+LuminGraphics `1.2.4` 的 `LuminRingBuffer` 会在当前帧耗尽可复用 slot 时按需追加 GPU buffer，
 并支持为超过初始 slot 大小的单次写入创建足够大的 slot。扩容后的资源保留到 Ring 关闭，已经提交的
 draw command 不会引用被替换或提前释放的 buffer。修改 Ring 生命周期时必须继续实测完整 Dropdown 帧。
 
@@ -19,6 +19,19 @@ draw command 不会引用被替换或提前释放的 buffer。修改 Ring 生命
 `MissingGlyphException` 穿透 Minecraft GUI。`Font Glyphs Per Frame` 限制同一帧内所有 Lumin 字体合计
 写入的真实 glyph 数量；STB 栅格化在 runtime 专用后台线程串行执行，atlas 修改和 GPU 上传仍只在
 Render Thread 按预算提交。超过预算和尚未加载的 glyph 临时使用同一占位符，后续帧继续加载。
+
+`Custom Font` 的相对值不依赖 Minecraft 工作目录：先在用户目录的 `.epsilon/fonts/` 下按相对路径
+查找，再按文件名递归查找当前用户和操作系统的标准字体目录。显式绝对路径仍可直接使用。Windows
+查找 `%LOCALAPPDATA%/Microsoft/Windows/Fonts` 与 `%WINDIR%/Fonts`；macOS 和 Linux 查找各自的
+用户字体目录与系统字体目录。切换自定义字体时必须立即创建 Lumin font loader，以便路径不可读或
+字体内容无效时在配置边界记录错误并恢复 `epsilon-default`，不能让延迟解析异常逃逸到 GUI 渲染。
+
+`Font Scale` 在 LuminGraphics-MC 的 `MinecraftUiRuntime2612.UI_TEXT_SCALE` 基准上追加业务倍率，
+同时更新现有 scene 的文字 renderer 和缓存的文字测量器。默认字体与自定义字体必须共享该倍率；
+不得只缩放绘制坐标而遗漏布局测量。
+
+字体 loader 将 `48px` 原样作为 STB 栅格化高度，`4px` SDF padding 额外扩展 glyph bitmap，不能从
+栅格化高度中扣除。LuminGraphics-MC 使用与高分辨率栅格匹配的 UI 基准倍率保持默认逻辑字号不变。
 
 `HudElementHolder` 每帧单独构建一棵 HUD `UiTree`：所有启用的 `HudModule` 只向该树追加节点，完成后
 整棵树一次提交到 HUD scene。Dropdown、Panel 和 HUD Editor chrome 维护各自的 GUI 树，不接收 HUD

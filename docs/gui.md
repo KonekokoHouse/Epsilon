@@ -57,7 +57,9 @@ HUD 尺寸通过 `setBounds()` 更新，移动通过 anchor/move API 完成。HU
 
 `ClientSetting.configureMinecraftFonts(runtime)` 统一注册默认字体、图标字体和其他 font id。
 绘制与测量必须使用相同 font id 和 scale。业务色通过 `EpsilonUiTheme.lumin` 转换，不得在控件中
-维护独立 atlas 或 renderer。
+维护独立 atlas 或 renderer。自定义字体的相对值从 `.epsilon/fonts/` 和操作系统字体目录解析，
+不使用 Minecraft 的当前运行目录。`Font Scale` 在 LuminGraphics-MC 的 UI 文字基准倍率上继续缩放，
+对默认字体和自定义字体同时生效，并保持绘制与测量一致。
 
 ## 验证
 
