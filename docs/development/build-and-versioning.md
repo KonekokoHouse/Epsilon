@@ -20,7 +20,7 @@ Sodium 兼容代码只在对应平台编译，不会把 Sodium 打入 Epsilon �
 
 Epsilon 优先从本机 `mavenLocal()` 解析 `com.github.slmpc` 依赖，未找到时从
 `https://slmpc.github.io/maven-repository` 获取，不依赖仓库绝对路径。版本目录当前消费 PrismRHI
-`0.2.2`、LuminGraphics `1.2.4-SNAPSHOT` 和 LuminGraphics-MC `1.2.4-SNAPSHOT`。LuminGraphics-MC
+`0.2.2`、LuminGraphics `1.2.5` 和 LuminGraphics-MC `1.2.5`。LuminGraphics-MC
 会将 LuminGraphics class 直接打入 loader JAR，因此两者必须共用同一版本键。三个上游项目发布到远端 Maven
 仓库后，CI 可以直接构建；本地开发也可以用 `publishToMavenLocal` 覆盖同版本依赖。
 

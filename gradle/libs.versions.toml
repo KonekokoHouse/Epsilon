@@ -17,7 +17,7 @@ asm = "9.8"
 jsr305 = "3.0.2"
 gson = "2.13.2"
 sodium = "0.8.12+mc26.1.2"
-lumin-graphics = "1.2.4-SNAPSHOT"
+lumin-graphics = "1.2.5"
 prism-rhi = "0.2.2"
 
 [libraries]
