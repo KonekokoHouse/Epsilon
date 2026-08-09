@@ -1,0 +1,24 @@
+{
+  "_value": "Example Suite",
+  "description": "Epsilon multi-module Lua example",
+  "groups": {
+    "general": {
+      "_value": "General"
+    }
+  },
+  "settings": {
+    "opacity": {
+      "_value": "Opacity"
+    }
+  },
+  "modules": {
+    "hud-sample": {
+      "_value": "HUD Sample",
+      "description": "Draws through the shared HUD UiTree"
+    },
+    "world-box": {
+      "_value": "World Box",
+      "description": "Submits a box to Render3DScheduler"
+    }
+  }
+}

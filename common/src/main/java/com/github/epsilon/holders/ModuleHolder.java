@@ -11,6 +11,7 @@ import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.ModuleKey;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.modules.impl.combat.*;
 import com.github.epsilon.modules.impl.movement.*;
@@ -24,7 +25,14 @@ import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.function.Function;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -37,6 +45,7 @@ public class ModuleHolder {
     }
 
     private final List<Module> modules = new ArrayList<>();
+    private final Map<ModuleKey, Module> modulesByKey = new HashMap<>();
 
     public void initModules() {
         addModule(ClientSetting.INSTANCE);
@@ -145,19 +154,105 @@ public class ModuleHolder {
     }
 
     private void addModule(Module module) {
-        modules.add(module);
-        module.setAddonId("epsilon");
+        register("epsilon", module);
         module.initI18n(EpsilonTranslateComponent.create("modules", module.getName().toLowerCase()));
     }
 
-    public void registerAddonModule(String addonId, Module module, TranslateComponent moduleComponent) {
-        module.setAddonId(addonId);
+    public synchronized void registerAddonModule(String addonId, Module module, TranslateComponent moduleComponent) {
+        register(addonId, module);
         module.initI18n(moduleComponent);
+    }
+
+    public synchronized ExternalModuleRegistration registerExternal(String ownerId, Module module, TranslateComponent moduleComponent) {
+        register(ownerId, module);
+        module.initI18n(moduleComponent);
+        return new ExternalModuleRegistration(module.getModuleKey(), module);
+    }
+
+    /** 在单个客户端线程临界区中替换某 owner 的全部外部 Module。 */
+    public synchronized List<ExternalModuleRegistration> replaceExternal(
+            String ownerId, List<? extends Module> replacements,
+            Function<Module, TranslateComponent> translationFactory) {
+        Objects.requireNonNull(ownerId, "ownerId");
+        Objects.requireNonNull(replacements, "replacements");
+        Objects.requireNonNull(translationFactory, "translationFactory");
+        Set<ModuleKey> replacementKeys = new LinkedHashSet<>();
+        for (Module module : replacements) {
+            Objects.requireNonNull(module, "module");
+            module.setAddonId(ownerId);
+            ModuleKey key = module.getModuleKey();
+            if (!replacementKeys.add(key)) throw new IllegalArgumentException("重复 Module ID: " + key);
+            Module conflict = modulesByKey.get(key);
+            if (conflict != null && !Objects.equals(conflict.getAddonId(), ownerId)) {
+                throw new IllegalArgumentException("Module ID 与其他 owner 冲突: " + key);
+            }
+        }
+
+        List<Module> previous = modules.stream()
+                .filter(module -> Objects.equals(module.getAddonId(), ownerId))
+                .toList();
+        for (Module module : previous) module.setEnabled(false);
+        modules.removeAll(previous);
+        previous.forEach(module -> modulesByKey.remove(module.getModuleKey(), module));
+
+        List<ExternalModuleRegistration> registrations = new ArrayList<>();
+        for (Module module : replacements) {
+            modulesByKey.put(module.getModuleKey(), module);
+            modules.add(module);
+            module.initI18n(translationFactory.apply(module));
+            registrations.add(new ExternalModuleRegistration(module.getModuleKey(), module));
+        }
+        return List.copyOf(registrations);
+    }
+
+    public synchronized Module find(ModuleKey key) {
+        return modulesByKey.get(key);
+    }
+
+    public synchronized List<Module> getModules() {
+        return Collections.unmodifiableList(new ArrayList<>(modules));
+    }
+
+    private void register(String ownerId, Module module) {
+        Objects.requireNonNull(module, "module");
+        module.setAddonId(ownerId);
+        ModuleKey key = module.getModuleKey();
+        Module existing = modulesByKey.putIfAbsent(key, module);
+        if (existing != null) {
+            throw new IllegalArgumentException("重复 Module ID: " + key.ownerId() + ":" + key.moduleId());
+        }
         modules.add(module);
     }
 
-    public List<Module> getModules() {
-        return modules;
+    public final class ExternalModuleRegistration implements AutoCloseable {
+        private final ModuleKey key;
+        private final Module module;
+        private boolean closed;
+
+        private ExternalModuleRegistration(ModuleKey key, Module module) {
+            this.key = key;
+            this.module = module;
+        }
+
+        public ModuleKey key() {
+            return key;
+        }
+
+        public Module module() {
+            return module;
+        }
+
+        @Override
+        public void close() {
+            synchronized (ModuleHolder.this) {
+                if (closed) return;
+                closed = true;
+                if (modulesByKey.get(key) != module) return;
+                module.setEnabled(false);
+                modulesByKey.remove(key);
+                modules.remove(module);
+            }
+        }
     }
 
     @EventHandler

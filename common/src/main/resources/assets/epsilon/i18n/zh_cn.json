@@ -107,6 +107,11 @@
       "addon": {
         "empty": "未找到附加组件",
         "no_settings": "无可用设置",
+        "lua_script": "Lua 脚本",
+        "lua_system": {
+          "name": "Lua 脚本",
+          "description": "管理受信任的 Lua 运行时和脚本包"
+        },
         "info": {
           "id": "ID",
           "version": "版本",
@@ -229,6 +234,7 @@
         "anti cheat": "反作弊",
         "appearance": "外观",
         "notification": "通知",
+        "lua scripts": "Lua 脚本",
         "open hud editor": "打开 HUD 编辑器",
         "gui keybind": "GUI 按键绑定",
         "gui mode": {
@@ -313,6 +319,9 @@
           "minecraft": "Minecraft"
         },
         "show welcome screen": "启动时显示欢迎页",
+        "enable lua scripts": "启用 Lua 脚本",
+        "lua script watcher": "Lua 脚本文件监听",
+        "lua script reload debounce": "Lua 脚本重载防抖",
         "sound notify": "声音通知",
         "chat notify": "聊天通知",
         "animated chat prefix": "聊天前缀动画",

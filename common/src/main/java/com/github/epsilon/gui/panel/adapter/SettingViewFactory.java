@@ -15,6 +15,7 @@ public class SettingViewFactory {
             case KeybindSetting keybindSetting -> new KeybindSettingRow(keybindSetting);
             case BoolSetting boolSetting -> new BoolSettingRow(boolSetting);
             case EnumSetting<?> enumSetting -> new EnumSettingRow(enumSetting);
+            case ChoiceSetting choiceSetting -> new ChoiceSettingRow(choiceSetting);
             case IntSetting intSetting -> new IntSettingRow(intSetting);
             case DoubleSetting doubleSetting -> new DoubleSettingRow(doubleSetting);
             case ColorSetting colorSetting -> new ColorSettingRow(colorSetting);

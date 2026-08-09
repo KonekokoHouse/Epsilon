@@ -39,6 +39,10 @@ dependencies {
         isTransitive = false
     }
     compileOnly(libs.sodium.neoforge)
+    implementation(libs.luaj.jse)
+    jarJar(libs.luaj.jse) {
+        version { strictly("[${libs.versions.luaj.get()}]") }
+    }
     sodiumNeoForgeOuterJar(libs.sodium.neoforge)
     compileOnly(extractedSodiumNeoForgeModJar)
 }

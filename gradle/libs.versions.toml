@@ -16,6 +16,7 @@ mixinextras = "0.5.3"
 asm = "9.8"
 jsr305 = "3.0.2"
 gson = "2.13.2"
+luaj = "3.0.1"
 sodium = "0.8.12+mc26.1.2"
 lumin-graphics = "1.2.5"
 prism-rhi = "0.2.2"
@@ -29,6 +30,7 @@ mixinextras-common = { module = "io.github.llamalad7:mixinextras-common", versio
 asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+luaj-jse = { module = "org.luaj:luaj-jse", version.ref = "luaj" }
 sodium-fabric = { module = "net.caffeinemc:sodium-fabric", version.ref = "sodium" }
 sodium-neoforge = { module = "net.caffeinemc:sodium-neoforge", version.ref = "sodium" }
 lumin-graphics-ui = { module = "com.github.slmpc.lumingraphics:lumin-graphics-ui", version.ref = "lumin-graphics" }

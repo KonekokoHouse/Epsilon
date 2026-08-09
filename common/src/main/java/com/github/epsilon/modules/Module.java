@@ -14,6 +14,8 @@ import java.util.List;
 
 public class Module implements SettingHost {
 
+    private final String moduleId;
+
     private final String name;
 
     private String addonId;
@@ -45,6 +47,17 @@ public class Module implements SettingHost {
     public TranslateComponent translateComponent;
 
     public Module(String name, Category category) {
+        this(name, name, category);
+    }
+
+    public Module(String moduleId, String name, Category category) {
+        if (moduleId == null || moduleId.isBlank()) {
+            throw new IllegalArgumentException("moduleId 不能为空");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name 不能为空");
+        }
+        this.moduleId = moduleId;
         this.name = name;
         this.category = category;
         mc = Minecraft.getInstance();
@@ -66,6 +79,14 @@ public class Module implements SettingHost {
 
     public String getAddonId() {
         return addonId;
+    }
+
+    public String getModuleId() {
+        return moduleId;
+    }
+
+    public ModuleKey getModuleKey() {
+        return addonId == null ? null : new ModuleKey(addonId, moduleId);
     }
 
     protected boolean nullCheck() {
@@ -108,6 +129,11 @@ public class Module implements SettingHost {
     protected void setDefaultEnabled(boolean defaultEnabled) {
         this.defaultEnabled = defaultEnabled;
         setEnabled(defaultEnabled);
+    }
+
+    /** 仅记录默认启用状态，供需要延迟完成运行时绑定的 Module 使用。 */
+    protected void setDefaultEnabledValue(boolean defaultEnabled) {
+        this.defaultEnabled = defaultEnabled;
     }
 
     protected void setDefaultHidden(boolean defaultHidden) {

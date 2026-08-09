@@ -10,6 +10,7 @@ import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.scripting.lua.render.LuaRender2DService;
 import com.github.epsilon.utils.client.ClientUtils;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
@@ -66,7 +67,7 @@ public class HudElementHolder {
         try {
             MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
             configureFonts(runtime);
-            runtime.render(scene(runtime), activeScene -> submitHudTree(activeScene, 0, deltaTracker));
+            runtime.render(scene(runtime), activeScene -> submitHudTree(activeScene, 0, deltaTracker, event));
         } catch (RuntimeException failure) {
             releaseScene(failure);
             LOGGER.error("HUD frame failed", failure);
@@ -119,11 +120,15 @@ public class HudElementHolder {
     /**
      * 构建并提交独立 HUD 树；调用方的 GUI 树不会接收任何 HUD 节点。
      */
-    public void submitHudTree(UiScene targetScene, int relativeLayer, DeltaTracker deltaTracker) {
-        targetScene.submit(UiLayer.CONTENT, relativeLayer, buildHudTree(deltaTracker));
+    public void submitHudTree(UiScene targetScene, int relativeLayer, DeltaTracker deltaTracker, Render2DEvent.HUD event) {
+        targetScene.submit(UiLayer.CONTENT, relativeLayer, buildHudTree(deltaTracker, event));
     }
 
-    private UiTree buildHudTree(DeltaTracker deltaTracker) {
+    public void submitHudTree(UiScene targetScene, int relativeLayer, DeltaTracker deltaTracker) {
+        targetScene.submit(UiLayer.CONTENT, relativeLayer, buildHudTree(deltaTracker, null));
+    }
+
+    private UiTree buildHudTree(DeltaTracker deltaTracker, Render2DEvent.HUD event) {
         UiTree.Scope hudScope = new UiTree.Scope();
         for (HudModule element : elements) {
             if (!element.isEnabled()) continue;
@@ -134,6 +139,7 @@ public class HudElementHolder {
                 LOGGER.error("HUD content '{}' failed", element.getName(), failure);
             }
         }
+        if (event != null) LuaRender2DService.INSTANCE.appendHud(hudScope, event);
         return UiTree.from(hudScope);
     }
 

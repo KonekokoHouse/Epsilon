@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "api": 1,
+  "id": "example-suite",
+  "name": "Example Suite",
+  "description": "Epsilon multi-module Lua example",
+  "version": "1.0.0",
+  "authors": ["Epsilon"],
+  "settingsEntry": "settings.lua",
+  "modules": [
+    {
+      "id": "hud-sample",
+      "name": "HUD Sample",
+      "entry": "modules/hud-sample.lua",
+      "category": "RENDER",
+      "defaultEnabled": false,
+      "defaultHidden": false
+    },
+    {
+      "id": "world-box",
+      "name": "World Box",
+      "entry": "modules/world-box.lua",
+      "category": "RENDER",
+      "defaultEnabled": false,
+      "defaultHidden": false
+    }
+  ]
+}

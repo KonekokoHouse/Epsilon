@@ -63,6 +63,7 @@ dependencies {
     annotationProcessor(libs.mixinextras.common)
     compileOnly(libs.asm)
     compileOnly(libs.jsr305)
+    implementation(libs.luaj.jse)
 }
 
 configurations {
@@ -120,6 +121,9 @@ val verifyLuminJarInJarArchives = tasks.register("verifyLuminJarInJarArchives") 
                 }
                 check(nested.none { it.contains("mc-26.1.2-common") || it.contains("bridge-contract") }) {
                     "${outer.name} must not embed Lumin common or bridge artifacts: $nested"
+                }
+                check(nested.count { it.substringAfterLast('/').startsWith("luaj-jse-") } == 1) {
+                    "${outer.name} must embed exactly one LuaJ runtime: $nested"
                 }
                 check(archive.getEntry(metadata) != null) {
                     "${outer.name} is missing $metadata"

@@ -53,6 +53,11 @@ public class EpsilonLanguageManager {
         return selectedLanguage;
     }
 
+    public String getSelectedLanguageCode() {
+        String code = resolveSelectedLanguageCode();
+        return code.isBlank() ? DEFAULT_LANGUAGE_CODE : code;
+    }
+
     public synchronized void reload(ResourceManager resourceManager) {
         Map<String, String> loadedTranslations = new HashMap<>();
         appendLanguage(resourceManager, DEFAULT_LANGUAGE_CODE, loadedTranslations);

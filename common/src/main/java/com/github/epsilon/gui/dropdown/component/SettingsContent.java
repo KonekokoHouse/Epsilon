@@ -62,6 +62,7 @@ public class SettingsContent {
         if (setting instanceof IntSetting s) return new IntSliderWidget(s);
         if (setting instanceof DoubleSetting s) return new DoubleSliderWidget(s);
         if (setting instanceof EnumSetting<?> s) return new EnumWidget(s);
+        if (setting instanceof ChoiceSetting s) return new ChoiceWidget(s);
         if (setting instanceof ColorSetting s) return new ColorWidget(s);
         if (setting instanceof RegistryListSetting<?> s) return new RegistryListSettingWidget(s);
         if (setting instanceof KeybindSetting s) return new KeybindWidget(s);
