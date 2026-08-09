@@ -193,6 +193,7 @@ public class ClientSetting extends Module {
     /** 向 MC-owned UI runtime 注册 Epsilon 字体，并应用当前业务字体选择。 */
     public synchronized void configureMinecraftFonts(MinecraftUiRuntime2612 runtime) {
         runtime.setProjectionScale(getScale());
+        runtime.setFontGlyphsPerFrame(getFontGlyphsPerFrame());
         if (fontRuntime != runtime) {
             runtime.registerFont("epsilon-default", Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
             runtime.registerFont("epsilon-icons", Identifier.fromNamespaceAndPath("epsilon", "fonts/icons.ttf"));
@@ -221,9 +222,10 @@ public class ClientSetting extends Module {
         runtime.useDefaultFont("epsilon-default");
     }
 
-    private void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
-        int budget = Math.max(1, maxGlyphsPerFrame);
-        // Lumin 按请求原子上传图集 revision，不再使用旧的逐帧全局上传预算。
+    private synchronized void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
+        if (fontRuntime != null) {
+            fontRuntime.setFontGlyphsPerFrame(Math.max(1, maxGlyphsPerFrame));
+        }
     }
 
     public boolean snapRotation() {

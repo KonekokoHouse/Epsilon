@@ -15,6 +15,11 @@ LuminGraphics `1.2.4-SNAPSHOT` 的 `LuminRingBuffer` 会在当前帧耗尽可复
 并支持为超过初始 slot 大小的单次写入创建足够大的 slot。扩容后的资源保留到 Ring 关闭，已经提交的
 draw command 不会引用被替换或提前释放的 buffer。修改 Ring 生命周期时必须继续实测完整 Dropdown 帧。
 
+字体缺少 code point 时，Lumin atlas 使用内置的 hollow-box glyph 继续完成测量和绘制，不得让
+`MissingGlyphException` 穿透 Minecraft GUI。`Font Glyphs Per Frame` 限制同一帧内所有 Lumin 字体合计
+写入的真实 glyph 数量；STB 栅格化在 runtime 专用后台线程串行执行，atlas 修改和 GPU 上传仍只在
+Render Thread 按预算提交。超过预算和尚未加载的 glyph 临时使用同一占位符，后续帧继续加载。
+
 `HudElementHolder` 每帧单独构建一棵 HUD `UiTree`：所有启用的 `HudModule` 只向该树追加节点，完成后
 整棵树一次提交到 HUD scene。Dropdown、Panel 和 HUD Editor chrome 维护各自的 GUI 树，不接收 HUD
 节点；HUD Editor 预览只在独立相对层提交 HUD 树。单个 HUD 元素使用子 layer 隔离构建失败，不能把
