@@ -2,12 +2,12 @@ package com.github.epsilon.gui.panel.view.settings;
 
 import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.render.UiContentBuffer;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
-import com.github.epsilon.gui.lib.state.UiInvalidationState;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.slmpc.lumingraphics.ui.render.UiContentBuffer;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.ui.state.UiInvalidationState;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.panel.adapter.SettingListController;
 import com.github.epsilon.gui.panel.component.setting.KeybindSettingRow;
@@ -41,10 +41,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     private static final float DETAIL_SETTINGS_MIN_HEIGHT = 96.0f;
 
     private final PanelState state;
-    private final TextRenderer textRenderer;
+    private final UiTextMetrics textRenderer;
     private final SettingListController settingListController;
-    private final UiContentBuffer listBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
-    private final UiContentBuffer detailBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
     private final UiInvalidationState contentState = new UiInvalidationState();
     private final Map<String, Animation> rowHoverAnimations = new HashMap<>();
     private final Map<String, Animation> rowSelectionAnimations = new HashMap<>();
@@ -64,7 +62,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     private float listScrollVelocity = 0;
     private float detailScrollVelocity = 0;
 
-    public AddonClientSettingTab(PanelState state, TextRenderer textRenderer, PanelPopupHost popupHost) {
+    public AddonClientSettingTab(PanelState state, UiTextMetrics textRenderer, PanelPopupHost popupHost) {
         this.state = state;
         this.textRenderer = textRenderer;
         this.settingListController = new SettingListController(popupHost);
@@ -72,6 +70,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
 
     @Override
     public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
+        UiContentBuffer listBuffer = new UiContentBuffer(renderBatch);
+        UiContentBuffer detailBuffer = new UiContentBuffer(renderBatch);
         this.bounds = bounds;
 
         if (Math.abs(listScrollVelocity) > 0.01f) {
@@ -120,11 +120,9 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         boolean popupConsumesHover = settingListController.isPopupHovered(mouseX, mouseY);
         int effectiveMouseX = popupConsumesHover ? Integer.MIN_VALUE : mouseX;
         int effectiveMouseY = popupConsumesHover ? Integer.MIN_VALUE : mouseY;
-        boolean rebuildContent = shouldRebuild(bounds, mouseX, mouseY, addons, selectedAddon, selectedSettings, guiGraphics.guiHeight(), contentSignature);
+        boolean rebuildContent = true;
 
         if (rebuildContent) {
-            listBuffer.clear();
-            detailBuffer.clear();
             contentState.beginRebuild();
             settingListController.prepareLayout(settingOwnerKey, selectedSettings);
             rowEntries.clear();
@@ -139,9 +137,9 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             if (addons.isEmpty()) {
                 float hintScale = 0.60f;
                 String hint = EpsilonTranslations.Gui.ADDON_EMPTY.getTranslatedName();
-                float hintWidth = textRenderer.getWidth(hint, hintScale);
+                float hintWidth = textRenderer.textWidth(hint, hintScale, null);
                 float hintX = bounds.x() + (bounds.width() - hintWidth) / 2.0f;
-                float hintY = bounds.y() + bounds.height() / 2.0f - textRenderer.getHeight(hintScale) / 2.0f;
+                float hintY = bounds.y() + bounds.height() / 2.0f - textRenderer.textHeight(hintScale, null) / 2.0f;
                 scope.text(hint, hintX, hintY, hintScale, MD3Theme.TEXT_MUTED);
                 return;
             }
@@ -204,12 +202,6 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         if (rebuildContent) {
             rememberSnapshot(bounds, mouseX, mouseY, addons, selectedAddon, selectedSettings, guiGraphics.guiHeight(), contentSignature);
         }
-    }
-
-    @Override
-    public void flushContent() {
-        listBuffer.flush();
-        detailBuffer.flush();
     }
 
     @Override
@@ -456,8 +448,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         float titleScale = 0.72f;
         float labelScale = 0.52f;
         float descScale = 0.56f;
-        float titleHeight = textRenderer.getHeight(titleScale);
-        float labelHeight = textRenderer.getHeight(labelScale);
+        float titleHeight = textRenderer.textHeight(titleScale, null);
+        float labelHeight = textRenderer.textHeight(labelScale, null);
         float textX = MD3Theme.ROW_CONTENT_INSET;
         float titleY = 8.0f;
         scope.text(trimToWidth(addon.getDisplayName(), titleScale, infoBounds.width() - 96.0f), textX, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
@@ -480,14 +472,14 @@ public class AddonClientSettingTab implements ClientSettingTabView {
 
         String chipText = addon.getRegisteredModules().size() + " " + EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName();
         float chipScale = 0.48f;
-        float chipWidth = textRenderer.getWidth(chipText, chipScale) + 10.0f;
+        float chipWidth = textRenderer.textWidth(chipText, chipScale, null) + 10.0f;
         float chipHeight = 14.0f;
         float chipX = infoBounds.width() - MD3Theme.ROW_TRAILING_INSET - chipWidth;
         float chipY = 8.0f;
         scope.roundRect(chipX, chipY, chipWidth, chipHeight, chipHeight / 2.0f, MD3Theme.PRIMARY_CONTAINER);
         scope.text(chipText,
-                chipX + (chipWidth - textRenderer.getWidth(chipText, chipScale)) / 2.0f,
-                chipY + (chipHeight - textRenderer.getHeight(chipScale)) / 2.0f,
+                chipX + (chipWidth - textRenderer.textWidth(chipText, chipScale, null)) / 2.0f,
+                chipY + (chipHeight - textRenderer.textHeight(chipScale, null)) / 2.0f,
                 chipScale,
                 MD3Theme.ON_PRIMARY_CONTAINER);
     }
@@ -532,9 +524,9 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     }
 
     private float getDetailInfoHeight(UiRect detailPanelBounds, EpsilonAddon addon) {
-        float titleHeight = textRenderer.getHeight(0.72f);
-        float labelHeight = textRenderer.getHeight(0.52f);
-        float descHeight = textRenderer.getHeight(0.56f);
+        float titleHeight = textRenderer.textHeight(0.72f, null);
+        float labelHeight = textRenderer.textHeight(0.52f, null);
+        float descHeight = textRenderer.textHeight(0.56f, null);
 
         float naturalHeight = 8.0f + titleHeight + 3.0f + labelHeight + 3.0f + labelHeight + 8.0f;
         if (addon != null && !addon.getDescription().isBlank()) {
@@ -617,17 +609,17 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         if (value == null || value.isEmpty()) {
             return "";
         }
-        if (textRenderer.getWidth(value, scale) <= width) {
+        if (textRenderer.textWidth(value, scale, null) <= width) {
             return value;
         }
         String ellipsis = "...";
-        float ellipsisWidth = textRenderer.getWidth(ellipsis, scale);
+        float ellipsisWidth = textRenderer.textWidth(ellipsis, scale, null);
         if (ellipsisWidth >= width) {
             return ellipsis;
         }
         for (int length = value.length() - 1; length >= 0; length--) {
             String candidate = value.substring(0, length) + ellipsis;
-            if (textRenderer.getWidth(candidate, scale) <= width) {
+            if (textRenderer.textWidth(candidate, scale, null) <= width) {
                 return candidate;
             }
         }
@@ -643,8 +635,6 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     @Override
     public void close() {
         settingListController.close();
-        listBuffer.close();
-        detailBuffer.close();
         markDirty();
     }
 

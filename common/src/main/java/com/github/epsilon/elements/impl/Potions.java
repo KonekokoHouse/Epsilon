@@ -1,13 +1,13 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
-import com.google.common.base.Suppliers;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
@@ -19,7 +19,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class Potions extends HudModule {
 
@@ -47,7 +46,6 @@ public class Potions extends HudModule {
     private final BoolSetting backgroundBlur = boolSetting("Background Blur", true);
     private final IntSetting blurStrength = intSetting("Blur Strength", 5, 1, 16, 1);
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     private static final float ROW_HEIGHT = 22.0f;
     private static final float ROW_SPACING = 2.0f;
@@ -69,7 +67,6 @@ public class Potions extends HudModule {
         List<EffectInfo> items = collectItems(deltaTracker);
         if (items.isEmpty()) return;
 
-        TextRenderer textRenderer = textRendererSupplier.get();
         var scope = renderScope();
 
         float scale = this.scale.getValue().floatValue();
@@ -110,25 +107,28 @@ public class Potions extends HudModule {
             float rowX = computeRowX(rowWidth, hAnchor);
 
             if (backgroundBlur.getValue()) {
-                BlurShader.INSTANCE.render(rowX, currentY, rowWidth, rowHeight, radius, blurStrength.getValue());
+                MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+                        new UiRect(rowX, currentY, rowWidth, rowHeight), radius, blurStrength.getValue()));
             }
 
             if (drawShadow.getValue()) {
-                scope.shadow(rowX, currentY, rowWidth, rowHeight, radius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), alpha));
+                scope.shadow(rowX, currentY, rowWidth, rowHeight, radius, shadowBlur.getValue().floatValue(), lumin(withAlpha(shadowColor.getValue(), alpha)));
             }
 
-            scope.roundRect(rowX, currentY, rowWidth, rowHeight, radius, withAlpha(backgroundColor.getValue(), alpha));
+            scope.roundRect(rowX, currentY, rowWidth, rowHeight, radius, lumin(withAlpha(backgroundColor.getValue(), alpha)));
 
             float cursorX = rowX + padX;
 
             if (showIcon.getValue() && info.iconTexture != null) {
                 float iconY = currentY + (rowHeight - iconSize) / 2.0f;
-                scope.texture(info.iconTexture, cursorX, iconY, iconSize, iconSize, 0f, 0f, 1f, 1f, new Color(255, 255, 255, (int) (255 * alpha)));
+                scope.texture(info.iconTexture.toString(), new UiRect(cursorX, iconY, iconSize, iconSize),
+                        0f, 0f, 0f, 0f, 0f, 0f, 1f, 1f,
+                        lumin(new Color(255, 255, 255, (int) (255 * alpha))));
                 cursorX += iconSize + iconTextGap;
             }
 
-            float nameTextHeight = textRenderer.getHeight(nameRenderScale);
-            float durationTextHeight = textRenderer.getHeight(durationRenderScale);
+            float nameTextHeight = textHeight(nameRenderScale, "epsilon-default");
+            float durationTextHeight = textHeight(durationRenderScale, "epsilon-default");
             float gap = NAME_DURATION_GAP * scale;
             float textBlockHeight = nameTextHeight + durationTextHeight + gap;
             float nameY = currentY + (rowHeight - textBlockHeight) / 2.0f;
@@ -137,8 +137,8 @@ public class Potions extends HudModule {
             Color nameColor = tintNameWithEffect.getValue() ? withAlpha(brighten(info.effectColor, 1.15f), alpha) : new Color(255, 255, 255, (int) (235 * alpha));
             Color durationColor = new Color(180, 180, 180, (int) (220 * alpha));
 
-            scope.text(info.name, cursorX, nameY, nameRenderScale, nameColor);
-            scope.text(info.duration, cursorX, durationY, durationRenderScale, durationColor);
+            scope.text(info.name, cursorX, nameY, nameRenderScale, lumin(nameColor));
+            scope.text(info.duration, cursorX, durationY, durationRenderScale, lumin(durationColor));
 
             if (showPill.getValue()) {
                 float pillX = rowX + rowWidth - padX - pillWidth;
@@ -146,7 +146,7 @@ public class Potions extends HudModule {
                 float pillY = currentY + padY;
 
                 Color pillTrack = new Color(0, 0, 0, (int) (140 * alpha));
-                scope.roundRect(pillX, pillY, pillWidth, pillH, pillRadius, pillTrack);
+                scope.roundRect(pillX, pillY, pillWidth, pillH, pillRadius, lumin(pillTrack));
 
                 float fillH = pillH * info.progress;
                 if (fillH > 0.5f) {
@@ -155,7 +155,8 @@ public class Potions extends HudModule {
                     float topRadius = fullFill ? pillRadius : 0f;
                     Color top = withAlpha(brighten(info.effectColor, 1.3f), alpha);
                     Color bottom = withAlpha(info.effectColor, alpha);
-                    scope.roundRectGradient(pillX, fillY, pillWidth, fillH, topRadius, topRadius, pillRadius, pillRadius, top, bottom, bottom, top);
+                    scope.roundRectGradient(pillX, fillY, pillWidth, fillH, topRadius, topRadius, pillRadius, pillRadius,
+                            lumin(top), lumin(bottom), lumin(bottom), lumin(top));
                 }
             }
 
@@ -215,7 +216,6 @@ public class Potions extends HudModule {
 
         if (alphaMap.isEmpty()) return List.of();
 
-        TextRenderer textRenderer = textRendererSupplier.get();
         float s = scale.getValue().floatValue();
         float nameRenderScale = nameScale.getValue().floatValue() * s;
         float durationRenderScale = durationScale.getValue().floatValue() * s;
@@ -242,8 +242,8 @@ public class Potions extends HudModule {
             int rgb = holder.value().getColor() & 0xFFFFFF;
             Color effectColor = new Color(rgb | 0xFF000000, true);
 
-            float nameWidth = textRenderer.getWidth(displayName, nameRenderScale);
-            float durationWidth = textRenderer.getWidth(durationStr, durationRenderScale);
+            float nameWidth = textWidth(displayName, nameRenderScale, "epsilon-default");
+            float durationWidth = textWidth(durationStr, durationRenderScale, "epsilon-default");
             float textWidth = Math.max(nameWidth, durationWidth);
 
             float total = padX;

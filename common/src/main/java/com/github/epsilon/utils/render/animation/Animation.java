@@ -1,6 +1,8 @@
 package com.github.epsilon.utils.render.animation;
 
-public class Animation {
+import com.github.slmpc.lumingraphics.ui.animation.UiAnimation;
+
+public class Animation implements UiAnimation {
 
     private final Easing easing;
     private long duration;
@@ -54,6 +56,17 @@ public class Animation {
         if (Float.isNaN(value) || !Float.isFinite(value)) {
             this.value = destinationValue;
         }
+    }
+
+    @Override
+    public float advance(float target) {
+        run(target);
+        return value;
+    }
+
+    @Override
+    public boolean active() {
+        return !finished;
     }
 
     /**

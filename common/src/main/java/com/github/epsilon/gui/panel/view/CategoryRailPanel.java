@@ -2,12 +2,13 @@ package com.github.epsilon.gui.panel.view;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.text.IconChars;
-import com.github.epsilon.graphics.text.StaticFontLoader;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.text.icon.IconChars;
+
+
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.PanelState;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.ModuleHolder;
@@ -30,7 +31,7 @@ public class CategoryRailPanel {
     private static final String SETTINGS_ICON = IconChars.SETTINGS;
 
     protected final PanelState state;
-    private final TextRenderer textRenderer;
+    private final UiTextMetrics textRenderer;
     private final Animation expandAnimation = new Animation(Easing.EASE_OUT_CUBIC, 240L);
     private final Animation contentAnimation = new Animation(Easing.EASE_OUT_CUBIC, 180L);
     private final Animation menuHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
@@ -44,7 +45,7 @@ public class CategoryRailPanel {
     private final Animation settingsHoverAnimation = new Animation(Easing.EASE_OUT_CUBIC, 120L);
     private UiRect bounds;
 
-    public CategoryRailPanel(PanelState state, TextRenderer textRenderer) {
+    public CategoryRailPanel(PanelState state, UiTextMetrics textRenderer) {
         this.state = state;
         this.textRenderer = textRenderer;
         this.expandAnimation.setStartValue(MD3Theme.RAIL_COLLAPSED_WIDTH);
@@ -93,7 +94,7 @@ public class CategoryRailPanel {
             float categoryStartY = getCategoryStartY(bounds);
             if (titleProgress > 0.02f) {
                 float titleY = 7.0f;
-                float titleHeight = textRenderer.getHeight(titleScale);
+                float titleHeight = textRenderer.textHeight(titleScale, null);
                 float pad = 3.0f;
                 float subtitleY = titleY + titleHeight + pad;
                 float titleOffset = (1.0f - titleProgress) * 8.0f;
@@ -104,7 +105,7 @@ public class CategoryRailPanel {
                         rail.text(Constants.VERSION, 38.0f + subtitleOffset, subtitleY, subtitleScale, MD3Theme.withAlpha(MD3Theme.TEXT_SECONDARY, (int) (210 * subtitleProgress)));
                     }
                     if (dividerProgress > 0.02f) {
-                        float dividerY = subtitleY + textRenderer.getHeight(subtitleScale) + 4.0f;
+                        float dividerY = subtitleY + textRenderer.textHeight(subtitleScale, null) + 4.0f;
                         float dividerBaseX = 7.0f;
                         float dividerTargetWidth = bounds.width() - 14.0f;
                         float dividerWidth = dividerTargetWidth * dividerProgress;
@@ -262,24 +263,25 @@ public class CategoryRailPanel {
         Color iconColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : (hovered ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_SECONDARY);
         Color labelColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : MD3Theme.TEXT_PRIMARY;
         Color countColor = selected ? MD3Theme.ON_SECONDARY_CONTAINER : MD3Theme.TEXT_SECONDARY;
-        float iconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS);
-        float labelHeight = textRenderer.getHeight(itemLabelScale);
-        float countHeight = textRenderer.getHeight(itemCountScale);
+        var iconFont = "epsilon-icons";
+        float iconHeight = textRenderer.textHeight(itemIconScale, iconFont);
+        float labelHeight = textRenderer.textHeight(itemLabelScale, null);
+        float countHeight = textRenderer.textHeight(itemCountScale, null);
         float iconY = (itemRect.height() - iconHeight) / 2.0f - 2.0f;
         float labelY = (itemRect.height() - labelHeight) / 2.0f;
         float countY = (itemRect.height() - countHeight) / 2.0f;
 
         scope.pushAbsolute(itemRect, item -> {
             item.roundRect(0.0f, 0.0f, itemRect.width(), itemRect.height(), MD3Theme.CARD_RADIUS, background);
-            float iconWidth = textRenderer.getWidth(category.icon, itemIconScale, StaticFontLoader.ICONS);
+            float iconWidth = textRenderer.textWidth(category.icon, itemIconScale, iconFont);
             float iconX = getRailIconCenterX(menuButton) - itemRect.x() - iconWidth / 2.0f;
-            item.text(category.icon, iconX, iconY, itemIconScale, iconColor, StaticFontLoader.ICONS);
+            item.text(category.icon, iconX, iconY, itemIconScale, iconColor, iconFont);
             if (contentProgress > 0.02f) {
                 float textOffset = (1.0f - contentProgress) * 5.0f;
                 Color animatedLabel = MD3Theme.withAlpha(labelColor, (int) (255 * contentProgress));
                 Color animatedCount = MD3Theme.withAlpha(countColor, (int) (220 * contentProgress));
                 item.text(category.getName(), 30.0f + textOffset, labelY, itemLabelScale, animatedLabel);
-                float countWidth = textRenderer.getWidth(Integer.toString(count), itemCountScale);
+                float countWidth = textRenderer.textWidth(Integer.toString(count), itemCountScale, null);
                 item.text(Integer.toString(count), itemRect.width() - 12.0f - countWidth, countY, itemCountScale, animatedCount);
             }
         });
@@ -294,15 +296,16 @@ public class CategoryRailPanel {
         Color settingsLabelColor = settingsSelected ? MD3Theme.ON_SECONDARY_CONTAINER : MD3Theme.TEXT_PRIMARY;
         scope.pushAbsolute(settingsRect, settings -> {
             settings.roundRect(0.0f, 0.0f, settingsRect.width(), settingsRect.height(), MD3Theme.CARD_RADIUS, settingsBg);
-            float settingsIconWidth = textRenderer.getWidth(SETTINGS_ICON, itemIconScale, StaticFontLoader.ICONS);
+            var settingsIconFont = "epsilon-icons";
+            float settingsIconWidth = textRenderer.textWidth(SETTINGS_ICON, itemIconScale, settingsIconFont);
             float settingsIconX = getRailIconCenterX(menuButton) - settingsRect.x() - settingsIconWidth / 2.0f;
-            float settingsIconHeight = textRenderer.getHeight(itemIconScale, StaticFontLoader.ICONS);
+            float settingsIconHeight = textRenderer.textHeight(itemIconScale, settingsIconFont);
             float settingsIconY = (settingsRect.height() - settingsIconHeight) / 2.0f - 2.0f;
-            settings.text(SETTINGS_ICON, settingsIconX, settingsIconY, itemIconScale, settingsIconColor, StaticFontLoader.ICONS);
+            settings.text(SETTINGS_ICON, settingsIconX, settingsIconY, itemIconScale, settingsIconColor, settingsIconFont);
             if (contentProgress > 0.02f) {
                 float textOffset = (1.0f - contentProgress) * 5.0f;
                 Color animatedLabel = MD3Theme.withAlpha(settingsLabelColor, (int) (255 * contentProgress));
-                float settingsLabelHeight = textRenderer.getHeight(itemLabelScale);
+                float settingsLabelHeight = textRenderer.textHeight(itemLabelScale, null);
                 float settingsLabelY = (settingsRect.height() - settingsLabelHeight) / 2.0f;
                 settings.text(EpsilonTranslations.Gui.CLIENT_SETTINGS.getTranslatedName(), 30.0f + textOffset, settingsLabelY, itemLabelScale, animatedLabel);
             }

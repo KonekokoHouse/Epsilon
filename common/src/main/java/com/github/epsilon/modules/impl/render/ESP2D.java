@@ -3,15 +3,19 @@ package com.github.epsilon.modules.impl.render;
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.RectRenderer;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.WorldToScreen;
-import com.google.common.base.Suppliers;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
+import com.github.slmpc.lumingraphics.ui.scene.UiScene;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -22,7 +26,6 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.awt.*;
-import java.util.function.Supplier;
 
 public class ESP2D extends Module {
 
@@ -53,63 +56,69 @@ public class ESP2D extends Module {
     private final ColorSetting othersColor = colorSetting("Others Color", new Color(0xFF0062), false);
     private final ColorSetting healthColor = colorSetting("Health Color", new Color(0x2FFF00), false, renderHealth::getValue);
 
-    private final Supplier<RectRenderer> rectRendererSupplier = Suppliers.memoize(RectRenderer::create);
+    private UiScene scene;
+    private MinecraftUiRuntime2612 sceneRuntime;
 
     @EventHandler
     private void onRender2D(Render2DEvent.Level event) {
         if (nullCheck() || mc.options.hideGui) return;
 
-        RectRenderer rectRenderer = rectRendererSupplier.get();
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         float screenWidth = LuminRenderSystem.getScaledWidth();
         float screenHeight = LuminRenderSystem.getScaledHeight();
 
-        for (Entity entity : mc.level.entitiesForRendering()) {
-            if (!(entity instanceof LivingEntity livingEntity) || !shouldRender(livingEntity)) continue;
+        UiTree tree = UiTree.build(scope -> {
+            for (Entity entity : mc.level.entitiesForRendering()) {
+                if (!(entity instanceof LivingEntity livingEntity) || !shouldRender(livingEntity)) continue;
 
-            Vec3 renderPosition = livingEntity.getPosition(partialTick);
-            AABB box = livingEntity.getBoundingBox().move(renderPosition.subtract(livingEntity.position()));
-            float x = Float.POSITIVE_INFINITY;
-            float y = Float.POSITIVE_INFINITY;
-            float endX = Float.NEGATIVE_INFINITY;
-            float endY = Float.NEGATIVE_INFINITY;
+                Vec3 renderPosition = livingEntity.getPosition(partialTick);
+                AABB box = livingEntity.getBoundingBox().move(renderPosition.subtract(livingEntity.position()));
+                float x = Float.POSITIVE_INFINITY;
+                float y = Float.POSITIVE_INFINITY;
+                float endX = Float.NEGATIVE_INFINITY;
+                float endY = Float.NEGATIVE_INFINITY;
 
-            for (int vertex = 0; vertex < 8; vertex++) {
-                Vec3 worldVertex = new Vec3(
-                        (vertex & 1) == 0 ? box.minX : box.maxX,
-                        (vertex & 2) == 0 ? box.minY : box.maxY,
-                        (vertex & 4) == 0 ? box.minZ : box.maxZ
-                );
-                Vector3f projected = WorldToScreen.calcWorld2Screen(worldVertex);
-                if (projected == null || !Float.isFinite(projected.x) || !Float.isFinite(projected.y)) continue;
+                for (int vertex = 0; vertex < 8; vertex++) {
+                    Vec3 worldVertex = new Vec3(
+                            (vertex & 1) == 0 ? box.minX : box.maxX,
+                            (vertex & 2) == 0 ? box.minY : box.maxY,
+                            (vertex & 4) == 0 ? box.minZ : box.maxZ
+                    );
+                    Vector3f projected = WorldToScreen.calcWorld2Screen(worldVertex);
+                    if (projected == null || !Float.isFinite(projected.x) || !Float.isFinite(projected.y)) continue;
 
-                x = Math.min(x, projected.x);
-                y = Math.min(y, projected.y);
-                endX = Math.max(endX, projected.x);
-                endY = Math.max(endY, projected.y);
-            }
-
-            if (!Float.isFinite(x) || endX < 0.0f || endY < 0.0f || x > screenWidth || y > screenHeight) continue;
-
-            if (renderBox.getValue()) {
-                if (boxOutline.getValue()) {
-                    Color black = Color.BLACK;
-                    rectRenderer.addRect(x - 1.0f, y, 1.5f, endY - y + 0.5f, black);
-                    rectRenderer.addRect(x - 1.0f, y - 0.5f, endX - x + 1.5f, 1.0f, black);
-                    rectRenderer.addRect(endX - 1.0f, y, 1.5f, endY - y + 0.5f, black);
-                    rectRenderer.addRect(x - 1.0f, endY - 1.0f, endX - x + 1.5f, 1.5f, black);
+                    x = Math.min(x, projected.x);
+                    y = Math.min(y, projected.y);
+                    endX = Math.max(endX, projected.x);
+                    endY = Math.max(endY, projected.y);
                 }
 
-                Color color = getEntityColor(livingEntity);
-                drawSolidBox(rectRenderer, x, y, endX, endY, color);
-            }
+                if (!Float.isFinite(x) || endX < 0.0f || endY < 0.0f || x > screenWidth || y > screenHeight) continue;
 
-            if (renderHealth.getValue()) {
-                drawHealthBar(rectRenderer, livingEntity, x, y, endY);
+                if (renderBox.getValue()) {
+                    if (boxOutline.getValue()) {
+                        Color black = Color.BLACK;
+                        scope.rect(x - 1.0f, y, 1.5f, endY - y + 0.5f, black);
+                        scope.rect(x - 1.0f, y - 0.5f, endX - x + 1.5f, 1.0f, black);
+                        scope.rect(endX - 1.0f, y, 1.5f, endY - y + 0.5f, black);
+                        scope.rect(x - 1.0f, endY - 1.0f, endX - x + 1.5f, 1.5f, black);
+                    }
+
+                    Color color = getEntityColor(livingEntity);
+                    drawSolidBox(scope, x, y, endX, endY, color);
+                }
+
+                if (renderHealth.getValue()) {
+                    drawHealthBar(scope, livingEntity, x, y, endY);
+                }
             }
+        });
+
+        if (tree.nodeCount() > 0) {
+            runtime.render(scene(runtime), UiLayer.CONTENT, tree);
         }
-
-        rectRenderer.drawAndClear();
     }
 
     private boolean shouldRender(Entity entity) {
@@ -146,14 +155,14 @@ public class ESP2D extends Module {
         };
     }
 
-    private void drawSolidBox(RectRenderer rectRenderer, float x, float y, float endX, float endY, Color color) {
-        rectRenderer.addRect(x - 0.5f, y, 0.5f, endY - y, color);
-        rectRenderer.addRect(x, endY - 0.5f, endX - x, 0.5f, color);
-        rectRenderer.addRect(x - 0.5f, y, endX - x + 0.5f, 0.5f, color);
-        rectRenderer.addRect(endX - 0.5f, y, 0.5f, endY - y, color);
+    private void drawSolidBox(UiTree.Scope scope, float x, float y, float endX, float endY, Color color) {
+        scope.rect(x - 0.5f, y, 0.5f, endY - y, color);
+        scope.rect(x, endY - 0.5f, endX - x, 0.5f, color);
+        scope.rect(x - 0.5f, y, endX - x + 0.5f, 0.5f, color);
+        scope.rect(endX - 0.5f, y, 0.5f, endY - y, color);
     }
 
-    private void drawHealthBar(RectRenderer rectRenderer, LivingEntity entity, float x, float y, float endY) {
+    private void drawHealthBar(UiTree.Scope scope, LivingEntity entity, float x, float y, float endY) {
         float height = endY - y;
         if (height <= 0.0f) return;
 
@@ -169,12 +178,33 @@ public class ESP2D extends Module {
         float barX = x - gap - outlineWidth - width;
 
         if (healthBarOutline.getValue()) {
-            rectRenderer.addRect(barX - outlineWidth, y - outlineWidth, width + outlineWidth * 2.0f, height + outlineWidth * 2.0f, Color.BLACK);
+            scope.rect(barX - outlineWidth, y - outlineWidth, width + outlineWidth * 2.0f, height + outlineWidth * 2.0f, Color.BLACK);
         } else {
-            rectRenderer.addRect(barX, y, width, height, Color.BLACK);
+            scope.rect(barX, y, width, height, Color.BLACK);
         }
 
-        rectRenderer.addRect(barX, fillY, width, endY - fillY, healthColor.getValue());
+        scope.rect(barX, fillY, width, endY - fillY, healthColor.getValue());
+    }
+
+    @Override
+    protected void onDisable() {
+        releaseScene();
+    }
+
+    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+        if (scene == null || sceneRuntime != runtime) {
+            releaseScene();
+            scene = runtime.createScene(EpsilonUiTheme.lumin());
+            sceneRuntime = runtime;
+        }
+        return scene;
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        if (previous != null) previous.close();
     }
 
 }

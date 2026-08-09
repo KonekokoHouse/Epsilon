@@ -2,7 +2,6 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.immediate.LuminImmediateRenderer;
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.mojang.blaze3d.TracyFrameCapture;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.jspecify.annotations.Nullable;
@@ -19,7 +18,6 @@ public class MixinRenderSystem {
         LuminRenderSystem.endDynamicUniformFrame();
         LuminImmediateRenderer.endFrame();
         LuminRenderSystem.beginRenderFrame();
-        TtfFontLoader.beginRenderFrame();
     }
 
 }

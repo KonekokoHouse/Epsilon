@@ -2,7 +2,8 @@
 
 ## 项目定位
 
-Epsilon 是面向 Minecraft 客户端的多加载器工具模组，同时支持 Fabric 和 NeoForge。共享业务代码位于 `common/`，两个加载器子项目复用同一份 Java 源码与资源。
+Epsilon 是面向 Minecraft 客户端的多加载器工具模组，同时支持 Fabric 和 NeoForge。共享业务代码位于
+`common/`，两个加载器子项目复用同一份 Java 源码与资源。
 
 ## 仓库结构
 
@@ -33,6 +34,13 @@ Epsilon/
 
 Minecraft 反编译源码是构建产物，不纳入仓库源码目录。获取方式和产物位置见根目录 [`AGENTS.md`](../../AGENTS.md) 的“Minecraft 源码获取与检索”。
 
+## 2D UI 边界
+
+Epsilon 业务代码直接构造公共 Lumin `UiTree`/`UiScene`，不维护另一套 2D renderer、text renderer、scheduler
+或 post-process wrapper。LuminGraphics-MC 的 `MinecraftUiRuntime2612` 在渲染线程拥有字体、glyph atlas、
+Minecraft 纹理、targets、native extraction bridge、资源重载处理和 2D frame resources；
+`MinecraftGuiExtractionBridge2612` 提交原版 `GuiGraphicsExtractor` state。
+
 ## `common` 核心包
 
 全部共享 Java 代码位于 `common/src/main/java/com/github/epsilon/`。
@@ -43,9 +51,9 @@ Minecraft 反编译源码是构建产物，不纳入仓库源码目录。获取�
 | `assets/` | 配置迁移、i18n、资源位置工具 |
 | `elements/` | `HudModule`、已注册 HUD 元素和通知模型 |
 | `events/` | 自定义 EventBus、监听器实现和事件类型 |
-| `graphics/` | Lumin GPU 抽象、buffer、renderer、shader、2D/3D scheduler、字体与即时绘制 |
-| `gui/` | Dropdown、Panel、HUD 编辑器、主菜单、UI Tree/Scene、主题和控件 |
-| `holders/` | 模块、HUD、Addon、配置、翻译、Renderer、RenderTarget、Shader、纹理缓存的所有权与生命周期 |
+| `graphics/` | 保留的 `LuminRenderSystem`、3D scheduler、shaders、buffers、immediate paths |
+| `gui/` | Dropdown、Panel、HUD 编辑器、主菜单、公共 Lumin UI consumers、主题和控件 |
+| `holders/` | 模块、HUD、Addon、配置、翻译、render target 和 shader 的所有权与生命周期 |
 | `interfaces/` | Mixin accessor/duck 接口 |
 | `managers/` | Rotation、Target、Extrapolation、Health、Packet、Friend、Sound、Notification、Timer |
 | `mixins/` | 共享客户端 Mixin；启用列表以 `epsilon.mixins.json` 为准 |

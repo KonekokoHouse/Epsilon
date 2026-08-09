@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.panel.view.settings;
 
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -34,12 +35,12 @@ public class ClientSettingTextField {
     }
 
     public void buildUi(UiTree.Scope scope, UiRect bounds, int mouseX, int mouseY,
-                        TextRenderer textRenderer, String placeholder, float textScale, String trailingHint) {
+                        UiTextMetrics textRenderer, String placeholder, float textScale, String trailingHint) {
         boolean hovered = bounds.contains(mouseX, mouseY);
         float hoverProgress = scope.animate(hoverAnimation, hovered);
         float focusProgress = scope.animate(focusAnimation, focused);
         float textInset = 10.0f;
-        float textHeight = textRenderer.getHeight(textScale);
+        float textHeight = textRenderer.textHeight(textScale, null);
         float textX = bounds.x() + textInset;
         float textY = bounds.y() + (bounds.height() - textHeight) / 2.0f;
 
@@ -47,17 +48,19 @@ public class ClientSettingTextField {
         String display = showPlaceholder ? placeholder : text;
         Color textColor = showPlaceholder ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY;
         scope.input(bounds, focused, hovered ? 0.6f : 0.0f,
-                focusProgress, MD3Theme.PRIMARY, 1.0f,
-                textInset, display, textScale, textColor,
+                focusProgress, EpsilonUiTheme.lumin(MD3Theme.PRIMARY), 1.0f,
+                textInset, display, textScale, EpsilonUiTheme.lumin(textColor),
                 null, null,
-                focused ? Math.min(cursor, text.length()) : null, focused ? MD3Theme.TEXT_PRIMARY : null,
+                focused ? Math.min(cursor, text.length()) : null,
+                focused ? EpsilonUiTheme.lumin(MD3Theme.TEXT_PRIMARY) : null,
                 focused && trailingHint != null && !trailingHint.isBlank() && !text.isEmpty() ? trailingHint : null,
                 0.56f,
-                focused && trailingHint != null && !trailingHint.isBlank() && !text.isEmpty() ? MD3Theme.TEXT_MUTED : null);
+                focused && trailingHint != null && !trailingHint.isBlank() && !text.isEmpty()
+                        ? EpsilonUiTheme.lumin(MD3Theme.TEXT_MUTED) : null);
 
         if (focused) {
             int safeCursor = Math.min(cursor, text.length());
-            float caretX = textX + textRenderer.getWidth(text.substring(0, safeCursor), textScale);
+            float caretX = textX + textRenderer.textWidth(text.substring(0, safeCursor), textScale, null);
             IMEFocusHelper.updateCursorPos(caretX, textY);
         }
     }

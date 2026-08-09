@@ -1,11 +1,12 @@
 package com.github.epsilon.gui.panel;
 
-import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.scene.UiLayer;
-import com.github.epsilon.gui.lib.scene.UiScene;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
+import com.github.slmpc.lumingraphics.ui.scene.UiScene;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.epsilon.gui.panel.input.PanelInputRouter;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
@@ -29,7 +30,7 @@ import net.minecraft.network.chat.Component;
 /**
  * 面板 UI 的主屏幕宿主。
  * <p>
- * 它负责维护全局状态、调度各子面板的 extract 阶段、统一 flush renderer，
+ * 它负责维护全局状态，并在 Minecraft UI runtime 的统一 scene 帧中调度各子面板，
  * 并将输入事件路由到 rail、模块列表、详情面板、客户端设置面板和弹窗宿主。
  */
 public class PanelScreen extends Screen {
@@ -38,14 +39,15 @@ public class PanelScreen extends Screen {
 
     private final PanelState state = new PanelState();
     private final PanelDirtyState dirtyState = new PanelDirtyState();
-    private final TextRenderer textRenderer = TextRenderer.create();
-    private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
+    private UiTextMetrics textMetrics;
+    private UiScene scene;
+    private MinecraftUiRuntime2612 sceneRuntime;
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final PanelInputRouter inputRouter = new PanelInputRouter();
-    private final CategoryRailPanel categoryRailPanel = new CategoryRailPanel(state, textRenderer);
-    private final ModuleListPanel moduleListPanel = new ModuleListPanel(state, textRenderer);
-    private final ModuleDetailPanel moduleDetailPanel = new ModuleDetailPanel(state, textRenderer, popupHost);
-    private final ClientSettingPanel clientSettingPanel = new ClientSettingPanel(state, textRenderer, popupHost);
+    private CategoryRailPanel categoryRailPanel;
+    private ModuleListPanel moduleListPanel;
+    private ModuleDetailPanel moduleDetailPanel;
+    private ClientSettingPanel clientSettingPanel;
     private int lastWidth = -1;
     private int lastHeight = -1;
     private String lastSelectedCategory = "";
@@ -57,8 +59,6 @@ public class PanelScreen extends Screen {
     private long lastI18nRevision = Long.MIN_VALUE;
 
     private IMEPreeditOverlay preeditOverlay;
-
-    private LuminRenderSystem.LuminRenderTarget renderTarget;
 
     private PanelScreen() {
         super(Component.literal("PanelGui"));
@@ -73,20 +73,39 @@ public class PanelScreen extends Screen {
      * 提取面板当前帧的渲染状态。
      * <p>
      * 该方法会计算布局、推动动画、让各个子面板把 UI 编译进共享批次，
-     * 最后在统一的 render 提交阶段执行 flush。
+     * 最后由 runtime 统一提交 scene。
      */
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
 
-        final var window = minecraft.getWindow();
-        if (renderTarget == null) {
-            renderTarget = LuminRenderSystem.LuminRenderTarget.create("click-gui", window.getWidth(), window.getHeight());
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        int epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        int epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
+        if (scene == null || sceneRuntime != runtime) {
+            releaseScene();
+            scene = runtime.createScene(EpsilonUiTheme.lumin());
+            sceneRuntime = runtime;
+            textMetrics = runtime.textMetrics();
+            categoryRailPanel = new CategoryRailPanel(state, textMetrics);
+            moduleListPanel = new ModuleListPanel(state, textMetrics);
+            moduleDetailPanel = new ModuleDetailPanel(state, textMetrics, popupHost);
+            clientSettingPanel = new ClientSettingPanel(state, textMetrics, popupHost);
         }
-        renderTarget.clear();
-        renderTarget.resize(window.getWidth(), window.getHeight());
 
-        LuminRenderSystem.setActiveTarget(renderTarget);
-        scene.beginFrame();
+        runtime.render(scene, activeScene -> extractPanelFrame(guiGraphics, activeScene,
+                epsilonMouseX, epsilonMouseY, partialTick));
+
+        if (preeditOverlay != null) {
+            this.preeditOverlay.updateInputPosition(
+                    (int) UiCoordinateMapper.toMinecraftX(IMEFocusHelper.activeCursorX),
+                    (int) UiCoordinateMapper.toMinecraftY(IMEFocusHelper.activeCursorY));
+            guiGraphics.setPreeditOverlay(this.preeditOverlay);
+        }
+        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
+    }
+
+    private void extractPanelFrame(GuiGraphicsExtractor guiGraphics, UiScene scene, int mouseX, int mouseY, float partialTick) {
 
         String currentCategory = state.getSelectedCategory().name();
         String currentModule = state.getSelectedModule() == null ? "" : state.getSelectedModule().getName();
@@ -119,10 +138,12 @@ public class PanelScreen extends Screen {
             dirtyState.markAllDirty();
         }
 
-        if (width != lastWidth || height != lastHeight) {
+        int uiWidth = UiCoordinateMapper.getProjectionWidthInt();
+        int uiHeight = UiCoordinateMapper.getProjectionHeightInt();
+        if (uiWidth != lastWidth || uiHeight != lastHeight) {
             dirtyState.markLayoutDirty();
-            lastWidth = width;
-            lastHeight = height;
+            lastWidth = uiWidth;
+            lastHeight = uiHeight;
         }
 
         if (dirtyState.consumeModuleListDirty()) {
@@ -136,12 +157,12 @@ public class PanelScreen extends Screen {
         }
 
         float railWidth = categoryRailPanel.getAnimatedWidth();
-        PanelLayout.Layout layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), railWidth);
+        PanelLayout.Layout layout = PanelLayout.compute(uiWidth, uiHeight, railWidth);
         popupHost.setOverlayBounds(layout.panel());
 
         drawChrome(layout);
-        int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
-        int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        int epsilonMouseX = mouseX;
+        int epsilonMouseY = mouseY;
         boolean popupActive = popupHost.getActivePopup() != null;
         int panelMouseX = popupActive ? Integer.MIN_VALUE : epsilonMouseX;
         int panelMouseY = popupActive ? Integer.MIN_VALUE : epsilonMouseY;
@@ -158,19 +179,7 @@ public class PanelScreen extends Screen {
             moduleDetailPanel.render(guiGraphics, scene.batch(UiLayer.CONTENT, 20), layout.detail(), panelMouseX, panelMouseY, partialTick);
         }
 
-        scene.flush();
-        flushQueuedContentBuffers();
-        scene.clear();
         renderPopup(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
-
-        LuminRenderSystem.setActiveTarget(null);
-
-        if (preeditOverlay != null) {
-            this.preeditOverlay.updateInputPosition((int) IMEFocusHelper.activeCursorX, (int) IMEFocusHelper.activeCursorY);
-            guiGraphics.setPreeditOverlay(this.preeditOverlay);
-        }
-        guiGraphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
-        popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
     private void drawChrome(PanelLayout.Layout layout) {
@@ -199,29 +208,17 @@ public class PanelScreen extends Screen {
         scene.submit(UiLayer.CHROME, -20, tree);
     }
 
-    private void flushQueuedContentBuffers() {
-        if (state.isClientSettingMode()) {
-            clientSettingPanel.flushContent();
-        } else {
-            moduleListPanel.flushContent();
-            moduleDetailPanel.flushContent();
-        }
-    }
-
     private void renderPopup(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (popupHost.getActivePopup() == null) {
             return;
         }
         popupHost.render(guiGraphics, scene.batch(UiLayer.POPUP), mouseX, mouseY, partialTick);
-        scene.flush();
-        popupHost.flush();
-        scene.clear();
     }
 
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         double mouseX = epsilonEvent.x();
         double mouseY = epsilonEvent.y();
         if (event.button() != 0) {
@@ -244,7 +241,10 @@ public class PanelScreen extends Screen {
                     || super.mouseClicked(epsilonEvent, isDoubleClick);
         }
 
-        PanelLayout.Layout layout = PanelLayout.compute(LuminRenderSystem.getScaledWidthInt(), LuminRenderSystem.getScaledHeightInt(), categoryRailPanel.getAnimatedWidth());
+        PanelLayout.Layout layout = PanelLayout.compute(
+                UiCoordinateMapper.getProjectionWidthInt(),
+                UiCoordinateMapper.getProjectionHeightInt(),
+                categoryRailPanel.getAnimatedWidth());
         if (!layout.panel().contains(mouseX, mouseY)) {
             if (ClientSetting.INSTANCE.closeOnOutside.getValue()) minecraft.setScreen(null);
             return true;
@@ -259,10 +259,18 @@ public class PanelScreen extends Screen {
         return handled || super.mouseClicked(epsilonEvent, isDoubleClick);
     }
 
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        textMetrics = null;
+        if (previous != null) previous.close();
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
-        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        double epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             dirtyState.markAllDirty();
             return true;
@@ -287,7 +295,7 @@ public class PanelScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (inputRouter.routeMouseReleased(epsilonEvent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
@@ -296,15 +304,16 @@ public class PanelScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
-        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
-        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
-        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
-        if (inputRouter.routeMouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(deltaX);
+        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(deltaY);
+        if (inputRouter.routeMouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY,
+                popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
         }
-        return super.mouseDragged(epsilonEvent, epsilonMouseX, epsilonMouseY);
+        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
     }
 
     @Override
@@ -345,6 +354,7 @@ public class PanelScreen extends Screen {
     public void removed() {
         super.removed();
         popupHost.close();
+        releaseScene();
         moduleListPanel.resetTransientState();
         moduleDetailPanel.resetTransientState();
         clientSettingPanel.resetTransientState();
@@ -354,12 +364,4 @@ public class PanelScreen extends Screen {
         preeditOverlay = null;
     }
 
-    /**
-     * 返回当前面板使用的离屏渲染目标。
-     *
-     * @return 当前渲染目标；首次渲染前可能为 {@code null}
-     */
-    public LuminRenderSystem.LuminRenderTarget getRenderTarget() {
-        return renderTarget;
-    }
 }

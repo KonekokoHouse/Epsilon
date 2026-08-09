@@ -3,8 +3,8 @@ package com.github.epsilon.gui.dropdown.component;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.utils.client.ConfigFolderOpener;
@@ -69,7 +69,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
                 scope.roundRect(btnX, btnY, btnW, BUTTON_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                         hovered ? MD3Theme.PRIMARY_CONTAINER : MD3Theme.SURFACE_CONTAINER_HIGH);
                 float labelScale = 0.48f;
-                float labelW = textMetrics.textWidth(actions[index], labelScale);
+                float labelW = textMetrics.textWidth(actions[index], labelScale, null);
                 scope.text(actions[index], btnX + (btnW - labelW) * 0.5f, getCenteredTextY(textMetrics, btnY, BUTTON_HEIGHT, labelScale), labelScale, MD3Theme.TEXT_PRIMARY);
             }
         }
@@ -230,7 +230,7 @@ public class ConfigDropdownPanel extends AbstractDropdownPanel {
     }
 
     private float getCenteredTextY(UiTextMetrics textMetrics, float boxY, float boxH, float scale) {
-        return boxY + (boxH - textMetrics.textHeight(scale)) / 2.0f;
+        return boxY + (boxH - textMetrics.textHeight(scale, null)) / 2.0f;
     }
 
     private List<String> configsForFrame() {

@@ -1,11 +1,12 @@
 package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.render.UiContentBuffer;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.slmpc.lumingraphics.ui.render.UiContentBuffer;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
@@ -44,8 +45,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private final Setting<List<String>> setting;
     private final Consumer<String> addFn;
     private final Consumer<String> removeFn;
-    private final UiContentBuffer contentBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
-    private final TextRenderer textRenderer = TextRenderer.create();
+    private final UiTextMetrics textRenderer = MinecraftUiRuntime2612.current().textMetrics();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
 
@@ -73,7 +73,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
 
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
-        contentBuffer.clear();
+        UiContentBuffer contentBuffer = new UiContentBuffer(renderBatch);
         List<String> entries = entries();
         float contentHeight = entries.size() * (ROW_HEIGHT + ROW_GAP);
         UiRect viewport = getViewport();
@@ -90,21 +90,21 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             lastViewport = animatedViewport;
             scope.pushAbsolute(animatedBounds, popup -> {
                 popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, MD3Theme.POPUP_SHADOW_BLUR,
-                        MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
-                        MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
+                        EpsilonUiTheme.lumin(MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress))),
+                        EpsilonUiTheme.lumin(MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)));
 
                 float titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f);
                 float summaryScale = 0.52f;
                 String summary = setting.getValue().size() + EpsilonTranslations.Gui.LIST_ENTRIES.getTranslatedName();
                 popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY);
-                popup.text(summary, animatedBounds.width() - PADDING - textRenderer.getWidth(summary, summaryScale),
+                popup.text(summary, animatedBounds.width() - PADDING - textRenderer.textWidth(summary, summaryScale, null),
                         centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED);
 
                 String placeholder = input.isEmpty() ? EpsilonTranslations.Gui.LIST_TYPE_TO_ADD.getTranslatedName() : input;
                 popup.input(inputBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f,
                         placeholder, 0.54f,
-                        input.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY,
-                        input.length(), MD3Theme.PRIMARY, null, 0.0f, null);
+                        EpsilonUiTheme.lumin(input.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY),
+                        input.length(), EpsilonUiTheme.lumin(MD3Theme.PRIMARY), null, 0.0f, null);
                 IMEFocusHelper.updateCursorPos(inputBounds.x() + 8.0f, inputBounds.y() + 4.0f);
 
                 hoveredRemove = null;
@@ -118,11 +118,6 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
             });
         });
         renderBatch.render(tree);
-    }
-
-    @Override
-    public void flush(UiRenderBatch renderBatch) {
-        contentBuffer.flushAndClear();
     }
 
     @Override
@@ -249,7 +244,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
                     MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 34));
         }
         scope.text(label,
-                bounds.x() + (bounds.width() - textRenderer.getWidth(label, textScale)) / 2.0f,
+                bounds.x() + (bounds.width() - textRenderer.textWidth(label, textScale, null)) / 2.0f,
                 centeredTextY(bounds.y(), bounds.height(), textScale),
                 textScale,
                 enabled ? MD3Theme.ON_SECONDARY_CONTAINER : MD3Theme.withAlpha(MD3Theme.ON_SECONDARY_CONTAINER, 80));
@@ -316,11 +311,10 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     }
 
     private float centeredTextY(float boxY, float boxHeight, float scale) {
-        return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f;
+        return boxY + (boxHeight - textRenderer.textHeight(scale, null)) * 0.5f;
     }
 
     @Override
     public void close() {
-        contentBuffer.close();
     }
 }

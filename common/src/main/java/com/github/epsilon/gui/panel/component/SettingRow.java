@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.panel.component;
 
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.settings.Setting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
@@ -12,8 +12,6 @@ import net.minecraft.client.input.PreeditEvent;
 import org.jspecify.annotations.Nullable;
 
 public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable {
-
-    protected static final TextRenderer FALLBACK_TEXT_METRICS = TextRenderer.create();
 
     protected final T setting;
 
@@ -29,7 +27,7 @@ public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable 
         return 28.0f;
     }
 
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, TextRenderer textRenderer,
+    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer,
                         UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
     }
 

@@ -17,8 +17,8 @@ asm = "9.8"
 jsr305 = "3.0.2"
 gson = "2.13.2"
 sodium = "0.8.12+mc26.1.2"
-junit = "5.13.4"
-junit-platform = "1.13.4"
+lumin-graphics = "1.2.5"
+prism-rhi = "0.2.2"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "project-minecraft" }
@@ -31,8 +31,13 @@ jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 sodium-fabric = { module = "net.caffeinemc:sodium-fabric", version.ref = "sodium" }
 sodium-neoforge = { module = "net.caffeinemc:sodium-neoforge", version.ref = "sodium" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
+lumin-graphics-ui = { module = "com.github.slmpc.lumingraphics:lumin-graphics-ui", version.ref = "lumin-graphics" }
+lumin-graphics-mc-fabric-v2612 = { module = "com.github.slmpc.lumingraphics.mc:lumin-graphics-mc-fabric-26.1.2", version.ref = "lumin-graphics" }
+lumin-graphics-mc-neoforge-v2612 = { module = "com.github.slmpc.lumingraphics.mc:lumin-graphics-mc-neoforge-26.1.2", version.ref = "lumin-graphics" }
+lumin-graphics-mc-common-v2612 = { module = "com.github.slmpc.lumingraphics.mc:mc-26.1.2-common", version.ref = "lumin-graphics" }
+lumin-graphics-mc-bridge-contract = { module = "com.github.slmpc.lumingraphics.mc:bridge-contract", version.ref = "lumin-graphics" }
+prism-rhi-backend-opengl41 = { module = "com.github.slmpc.prismrhi:prism-rhi-backend-opengl41", version.ref = "prism-rhi" }
+prism-rhi-backend-opengl46 = { module = "com.github.slmpc.prismrhi:prism-rhi-backend-opengl46", version.ref = "prism-rhi" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

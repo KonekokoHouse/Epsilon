@@ -1,25 +1,24 @@
 package com.github.epsilon.gui.hudeditor;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.text.IconChars;
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.component.CategoryPanel;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
-import com.github.epsilon.gui.lib.scene.UiLayer;
-import com.github.epsilon.gui.lib.scene.UiScene;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.text.icon.IconChars;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
+import com.github.slmpc.lumingraphics.ui.scene.UiScene;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
@@ -35,6 +34,8 @@ import java.util.function.Consumer;
 public class HudEditorScreen extends Screen {
 
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();
+    private static final String DEFAULT_FONT_ID = "epsilon-default";
+    private static final String ICON_FONT_ID = "epsilon-icons";
 
     private static final float SNAP_DISTANCE = 6.0f;
     private static final float ELEMENT_PADDING = 3.0f;
@@ -42,7 +43,6 @@ public class HudEditorScreen extends Screen {
     private static final float GUIDE_ALPHA = 95.0f;
 
     private CategoryPanel hudPanel;
-    private LuminRenderSystem.LuminRenderTarget renderTarget;
     private int renderFrameId;
     private int panelElementCount = -1;
     private HudModule selectedElement;
@@ -51,12 +51,15 @@ public class HudEditorScreen extends Screen {
     private float dragOffsetY;
     private SnapInfo currentSnap = SnapInfo.none();
 
-    private final TextRenderer textMetrics = TextRenderer.create();
-    private final UiTextMetrics uiTextMetrics = new EditorTextMetrics();
-    private final UiScene scene = new UiScene(EpsilonUiTheme.INSTANCE);
+    private UiScene scene;
+    private MinecraftUiRuntime2612 sceneRuntime;
+    private UiTextMetrics textMetrics;
     private UiRenderBatch editorBatch;
     private UiTree.Scope editorScope;
     private int editorLayer;
+    private int pendingMouseX;
+    private int pendingMouseY;
+    private boolean framePending;
 
     private HudEditorScreen() {
         super(Component.literal("HudEditor"));
@@ -74,25 +77,32 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        final var window = minecraft.getWindow();
-        LuminRenderSystem.LuminRenderTarget renderTarget = getRenderTarget(window.getWidth(), window.getHeight());
-        renderTarget.resize(window.getWidth(), window.getHeight());
-        renderTarget.clear();
-
-        LuminRenderSystem.setActiveTarget(renderTarget);
-        scene.beginFrame();
-
-        int epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
-        int epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
-        drawEditor(graphics, epsilonMouseX, epsilonMouseY);
-        scene.endFrame();
-
-        LuminRenderSystem.setActiveTarget(null);
-        graphics.blit(renderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        pendingMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        pendingMouseY = UiCoordinateMapper.toProjectionY(mouseY);
+        framePending = true;
         drawElementOverlays(graphics);
     }
 
-    private void drawEditor(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    private void prepareScene(MinecraftUiRuntime2612 runtime) {
+        if (scene != null && sceneRuntime == runtime) return;
+        releaseScene();
+        runtime.useDefaultFont(DEFAULT_FONT_ID);
+        scene = runtime.createScene(EpsilonUiTheme.lumin());
+        sceneRuntime = runtime;
+        textMetrics = runtime.textMetrics();
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        textMetrics = null;
+        editorBatch = null;
+        editorScope = null;
+        if (previous != null) previous.close();
+    }
+
+    private void drawEditor(UiScene activeScene, int mouseX, int mouseY) {
         ensureHudPanel();
 
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
@@ -101,11 +111,11 @@ public class HudEditorScreen extends Screen {
 
         validateSelection();
 
-        editorBatch = scene.batch(UiLayer.CONTENT);
+        editorBatch = activeScene.batch(UiLayer.CONTENT);
         editorLayer = -120;
 
-        float screenW = LuminRenderSystem.getScaledWidth();
-        float screenH = LuminRenderSystem.getScaledHeight();
+        float screenW = UiCoordinateMapper.getProjectionWidth();
+        float screenH = UiCoordinateMapper.getProjectionHeight();
 
         beginEditorLayer(10);
         editorScope.rect(0.0f, 0.0f, screenW, screenH, MD3Theme.withAlpha(MD3Theme.SURFACE_DIM, 72));
@@ -121,11 +131,6 @@ public class HudEditorScreen extends Screen {
         drawSnapGuides(editorScope, screenW, screenH);
         flushEditorLayer();
 
-        for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
-            if (!element.isEnabled()) continue;
-            element.renderWithBatch(minecraft.getDeltaTracker(), scene.batch(UiLayer.CONTENT, -40));
-        }
-
         beginEditorLayer(100);
         List<HudModule> elements = HudElementHolder.INSTANCE.getElements();
         HudModule hovered = findElementAt(mouseX, mouseY, true);
@@ -134,7 +139,7 @@ public class HudEditorScreen extends Screen {
             boolean selected = element == selectedElement;
             boolean hover = element == hovered;
             if (!selected && !hover) continue;
-            drawElementFrame(editorScope, uiTextMetrics, element, selected, hover);
+            drawElementFrame(editorScope, textMetrics, element, selected, hover);
         }
         flushEditorLayer();
 
@@ -143,22 +148,26 @@ public class HudEditorScreen extends Screen {
         drawPanel(mouseX, mouseY);
     }
 
-    private LuminRenderSystem.LuminRenderTarget getRenderTarget(int width, int height) {
-        if (renderTarget == null) {
-            renderTarget = LuminRenderSystem.LuminRenderTarget.create("hud-editor-gui", width, height);
-        }
-        return renderTarget;
+    /**
+     * 在世界画面提交后执行 HUD 预览，确保背景模糊能读取到主渲染目标的有效内容。
+     */
+    public void renderPendingHudElements() {
+        if (!framePending || minecraft.screen != this) return;
+        framePending = false;
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        prepareScene(runtime);
+        runtime.render(scene, activeScene -> {
+            drawEditor(activeScene, pendingMouseX, pendingMouseY);
+            HudElementHolder.INSTANCE.submitHudTree(activeScene, -40, minecraft.getDeltaTracker());
+        });
     }
 
     private void drawElementOverlays(GuiGraphicsExtractor graphics) {
-        float overlayScale = (float) (LuminRenderSystem.getGuiScale() / minecraft.getWindow().getGuiScale());
-        graphics.pose().pushMatrix();
-        graphics.pose().scale(overlayScale, overlayScale);
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
             element.renderOverlay(graphics, minecraft.getDeltaTracker());
         }
-        graphics.pose().popMatrix();
     }
 
     private void drawPanel(int mouseX, int mouseY) {
@@ -181,7 +190,7 @@ public class HudEditorScreen extends Screen {
                     hudPanel.getY() - shadowPad,
                     hudPanel.getWidth() + shadowPad * 2.0f,
                     revealedH + shadowPad * 2.0f,
-                    scope -> hudPanel.drawBackground(scope, uiTextMetrics)
+                    scope -> hudPanel.drawBackground(scope, textMetrics)
             );
             flushEditorLayer();
 
@@ -193,7 +202,7 @@ public class HudEditorScreen extends Screen {
                 beginEditorLayer(10);
                 boolean requiresContentScissor = intro < 1.0f || hudPanel.requiresContentScissor();
                 withEditorScissor(requiresContentScissor, hudPanel.getX(), clipY, hudPanel.getWidth(), actualClipH,
-                        scope -> hudPanel.drawContent(scope, uiTextMetrics, mouseX, mouseY));
+                        scope -> hudPanel.drawContent(scope, textMetrics, mouseX, mouseY));
                 flushEditorLayer();
             }
 
@@ -206,15 +215,15 @@ public class HudEditorScreen extends Screen {
         String subtitle = selectedElement == null ? "Select and drag an element" : selectedElement.getTranslatedName();
         float titleScale = 0.64f;
         float subtitleScale = 0.56f;
-        float titleW = textMetrics.getWidth(title, titleScale);
-        float subW = textMetrics.getWidth(subtitle, subtitleScale);
-        float titleH = textMetrics.getHeight(titleScale);
-        float subtitleH = textMetrics.getHeight(subtitleScale);
+        float titleW = textMetrics.textWidth(title, titleScale, null);
+        float subW = textMetrics.textWidth(subtitle, subtitleScale, null);
+        float titleH = textMetrics.textHeight(titleScale, null);
+        float subtitleH = textMetrics.textHeight(subtitleScale, null);
         float boxW = Math.max(titleW, subW) + 24.0f;
         float boxH = 32.0f;
         float radius = 8.0f;
         float middlePadding = 3.0f;
-        float labelX = (LuminRenderSystem.getScaledWidth() - boxW) * 0.5f;
+        float labelX = (UiCoordinateMapper.getProjectionWidth() - boxW) * 0.5f;
         float labelY = DropdownTheme.PANEL_MARGIN_Y + 2.0f;
         float titleY = labelY + (boxH - titleH - middlePadding - subtitleH) * 0.5f;
         float subtitleY = titleY + titleH + middlePadding;
@@ -270,10 +279,10 @@ public class HudEditorScreen extends Screen {
                                   HudModule element, float frameX, float frameY) {
         String label = element.getTranslatedName();
         float scale = 0.48f;
-        float textW = textMetrics.textWidth(label, scale);
+        float textW = textMetrics.textWidth(label, scale, null);
         float labelW = textW + 10.0f;
         float labelY = frameY - LABEL_HEIGHT - 3.0f;
-        float textY = labelY + (LABEL_HEIGHT - textMetrics.textHeight(scale)) * 0.5f;
+        float textY = labelY + (LABEL_HEIGHT - textMetrics.textHeight(scale, null)) * 0.5f;
         scope.roundRect(frameX, labelY, labelW, LABEL_HEIGHT, 6.5f, MD3Theme.PRIMARY_CONTAINER);
         scope.text(label, frameX + (labelW - textW) / 2.0f, textY, scale, MD3Theme.ON_PRIMARY_CONTAINER);
     }
@@ -290,28 +299,6 @@ public class HudEditorScreen extends Screen {
     private void withEditorScissor(boolean required, float guiX, float guiY, float guiW, float guiH,
                                    Consumer<UiTree.Scope> content) {
         editorScope.scissorIf(required, new UiRect(guiX, guiY, guiW, guiH), content);
-    }
-
-    private final class EditorTextMetrics implements UiTextMetrics {
-        @Override
-        public float textWidth(String text, float scale) {
-            return textMetrics.getWidth(text, scale);
-        }
-
-        @Override
-        public float textWidth(String text, float scale, TtfFontLoader fontLoader) {
-            return textMetrics.getWidth(text, scale, fontLoader);
-        }
-
-        @Override
-        public float textHeight(float scale) {
-            return textMetrics.getHeight(scale);
-        }
-
-        @Override
-        public float textHeight(float scale, TtfFontLoader fontLoader) {
-            return textMetrics.getHeight(scale, fontLoader);
-        }
     }
 
     @Override
@@ -343,12 +330,12 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (hudPanel != null && hudPanel.mouseClicked(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
             validateSelection();
             return true;
         }
-        if (epsilonEvent.button() == 0) {
+        if (event.button() == 0) {
             HudModule element = findElementAt(epsilonEvent.x(), epsilonEvent.y(), false);
             if (element != null) {
                 selectedElement = element;
@@ -367,8 +354,8 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
-        if (draggingElement != null && epsilonEvent.button() == 0) {
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        if (draggingElement != null && event.button() == 0) {
             draggingElement = null;
             currentSnap = SnapInfo.none();
             return true;
@@ -381,23 +368,24 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
-        MouseButtonEvent epsilonEvent = LuminRenderSystem.toEpsilonMouseEvent(event);
+        MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(mouseY);
         if (draggingElement != null) {
-            double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(event.x());
-            double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(event.y());
-            moveElementTo(draggingElement, (float) epsilonMouseX - dragOffsetX, (float) epsilonMouseY - dragOffsetY, true);
+            moveElementTo(draggingElement, (float) epsilonEvent.x() - dragOffsetX,
+                    (float) epsilonEvent.y() - dragOffsetY, true);
             return true;
         }
         if (hudPanel != null) {
-            hudPanel.mouseDragged(LuminRenderSystem.toEpsilonMouseX(event.x()), LuminRenderSystem.toEpsilonMouseY(event.y()));
+            hudPanel.mouseDragged(epsilonEvent.x(), epsilonEvent.y());
         }
-        return super.mouseDragged(epsilonEvent, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
+        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        double epsilonMouseX = LuminRenderSystem.toEpsilonMouseX(mouseX);
-        double epsilonMouseY = LuminRenderSystem.toEpsilonMouseY(mouseY);
+        double epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        double epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         if (hudPanel != null && hudPanel.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollY)) {
             return true;
         }
@@ -443,8 +431,8 @@ public class HudEditorScreen extends Screen {
     }
 
     private SnapInfo computeSnap(HudModule element, float targetX, float targetY) {
-        float screenW = LuminRenderSystem.getScaledWidth();
-        float screenH = LuminRenderSystem.getScaledHeight();
+        float screenW = UiCoordinateMapper.getProjectionWidth();
+        float screenH = UiCoordinateMapper.getProjectionHeight();
         float snappedX = targetX;
         float snappedY = targetY;
         float verticalGuide = Float.NaN;
@@ -554,6 +542,8 @@ public class HudEditorScreen extends Screen {
     @Override
     public void removed() {
         super.removed();
+        framePending = false;
+        releaseScene();
         draggingElement = null;
         currentSnap = SnapInfo.none();
     }
@@ -566,7 +556,7 @@ public class HudEditorScreen extends Screen {
     }
 
     private float resolveMaxPanelHeight() {
-        return Math.min(LuminRenderSystem.getScaledHeight() * 0.72f, 350.0f);
+        return Math.min(UiCoordinateMapper.getProjectionHeight() * 0.72f, 350.0f);
     }
 
     private void ensureHudPanel() {

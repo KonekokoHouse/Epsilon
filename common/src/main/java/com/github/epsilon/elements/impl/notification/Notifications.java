@@ -1,20 +1,17 @@
 package com.github.epsilon.elements.impl.notification;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.TextRenderer;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.animation.Easing;
-import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class Notifications extends HudModule {
 
@@ -40,7 +37,6 @@ public class Notifications extends HudModule {
     private static final float LINE_GAP = 1.8f;
     private static final float SUBTITLE_SCALE = 0.92f;
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
     public void render(DeltaTracker deltaTracker) {
@@ -48,7 +44,6 @@ public class Notifications extends HudModule {
         Notification previewNotification = createPreviewNotification();
         if (Managers.NOTIFICATION.isEmpty() && previewNotification == null) return;
 
-        TextRenderer textRenderer = textRendererSupplier.get();
         UiTree.Scope scope = renderScope();
 
         float s = scale.getValue().floatValue();
@@ -81,7 +76,7 @@ public class Notifications extends HudModule {
 
         for (RenderEntry entry : entries) {
             float renderX = getRenderX(anchorWidth, entry.boxWidth);
-            renderNotification(scope, textRenderer, entry.notification, entry.frame, renderX, currentY, anchorWidth, entry.boxWidth, boxHeight, s, textScale, bgAlpha);
+            renderNotification(scope, entry.notification, entry.frame, renderX, currentY, anchorWidth, entry.boxWidth, boxHeight, s, textScale, bgAlpha);
             currentY += entry.frame.occupiedHeight;
         }
 
@@ -134,13 +129,13 @@ public class Notifications extends HudModule {
         return new RenderFrame(RenderStage.HIDDEN, 0.0f, 0.0f);
     }
 
-    private void renderNotification(UiTree.Scope scope, TextRenderer metrics, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha) {
+    private void renderNotification(UiTree.Scope scope, Notification notification, RenderFrame frame, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha) {
         switch (frame.stage) {
             case ENTER_BAR, EXIT_BAR -> {
                 renderStage1(scope, notification, x, y, anchorWidth, boxWidth, boxHeight, frame.progress);
             }
             case ENTER_CONTENT, EXIT_CONTENT, SHOW -> {
-                renderStage2(scope, metrics, notification, x, y, boxWidth, boxHeight, scale, textScale, bgAlpha, frame.progress);
+                renderStage2(scope, notification, x, y, boxWidth, boxHeight, scale, textScale, bgAlpha, frame.progress);
             }
             case HIDDEN -> {
             }
@@ -150,35 +145,40 @@ public class Notifications extends HudModule {
     private void renderStage1(UiTree.Scope scope, Notification notification, float x, float y, float anchorWidth, float boxWidth, float boxHeight, float progress) {
         float width = isLeftDocked() ? boxWidth * progress : boxWidth - anchorWidth * (1.0f - progress);
         float renderX = isLeftDocked() ? x : x + boxWidth - width;
-        scope.rect(renderX, y, width, boxHeight, notification.getMode().getColor());
+        scope.rect(renderX, y, width, boxHeight, lumin(notification.getMode().getColor()));
     }
 
-    private void renderStage2(UiTree.Scope scope, TextRenderer metrics, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha, float progress) {
-        scope.rect(x, y, boxWidth, boxHeight, new Color(0, 0, 0, bgAlpha));
-        boolean requiresScissor = textExceedsBox(metrics, notification, boxWidth, boxHeight, scale, textScale);
-        scope.scissorIf(requiresScissor, x, y, boxWidth, boxHeight,
-                textScope -> renderText(textScope, metrics, notification, x, y, boxWidth, boxHeight,
-                        scale, textScale, Math.round(255.0f * progress)));
+    private void renderStage2(UiTree.Scope scope, Notification notification, float x, float y, float boxWidth, float boxHeight, float scale, float textScale, int bgAlpha, float progress) {
+        scope.rect(x, y, boxWidth, boxHeight, lumin(new Color(0, 0, 0, bgAlpha)));
+        boolean requiresScissor = textExceedsBox(notification, boxWidth, boxHeight, scale, textScale);
+        if (requiresScissor) {
+            scope.scissor(x, y, boxWidth, boxHeight,
+                    textScope -> renderText(textScope, notification, x, y, boxWidth, boxHeight,
+                            scale, textScale, Math.round(255.0f * progress)));
+        } else {
+            renderText(scope, notification, x, y, boxWidth, boxHeight,
+                    scale, textScale, Math.round(255.0f * progress));
+        }
         float accentWidth = ACCENT_BAR_WIDTH * scale + (boxWidth - ACCENT_BAR_WIDTH * scale) * (1.0f - progress);
         float accentX = isLeftDocked() ? x + boxWidth - accentWidth : x;
-        scope.rect(accentX, y, accentWidth, boxHeight, notification.getMode().getColor());
+        scope.rect(accentX, y, accentWidth, boxHeight, lumin(notification.getMode().getColor()));
     }
 
-    private void renderText(UiTree.Scope scope, TextRenderer metrics, Notification n, float x, float y, float boxWidth, float boxHeight, float scale, float desiredTextScale, int alpha) {
+    private void renderText(UiTree.Scope scope, Notification n, float x, float y, float boxWidth, float boxHeight, float scale, float desiredTextScale, int alpha) {
         boolean hasSubTitle = !n.getSubTitle().isEmpty();
-        float textScale = getFittedTextScale(metrics, n, boxWidth, scale, desiredTextScale);
+        float textScale = getFittedTextScale(n, boxWidth, scale, desiredTextScale);
         float subTitleScale = getSubTitleScale(textScale);
         float lineGap = getLineGap(textScale, scale);
-        float titleHeight = metrics.getHeight(textScale);
-        float subTitleHeight = hasSubTitle ? metrics.getHeight(subTitleScale) : 0.0f;
+        float titleHeight = textHeight(textScale, "epsilon-default");
+        float subTitleHeight = hasSubTitle ? textHeight(subTitleScale, "epsilon-default") : 0.0f;
         float contentHeight = titleHeight + subTitleHeight + (hasSubTitle ? lineGap : 0.0f);
         float textX = x + (isLeftDocked() ? TEXT_PADDING * scale : (ACCENT_BAR_WIDTH + TEXT_PADDING) * scale);
         float titleY = y + (boxHeight - contentHeight) / 2.0f;
 
-        scope.text(n.getTitle(), textX, titleY, textScale, new Color(255, 255, 255, alpha));
+        scope.text(n.getTitle(), textX, titleY, textScale, lumin(new Color(255, 255, 255, alpha)));
         if (hasSubTitle) {
             float subTitleY = titleY + titleHeight + lineGap;
-            scope.text(n.getSubTitle(), textX, subTitleY, subTitleScale, n.getMode().getColor(Math.round(alpha * 0.86f)));
+            scope.text(n.getSubTitle(), textX, subTitleY, subTitleScale, lumin(n.getMode().getColor(Math.round(alpha * 0.86f))));
         }
     }
 
@@ -186,30 +186,30 @@ public class Notifications extends HudModule {
         return LINE_GAP * textScale + subtitleYOffset.getValue().floatValue() * scale;
     }
 
-    private float getFittedTextScale(TextRenderer metrics, Notification notification, float boxWidth, float scale, float desiredTextScale) {
-        float maxWidth = Math.max(metrics.getWidth(notification.getTitle(), desiredTextScale),
-                metrics.getWidth(notification.getSubTitle(), getSubTitleScale(desiredTextScale)));
+    private float getFittedTextScale(Notification notification, float boxWidth, float scale, float desiredTextScale) {
+        float maxWidth = Math.max(textWidth(notification.getTitle(), desiredTextScale, "epsilon-default"),
+                textWidth(notification.getSubTitle(), getSubTitleScale(desiredTextScale), "epsilon-default"));
         float availableWidth = Math.max(1.0f, boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale);
         float widthFit = maxWidth > availableWidth ? availableWidth / maxWidth : 1.0f;
 
         return Math.max(0.35f, desiredTextScale * widthFit);
     }
 
-    private boolean textExceedsBox(TextRenderer metrics, Notification notification, float boxWidth,
+    private boolean textExceedsBox(Notification notification, float boxWidth,
                                    float boxHeight, float scale, float desiredTextScale) {
-        float textScale = getFittedTextScale(metrics, notification, boxWidth, scale, desiredTextScale);
+        float textScale = getFittedTextScale(notification, boxWidth, scale, desiredTextScale);
         float subTitleScale = getSubTitleScale(textScale);
-        float maxWidth = Math.max(metrics.getWidth(notification.getTitle(), textScale),
-                metrics.getWidth(notification.getSubTitle(), subTitleScale));
+        float maxWidth = Math.max(textWidth(notification.getTitle(), textScale, "epsilon-default"),
+                textWidth(notification.getSubTitle(), subTitleScale, "epsilon-default"));
         float availableWidth = Math.max(1.0f,
                 boxWidth - (TEXT_PADDING * 2.0f + ACCENT_BAR_WIDTH) * scale);
 
-        float titleHeight = metrics.getHeight(textScale);
+        float titleHeight = textHeight(textScale, "epsilon-default");
         if (notification.getSubTitle().isEmpty()) {
             return maxWidth > availableWidth || titleHeight > boxHeight;
         }
 
-        float subTitleHeight = metrics.getHeight(subTitleScale);
+        float subTitleHeight = textHeight(subTitleScale, "epsilon-default");
         float lineGap = getLineGap(textScale, scale);
         float contentHeight = titleHeight + lineGap + subTitleHeight;
         float titleY = (boxHeight - contentHeight) * 0.5f;

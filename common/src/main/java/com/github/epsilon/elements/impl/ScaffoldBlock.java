@@ -1,23 +1,22 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.modules.impl.movement.Scaffold;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.animation.Easing;
-import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
 
 public class ScaffoldBlock extends HudModule {
 
@@ -57,7 +56,6 @@ public class ScaffoldBlock extends HudModule {
     private float visibilityProgress;
     private long lastVisibilityUpdateMs;
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
     protected void onEnable() {
@@ -87,12 +85,11 @@ public class ScaffoldBlock extends HudModule {
             return;
         }
 
-        TextRenderer textRenderer = textRendererSupplier.get();
         UiTree.Scope scope = renderScope();
 
-        Layout layout = createLayout(textRenderer);
+        Layout layout = createLayout();
         drawBackground(scope, layout, animation);
-        drawText(scope, textRenderer, layout, animation);
+        drawText(scope, layout, animation);
         setBounds(layout.totalWidth(), layout.height());
     }
 
@@ -118,15 +115,15 @@ public class ScaffoldBlock extends HudModule {
         return new AnimationState(panelProgress, contentProgress, contentAlpha);
     }
 
-    private Layout createLayout(TextRenderer textRenderer) {
+    private Layout createLayout() {
         float scaled = scale.getValue().floatValue();
         float height = BASE_HEIGHT * scaled;
         float radius = Math.min(cornerRadius.getValue().floatValue() * scaled, height / 2.0f);
         float padX = BASE_PAD_X * scaled;
         float labelScale = 0.62f * scaled;
         float labelGap = BASE_LABEL_GAP * scaled;
-        float numberColumnWidth = getNumberColumnWidth(textRenderer, scaled);
-        float labelWidth = textRenderer.getWidth(LABEL, labelScale);
+        float numberColumnWidth = getNumberColumnWidth(scaled);
+        float labelWidth = textWidth(LABEL, labelScale, "epsilon-default");
         float totalWidth = padX * 2.0f + numberColumnWidth + labelGap + labelWidth;
         return new Layout(height, radius, padX, scaled, labelScale, labelGap, numberColumnWidth, labelWidth, totalWidth, this.x);
     }
@@ -137,36 +134,39 @@ public class ScaffoldBlock extends HudModule {
         float animatedRadius = Math.min(layout.radius(), animatedWidth / 2.0f);
 
         if (backgroundBlur.getValue()) {
-            BlurShader.INSTANCE.render(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, blurStrength.getValue());
+            MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+                    new UiRect(animatedX, this.y, animatedWidth, layout.height()), animatedRadius, blurStrength.getValue()));
         }
         if (drawShadow.getValue()) {
-            scope.shadow(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, shadowBlur.getValue().floatValue(), withAlpha(shadowColor.getValue(), animation.contentAlpha()));
+            scope.shadow(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, shadowBlur.getValue().floatValue(), lumin(withAlpha(shadowColor.getValue(), animation.contentAlpha())));
         }
 
-        scope.roundRect(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, withAlpha(backgroundColor.getValue(), animation.contentAlpha()));
+        scope.roundRect(animatedX, this.y, animatedWidth, layout.height(), animatedRadius, lumin(withAlpha(backgroundColor.getValue(), animation.contentAlpha())));
     }
 
-    private void drawText(UiTree.Scope scope, TextRenderer textRenderer, Layout layout, AnimationState animation) {
+    private void drawText(UiTree.Scope scope, Layout layout, AnimationState animation) {
         float numberColumnX = layout.renderX() + layout.padX();
-        float numberY = this.y + (layout.height() - textRenderer.getHeight(layout.numberScale())) / 2.0f;
+        float numberY = this.y + (layout.height() - textHeight(layout.numberScale(), "epsilon-default")) / 2.0f;
         float animatedNumberColumnX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.numberColumnWidth() / 2.0f, numberColumnX);
         float animatedWidth = layout.totalWidth() * animation.panelProgress();
         float animatedX = Mth.lerp(animation.panelProgress(), layout.centerX(), layout.renderX());
 
         boolean requiresScissor = animation.panelProgress() < 1.0f
                 || smoothNumber.getValue() && numberAnimProgress < 1.0f;
-        scope.scissorIf(requiresScissor, new UiRect(animatedX, this.y, animatedWidth, layout.height()), clipped -> {
+        Consumer<UiTree.Scope> content = clipped -> {
             if (smoothNumber.getValue()) {
-                drawRollingNumber(clipped, textRenderer, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
+                drawRollingNumber(clipped, layout.numberScale(), animatedNumberColumnX, layout.numberColumnWidth(), numberY, animation.contentAlpha());
             } else {
-                clipped.text(targetCountText, animatedNumberColumnX, numberY, layout.numberScale(), withAlpha(textColor.getValue(), animation.contentAlpha()));
+                clipped.text(targetCountText, animatedNumberColumnX, numberY, layout.numberScale(), lumin(withAlpha(textColor.getValue(), animation.contentAlpha())));
             }
 
             float labelX = numberColumnX + layout.numberColumnWidth() + layout.labelGap();
             float animatedLabelX = Mth.lerp(animation.contentProgress(), layout.centerX() - layout.labelWidth() / 2.0f, labelX);
-            float labelY = this.y + (layout.height() - textRenderer.getHeight(layout.labelScale())) / 2.0f;
-            clipped.text(LABEL, animatedLabelX, labelY, layout.labelScale(), withAlpha(textSecondary.getValue(), animation.contentAlpha()));
-        });
+            float labelY = this.y + (layout.height() - textHeight(layout.labelScale(), "epsilon-default")) / 2.0f;
+            clipped.text(LABEL, animatedLabelX, labelY, layout.labelScale(), lumin(withAlpha(textSecondary.getValue(), animation.contentAlpha())));
+        };
+        if (requiresScissor) scope.scissor(new UiRect(animatedX, this.y, animatedWidth, layout.height()), content);
+        else content.accept(scope);
     }
 
     private void syncNumberAnimation(int blockCount, DeltaTracker deltaTracker) {
@@ -228,21 +228,21 @@ public class ScaffoldBlock extends HudModule {
         }
     }
 
-    private float getNumberColumnWidth(TextRenderer textRenderer, float numberScale) {
+    private float getNumberColumnWidth(float numberScale) {
         float width = Math.max(
-                textRenderer.getWidth(previousCountText, numberScale),
-                textRenderer.getWidth(targetCountText, numberScale)
+                textWidth(previousCountText, numberScale, "epsilon-default"),
+                textWidth(targetCountText, numberScale, "epsilon-default")
         );
         return width + 4.0f * scale.getValue().floatValue();
     }
 
-    private void drawRollingNumber(UiTree.Scope scope, TextRenderer textRenderer, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
+    private void drawRollingNumber(UiTree.Scope scope, float numberScale, float columnX, float columnWidth, float textY, float alphaMul) {
         String previous = previousCountText;
         String target = targetCountText;
         int maxLen = Math.max(previous.length(), target.length());
         float contentWidth = Math.max(
-                textRenderer.getWidth(previous, numberScale),
-                textRenderer.getWidth(target, numberScale)
+                textWidth(previous, numberScale, "epsilon-default"),
+                textWidth(target, numberScale, "epsilon-default")
         );
         float charX = columnX + Math.max(0.0f, (columnWidth - contentWidth) / 2.0f);
         float slideOffset = 4.0f * scale.getValue().floatValue();
@@ -253,25 +253,25 @@ public class ScaffoldBlock extends HudModule {
 
             float slotWidth = 0.0f;
             if (previousChar != '\0') {
-                slotWidth = Math.max(slotWidth, textRenderer.getWidth(String.valueOf(previousChar), numberScale));
+                slotWidth = Math.max(slotWidth, textWidth(String.valueOf(previousChar), numberScale, "epsilon-default"));
             }
             if (targetChar != '\0') {
-                slotWidth = Math.max(slotWidth, textRenderer.getWidth(String.valueOf(targetChar), numberScale));
+                slotWidth = Math.max(slotWidth, textWidth(String.valueOf(targetChar), numberScale, "epsilon-default"));
             }
 
             if (previousChar == targetChar) {
                 if (targetChar != '\0') {
-                    scope.text(String.valueOf(targetChar), charX, textY, numberScale, withAlpha(textColor.getValue(), alphaMul));
+                    scope.text(String.valueOf(targetChar), charX, textY, numberScale, lumin(withAlpha(textColor.getValue(), alphaMul)));
                 }
             } else {
                 float oldAlpha = 1.0f - numberAnimProgress;
                 float newAlpha = numberAnimProgress;
 
                 if (previousChar != '\0' && oldAlpha > 0.01f) {
-                    scope.text(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, withAlpha(textColor.getValue(), oldAlpha * alphaMul));
+                    scope.text(String.valueOf(previousChar), charX, textY - numberAnimProgress * slideOffset, numberScale, lumin(withAlpha(textColor.getValue(), oldAlpha * alphaMul)));
                 }
                 if (targetChar != '\0' && newAlpha > 0.01f) {
-                    scope.text(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, withAlpha(textColor.getValue(), newAlpha * alphaMul));
+                    scope.text(String.valueOf(targetChar), charX, textY + (1.0f - numberAnimProgress) * slideOffset, numberScale, lumin(withAlpha(textColor.getValue(), newAlpha * alphaMul)));
                 }
             }
 

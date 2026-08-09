@@ -1,5 +1,7 @@
 package com.github.epsilon.mixins;
 
+import com.github.epsilon.events.bus.EventBus;
+import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.github.epsilon.modules.impl.render.GameAnimation;
 import com.github.epsilon.modules.impl.render.NoRender;
@@ -22,6 +24,11 @@ public class MixinGui {
         if (noRender.isEnabled() && noRender.potionEffects.getValue()) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    private void onExtractRenderState(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        EventBus.INSTANCE.post(new Render2DEvent.HUD(graphics));
     }
 
     @ModifyArg(method = "extractItemHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V", ordinal = 1), index = 2)

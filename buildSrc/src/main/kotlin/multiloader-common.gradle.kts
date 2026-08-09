@@ -36,7 +36,6 @@ val license = project.property("license").toString()
 val neoforgeVersion = project.property("neoforge_version").toString()
 val neoforgeLoaderVersionRange = project.property("neoforge_loader_version_range").toString()
 val credits = project.findProperty("credits")?.toString() ?: ""
-
 base {
     archivesName.set("${modId}-${project.name}-${minecraftVersion}")
 }
@@ -57,6 +56,14 @@ java {
 }
 
 repositories {
+    mavenLocal {
+        content { includeGroupAndSubgroups("com.github.slmpc") }
+    }
+    maven {
+        name = "SlmpcMaven"
+        url = uri("https://slmpc.github.io/maven-repository")
+        content { includeGroupAndSubgroups("com.github.slmpc") }
+    }
     mavenCentral()
     exclusiveContent {
         forRepository {
@@ -76,6 +83,10 @@ repositories {
         }
         filter { includeGroup("net.caffeinemc") }
     }
+}
+
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 
 val licenseFileName = "LICENSE_${modName}"
@@ -120,10 +131,10 @@ tasks.named<ProcessResources>("processResources") {
         "mod_author" to modAuthor,
         "mod_id" to modId,
         "license" to license,
+        "credits" to credits,
         "description" to (project.findProperty("description")?.toString() ?: ""),
         "neoforge_version" to neoforgeVersion,
         "neoforge_loader_version_range" to neoforgeLoaderVersionRange,
-        "credits" to credits,
         "java_version" to javaVersion
     )
 

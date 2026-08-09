@@ -1,9 +1,9 @@
 package com.github.epsilon.gui.panel.component;
 
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import org.jspecify.annotations.Nullable;
 
@@ -65,31 +65,32 @@ public class PanelElements {
         Color indicator = MD3Theme.filledFieldIndicator(focused, hoverProgress);
 
         scope.input(bounds, focused, hoverProgress,
-                6.0f, null, 0.0f, new Color(0, 0, 0, 0),
+                6.0f, null, 0.0f, EpsilonUiTheme.lumin(new Color(0, 0, 0, 0)),
                 null, null,
                 null, 0.0f, null);
         return new FilledFieldColors(text, caret, indicator);
     }
 
-    public static UiRect measureAssistChipBounds(TextRenderer textRenderer, UiRect rowBounds, String label,
+    public static UiRect measureAssistChipBounds(UiTextMetrics textRenderer, UiRect rowBounds, String label,
                                                  float textScale, float horizontalPadding, float trailingSlotWidth, float maxWidth) {
-        float desiredWidth = textRenderer.getWidth(label, textScale) + horizontalPadding * 2.0f + trailingSlotWidth;
+        float desiredWidth = textRenderer.textWidth(label, textScale, null) + horizontalPadding * 2.0f + trailingSlotWidth;
         return alignTrailing(rowBounds, Math.min(maxWidth, desiredWidth), MD3Theme.COMPACT_CHIP_HEIGHT);
     }
 
     /**
      * 在 DSL 中构建一个 assist chip 语义节点。
      */
-    public static void buildAssistChip(UiTree.Scope scope, TextRenderer textRenderer, UiRect bounds,
+    public static void buildAssistChip(UiTree.Scope scope, UiTextMetrics textRenderer, UiRect bounds,
                                        String label, float textScale, Color background, Color foreground,
-                                       @Nullable String trailingIcon, float trailingIconScale, @Nullable TtfFontLoader trailingIconFont) {
-        scope.chip(bounds, label, textScale, background, foreground, trailingIcon, trailingIconScale, trailingIconFont);
+                                       String trailingIcon, float trailingIconScale, String trailingIconFont) {
+        scope.chip(bounds, label, textScale, EpsilonUiTheme.lumin(background), EpsilonUiTheme.lumin(foreground),
+                trailingIcon, trailingIconScale, trailingIconFont);
     }
 
     /**
      * 在 DSL 中构建一个双段 segmented control 节点。
      */
-    public static void buildSegmentedControl(UiTree.Scope scope, TextRenderer textRenderer,
+    public static void buildSegmentedControl(UiTree.Scope scope, UiTextMetrics textRenderer,
                                              UiRect bounds, String leadingLabel, String trailingLabel,
                                              float progress, float hoverProgress) {
         scope.segmented(bounds, leadingLabel, trailingLabel, progress, hoverProgress);
@@ -98,9 +99,9 @@ public class PanelElements {
     /**
      * 在 DSL 中构建一个圆角图标按钮节点。
      */
-    public static void buildIconButton(UiTree.Scope scope, TextRenderer textRenderer, UiRect bounds,
+    public static void buildIconButton(UiTree.Scope scope, UiTextMetrics textRenderer, UiRect bounds,
                                        String label, float scale, Color tone, float hoverProgress) {
-        scope.iconButton(bounds, label, scale, tone, hoverProgress);
+        scope.iconButton(bounds, label, scale, EpsilonUiTheme.lumin(tone), hoverProgress);
     }
 
     /**

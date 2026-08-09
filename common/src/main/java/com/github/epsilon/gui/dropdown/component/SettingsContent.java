@@ -3,9 +3,9 @@ package com.github.epsilon.gui.dropdown.component;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
@@ -116,7 +116,7 @@ public class SettingsContent {
         if (sections.isEmpty()) {
             String label = EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName();
             float labelScale = 0.58f;
-            float textW = textMetrics.textWidth(label, labelScale);
+            float textW = textMetrics.textWidth(label, labelScale, null);
             scope.text(label, panelX + (panelWidth - textW) * 0.5f, contentY + 8.0f, labelScale, MD3Theme.TEXT_MUTED);
             return;
         }
@@ -307,16 +307,16 @@ public class SettingsContent {
                 MD3Theme.lerp(DropdownTheme.groupBackground(), DropdownTheme.groupBackgroundHover(), hoverProgress));
 
         String label = trimToWidth(section.title(), DropdownTheme.GROUP_HEADER_TEXT_SCALE, headerW - 74.0f, textMetrics);
-        float labelY = sectionY + (headerH - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
+        float labelY = sectionY + (headerH - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE, null)) * 0.5f;
         scope.text(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
 
         String countLabel = Integer.toString(section.widgets().size());
-        float countWidth = textMetrics.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
+        float countWidth = textMetrics.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE, null) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
         float countX = headerX + headerW - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f;
         float chipH = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT;
         float countY = sectionY + (headerH - chipH) * 0.5f;
         scope.roundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
-        float countTextY = countY + (chipH - textMetrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
+        float countTextY = countY + (chipH - textMetrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE, null)) * 0.5f;
         scope.text(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
 
         scope.triangle(headerX + headerW - DropdownTheme.SETTING_PADDING_X - 2.5f,
@@ -356,13 +356,13 @@ public class SettingsContent {
 
     private String trimToWidth(String value, float scale, float maxWidth, UiTextMetrics textMetrics) {
         if (value == null || value.isEmpty()) return "";
-        if (textMetrics.textWidth(value, scale) <= maxWidth) return value;
+        if (textMetrics.textWidth(value, scale, null) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale);
+        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale, null);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         for (int len = value.length() - 1; len >= 0; len--) {
             String candidate = value.substring(0, len) + ellipsis;
-            if (textMetrics.textWidth(candidate, scale) <= maxWidth) return candidate;
+            if (textMetrics.textWidth(candidate, scale, null) <= maxWidth) return candidate;
         }
         return ellipsis;
     }

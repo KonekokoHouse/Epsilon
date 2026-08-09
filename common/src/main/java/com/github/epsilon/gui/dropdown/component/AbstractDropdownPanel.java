@@ -1,13 +1,10 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.TranslateComponent;
-import com.github.epsilon.graphics.text.StaticFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.control.UiScrollBar;
-import com.github.epsilon.gui.theme.EpsilonUiTheme;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -22,7 +19,7 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
     protected final String icon;
     protected final Animation openAnim = new Animation(Easing.EASE_IN_OUT_CUBIC, DropdownTheme.ANIM_OPEN);
     protected final Animation introAnim;
-    protected final UiScrollBar scrollBar = new UiScrollBar(EpsilonUiTheme.INSTANCE);
+    protected final UiScrollBar scrollBar = new UiScrollBar();
 
     protected float x;
     protected float y;
@@ -111,10 +108,11 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
         float iconX = x + 7.5f;
         float textX = icon == null || icon.isBlank() ? x + 10.0f : iconX + 16.0f;
-        float textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE)) * 0.5f;
+        float textY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_TEXT_SCALE, null)) * 0.5f;
         if (icon != null && !icon.isBlank()) {
-            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_ICON_SCALE, StaticFontLoader.ICONS)) * 0.5f - 2.0f;
-            scope.text(icon, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, StaticFontLoader.ICONS);
+            String iconFont = "epsilon-icons";
+            float iconY = y + (DropdownTheme.PANEL_HEADER_HEIGHT - textMetrics.textHeight(DropdownTheme.HEADER_ICON_SCALE, iconFont)) * 0.5f - 2.0f;
+            scope.text(icon, iconX, iconY, DropdownTheme.HEADER_ICON_SCALE, MD3Theme.PRIMARY, iconFont);
         }
         String headerTitle = getTitle();
         scope.text(headerTitle, textX, textY, DropdownTheme.HEADER_TEXT_SCALE, MD3Theme.TEXT_PRIMARY);
@@ -392,13 +390,13 @@ public abstract class AbstractDropdownPanel implements DropdownPanel {
 
     protected String trimToWidth(String value, float scale, float maxWidth, UiTextMetrics textMetrics) {
         if (value == null || value.isEmpty()) return "";
-        if (textMetrics.textWidth(value, scale) <= maxWidth) return value;
+        if (textMetrics.textWidth(value, scale, null) <= maxWidth) return value;
         String ellipsis = "...";
-        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale);
+        float ellipsisWidth = textMetrics.textWidth(ellipsis, scale, null);
         if (ellipsisWidth >= maxWidth) return ellipsis;
         for (int len = value.length() - 1; len >= 0; len--) {
             String candidate = value.substring(0, len) + ellipsis;
-            if (textMetrics.textWidth(candidate, scale) <= maxWidth) return candidate;
+            if (textMetrics.textWidth(candidate, scale, null) <= maxWidth) return candidate;
         }
         return ellipsis;
     }

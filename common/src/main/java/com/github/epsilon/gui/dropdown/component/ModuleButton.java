@@ -1,13 +1,12 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.text.IconChars;
-import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.slmpc.lumingraphics.text.icon.IconChars;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.*;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
@@ -169,7 +168,7 @@ public class ModuleButton extends Component {
         scope.rect(3.0f, DropdownTheme.MODULE_HEIGHT - 0.5f, width - 6.0f, 0.5f, DropdownTheme.moduleDivider());
 
         Color textColor = MD3Theme.lerp(DropdownTheme.moduleTextDisabled(hover), DropdownTheme.moduleTextEnabled(), toggle);
-        float textY = (DropdownTheme.MODULE_HEIGHT - textMetrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE)) * 0.5f;
+        float textY = (DropdownTheme.MODULE_HEIGHT - textMetrics.textHeight(DropdownTheme.MODULE_TEXT_SCALE, null)) * 0.5f;
         float leftX = DropdownTheme.MODULE_PADDING_X;
         scope.text(module.getTranslatedName(), leftX, textY, DropdownTheme.MODULE_TEXT_SCALE, textColor);
 
@@ -218,7 +217,7 @@ public class ModuleButton extends Component {
 
         float scale = DropdownTheme.MODULE_ADDON_INFO_TEXT_SCALE;
         String addonLabel = EpsilonTranslations.Module.FROM.getTranslatedName() + " " + getAddonLabel();
-        float textY = infoY + (infoH - textMetrics.textHeight(scale)) * 0.5f - 0.5f;
+        float textY = infoY + (infoH - textMetrics.textHeight(scale, null)) * 0.5f - 0.5f;
         scope.text(addonLabel, infoX + DropdownTheme.SETTING_PADDING_X, textY, scale, DropdownTheme.moduleAddonInfoText());
     }
 
@@ -238,16 +237,16 @@ public class ModuleButton extends Component {
         scope.roundRect(headerX, sectionY, headerW, headerH, headerRadius, headerBg);
 
         String label = section.title();
-        float labelY = sectionY + (headerH - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE)) * 0.5f;
+        float labelY = sectionY + (headerH - textMetrics.textHeight(DropdownTheme.GROUP_HEADER_TEXT_SCALE, null)) * 0.5f;
         scope.text(label, headerX + DropdownTheme.SETTING_PADDING_X, labelY, DropdownTheme.GROUP_HEADER_TEXT_SCALE, DropdownTheme.groupText());
 
         String countLabel = Integer.toString(section.widgets().size());
-        float countWidth = textMetrics.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
+        float countWidth = textMetrics.textWidth(countLabel, DropdownTheme.GROUP_COUNT_TEXT_SCALE, null) + DropdownTheme.GROUP_COUNT_CHIP_PADDING * 2.0f;
         float countX = headerX + headerW - DropdownTheme.SETTING_PADDING_X - countWidth - 12.0f;
         float chipH = DropdownTheme.GROUP_COUNT_CHIP_HEIGHT;
         float countY = sectionY + (headerH - chipH) * 0.5f;
         scope.roundRect(countX, countY, countWidth, chipH, chipH / 2.0f, DropdownTheme.groupCountChip());
-        float countTextY = countY + (chipH - textMetrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE)) * 0.5f;
+        float countTextY = countY + (chipH - textMetrics.textHeight(DropdownTheme.GROUP_COUNT_TEXT_SCALE, null)) * 0.5f;
         scope.text(countLabel, countX + DropdownTheme.GROUP_COUNT_CHIP_PADDING, countTextY, DropdownTheme.GROUP_COUNT_TEXT_SCALE, DropdownTheme.groupCountText());
 
         float chevronSize = 2.5f;
@@ -296,8 +295,8 @@ public class ModuleButton extends Component {
 
         String keyText = listeningKeybind ? "..." : formatCompactKeybind(module.getKeyBind());
         float textScale = keyText.length() >= 3 ? 0.46f : 0.52f;
-        float textW = textMetrics.textWidth(keyText, textScale);
-        float textH = textMetrics.textHeight(textScale);
+        float textW = textMetrics.textWidth(keyText, textScale, null);
+        float textH = textMetrics.textHeight(textScale, null);
 
         Color surface;
         Color outline;
@@ -362,14 +361,15 @@ public class ModuleButton extends Component {
             scope.roundRect(btnX, btnY, btnW, btnH, DropdownTheme.KEYBIND_RADIUS, MD3Theme.lerp(MD3Theme.SECONDARY_CONTAINER, MD3Theme.SECONDARY, hovered ? 0.12f : 0.0f));
             String icon = IconChars.VISIBILITY;
             float scale = 0.58f;
-            float iconW = textMetrics.textWidth(icon, scale, StaticFontLoader.ICONS);
-            float iconH = textMetrics.textHeight(scale, StaticFontLoader.ICONS);
-            scope.text(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, StaticFontLoader.ICONS);
+            String iconFont = "epsilon-icons";
+            float iconW = textMetrics.textWidth(icon, scale, iconFont);
+            float iconH = textMetrics.textHeight(scale, iconFont);
+            scope.text(icon, btnX + (btnW - iconW) * 0.5f, btnY + (btnH - iconH) * 0.5f - 1.0f, scale, MD3Theme.ON_SECONDARY_CONTAINER, iconFont);
         }
         if (hovered) {
             String hint = module.isHidden() ? EpsilonTranslations.Module.HIDDEN.getTranslatedName() : EpsilonTranslations.Module.VISIBLE.getTranslatedName();
             float hintScale = 0.42f;
-            float hintW = textMetrics.textWidth(hint, hintScale);
+            float hintW = textMetrics.textWidth(hint, hintScale, null);
             float hintX = Mth.clamp(btnX + (btnW - hintW) * 0.5f, 2.0f, width - hintW - 2.0f);
             scope.text(hint, hintX, DropdownTheme.MODULE_HEIGHT + 1.0f, hintScale, MD3Theme.TEXT_MUTED);
         }

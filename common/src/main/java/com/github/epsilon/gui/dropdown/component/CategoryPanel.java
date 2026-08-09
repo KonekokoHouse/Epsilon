@@ -1,10 +1,9 @@
 package com.github.epsilon.gui.dropdown.component;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.control.UiScrollBar;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.Category;

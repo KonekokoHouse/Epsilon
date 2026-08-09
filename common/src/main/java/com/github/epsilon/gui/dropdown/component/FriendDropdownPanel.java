@@ -3,8 +3,8 @@ package com.github.epsilon.gui.dropdown.component;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.dropdown.DropdownTheme;
 import com.github.epsilon.gui.dropdown.widget.DropdownTextField;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.Managers;
 import org.lwjgl.glfw.GLFW;
@@ -53,7 +53,7 @@ public class FriendDropdownPanel extends AbstractDropdownPanel {
             scope.roundRect(x + PADDING, rowY, width - PADDING * 2.0f, ROW_HEIGHT, DropdownTheme.BUTTON_RADIUS,
                     hovered ? MD3Theme.SURFACE_CONTAINER_HIGH : MD3Theme.SURFACE_CONTAINER_LOW);
             scope.text(trimToWidth(name, DropdownTheme.SETTING_TEXT_SCALE, width - 38.0f, textMetrics),
-                    x + PADDING + 6.0f, rowY + (ROW_HEIGHT - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+                    x + PADDING + 6.0f, rowY + (ROW_HEIGHT - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE, null)) * 0.5f,
                     DropdownTheme.SETTING_TEXT_SCALE, MD3Theme.TEXT_PRIMARY);
             float removeX = x + width - PADDING - 18.0f;
             scope.text("x", removeX + 5.0f, rowY + 3.0f, 0.54f,

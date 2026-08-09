@@ -1,10 +1,11 @@
 package com.github.epsilon.gui.panel.component;
 
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.adapter.ModuleViewModel;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.utils.client.KeybindUtils;
 
 import java.awt.*;
@@ -70,13 +71,13 @@ public class ModuleRow {
      * @param toggleProgress      开关进度
      * @param toggleHoverProgress 开关悬停进度
      */
-    public void buildUi(UiTree.Scope scope, TextRenderer textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
+    public void buildUi(UiTree.Scope scope, UiTextMetrics textRenderer, float hoverProgress, float selectedProgress, float toggleProgress, float toggleHoverProgress) {
         float titleScale = 0.70f;
         float subScale = 0.60f;
         float keyScale = 0.6f;
-        float titleHeight = textRenderer.getHeight(titleScale);
-        float subHeight = textRenderer.getHeight(subScale);
-        float keyHeight = textRenderer.getHeight(keyScale);
+        float titleHeight = textRenderer.textHeight(titleScale, null);
+        float subHeight = textRenderer.textHeight(subScale, null);
+        float keyHeight = textRenderer.textHeight(keyScale, null);
         float lineGap = 2.0f;
         float totalTextHeight = titleHeight + lineGap + subHeight;
         float titleY = (bounds.height() - totalTextHeight) / 2.0f;
@@ -86,7 +87,7 @@ public class ModuleRow {
         Color subColor = MD3Theme.lerp(MD3Theme.TEXT_SECONDARY, MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180), selectedProgress);
         Color keyColor = MD3Theme.isLightTheme() ? MD3Theme.TEXT_SECONDARY : MD3Theme.TEXT_MUTED;
         String keybindText = formatKeybind(module.module().getKeyBind());
-        float keyWidth = textRenderer.getWidth(keybindText, keyScale);
+        float keyWidth = textRenderer.textWidth(keybindText, keyScale, null);
         UiRect localToggleBounds = toggleBounds.relativeTo(bounds);
         float clipRight = localToggleBounds.x() - KEYBIND_TOGGLE_GAP;
         float clipWidth = Math.min(keyWidth, KEYBIND_CLIP_WIDTH);
@@ -107,13 +108,14 @@ public class ModuleRow {
         } else {
             float overflow = keyWidth - clipWidth;
             float scrollOffset = -overflow * marqueePhase();
-            scope.marqueeText(keybindText, clipX + scrollOffset, keyY, keyScale, keyColor, keybindClip);
+            scope.marqueeText(keybindText, clipX + scrollOffset, keyY, keyScale,
+                    EpsilonUiTheme.lumin(keyColor), keybindClip);
         }
     }
 
-    public boolean hasOverflowingKeybind(TextRenderer textRenderer) {
+    public boolean hasOverflowingKeybind(UiTextMetrics textRenderer) {
         float keyScale = 0.6f;
-        float keyWidth = textRenderer.getWidth(formatKeybind(module.module().getKeyBind()), keyScale);
+        float keyWidth = textRenderer.textWidth(formatKeybind(module.module().getKeyBind()), keyScale, null);
         return keyWidth > KEYBIND_CLIP_WIDTH + 0.5f;
     }
 

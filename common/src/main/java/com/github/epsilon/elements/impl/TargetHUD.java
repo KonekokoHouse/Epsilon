@@ -1,22 +1,21 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.epsilon.graphics.LuminTexture;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.graphics.shaders.BlurShader;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.combat.KillAura;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.animation.Easing;
-import com.google.common.base.Suppliers;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -26,7 +25,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Supplier;
 
 public class TargetHUD extends HudModule {
 
@@ -74,7 +72,6 @@ public class TargetHUD extends HudModule {
     private float visibilityProgress = 0.0f;
     private long lastVisibilityUpdateMs = 0L;
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
 
     @Override
     public void render(DeltaTracker deltaTracker) {
@@ -88,7 +85,6 @@ public class TargetHUD extends HudModule {
         float animationScale = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f));
         if (target == null || animationScale <= 0.01f) return;
 
-        TextRenderer textRenderer = textRendererSupplier.get();
         UiTree.Scope scope = renderScope();
 
         LivingEntity liveTarget = resolveTarget();
@@ -119,7 +115,7 @@ public class TargetHUD extends HudModule {
         float contentAreaHeight = Math.max(1.0f, innerHeight - pad - barHeight);
         float headSize = Math.min(contentAreaHeight, Math.max(26.0f * panelScale, panelHeight * 0.6f) * 1.05f);
         float textScale = Math.max(0.45f, nameSize.getValue().floatValue() / 14.0f) * panelScale;
-        float textHeight = textRenderer.getHeight(textScale);
+        float textHeight = textHeight(textScale, "epsilon-default");
         float contentRowHeight = Math.max(headSize, textHeight);
         float contentBlockHeight = contentRowHeight + pad + barHeight;
         float contentStartY = this.y + pad + Math.max(0.0f, (innerHeight - contentBlockHeight) / 2.0f);
@@ -133,7 +129,7 @@ public class TargetHUD extends HudModule {
         String healthText = String.format(Locale.ROOT, "%.1f", displayedHealth);
 
         float contentY = headY + 2.0f * panelScale;
-        float healthTextWidth = textRenderer.getWidth(healthText, textScale);
+        float healthTextWidth = textWidth(healthText, textScale, "epsilon-default");
         float healthTextX = this.x + panelWidth - pad - healthTextWidth;
         float equipmentY = contentY + textHeight + 2.8f * panelScale;
         float equipmentScale = EQUIPMENT_ITEM_SCALE * panelScale;
@@ -174,39 +170,42 @@ public class TargetHUD extends HudModule {
         float finalHeadRadius = scaledHeadRadius * headDamageScale;
         Color headTintColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale);
 
-        BlurShader.INSTANCE.render(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, blurStrength.getValue().floatValue());
+        MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+                new UiRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight),
+                scaledCornerRadius, blurStrength.getValue().floatValue()));
 
         if (drawShadow.getValue()) {
-            scope.shadow(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, shadowBlur.getValue().floatValue() * animationScale, withAlpha(shadowColor.getValue(), animationScale));
+            scope.shadow(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, shadowBlur.getValue().floatValue() * animationScale, lumin(withAlpha(shadowColor.getValue(), animationScale)));
         }
 
-        scope.roundRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, withAlpha(backgroundColor.getValue(), animationScale));
-        scope.roundRect(scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barBackgroundColor.getValue(), animationScale));
+        scope.roundRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight, scaledCornerRadius, lumin(withAlpha(backgroundColor.getValue(), animationScale)));
+        scope.roundRect(scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius, lumin(withAlpha(barBackgroundColor.getValue(), animationScale)));
         if (delayBar.getValue() && delayedHealth > displayedHealth) {
-            scope.roundRect(scaledPadX, scaledBarY, scaledDelayedBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(delayBarColor.getValue(), animationScale));
+            scope.roundRect(scaledPadX, scaledBarY, scaledDelayedBarWidth, scaledBarHeight, scaledBarRadius, lumin(withAlpha(delayBarColor.getValue(), animationScale)));
         }
-        scope.roundRect(scaledPadX, scaledBarY, scaledFilledBarWidth, scaledBarHeight, scaledBarRadius, withAlpha(barFillColor.getValue(), animationScale));
+        scope.roundRect(scaledPadX, scaledBarY, scaledFilledBarWidth, scaledBarHeight, scaledBarRadius, lumin(withAlpha(barFillColor.getValue(), animationScale)));
         if (!(target instanceof AbstractClientPlayer)) {
-            scope.roundRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize, finalHeadRadius, withAlpha(tintColor(new Color(80, 80, 80, 200), damageProgress), animationScale));
+            scope.roundRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize, finalHeadRadius, lumin(withAlpha(tintColor(new Color(80, 80, 80, 200), damageProgress), animationScale)));
         }
 
         if (barOutline.getValue() && scaledBarOutlineWidth > 0.0f) {
             scope.outline(
                     scaledPadX, scaledBarY, scaledBarWidth, scaledBarHeight, scaledBarRadius,
-                    scaledBarOutlineWidth, withAlpha(barOutlineColor.getValue(), animationScale)
+                    scaledBarOutlineWidth, lumin(withAlpha(barOutlineColor.getValue(), animationScale))
             );
         }
 
         if (target instanceof AbstractClientPlayer player) {
-            AbstractTexture abstractTexture = mc.getTextureManager().getTexture(player.getSkin().body().texturePath());
-            scope.playerHead(
-                    new LuminTexture(abstractTexture.getTexture(), abstractTexture.getTextureView(), abstractTexture.getSampler()),
-                    finalHeadX, finalHeadY, finalHeadSize, finalHeadRadius, headTintColor
-            );
+            String skin = player.getSkin().body().texturePath().toString();
+            UiRect head = new UiRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize);
+            scope.texture(skin, head, finalHeadRadius, finalHeadRadius, finalHeadRadius, finalHeadRadius,
+                    8f / 64f, 8f / 64f, 16f / 64f, 16f / 64f, lumin(headTintColor));
+            scope.texture(skin, head, finalHeadRadius, finalHeadRadius, finalHeadRadius, finalHeadRadius,
+                    40f / 64f, 8f / 64f, 48f / 64f, 16f / 64f, lumin(headTintColor));
         }
 
-        scope.text(nameText, scaledTextStartX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
-        scope.text(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, withAlpha(textColor.getValue(), animationScale));
+        scope.text(nameText, scaledTextStartX, scaledContentY, scaledTextScale, lumin(withAlpha(textColor.getValue(), animationScale)));
+        scope.text(healthText, scaledHealthTextX, scaledContentY, scaledTextScale, lumin(withAlpha(textColor.getValue(), animationScale)));
     }
 
     @Override
@@ -215,7 +214,6 @@ public class TargetHUD extends HudModule {
         LivingEntity target = renderedTarget;
         if (target == null || visibilityProgress <= 0.01f) return;
 
-        TextRenderer textRenderer = textRendererSupplier.get();
         float panelWidth = width.getValue().floatValue() * panelScale;
         float panelHeight = height.getValue().floatValue() * panelScale;
         float animationScale = Easing.EASE_OUT_SINE.getFunction().apply(Mth.clamp(visibilityProgress, 0.0f, 1.0f));
@@ -225,7 +223,7 @@ public class TargetHUD extends HudModule {
         float contentAreaHeight = Math.max(1.0f, innerHeight - pad - barHeight);
         float headSize = Math.min(contentAreaHeight, Math.max(26.0f * panelScale, panelHeight * 0.6f) * 1.05f);
         float textScale = Math.max(0.45f, nameSize.getValue().floatValue() / 14.0f) * panelScale;
-        float textHeight = textRenderer.getHeight(textScale);
+        float textHeight = textHeight(textScale, "epsilon-default");
         float contentRowHeight = Math.max(headSize, textHeight);
         float contentBlockHeight = contentRowHeight + pad + barHeight;
         float contentStartY = this.y + pad + Math.max(0.0f, (innerHeight - contentBlockHeight) / 2.0f);
@@ -273,9 +271,12 @@ public class TargetHUD extends HudModule {
     }
 
     private void drawItem(GuiGraphicsExtractor graphics, LivingEntity owner, ItemStack stack, float x, float y, float scale, int seed) {
+        float guiX = (float) UiCoordinateMapper.toMinecraftX(x);
+        float guiY = (float) UiCoordinateMapper.toMinecraftY(y);
+        float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
         graphics.pose().pushMatrix();
-        graphics.pose().translate(x + scale, y + scale);
-        graphics.pose().scale(scale, scale);
+        graphics.pose().translate(guiX + guiScale, guiY + guiScale);
+        graphics.pose().scale(guiScale, guiScale);
         graphics.item(owner, stack, 0, 0, seed);
         graphics.pose().popMatrix();
     }

@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.popup;
 
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
@@ -11,8 +11,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 /**
  * 面板弹窗宿主。
  * <p>
- * 它负责管理当前活动弹窗、提供相对面板的居中布局能力，并把弹窗的 extract/flush
- * 生命周期接入主屏幕统一的渲染批次提交流程。
+ * 它负责管理当前活动弹窗、提供相对面板的居中布局能力，并把弹窗内容接入主屏幕的渲染批次。
  */
 public class PanelPopupHost {
 
@@ -78,9 +77,7 @@ public class PanelPopupHost {
     }
 
     /**
-     * 让当前弹窗提取本帧 UI，并写入宿主内部批次。
-     * <p>
-     * 该阶段只做 extract，不直接 flush；真正的输出由主屏幕统一调度。
+     * 让当前弹窗提取本帧 UI，并写入 scene 当前批次。
      */
     public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         if (activePopup == null) {
@@ -91,12 +88,7 @@ public class PanelPopupHost {
         pendingBatch = renderBatch;
     }
 
-    /**
-     * 输出当前活动弹窗的批次内容。
-     * <p>
-     * 若弹窗拥有额外的 viewport 或私有缓冲，也会在其 {@link Popup#flush(UiRenderBatch)}
-     * 中一并处理。
-     */
+    /** 保留给尚未迁移到 runtime scene 帧生命周期的共享调用方。 */
     public void flush() {
         if (pendingBatch == null || activePopup == null) {
             return;
@@ -186,8 +178,7 @@ public class PanelPopupHost {
     /**
      * 面板弹窗协议。
      * <p>
-     * 弹窗需要实现几何区域、UI 提取以及输入事件处理；普通图元进入主 scene，
-     * 私有视口缓冲或原版物品预览等额外输出可以在 {@link #flush(UiRenderBatch)} 中补充。
+     * 弹窗需要实现几何区域、UI 提取以及输入事件处理；普通图元进入主 scene。
      */
     public interface Popup extends AutoCloseable {
         /**
@@ -206,11 +197,7 @@ public class PanelPopupHost {
          */
         void extractGui(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick);
 
-        /**
-         * 输出弹窗的私有附加缓冲。
-         * <p>
-         * 普通弹窗图元已经写入主 scene，会在帧尾统一 flush；这里仅留给 viewport、物品预览等私有资源做补充输出。
-         */
+        /** 保留给需要显式提交附加缓冲的兼容实现。 */
         default void flush(UiRenderBatch renderBatch) {
         }
 

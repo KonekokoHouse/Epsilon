@@ -2,21 +2,22 @@ package com.github.epsilon.modules.impl;
 
 import com.github.epsilon.assets.i18n.EpsilonLanguage;
 import com.github.epsilon.assets.i18n.EpsilonLanguageManager;
-import com.github.epsilon.graphics.text.ttf.TtfFontLoader;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
 import com.github.epsilon.gui.screen.MainMenuScreen;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.TextureCacheHolder;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
+import com.github.epsilon.utils.client.FontPathResolver;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
 import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -85,6 +86,9 @@ public class ClientSetting extends Module {
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgNotification = settingGroup("Notification");
+    private MinecraftUiRuntime2612 fontRuntime;
+    private FontMode appliedFontMode;
+    private String appliedCustomFont;
 
     @SuppressWarnings("unused")
     private final ButtonSetting openHUDEditor = buttonSetting("Open HUD Editor", () -> mc.setScreen(HudEditorScreen.INSTANCE));
@@ -111,7 +115,6 @@ public class ClientSetting extends Module {
 
     public final BoolSetting i18nFallback = boolSetting("I18n Fallback", true, _ -> {
         TranslateHolder.INSTANCE.refresh();
-        TextureCacheHolder.INSTANCE.clearCache();
     }).group(sgGeneral);
 
     public final BoolSetting fontAntiAliasing = boolSetting("Font Anti Aliasing", true).group(sgGeneral);
@@ -121,6 +124,9 @@ public class ClientSetting extends Module {
     public final StringSetting customFont = stringSetting("Custom Font", "", () -> font.is(FontMode.Custom))
             .group(sgGeneral)
             .applyWhenRelease();
+
+    public final DoubleSetting fontScale = doubleSetting("Font Scale", 1.0, 0.5, 2.0, 0.05,
+            this::applyUiTextScaleMultiplier).group(sgGeneral).applyWhenRelease();
 
     public final IntSetting fontGlyphsPerFrame = intSetting("Font Glyphs Per Frame", 8, 1, 64, 1, this::applyFontGlyphUploadBudget).group(sgGeneral);
 
@@ -183,13 +189,59 @@ public class ClientSetting extends Module {
         return fontGlyphsPerFrame.getValue();
     }
 
+    public double getFontScale() {
+        return fontScale.getValue();
+    }
+
     public void syncFontGlyphUploadBudget() {
         applyFontGlyphUploadBudget(fontGlyphsPerFrame.getValue());
     }
 
-    private void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
-        int budget = Math.max(1, maxGlyphsPerFrame);
-        TtfFontLoader.setMaxGlyphUploadsPerFrame(budget);
+    /** 向 MC-owned UI runtime 注册 Epsilon 字体，并应用当前业务字体选择。 */
+    public synchronized void configureMinecraftFonts(MinecraftUiRuntime2612 runtime) {
+        runtime.setProjectionScale(getScale());
+        runtime.setUiTextScaleMultiplier((float) getFontScale());
+        runtime.setFontGlyphsPerFrame(getFontGlyphsPerFrame());
+        if (fontRuntime != runtime) {
+            runtime.registerFont("epsilon-default", Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
+            runtime.registerFont("epsilon-icons", Identifier.fromNamespaceAndPath("epsilon", "fonts/icons.ttf"));
+            runtime.registerFont("epsilon-jura-light", Identifier.fromNamespaceAndPath("epsilon", "fonts/jura-light.ttf"));
+            runtime.registerFont("epsilon-osakachips", Identifier.fromNamespaceAndPath("epsilon", "fonts/osakachips.ttf"));
+            fontRuntime = runtime;
+            appliedFontMode = null;
+            appliedCustomFont = null;
+        }
+
+        FontMode nextMode = font.getValue();
+        String nextCustom = customFont.getValue();
+        if (nextMode == appliedFontMode && (nextMode != FontMode.Custom
+                || java.util.Objects.equals(nextCustom, appliedCustomFont))) return;
+        appliedFontMode = nextMode;
+        appliedCustomFont = nextCustom;
+        if (nextMode == FontMode.Custom) {
+            try {
+                runtime.useCustomDefaultFont("epsilon-custom", FontPathResolver.resolve(nextCustom));
+                // Lumin 延迟创建字体 loader；在这里强制读取和解析，确保失败仍处于回退边界内。
+                runtime.font("epsilon-custom");
+                return;
+            } catch (RuntimeException failure) {
+                com.github.epsilon.Constants.LOGGER.error(
+                        "Failed to load custom Lumin font '{}'; using Epsilon default", nextCustom, failure);
+            }
+        }
+        runtime.useDefaultFont("epsilon-default");
+    }
+
+    private synchronized void applyFontGlyphUploadBudget(int maxGlyphsPerFrame) {
+        if (fontRuntime != null) {
+            fontRuntime.setFontGlyphsPerFrame(Math.max(1, maxGlyphsPerFrame));
+        }
+    }
+
+    private synchronized void applyUiTextScaleMultiplier(double multiplier) {
+        if (fontRuntime != null) {
+            fontRuntime.setUiTextScaleMultiplier((float) multiplier);
+        }
     }
 
     public boolean snapRotation() {

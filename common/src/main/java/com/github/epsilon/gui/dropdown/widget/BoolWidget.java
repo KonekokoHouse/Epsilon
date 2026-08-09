@@ -1,8 +1,8 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.sound.SoundKey;
@@ -58,7 +58,7 @@ public class BoolWidget extends SettingWidget<BoolSetting> {
         float hoverProgress = hoverAnim.getValue();
 
         scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
-                (getHeight() - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+                (getHeight() - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE, null)) * 0.5f,
                 DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         scope.roundRect(sx, sy, sw, sh, SWITCH_RADIUS, MD3Theme.switchTrack(t));

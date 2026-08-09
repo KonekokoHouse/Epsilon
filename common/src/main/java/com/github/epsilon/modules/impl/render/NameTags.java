@@ -4,16 +4,21 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render2DEvent;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.RectRenderer;
-import com.github.epsilon.graphics.renderers.TextRenderer;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.WorldToScreen;
-import com.google.common.base.Suppliers;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
+import com.github.slmpc.lumingraphics.ui.scene.UiScene;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -25,7 +30,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Supplier;
 
 public class NameTags extends Module {
 
@@ -36,16 +40,16 @@ public class NameTags extends Module {
     public static final NameTags INSTANCE = new NameTags();
 
     private final DoubleSetting range = doubleSetting("Range", 64.0, 4.0, 128.0, 1.0);
+    public final BoolSetting vanillaNameTags = boolSetting("Vanilla Name Tags", false);
     private final DoubleSetting scale = doubleSetting("Scale", 0.4, 0.1, 1.5, 0.1);
     private final DoubleSetting heightOffset = doubleSetting("Height Offset", 0.15, -0.5, 1.0, 0.05);
     private final ColorSetting backgroundColor = colorSetting("Background Color", TAG_BACKGROUND);
-    public final BoolSetting vanillaNameTags = boolSetting("Vanilla Name Tags", false);
     private final BoolSetting showEquipment = boolSetting("Show Equipment", true);
     private final BoolSetting showHands = boolSetting("Show Hands", true, showEquipment::getValue);
     private final BoolSetting showSelf = boolSetting("Show Self", true);
 
-    private final Supplier<TextRenderer> textRendererSupplier = Suppliers.memoize(TextRenderer::create);
-    private final Supplier<RectRenderer> rectRendererSupplier = Suppliers.memoize(RectRenderer::create);
+    private UiScene scene;
+    private MinecraftUiRuntime2612 sceneRuntime;
 
     private NameTags() {
         super("Name Tags", Category.RENDER);
@@ -63,7 +67,9 @@ public class NameTags extends Module {
         double maxDistanceSq = range.getValue() * range.getValue();
         float textScale = scale.getValue().floatValue();
 
-        TextRenderer textRenderer = textRendererSupplier.get();
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        UiTextMetrics textMetrics = runtime.textMetrics();
 
         for (Player target : mc.level.players()) {
             if (!target.isAlive() || target.isSpectator()) continue;
@@ -88,14 +94,14 @@ public class NameTags extends Module {
 
             float padding = 3.0f * renderScale;
             float lineGap = 2.0f * renderScale;
-            float lineHeight = textRenderer.getHeight(renderScale);
+            float lineHeight = textMetrics.textHeight(renderScale, null);
             float itemScale = getItemScale(renderScale);
             float itemSize = 16.0f * itemScale;
             float itemGap = 2.0f * renderScale;
             float itemRowWidth = equipmentItems.isEmpty() ? 0.0f : equipmentItems.size() * itemSize + Math.max(0, equipmentItems.size() - 1) * itemGap;
-            float headerWidth = textRenderer.getWidth(nameText, renderScale)
-                    + textRenderer.getWidth(" ", renderScale)
-                    + textRenderer.getWidth(healthText, renderScale);
+            float headerWidth = textMetrics.textWidth(nameText, renderScale, null)
+                    + textMetrics.textWidth(" ", renderScale, null)
+                    + textMetrics.textWidth(healthText, renderScale, null);
 
             float boxWidth = headerWidth + padding * 2.0f;
             float boxHeight = padding * 2.0f + lineHeight;
@@ -125,38 +131,63 @@ public class NameTags extends Module {
     @EventHandler
     private void renderTagList(Render2DEvent.Level event) {
         GuiGraphicsExtractor graphics = event.getGuiGraphics();
-        RectRenderer rectRenderer = rectRendererSupplier.get();
-        TextRenderer textRenderer = textRendererSupplier.get();
+        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
+        UiTextMetrics textMetrics = runtime.textMetrics();
 
-        for (TagDrawData data : drawList) {
-            rectRenderer.addRect(data.x, data.y, data.width, data.height, backgroundColor.getValue());
+        UiTree tree = UiTree.build(scope -> {
+            for (TagDrawData data : drawList) {
+                scope.rect(data.x, data.y, data.width, data.height, backgroundColor.getValue());
 
-            float headerY = data.y + data.padding;
+                float headerY = data.y + data.padding;
 
-            float nameWidth = textRenderer.getWidth(data.nameText, data.scale);
-            float spaceWidth = textRenderer.getWidth(" ", data.scale);
-            float healthWidth = textRenderer.getWidth(data.healthText, data.scale);
-            float headerWidth = nameWidth + spaceWidth + healthWidth;
-            float headerX = data.x + (data.width - headerWidth) * 0.5f;
+                float nameWidth = textMetrics.textWidth(data.nameText, data.scale, null);
+                float spaceWidth = textMetrics.textWidth(" ", data.scale, null);
+                float healthWidth = textMetrics.textWidth(data.healthText, data.scale, null);
+                float headerWidth = nameWidth + spaceWidth + healthWidth;
+                float headerX = data.x + (data.width - headerWidth) * 0.5f;
 
-            textRenderer.addText(data.nameText, headerX, headerY, data.scale, data.isFriend ? FRIEND_COLOR : NAME_COLOR);
-            textRenderer.addText(data.healthText, headerX + nameWidth + spaceWidth, headerY, data.scale, data.healthColor);
+                scope.text(data.nameText, headerX, headerY, data.scale, data.isFriend ? FRIEND_COLOR : NAME_COLOR);
+                scope.text(data.healthText, headerX + nameWidth + spaceWidth, headerY, data.scale, data.healthColor);
 
-            if (!data.equipmentItems.isEmpty()) {
-                float itemRowWidth = data.equipmentItems.size() * data.itemSize + Math.max(0, data.equipmentItems.size() - 1) * data.itemGap;
-                float itemX = data.x + data.width * 0.5f - itemRowWidth * 0.5f;
-                float itemY = data.y - data.itemRowGap - data.itemSize;
-                for (ItemStack stack : data.equipmentItems) {
-                    drawItem(graphics, stack, itemX, itemY, data.itemScale);
-                    itemX += data.itemSize + data.itemGap;
+                if (!data.equipmentItems.isEmpty()) {
+                    float itemRowWidth = data.equipmentItems.size() * data.itemSize + Math.max(0, data.equipmentItems.size() - 1) * data.itemGap;
+                    float itemX = data.x + data.width * 0.5f - itemRowWidth * 0.5f;
+                    float itemY = data.y - data.itemRowGap - data.itemSize;
+                    for (ItemStack stack : data.equipmentItems) {
+                        drawItem(graphics, stack, itemX, itemY, data.itemScale);
+                        itemX += data.itemSize + data.itemGap;
+                    }
                 }
             }
+        });
+
+        if (tree.nodeCount() > 0) {
+            runtime.render(scene(runtime), UiLayer.CONTENT, tree);
         }
-
-        rectRenderer.drawAndClear();
-        textRenderer.drawAndClear();
-
         drawList.clear();
+    }
+
+    @Override
+    protected void onDisable() {
+        drawList.clear();
+        releaseScene();
+    }
+
+    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+        if (scene == null || sceneRuntime != runtime) {
+            releaseScene();
+            scene = runtime.createScene(EpsilonUiTheme.lumin());
+            sceneRuntime = runtime;
+        }
+        return scene;
+    }
+
+    private void releaseScene() {
+        UiScene previous = scene;
+        scene = null;
+        sceneRuntime = null;
+        if (previous != null) previous.close();
     }
 
     private List<ItemStack> buildEquipmentItems(Player player) {
@@ -190,9 +221,12 @@ public class NameTags extends Module {
     }
 
     private void drawItem(GuiGraphicsExtractor graphics, ItemStack stack, float x, float y, float scale) {
+        float guiX = (float) UiCoordinateMapper.toMinecraftX(x);
+        float guiY = (float) UiCoordinateMapper.toMinecraftY(y);
+        float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
         graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(scale, scale);
+        graphics.pose().translate(guiX, guiY);
+        graphics.pose().scale(guiScale, guiScale);
         graphics.item(stack, 0, 0);
         graphics.itemDecorations(mc.font, stack, 0, 0);
         graphics.pose().popMatrix();

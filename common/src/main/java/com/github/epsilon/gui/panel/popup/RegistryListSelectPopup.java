@@ -1,12 +1,13 @@
 package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.LuminRenderSystem;
-import com.github.epsilon.graphics.renderers.TextRenderer;
-import com.github.epsilon.gui.lib.UiRect;
-import com.github.epsilon.gui.lib.UiTree;
-import com.github.epsilon.gui.lib.render.UiContentBuffer;
-import com.github.epsilon.gui.lib.render.UiRenderBatch;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
+import com.github.slmpc.lumingraphics.ui.render.UiContentBuffer;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
 import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
@@ -69,9 +70,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final Consumer<T> removeFn;
     private final List<T> allEntries;
     private final List<Category<T>> categories;
-    private final UiContentBuffer availableBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
-    private final UiContentBuffer selectedBuffer = new UiContentBuffer(EpsilonUiTheme.INSTANCE);
-    private final TextRenderer textRenderer = TextRenderer.create();
+    private final UiTextMetrics textRenderer = MinecraftUiRuntime2612.current().textMetrics();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState availableScrollBarDrag = new ScrollBarDragState();
     private final ScrollBarDragState selectedScrollBarDrag = new ScrollBarDragState();
@@ -288,8 +287,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
-        availableBuffer.clear();
-        selectedBuffer.clear();
+        UiContentBuffer availableBuffer = new UiContentBuffer(renderBatch);
+        UiContentBuffer selectedBuffer = new UiContentBuffer(renderBatch);
         itemPreviews.clear();
         List<T> available = filteredAvailable();
         List<T> selected = filteredSelected();
@@ -304,19 +303,19 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             UiRect animatedViewport = getViewport(popupY);
             scope.pushAbsolute(animatedBounds, popup -> {
                 popup.popupCard(animatedBounds.atOrigin(), MD3Theme.CARD_RADIUS, MD3Theme.POPUP_SHADOW_BLUR,
-                        MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress)),
-                        MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255));
+                        EpsilonUiTheme.lumin(MD3Theme.withAlpha(MD3Theme.SHADOW, (int) (MD3Theme.POPUP_SHADOW_ALPHA * progress))),
+                        EpsilonUiTheme.lumin(MD3Theme.withAlpha(MD3Theme.SURFACE_CONTAINER_LOW, 255)));
 
                 float titleY = centeredTextY(6.0f, TITLE_HEIGHT, 0.68f);
                 float summaryScale = 0.52f;
                 String summary = setting.getValue().size() + EpsilonTranslations.Gui.LIST_SELECTED.getTranslatedName();
                 popup.text(setting.getDisplayName(), PADDING, titleY, 0.68f, MD3Theme.TEXT_PRIMARY);
-                popup.text(summary, animatedBounds.width() - PADDING - textRenderer.getWidth(summary, summaryScale),
+                popup.text(summary, animatedBounds.width() - PADDING - textRenderer.textWidth(summary, summaryScale, null),
                         centeredTextY(6.0f, TITLE_HEIGHT, summaryScale), summaryScale, MD3Theme.TEXT_MUTED);
                 popup.input(searchBounds.relativeTo(animatedBounds), true, 1.0f, 8.0f,
                         query.isEmpty() ? EpsilonTranslations.Gui.LIST_SEARCH.getTranslatedName() : query, 0.54f,
-                        query.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY,
-                        query.length(), MD3Theme.PRIMARY, null, 0.0f, null);
+                        EpsilonUiTheme.lumin(query.isEmpty() ? MD3Theme.TEXT_MUTED : MD3Theme.TEXT_PRIMARY),
+                        query.length(), EpsilonUiTheme.lumin(MD3Theme.PRIMARY), null, 0.0f, null);
                 IMEFocusHelper.updateCursorPos(searchBounds.x() + 8.0f, searchBounds.y() + 4.0f);
 
                 // Category tabs
@@ -329,7 +328,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                     float catTabX = leftX;
                     for (int ci = -1; ci < categories.size(); ci++) {
                         String catName = ci < 0 ? EpsilonTranslations.Gui.LIST_ALL.getTranslatedName() : categories.get(ci).name();
-                        float catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f;
+                        float catTextW = textRenderer.textWidth(catName, 0.44f, null) + 10.0f;
                         boolean catSelected = selectedCategory == ci;
                         UiRect catBounds = new UiRect(catTabX, catY, catTextW, CATEGORY_TAB_HEIGHT);
                         popup.roundRect(catBounds.x() - animatedBounds.x(), catBounds.y() - animatedBounds.y(),
@@ -337,7 +336,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                                 catSelected ? MD3Theme.PRIMARY : MD3Theme.SURFACE_CONTAINER_HIGH);
                         popup.text(catName,
                                 catBounds.x() - animatedBounds.x() + 5.0f,
-                                catBounds.y() - animatedBounds.y() + (catBounds.height() - textRenderer.getHeight(0.44f)) * 0.5f,
+                                catBounds.y() - animatedBounds.y() + (catBounds.height() - textRenderer.textHeight(0.44f, null)) * 0.5f,
                                 0.44f, catSelected ? MD3Theme.ON_PRIMARY : MD3Theme.TEXT_SECONDARY);
                         catTabX += catTextW + CATEGORY_TAB_GAP;
                     }
@@ -387,12 +386,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @Override
-    public void flush(UiRenderBatch renderBatch) {
-        availableBuffer.flushAndClear();
-        selectedBuffer.flushAndClear();
-    }
-
-    @Override
     public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (iconProvider == null || itemPreviews.isEmpty()) return;
         guiGraphics.nextStratum();
@@ -422,7 +415,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             float catTabX = bounds.x() + PADDING;
             for (int ci = -1; ci < categories.size(); ci++) {
                 String catName = ci < 0 ? EpsilonTranslations.Gui.LIST_ALL.getTranslatedName() : categories.get(ci).name();
-                float catTextW = textRenderer.getWidth(catName, 0.44f) + 10.0f;
+                float catTextW = textRenderer.textWidth(catName, 0.44f, null) + 10.0f;
                 if (event.x() >= catTabX && event.x() <= catTabX + catTextW
                         && event.y() >= catY && event.y() <= catY + CATEGORY_TAB_HEIGHT) {
                     selectedCategory = ci;
@@ -686,13 +679,13 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private float centeredTextY(float boxY, float boxHeight, float scale) {
-        return boxY + (boxHeight - textRenderer.getHeight(scale)) * 0.5f;
+        return boxY + (boxHeight - textRenderer.textHeight(scale, null)) * 0.5f;
     }
 
     private void drawItemPreview(GuiGraphicsExtractor guiGraphics, ItemPreview preview) {
         if (preview.stack().isEmpty()) return;
         float scale = preview.size() / 16.0f;
-        float guiScale = (float) (scale * LuminRenderSystem.getGuiScale() / mc.getWindow().getGuiScale());
+        float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
         float guiX = toMinecraftGuiX(preview.x());
         float guiY = toMinecraftGuiY(preview.y());
         guiGraphics.pose().pushMatrix();
@@ -702,12 +695,12 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         guiGraphics.pose().popMatrix();
     }
 
-    private float toMinecraftGuiX(float epsilonX) {
-        return (float) LuminRenderSystem.toMinecraftGuiX(epsilonX);
+    private float toMinecraftGuiX(float uiX) {
+        return (float) UiCoordinateMapper.toMinecraftX(uiX);
     }
 
-    private float toMinecraftGuiY(float epsilonY) {
-        return (float) LuminRenderSystem.toMinecraftGuiY(epsilonY);
+    private float toMinecraftGuiY(float uiY) {
+        return (float) UiCoordinateMapper.toMinecraftY(uiY);
     }
 
     private int toMinecraftGuiXInt(float epsilonX) {
@@ -720,9 +713,6 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
 
     @Override
     public void close() {
-        availableBuffer.close();
-        selectedBuffer.close();
-        textRenderer.close();
         itemPreviews.clear();
     }
 

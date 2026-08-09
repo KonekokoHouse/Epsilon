@@ -1,9 +1,8 @@
 package com.github.epsilon.graphics;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import com.github.epsilon.graphics.text.StaticFontLoader;
+import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.epsilon.holders.RenderTargetHolder;
-import com.github.epsilon.holders.RendererHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.render.ScissorUtils;
 import com.mojang.blaze3d.ProjectionType;
@@ -17,7 +16,6 @@ import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.client.renderer.Projection;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.client.renderer.rendertype.TextureTransform;
-import net.minecraft.client.renderer.state.WindowRenderState;
 import net.minecraft.resources.Identifier;
 import org.joml.*;
 
@@ -47,8 +45,6 @@ public class LuminRenderSystem {
         guiProjectionMatrixBuffer.close();
         ShaderUniforms.closeAll();
         RenderTargetHolder.INSTANCE.destroyAll();
-        RendererHolder.INSTANCE.destroyAll();
-        StaticFontLoader.destroyDefault();
     }
 
     public static <T extends DynamicUniformStorage.DynamicUniform> GpuBufferSlice writeDynamicUniform(
@@ -83,13 +79,11 @@ public class LuminRenderSystem {
     }
 
     public static float getScaledWidth() {
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
-        return (float) (windowState.width / getGuiScale());
+        return UiCoordinateMapper.getProjectionWidth();
     }
 
     public static float getScaledHeight() {
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
-        return (float) (windowState.height / getGuiScale());
+        return UiCoordinateMapper.getProjectionHeight();
     }
 
     public static int getScaledWidthInt() {
@@ -101,19 +95,19 @@ public class LuminRenderSystem {
     }
 
     public static double toEpsilonMouseX(double mouseX) {
-        return mouseX * mc.getWindow().getGuiScale() / getGuiScale();
+        return UiCoordinateMapper.toProjectionX(mouseX);
     }
 
     public static double toEpsilonMouseY(double mouseY) {
-        return mouseY * mc.getWindow().getGuiScale() / getGuiScale();
+        return UiCoordinateMapper.toProjectionY(mouseY);
     }
 
     public static double toMinecraftGuiX(double epsilonX) {
-        return epsilonX * getGuiScale() / mc.getWindow().getGuiScale();
+        return UiCoordinateMapper.toMinecraftX(epsilonX);
     }
 
     public static double toMinecraftGuiY(double epsilonY) {
-        return epsilonY * getGuiScale() / mc.getWindow().getGuiScale();
+        return UiCoordinateMapper.toMinecraftY(epsilonY);
     }
 
     public static int toEpsilonMouseX(int mouseX) {
@@ -125,7 +119,7 @@ public class LuminRenderSystem {
     }
 
     public static MouseButtonEvent toEpsilonMouseEvent(MouseButtonEvent event) {
-        return new MouseButtonEvent(toEpsilonMouseX(event.x()), toEpsilonMouseY(event.y()), event.buttonInfo());
+        return UiCoordinateMapper.toProjectionEvent(event);
     }
 
     public static ScissorRect toFramebufferScissor(float x, float y, float width, float height) {

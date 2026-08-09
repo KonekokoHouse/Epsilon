@@ -1,9 +1,10 @@
 package com.github.epsilon.gui.dropdown.widget;
 
 import com.github.epsilon.gui.dropdown.DropdownTheme;
-import com.github.epsilon.gui.lib.UiTextMetrics;
-import com.github.epsilon.gui.lib.UiTree;
+import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
+import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.MD3Theme;
+import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
@@ -65,7 +66,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
         float t = openAnim.getValue();
 
         scope.text(setting.getDisplayName(), DropdownTheme.SETTING_PADDING_X,
-                (DropdownTheme.SETTING_HEIGHT - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE)) * 0.5f,
+                (DropdownTheme.SETTING_HEIGHT - textMetrics.textHeight(DropdownTheme.SETTING_TEXT_SCALE, null)) * 0.5f,
                 DropdownTheme.SETTING_TEXT_SCALE, DropdownTheme.settingLabel());
 
         float previewX = width - DropdownTheme.SETTING_PADDING_X - DropdownTheme.COLOR_PREVIEW_SIZE;
@@ -126,8 +127,12 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
     private void drawSaturationBrightnessPalette(UiTree.Scope scope, float localX, float localY, float width, float height, Color hueColor) {
         scope.rect(localX - 1.0f, localY - 1.0f, width + 2.0f, height + 2.0f, new Color(255, 255, 255, 45));
-        scope.rectGradient(localX, localY, width, height, Color.WHITE, Color.WHITE, hueColor, hueColor);
-        scope.rectGradient(localX, localY, width, height, new Color(0, 0, 0, 0), Color.BLACK, Color.BLACK, new Color(0, 0, 0, 0));
+        scope.rectGradient(localX, localY, width, height,
+                EpsilonUiTheme.lumin(Color.WHITE), EpsilonUiTheme.lumin(Color.WHITE),
+                EpsilonUiTheme.lumin(hueColor), EpsilonUiTheme.lumin(hueColor));
+        scope.rectGradient(localX, localY, width, height,
+                EpsilonUiTheme.lumin(new Color(0, 0, 0, 0)), EpsilonUiTheme.lumin(Color.BLACK),
+                EpsilonUiTheme.lumin(Color.BLACK), EpsilonUiTheme.lumin(new Color(0, 0, 0, 0)));
     }
 
     private void drawSliderPicker(UiTree.Scope scope, float centerX, float localY, float height) {
@@ -149,7 +154,7 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
 
     private void drawChannelRow(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, Channel channel, float rowY, float alphaProgress) {
         int value = getChannelValue(channel);
-        float textY = rowY + (CHANNEL_ROW_HEIGHT - textMetrics.textHeight(CHANNEL_TEXT_SCALE)) * 0.5f;
+        float textY = rowY + (CHANNEL_ROW_HEIGHT - textMetrics.textHeight(CHANNEL_TEXT_SCALE, null)) * 0.5f;
         Color textColor = MD3Theme.withAlpha(DropdownTheme.settingLabel(), (int) (DropdownTheme.settingLabel().getAlpha() * alphaProgress));
         scope.text(channel.label, DropdownTheme.SETTING_PADDING_X, textY, CHANNEL_TEXT_SCALE, textColor);
 
@@ -182,7 +187,9 @@ public class ColorWidget extends SettingWidget<ColorSetting> {
             case BLUE -> new Color(current.getRed(), current.getGreen(), 255);
             case ALPHA -> new Color(current.getRed(), current.getGreen(), current.getBlue(), 255);
         };
-        scope.roundRectHorizontalGradient(trackX, trackY, trackW, trackH, trackH * 0.5f, MD3Theme.withAlpha(start, (int) (start.getAlpha() * alphaProgress)), MD3Theme.withAlpha(end, (int) (end.getAlpha() * alphaProgress)));
+        scope.roundRectHorizontalGradient(trackX, trackY, trackW, trackH, trackH * 0.5f,
+                EpsilonUiTheme.lumin(MD3Theme.withAlpha(start, (int) (start.getAlpha() * alphaProgress))),
+                EpsilonUiTheme.lumin(MD3Theme.withAlpha(end, (int) (end.getAlpha() * alphaProgress))));
     }
 
     @Override

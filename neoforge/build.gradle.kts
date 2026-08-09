@@ -28,6 +28,16 @@ val extractedSodiumNeoForgeModJar = files(
 ).builtBy(extractSodiumNeoForgeModJar)
 
 dependencies {
+    implementation(libs.lumin.graphics.mc.neoforge.v2612) {
+        isTransitive = false
+    }
+    jarJar(libs.lumin.graphics.mc.neoforge.v2612) {
+        isTransitive = false
+        version { strictly("[${libs.versions.lumin.graphics.get()}]") }
+    }
+    compileOnly(libs.lumin.graphics.mc.bridge.contract) {
+        isTransitive = false
+    }
     compileOnly(libs.sodium.neoforge)
     sodiumNeoForgeOuterJar(libs.sodium.neoforge)
     compileOnly(extractedSodiumNeoForgeModJar)
