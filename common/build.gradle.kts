@@ -63,15 +63,6 @@ dependencies {
     annotationProcessor(libs.mixinextras.common)
     compileOnly(libs.asm)
     compileOnly(libs.jsr305)
-    testImplementation(libs.gson)
-    testImplementation(libs.junit.jupiter)
-    testImplementation(libs.lumin.graphics.ui)
-    testImplementation(files(configurations.compileClasspath))
-    testRuntimeOnly(libs.junit.platform.launcher)
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
 }
 
 configurations {

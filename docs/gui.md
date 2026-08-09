@@ -61,11 +61,10 @@ HUD 尺寸通过 `setBounds()` 更新，移动通过 anchor/move API 完成。HU
 
 ## 验证
 
-GUI 迁移约束由 `PublicLuminScreenMigrationTest`、坐标测试、字体 shader 测试和菜单文本测试覆盖。
-修改 Screen、HUD 或 layer 顺序后至少运行：
+仓库当前不维护 GUI 测试源码。修改 Screen、HUD 或 layer 顺序后至少运行双平台编译，并启动受影响的
+客户端路径检查坐标、字体、scissor 和 painter order：
 
 ```powershell
-.\gradlew.bat :common:test
 .\gradlew.bat :common:compileJava
 .\gradlew.bat :fabric:compileJava :neoforge:compileJava
 ```

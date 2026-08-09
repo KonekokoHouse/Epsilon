@@ -87,7 +87,6 @@ Minecraft image、view 和 native handle 不由 Epsilon 关闭。
 ## 验证
 
 ```powershell
-.\gradlew.bat :common:test
 .\gradlew.bat :common:compileJava
 .\gradlew.bat :fabric:compileJava :neoforge:compileJava
 ```

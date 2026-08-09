@@ -3,7 +3,7 @@
 ## 版本来源
 
 - `gradle.properties`：Epsilon 自身的 `version`、`group`、`mod_id`、`mod_name`、`mod_author`、许可证和描述。
-- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium、LuminGraphics、PrismRHI 和测试库版本。
+- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium、LuminGraphics 和 PrismRHI 版本。
 - 根 `build.gradle.kts`：将版本目录中的值映射为各子项目使用的 Gradle 属性。
 - `common/build.gradle.kts`：生成 `com.github.epsilon.BuildConfig`，当前暴露 `MOD_ID` 和有效构建版本。
 
@@ -35,7 +35,6 @@ Windows PowerShell：
 
 ```powershell
 .\gradlew.bat buildRelease --stacktrace
-.\gradlew.bat :common:test
 .\gradlew.bat :fabric:runClient
 .\gradlew.bat :neoforge:runClient
 ```
@@ -48,11 +47,10 @@ CI 使用 Java 25 执行：
 
 构建产物包括 Fabric 与 NeoForge Jar，并由 CI 上传。
 
-## 测试
+## 验证
 
-可脱离游戏运行的渲染契约、坐标、配置、解析、排序或数学逻辑优先在
-`common/src/test/java` 添加 JUnit 5 测试。构建验证范围必须遵循
-[`AGENTS.md`](../../AGENTS.md) 的提交前检查。
+仓库当前不维护测试源码或测试专用依赖。修改后使用与范围匹配的编译、`buildRelease` 和客户端运行检查；
+具体验证范围遵循 [`AGENTS.md`](../../AGENTS.md) 的提交前检查。
 
 ## 外部资料
 
