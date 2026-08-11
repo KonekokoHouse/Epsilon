@@ -17,6 +17,10 @@ dependencies {
     compileOnly(libs.lumin.graphics.mc.bridge.contract) {
         isTransitive = false
     }
+    implementation(libs.luaj.jse)
+    jarJar(libs.luaj.jse) {
+        version { strictly("[${libs.versions.luaj.get()}]") }
+    }
 }
 
 neoForge {

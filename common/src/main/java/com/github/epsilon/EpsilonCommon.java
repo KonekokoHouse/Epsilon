@@ -10,6 +10,7 @@ import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.scripting.lua.LuaScriptManager;
 
 import java.lang.invoke.MethodHandles;
 
@@ -33,12 +34,15 @@ public class EpsilonCommon {
         // 初始化 Render3DScheduler 里的 RenderPipeline
         Render3DScheduler.init();
 
+        LuaScriptManager.INSTANCE.init(ClientSetting.INSTANCE.luaScriptsEnabled.getValue());
+
         // 生成空的 i18n 文件
         I18NFileGenerator.generate("epsilon-empty-i18n.json");
 
         // 添加一个退出游戏时候的钩子
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ConfigHolder.INSTANCE.saveNow();
+            LuaScriptManager.INSTANCE.close();
             Constants.LOGGER.info(Constants.NAME + " saved config on shutdown.");
         }));
 

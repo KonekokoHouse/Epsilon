@@ -1,0 +1,24 @@
+{
+  "_value": "Lua 示例套件",
+  "description": "Epsilon 多模块 Lua 示例",
+  "groups": {
+    "general": {
+      "_value": "常规"
+    }
+  },
+  "settings": {
+    "opacity": {
+      "_value": "不透明度"
+    }
+  },
+  "modules": {
+    "hud-sample": {
+      "_value": "HUD 示例",
+      "description": "通过共享 HUD UiTree 绘制"
+    },
+    "world-box": {
+      "_value": "世界方框",
+      "description": "向 Render3DScheduler 提交方框"
+    }
+  }
+}

@@ -34,6 +34,8 @@ dependencies {
     compileOnly(libs.mixinextras.common)
     annotationProcessor(libs.mixinextras.common)
     compileOnly(libs.asm)
+    implementation(libs.luaj.jse)
+    include(libs.luaj.jse)
     compileOnly(libs.jsr305)
 }
 

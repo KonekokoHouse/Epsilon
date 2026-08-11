@@ -46,7 +46,8 @@ Module/HUD 的 Setting、SettingGroup 和 Enum 选项使用所属组件 key 的�
 新增或删除 Module、HUD、Setting、SettingGroup、Enum 选项或 `EpsilonTranslations` 后：
 
 1. 调用 `I18NFileGenerator.generate("epsilon-empty-i18n.json")` 生成当前模板。可传 owner ID 只生成一个 owner。
-2. 运行 `python scripts/complete_i18n.py` 补全、排序并删除多余 key；需要时使用 `--owner epsilon` 或 `--owner <addonId>`。
+2. 运行 `uv run scripts/dev.py i18n` 补全、排序并删除多余 key；需要时追加 `--owner epsilon` 或
+   `--owner <addonId>`。全部参数见 [`scripts/README.md`](../../scripts/README.md)。
 3. 人工填写新增翻译。
 4. 校验 `en_us.json` 与 `zh_cn.json` 都是合法嵌套 object，并通过完整构建验证资源处理。
 

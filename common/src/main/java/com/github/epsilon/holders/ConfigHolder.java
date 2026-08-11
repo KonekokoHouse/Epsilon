@@ -8,6 +8,9 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.Setting;
+import com.github.epsilon.settings.SettingHost;
+import com.github.epsilon.settings.ExternalConfigState;
+import com.github.epsilon.scripting.lua.LuaScriptManager;
 import com.github.epsilon.settings.impl.*;
 import com.google.gson.*;
 
@@ -18,7 +21,9 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -58,6 +63,8 @@ public class ConfigHolder {
     private List<String> cachedConfigNames = List.of();
     private long configListCacheExpiresAt;
     private boolean configListCacheDirty = true;
+    private final Map<String, SettingHost> externalSettingHosts = new LinkedHashMap<>();
+    private boolean initialized;
 
     private ConfigHolder() {
     }
@@ -69,6 +76,7 @@ public class ConfigHolder {
             activeConfigName = resolveStoredActiveConfigName();
             ensureConfigExists(activeConfigName);
             loadActiveConfigSnapshot();
+            initialized = true;
         } catch (Exception e) {
             Constants.LOGGER.error("初始化配置失败", e);
         }
@@ -124,6 +132,54 @@ public class ConfigHolder {
         for (Module module : modules) {
             if (module != null) applyModuleFromDisk(module, getActiveConfigStorageDir());
         }
+    }
+
+    /**
+     * 载入 Module 配置但延迟启用，用于外部运行时完成注册前的 staging。
+     *
+     * @return 配置中记录的启用状态；文件不存在或值无效时返回 fallbackEnabled
+     */
+    public synchronized boolean hydrateModule(Module module, boolean fallbackEnabled) {
+        Objects.requireNonNull(module, "module");
+        return applyModuleFromDisk(module, getActiveConfigStorageDir(), false, fallbackEnabled);
+    }
+
+    public synchronized ExternalSettingHostRegistration registerExternalSettingHost(String ownerId, SettingHost host) {
+        validateExternalOwnerId(ownerId);
+        Objects.requireNonNull(host, "host");
+        if (externalSettingHosts.putIfAbsent(ownerId, host) != null) {
+            throw new IllegalArgumentException("重复动态 SettingHost ID: " + ownerId);
+        }
+        if (initialized) {
+            applySettingHostFromDisk(ownerId, host, getActiveConfigStorageDir());
+            loadExternalState(ownerId, host, getActiveConfigStorageDir());
+        }
+        return new ExternalSettingHostRegistration(ownerId, host);
+    }
+
+    public synchronized ExternalSettingHostRegistration replaceExternalSettingHost(
+            String ownerId, SettingHost expected, SettingHost replacement) {
+        validateExternalOwnerId(ownerId);
+        Objects.requireNonNull(expected, "expected");
+        Objects.requireNonNull(replacement, "replacement");
+        if (externalSettingHosts.get(ownerId) != expected) {
+            throw new IllegalStateException("动态 SettingHost 已变化: " + ownerId);
+        }
+        externalSettingHosts.put(ownerId, replacement);
+        return new ExternalSettingHostRegistration(ownerId, replacement);
+    }
+
+    public synchronized void applyToExternalSettingHost(String ownerId, SettingHost host) {
+        validateExternalOwnerId(ownerId);
+        Objects.requireNonNull(host, "host");
+        applySettingHostFromDisk(ownerId, host, getActiveConfigStorageDir());
+    }
+
+    /** 在 staging 阶段静默载入动态 SettingHost，避免候选 runtime 提前发布 changed callback。 */
+    public synchronized void hydrateExternalSettingHost(String ownerId, SettingHost host) {
+        validateExternalOwnerId(ownerId);
+        Objects.requireNonNull(host, "host");
+        applySettingHostFromDisk(ownerId, host, getActiveConfigStorageDir(), true);
     }
 
     public synchronized void saveNow() {
@@ -278,23 +334,32 @@ public class ConfigHolder {
 
     private Path getModuleFile(Path configStorageDir, Module module) {
         String addonId = module.getAddonId() != null ? module.getAddonId() : "unknown";
-        return configStorageDir.resolve(addonId).resolve(module.getName() + ".json");
+        return configStorageDir.resolve(addonId).resolve(module.getModuleId() + ".json");
     }
 
     private void applyModuleFromDisk(Module module, Path configStorageDir) {
+        applyModuleFromDisk(module, configStorageDir, true, module.isEnabled());
+    }
+
+    private boolean applyModuleFromDisk(Module module, Path configStorageDir, boolean applyEnabled, boolean fallbackEnabled) {
         Path file = getModuleFile(configStorageDir, module);
-        if (!Files.exists(file)) return;
+        if (!Files.exists(file) && !Objects.equals(module.getModuleId(), module.getName())) {
+            Path legacyFile = file.getParent().resolve(module.getName() + ".json");
+            if (Files.exists(legacyFile)) file = legacyFile;
+        }
+        if (!Files.exists(file)) return fallbackEnabled;
         try {
             String json = Files.readString(file, StandardCharsets.UTF_8);
             JsonElement parsed = JsonParser.parseString(json);
-            if (parsed == null || !parsed.isJsonObject()) return;
-            applyModuleObject(module, parsed.getAsJsonObject());
+            if (parsed == null || !parsed.isJsonObject()) return fallbackEnabled;
+            return applyModuleObject(module, parsed.getAsJsonObject(), applyEnabled, fallbackEnabled);
         } catch (Exception e) {
             Constants.LOGGER.error("读取模块配置失败: {}", file, e);
+            return fallbackEnabled;
         }
     }
 
-    private void applyModuleObject(Module module, JsonObject moduleObj) {
+    private boolean applyModuleObject(Module module, JsonObject moduleObj, boolean applyEnabled, boolean fallbackEnabled) {
         if (moduleObj.has("keyBind") && moduleObj.get("keyBind").isJsonPrimitive()) {
             try {
                 module.setKeyBind(moduleObj.get("keyBind").getAsInt());
@@ -339,7 +404,8 @@ public class ConfigHolder {
                 if (setting != null && setting.isRootSetting()) {
                     continue;
                 }
-                applySetting(setting, settingsObj.get(setting.getName()));
+                if (applyEnabled) applySetting(setting, settingsObj.get(setting.getName()));
+                else applySettingSilently(setting, settingsObj.get(setting.getName()));
             }
         }
 
@@ -350,9 +416,12 @@ public class ConfigHolder {
         }
 
         // Apply enabled state last so onEnable/onDisable fire after settings are set
+        boolean enabled = fallbackEnabled;
         if (moduleObj.has("enabled") && moduleObj.get("enabled").isJsonPrimitive()) {
-            module.setEnabled(moduleObj.get("enabled").getAsBoolean());
+            enabled = moduleObj.get("enabled").getAsBoolean();
+            if (applyEnabled) module.setEnabled(enabled);
         }
+        return enabled;
     }
 
     private void saveModuleToDisk(Module module, Path configStorageDir) throws IOException {
@@ -458,11 +527,15 @@ public class ConfigHolder {
     }
 
     private JsonObject buildAddonObject(EpsilonAddon addon) {
+        return buildSettingHostObject(addon.getSettings());
+    }
+
+    private JsonObject buildSettingHostObject(List<Setting<?>> settings) {
         JsonObject obj = new JsonObject();
         obj.addProperty("version", CONFIG_VERSION);
 
         JsonObject settingsObj = new JsonObject();
-        for (Setting<?> setting : addon.getSettings()) {
+        for (Setting<?> setting : settings) {
             if (setting == null) continue;
             JsonElement value = serializeSetting(setting);
             if (value != null) settingsObj.add(setting.getName(), value);
@@ -470,6 +543,46 @@ public class ConfigHolder {
         obj.add("settings", settingsObj);
 
         return obj;
+    }
+
+    private Path getExternalSettingHostFile(Path configStorageDir, String ownerId) {
+        return configStorageDir.resolve(ownerId).resolve(ADDON_SETTINGS_FILE_NAME);
+    }
+
+    private void applySettingHostFromDisk(String ownerId, SettingHost host, Path configStorageDir) {
+        applySettingHostFromDisk(ownerId, host, configStorageDir, false);
+    }
+
+    private void applySettingHostFromDisk(String ownerId, SettingHost host, Path configStorageDir, boolean silent) {
+        Path file = getExternalSettingHostFile(configStorageDir, ownerId);
+        if (!Files.exists(file)) return;
+        try {
+            JsonElement parsed = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8));
+            JsonObject settingsObj = parsed != null && parsed.isJsonObject()
+                    ? getObject(parsed.getAsJsonObject(), "settings") : null;
+            if (settingsObj == null) return;
+            for (Setting<?> setting : host.mutableSettings()) {
+                if (setting != null) {
+                    if (silent) applySettingSilently(setting, settingsObj.get(setting.getName()));
+                    else applySetting(setting, settingsObj.get(setting.getName()));
+                }
+            }
+        } catch (Exception e) {
+            Constants.LOGGER.error("读取动态 SettingHost 配置失败: {} ({})", ownerId, file, e);
+        }
+    }
+
+    private void saveExternalSettingHostToDisk(String ownerId, SettingHost host, Path configStorageDir) throws IOException {
+        if (host.mutableSettings().isEmpty()) return;
+        Path file = getExternalSettingHostFile(configStorageDir, ownerId);
+        try {
+            Files.createDirectories(file.getParent());
+            Files.writeString(file, gson.toJson(buildSettingHostObject(host.mutableSettings())), StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            Constants.LOGGER.error("写入动态 SettingHost 配置失败: {} ({})", ownerId, file, e);
+            throw e;
+        }
     }
 
     private synchronized void saveFriends(Path configStorageDir) throws IOException {
@@ -515,6 +628,7 @@ public class ConfigHolder {
         if (setting instanceof IntSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof DoubleSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof StringSetting s) return new JsonPrimitive(s.getValue());
+        if (setting instanceof ChoiceSetting s) return new JsonPrimitive(s.getValue());
         if (setting instanceof StringListSetting s) {
             JsonArray array = new JsonArray();
             for (String str : s.getValue()) array.add(str);
@@ -557,6 +671,7 @@ public class ConfigHolder {
             else if (setting instanceof IntSetting s) s.setUnboundedValue(value.getAsInt());
             else if (setting instanceof DoubleSetting s) s.setUnboundedValue(value.getAsDouble());
             else if (setting instanceof StringSetting s) s.setValue(value.getAsString());
+            else if (setting instanceof ChoiceSetting s) s.setValue(value.getAsString());
             else if (setting == ClientSetting.INSTANCE.guiMode && setting instanceof EnumSetting s)
                 s.setModeSilently(value.getAsString());
             else if (setting instanceof EnumSetting s) s.setMode(value.getAsString());
@@ -683,11 +798,15 @@ public class ConfigHolder {
         List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
         resetModulesToDefaults(modules);
         resetAddonsToDefaults(addons);
-        applyToModules(modules);
+        resetExternalSettingHostsToDefaults();
         applyToAddons(addons);
+        applyToExternalSettingHosts();
+        applyToModules(modules);
+        loadExternalSettingHostStates();
         loadFriends(getActiveConfigStorageDir());
         loadRootClientSettings();
         ClientSetting.INSTANCE.syncFontGlyphUploadBudget();
+        LuaScriptManager.INSTANCE.onActiveConfigChanged();
     }
 
     private void saveActiveConfigSnapshot() throws IOException {
@@ -702,8 +821,93 @@ public class ConfigHolder {
             }
         }
         saveAddonsToDisk(AddonHolder.INSTANCE.getAddons(), configStorageDir);
+        for (Map.Entry<String, SettingHost> entry : externalSettingHosts.entrySet()) {
+            saveExternalSettingHostToDisk(entry.getKey(), entry.getValue(), configStorageDir);
+            saveExternalState(entry.getKey(), entry.getValue(), configStorageDir);
+        }
         saveFriends(configStorageDir);
         saveRootClientSettings();
+    }
+
+    private void resetExternalSettingHostsToDefaults() {
+        for (SettingHost host : externalSettingHosts.values()) {
+            for (Setting<?> setting : host.mutableSettings()) {
+                if (setting != null) setting.reset();
+            }
+        }
+    }
+
+    private void applyToExternalSettingHosts() {
+        Path storageDir = getActiveConfigStorageDir();
+        for (Map.Entry<String, SettingHost> entry : externalSettingHosts.entrySet()) {
+            applySettingHostFromDisk(entry.getKey(), entry.getValue(), storageDir);
+        }
+    }
+
+    private void loadExternalSettingHostStates() {
+        Path storageDir = getActiveConfigStorageDir();
+        for (Map.Entry<String, SettingHost> entry : externalSettingHosts.entrySet()) {
+            loadExternalState(entry.getKey(), entry.getValue(), storageDir);
+        }
+    }
+
+    private static void loadExternalState(String ownerId, SettingHost host, Path configStorageDir) {
+        if (!(host instanceof ExternalConfigState state)) return;
+        try {
+            state.loadExternalState(configStorageDir.resolve(ownerId));
+        } catch (RuntimeException failure) {
+            Constants.LOGGER.error("读取动态 SettingHost 状态失败: {}", ownerId, failure);
+        }
+    }
+
+    private static void saveExternalState(String ownerId, SettingHost host, Path configStorageDir) {
+        if (!(host instanceof ExternalConfigState state)) return;
+        try {
+            state.saveExternalState(configStorageDir.resolve(ownerId));
+        } catch (RuntimeException failure) {
+            Constants.LOGGER.error("写入动态 SettingHost 状态失败: {}", ownerId, failure);
+        }
+    }
+
+    private static void validateExternalOwnerId(String ownerId) {
+        if (ownerId == null || ownerId.isBlank() || ownerId.contains("/") || ownerId.contains("\\") || ownerId.equals("..")) {
+            throw new IllegalArgumentException("无效动态 SettingHost ID: " + ownerId);
+        }
+    }
+
+    public final class ExternalSettingHostRegistration implements AutoCloseable {
+        private final String ownerId;
+        private final SettingHost host;
+        private boolean closed;
+
+        private ExternalSettingHostRegistration(String ownerId, SettingHost host) {
+            this.ownerId = ownerId;
+            this.host = host;
+        }
+
+        public String ownerId() {
+            return ownerId;
+        }
+
+        public SettingHost settingHost() {
+            return host;
+        }
+
+        @Override
+        public void close() {
+            synchronized (ConfigHolder.this) {
+                if (closed) return;
+                closed = true;
+                if (externalSettingHosts.get(ownerId) != host) return;
+                try {
+                    if (initialized) saveExternalSettingHostToDisk(ownerId, host, getActiveConfigStorageDir());
+                    if (initialized) saveExternalState(ownerId, host, getActiveConfigStorageDir());
+                } catch (IOException e) {
+                    Constants.LOGGER.error("注销动态 SettingHost 前保存失败: {}", ownerId, e);
+                }
+                externalSettingHosts.remove(ownerId);
+            }
+        }
     }
 
     private void loadRootClientSettings() {
@@ -712,9 +916,11 @@ public class ConfigHolder {
                 String json = Files.readString(rootSettingsFile, StandardCharsets.UTF_8);
                 JsonElement parsed = JsonParser.parseString(json);
                 if (parsed != null && parsed.isJsonObject()) {
-                    JsonElement value = parsed.getAsJsonObject().get("showWelcomeScreen");
-                    if (value != null && value.isJsonPrimitive()) {
-                        ClientSetting.INSTANCE.showWelcomeScreen.setValueSilently(value.getAsBoolean());
+                    JsonObject root = parsed.getAsJsonObject();
+                    for (Setting<?> setting : ClientSetting.INSTANCE.getSettings()) {
+                        if (setting != null && setting.isRootSetting()) {
+                            applySettingSilently(setting, root.get(rootSettingKey(setting)));
+                        }
                     }
                 }
                 return;
@@ -734,13 +940,63 @@ public class ConfigHolder {
         try {
             ensureRootDirectories();
             JsonObject root = new JsonObject();
-            root.addProperty("showWelcomeScreen", ClientSetting.INSTANCE.showWelcomeScreen.getValue());
+            for (Setting<?> setting : ClientSetting.INSTANCE.getSettings()) {
+                if (setting == null || !setting.isRootSetting()) continue;
+                JsonElement value = serializeSetting(setting);
+                if (value != null) root.add(rootSettingKey(setting), value);
+            }
             Files.writeString(rootSettingsFile, gson.toJson(root), StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING,
                     StandardOpenOption.WRITE);
         } catch (Exception e) {
             Constants.LOGGER.error("写入根配置失败", e);
+        }
+    }
+
+    private static String rootSettingKey(Setting<?> setting) {
+        if (setting == ClientSetting.INSTANCE.showWelcomeScreen) return "showWelcomeScreen";
+        String[] words = setting.getName().trim().split(" +");
+        if (words.length == 0) return setting.getName();
+        StringBuilder key = new StringBuilder(words[0].toLowerCase(java.util.Locale.ROOT));
+        for (int index = 1; index < words.length; index++) {
+            String word = words[index].toLowerCase(java.util.Locale.ROOT);
+            if (!word.isEmpty()) key.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+        }
+        return key.toString();
+    }
+
+    private static void applySettingSilently(Setting<?> setting, JsonElement value) {
+        if (value == null) return;
+        try {
+            if (value.isJsonArray()) {
+                List<String> values = new ArrayList<>();
+                for (JsonElement element : value.getAsJsonArray()) {
+                    if (element != null && element.isJsonPrimitive()) values.add(element.getAsString());
+                }
+                if (setting instanceof StringListSetting typed) typed.setValueSilently(values);
+                else if (setting instanceof RegistryListSetting<?> typed) typed.setIds(values);
+                return;
+            }
+            if (!value.isJsonPrimitive()) return;
+            if (setting instanceof BoolSetting typed) typed.setValueSilently(value.getAsBoolean());
+            else if (setting instanceof KeybindSetting typed) typed.setValueSilently(value.getAsInt());
+            else if (setting instanceof IntSetting typed) {
+                int parsed = value.getAsInt();
+                typed.setValueSilently(Math.max(typed.getMin(), Math.min(typed.getMax(), parsed)));
+            } else if (setting instanceof DoubleSetting typed) {
+                double parsed = value.getAsDouble();
+                typed.setValueSilently(Math.max(typed.getMin(), Math.min(typed.getMax(), parsed)));
+            } else if (setting instanceof StringSetting typed) typed.setValueSilently(value.getAsString());
+            else if (setting instanceof ChoiceSetting typed) typed.setValueSilently(value.getAsString());
+            else if (setting instanceof EnumSetting typed) typed.setModeSilently(value.getAsString());
+            else if (setting instanceof ColorSetting typed) {
+                Color color = new Color(value.getAsInt(), true);
+                if (!typed.isAllowAlpha()) color = new Color(color.getRed(), color.getGreen(), color.getBlue());
+                typed.setValueSilently(color);
+            }
+        } catch (Exception exception) {
+            Constants.LOGGER.warn("忽略无效 root setting '{}': {}", setting.getName(), value);
         }
     }
 

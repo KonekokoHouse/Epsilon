@@ -59,6 +59,19 @@ The declarative UI layer built on Lumin is documented in the [Epsilon GUI Librar
 ./gradlew runClient
 ```
 
+## 🐍 Python Development Tools
+
+Repository maintenance and code generation scripts use [uv](https://docs.astral.sh/uv/). Python dependencies are
+declared in `pyproject.toml` and locked by `uv.lock`:
+
+```bash
+uv sync --frozen
+uv run scripts/dev.py verify
+```
+
+See the [scripts documentation](scripts/README.md) for the complete code generation workflow, generated files, discovery
+rules, and test commands.
+
 ## 🙏 Credits
 
 Special thanks to the following projects. See [NOTICE](NOTICE.md) for third-party code attributions.

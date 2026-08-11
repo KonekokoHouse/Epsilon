@@ -1,6 +1,7 @@
 package com.github.epsilon.gui.panel.view.settings;
 
-import com.github.epsilon.addon.EpsilonAddon;
+import com.github.epsilon.gui.addon.AddonPanelEntry;
+import com.github.epsilon.gui.addon.AddonPanelEntryRegistry;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
@@ -16,7 +17,7 @@ import com.github.epsilon.gui.panel.utils.ScrollBarDragState;
 import com.github.epsilon.gui.panel.utils.ScrollBarUtils;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import com.github.epsilon.holders.AddonHolder;
+import com.github.slmpc.lumingraphics.text.icon.IconChars;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
@@ -37,7 +38,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     private static final float LIST_ROW_HEIGHT = 34.0f;
     private static final float DETAIL_GAP = 8.0f;
     private static final float DETAIL_INFO_MIN_HEIGHT = 54.0f;
-    private static final float DETAIL_INFO_MAX_HEIGHT = 92.0f;
+    private static final float DETAIL_INFO_MAX_HEIGHT = 120.0f;
     private static final float DETAIL_SETTINGS_MIN_HEIGHT = 96.0f;
 
     private final PanelState state;
@@ -50,6 +51,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     private final ScrollBarDragState listScrollBarDrag = new ScrollBarDragState();
     private final ScrollBarDragState detailScrollBarDrag = new ScrollBarDragState();
     private final List<AddonRowEntry> rowEntries = new ArrayList<>();
+    private final List<ActionEntry> actionEntries = new ArrayList<>();
 
     private UiRect bounds;
     private float lastListScroll = Float.NaN;
@@ -91,8 +93,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             markDirty();
         }
 
-        List<EpsilonAddon> addons = AddonHolder.INSTANCE.getAddons();
-        EpsilonAddon selectedAddon = resolveSelectedAddon(addons);
+        List<AddonPanelEntry> addons = AddonPanelEntryRegistry.INSTANCE.entries();
+        AddonPanelEntry selectedAddon = resolveSelectedAddon(addons);
         List<Setting<?>> selectedSettings = selectedAddon == null
                 ? List.of()
                 : selectedAddon.getSettings().stream().filter(Setting::isAvailable).toList();
@@ -126,7 +128,8 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             contentState.beginRebuild();
             settingListController.prepareLayout(settingOwnerKey, selectedSettings);
             rowEntries.clear();
-            List<String> addonIds = addons.stream().map(EpsilonAddon::getAddonId).toList();
+            actionEntries.clear();
+            List<String> addonIds = addons.stream().map(AddonPanelEntry::getAddonId).toList();
             rowHoverAnimations.keySet().removeIf(id -> !addonIds.contains(id));
             rowSelectionAnimations.keySet().removeIf(id -> !addonIds.contains(id));
         }
@@ -149,7 +152,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                     return;
                 }
                 float rowY = listViewport.y() - state.getAddonListScroll();
-                for (EpsilonAddon addon : addons) {
+                for (AddonPanelEntry addon : addons) {
                     UiRect rowBounds = new UiRect(listViewport.x(), rowY, listRowWidth, LIST_ROW_HEIGHT);
                     rowEntries.add(new AddonRowEntry(addon.getAddonId(), rowBounds));
 
@@ -233,7 +236,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         }
 
         UiRect listViewport = getListViewport(getListPanelBounds(bounds));
-        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
+        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonPanelEntryRegistry.INSTANCE.entries()));
 
         if (listScrollBarDrag.mouseClicked(event.x(), event.y(), listViewport, state.getAddonListScroll(), state.getMaxAddonListScroll())) {
             float newScroll = listScrollBarDrag.mouseDragged(event.y(), listViewport, state.getMaxAddonListScroll());
@@ -263,6 +266,14 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                 markDirty();
                 return true;
             }
+        }
+
+        for (ActionEntry entry : actionEntries) {
+            if (!entry.bounds().contains(event.x(), event.y()) || !entry.enabled()) continue;
+            if (entry.type() == ActionType.TOGGLE) entry.addon().toggle();
+            else entry.addon().reload();
+            markDirty();
+            return true;
         }
 
         if (settingListController.mouseClicked(event, isDoubleClick, settingsViewport, (row, rowBounds, clickEvent, doubleClick) -> {
@@ -302,7 +313,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             return true;
         }
         if (detailScrollBarDrag.isDragging()) {
-            UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
+            UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonPanelEntryRegistry.INSTANCE.entries()));
             float newScroll = detailScrollBarDrag.mouseDragged(event.y(), settingsViewport, state.getMaxAddonDetailScroll());
             if (newScroll >= 0.0f) {
                 state.setAddonDetailScroll(newScroll);
@@ -328,7 +339,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             markDirty();
             return true;
         }
-        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonHolder.INSTANCE.getAddons()));
+        UiRect settingsViewport = getDetailSettingsViewport(getDetailPanelBounds(bounds, getListPanelBounds(bounds)), resolveSelectedAddon(AddonPanelEntryRegistry.INSTANCE.entries()));
         if (settingsViewport.contains(mouseX, mouseY)) {
             detailScrollVelocity -= (float) scrollY * 24.0f;
             markDirty();
@@ -380,7 +391,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
 
     @Override
     public void onActivated() {
-        resolveSelectedAddon(AddonHolder.INSTANCE.getAddons());
+        resolveSelectedAddon(AddonPanelEntryRegistry.INSTANCE.entries());
         markDirty();
     }
 
@@ -397,7 +408,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         markDirty();
     }
 
-    private EpsilonAddon resolveSelectedAddon(List<EpsilonAddon> addons) {
+    private AddonPanelEntry resolveSelectedAddon(List<AddonPanelEntry> addons) {
         if (addons.isEmpty()) {
             if (!state.getSelectedAddonId().isEmpty()) {
                 state.setSelectedAddonId("");
@@ -405,13 +416,13 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             return null;
         }
 
-        for (EpsilonAddon addon : addons) {
+        for (AddonPanelEntry addon : addons) {
             if (Objects.equals(addon.getAddonId(), state.getSelectedAddonId())) {
                 return addon;
             }
         }
 
-        EpsilonAddon fallback = addons.getFirst();
+        AddonPanelEntry fallback = addons.getFirst();
         state.setSelectedAddonId(fallback.getAddonId());
         return fallback;
     }
@@ -423,7 +434,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                 detailPanel.roundRect(0.0f, 0.0f, detailPanelBounds.width(), detailPanelBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER));
     }
 
-    private void buildAddonListRow(UiTree.Scope scope, EpsilonAddon addon, UiRect rowBounds, float hoverProgress, float selectedProgress) {
+    private void buildAddonListRow(UiTree.Scope scope, AddonPanelEntry addon, UiRect rowBounds, float hoverProgress, float selectedProgress) {
         Color baseColor = MD3Theme.rowSurface(hoverProgress);
         Color rowColor = selectedProgress > 0.01f
                 ? MD3Theme.lerp(baseColor, MD3Theme.PRIMARY_CONTAINER, selectedProgress * 0.45f)
@@ -433,16 +444,21 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         float titleScale = 0.64f;
         float subScale = 0.50f;
         float textX = MD3Theme.ROW_CONTENT_INSET;
+        if (addon.isLua()) {
+            scope.text(IconChars.CODE, textX, 8.0f, 0.70f,
+                    selectedProgress > 0.2f ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_SECONDARY, "epsilon-icons");
+            textX += 15.0f;
+        }
         float titleY = 7.0f;
         scope.text(trimToWidth(addon.getDisplayName(), titleScale, rowBounds.width() - 14.0f), textX, titleY, titleScale, selectedProgress > 0.2f ? MD3Theme.ON_PRIMARY_CONTAINER : MD3Theme.TEXT_PRIMARY);
-        scope.text(trimToWidth(addon.getAddonId(), subScale, rowBounds.width() - 14.0f), textX, titleY + 12.0f, subScale, selectedProgress > 0.2f ? MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180) : MD3Theme.TEXT_MUTED);
+        scope.text(trimToWidth(addon.getDisplayId(), subScale, rowBounds.width() - 14.0f), textX, titleY + 12.0f, subScale, selectedProgress > 0.2f ? MD3Theme.withAlpha(MD3Theme.ON_PRIMARY_CONTAINER, 180) : MD3Theme.TEXT_MUTED);
     }
 
-    private void buildAddonInfo(UiTree.Scope scope, EpsilonAddon addon, UiRect infoBounds) {
+    private void buildAddonInfo(UiTree.Scope scope, AddonPanelEntry addon, UiRect infoBounds) {
         scope.pushAbsolute(infoBounds, info -> buildAddonInfoContent(info, addon, infoBounds));
     }
 
-    private void buildAddonInfoContent(UiTree.Scope scope, EpsilonAddon addon, UiRect infoBounds) {
+    private void buildAddonInfoContent(UiTree.Scope scope, AddonPanelEntry addon, UiRect infoBounds) {
         scope.roundRect(0.0f, 0.0f, infoBounds.width(), infoBounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
 
         float titleScale = 0.72f;
@@ -455,7 +471,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         scope.text(trimToWidth(addon.getDisplayName(), titleScale, infoBounds.width() - 96.0f), textX, titleY, titleScale, MD3Theme.TEXT_PRIMARY);
 
         String version = addon.getVersion().isBlank() ? "-" : addon.getVersion();
-        String metaLine = EpsilonTranslations.Gui.ADDON_INFO_ID.getTranslatedName() + ": " + addon.getAddonId()
+        String metaLine = EpsilonTranslations.Gui.ADDON_INFO_ID.getTranslatedName() + ": " + addon.getDisplayId()
                 + "  •  " + EpsilonTranslations.Gui.ADDON_INFO_VERSION.getTranslatedName() + ": " + version;
         float metaY = titleY + titleHeight + 3.0f;
         scope.text(trimToWidth(metaLine, labelScale, infoBounds.width() - 18.0f), textX, metaY, labelScale, MD3Theme.TEXT_SECONDARY);
@@ -470,7 +486,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
             scope.text(trimToWidth(addon.getDescription(), descScale, infoBounds.width() - 18.0f), textX, detailY, descScale, MD3Theme.TEXT_PRIMARY);
         }
 
-        String chipText = addon.getRegisteredModules().size() + " " + EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName();
+        String chipText = addon.getModuleCount() + " " + EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName();
         float chipScale = 0.48f;
         float chipWidth = textRenderer.textWidth(chipText, chipScale, null) + 10.0f;
         float chipHeight = 14.0f;
@@ -482,6 +498,37 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                 chipY + (chipHeight - textRenderer.textHeight(chipScale, null)) / 2.0f,
                 chipScale,
                 MD3Theme.ON_PRIMARY_CONTAINER);
+
+        if (addon.isLua()) {
+            float actionY = infoBounds.height() - 25.0f;
+            if (!addon.getError().isBlank()) {
+                scope.text(trimToWidth(addon.getError(), 0.46f, infoBounds.width() - 18.0f),
+                        MD3Theme.ROW_CONTENT_INSET, actionY - 13.0f, 0.46f, MD3Theme.ERROR);
+            }
+            if (addon.getKind() == AddonPanelEntry.Kind.LUA_SCRIPT) {
+                UiRect toggleHitBounds = new UiRect(infoBounds.x() + textX, infoBounds.y() + actionY, 32.0f, 20.0f);
+                actionEntries.add(new ActionEntry(addon, ActionType.TOGGLE, toggleHitBounds, addon.canToggle()));
+                scope.toggle(new UiRect(textX + 3.0f, actionY + 2.0f, MD3Theme.SWITCH_WIDTH, MD3Theme.SWITCH_HEIGHT),
+                        addon.isEnabled() ? 1.0f : 0.0f, 0.0f);
+                textX += 37.0f;
+            }
+            if (addon.getKind() == AddonPanelEntry.Kind.LUA_SCRIPT || addon.getKind() == AddonPanelEntry.Kind.LUA_ERROR) {
+                UiRect reloadBounds = new UiRect(infoBounds.x() + textX, infoBounds.y() + actionY, 20.0f, 20.0f);
+                actionEntries.add(new ActionEntry(addon, ActionType.RELOAD, reloadBounds, addon.canReload()));
+                scope.roundRect(textX, actionY, 20.0f, 20.0f, 5.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST);
+                scope.text(IconChars.REFRESH, textX + 4.0f, actionY + 4.0f, 0.68f,
+                        addon.canReload() ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_MUTED, "epsilon-icons");
+            }
+
+            String type = EpsilonTranslations.Gui.ADDON_LUA_SCRIPT.getTranslatedName();
+            float typeScale = 0.46f;
+            float typeWidth = textRenderer.textWidth(type, typeScale, null) + 22.0f;
+            float typeX = infoBounds.width() - MD3Theme.ROW_TRAILING_INSET - typeWidth;
+            scope.roundRect(typeX, actionY, typeWidth, 20.0f, 5.0f, MD3Theme.SECONDARY_CONTAINER);
+            scope.text(IconChars.CODE, typeX + 5.0f, actionY + 5.0f, 0.58f,
+                    MD3Theme.ON_SECONDARY_CONTAINER, "epsilon-icons");
+            scope.text(type, typeX + 17.0f, actionY + 5.0f, typeScale, MD3Theme.ON_SECONDARY_CONTAINER);
+        }
     }
 
     private UiRect getListPanelBounds(UiRect bounds) {
@@ -503,7 +550,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         return new UiRect(x, bounds.y(), bounds.right() - x, bounds.height());
     }
 
-    private UiRect getDetailInfoBounds(UiRect detailPanelBounds, EpsilonAddon addon) {
+    private UiRect getDetailInfoBounds(UiRect detailPanelBounds, AddonPanelEntry addon) {
         return new UiRect(
                 detailPanelBounds.x() + 4.0f,
                 detailPanelBounds.y() + 4.0f,
@@ -512,7 +559,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         );
     }
 
-    private UiRect getDetailSettingsViewport(UiRect detailPanelBounds, EpsilonAddon addon) {
+    private UiRect getDetailSettingsViewport(UiRect detailPanelBounds, AddonPanelEntry addon) {
         UiRect infoBounds = getDetailInfoBounds(detailPanelBounds, addon);
         float y = infoBounds.bottom() + DETAIL_GAP;
         return new UiRect(
@@ -523,7 +570,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         );
     }
 
-    private float getDetailInfoHeight(UiRect detailPanelBounds, EpsilonAddon addon) {
+    private float getDetailInfoHeight(UiRect detailPanelBounds, AddonPanelEntry addon) {
         float titleHeight = textRenderer.textHeight(0.72f, null);
         float labelHeight = textRenderer.textHeight(0.52f, null);
         float descHeight = textRenderer.textHeight(0.56f, null);
@@ -532,13 +579,15 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         if (addon != null && !addon.getDescription().isBlank()) {
             naturalHeight += 5.0f + descHeight;
         }
+        if (addon != null && addon.isLua()) naturalHeight += 25.0f;
+        if (addon != null && !addon.getError().isBlank()) naturalHeight += 14.0f;
 
         float availableForInfo = detailPanelBounds.height() - DETAIL_GAP - DETAIL_SETTINGS_MIN_HEIGHT - 8.0f;
         float maxHeight = Math.max(DETAIL_INFO_MIN_HEIGHT, Math.clamp(availableForInfo, DETAIL_INFO_MIN_HEIGHT, DETAIL_INFO_MAX_HEIGHT));
         return Math.clamp(naturalHeight, DETAIL_INFO_MIN_HEIGHT, maxHeight);
     }
 
-    private boolean shouldRebuild(UiRect bounds, int mouseX, int mouseY, List<EpsilonAddon> addons, EpsilonAddon selectedAddon, List<Setting<?>> selectedSettings, int guiHeight, long contentSignature) {
+    private boolean shouldRebuild(UiRect bounds, int mouseX, int mouseY, List<AddonPanelEntry> addons, AddonPanelEntry selectedAddon, List<Setting<?>> selectedSettings, int guiHeight, long contentSignature) {
         if (contentState.needsRebuild(bounds, mouseX, mouseY, guiHeight, contentSignature)) {
             return true;
         }
@@ -555,7 +604,7 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         if (!Objects.equals(lastListeningKey, listeningKey)) {
             return true;
         }
-        List<String> addonKeys = addons.stream().map(EpsilonAddon::getAddonId).toList();
+        List<String> addonKeys = addons.stream().map(AddonPanelEntry::getAddonId).toList();
         if (!Objects.equals(lastAddonKeys, addonKeys)) {
             return true;
         }
@@ -566,30 +615,32 @@ public class AddonClientSettingTab implements ClientSettingTabView {
         return lastContentSignature != contentSignature;
     }
 
-    private void rememberSnapshot(UiRect bounds, int mouseX, int mouseY, List<EpsilonAddon> addons, EpsilonAddon selectedAddon, List<Setting<?>> selectedSettings, int guiHeight, long contentSignature) {
+    private void rememberSnapshot(UiRect bounds, int mouseX, int mouseY, List<AddonPanelEntry> addons, AddonPanelEntry selectedAddon, List<Setting<?>> selectedSettings, int guiHeight, long contentSignature) {
         contentState.rememberSnapshot(bounds, mouseX, mouseY, guiHeight, contentSignature);
         lastListScroll = state.getAddonListScroll();
         lastDetailScroll = state.getAddonDetailScroll();
         lastSelectedAddonId = selectedAddon == null ? "" : selectedAddon.getAddonId();
         lastListeningKey = state.getListeningKeybindSetting() == null ? "" : state.getListeningKeybindSetting().getName();
-        lastAddonKeys = addons.stream().map(EpsilonAddon::getAddonId).toList();
+        lastAddonKeys = addons.stream().map(AddonPanelEntry::getAddonId).toList();
         lastVisibleSettings = selectedSettings.stream().map(Setting::getName).toList();
         lastContentSignature = contentSignature;
     }
 
-    private long buildContentSignature(List<EpsilonAddon> addons, EpsilonAddon selectedAddon, List<Setting<?>> selectedSettings, String settingOwnerKey) {
+    private long buildContentSignature(List<AddonPanelEntry> addons, AddonPanelEntry selectedAddon, List<Setting<?>> selectedSettings, String settingOwnerKey) {
         long signature = 17L;
         signature = signature * 31L + TranslateHolder.INSTANCE.getRevision();
         signature = signature * 31L + Float.floatToIntBits(state.getAddonListScroll());
         signature = signature * 31L + Float.floatToIntBits(state.getAddonDetailScroll());
         signature = signature * 31L + state.getSelectedAddonId().hashCode();
         signature = signature * 31L + (state.getListeningKeybindSetting() == null ? 0 : state.getListeningKeybindSetting().getName().hashCode());
-        for (EpsilonAddon addon : addons) {
+        for (AddonPanelEntry addon : addons) {
             signature = signature * 31L + addon.getAddonId().hashCode();
             signature = signature * 31L + addon.getDisplayName().hashCode();
             signature = signature * 31L + addon.getDescription().hashCode();
             signature = signature * 31L + addon.getVersion().hashCode();
-            signature = signature * 31L + addon.getRegisteredModules().size();
+            signature = signature * 31L + addon.getModuleCount();
+            signature = signature * 31L + (addon.isEnabled() ? 1 : 0);
+            signature = signature * 31L + addon.getError().hashCode();
             for (String author : addon.getAuthors()) {
                 signature = signature * 31L + author.hashCode();
             }
@@ -639,6 +690,11 @@ public class AddonClientSettingTab implements ClientSettingTabView {
     }
 
     private record AddonRowEntry(String addonId, UiRect bounds) {
+    }
+
+    private enum ActionType { TOGGLE, RELOAD }
+
+    private record ActionEntry(AddonPanelEntry addon, ActionType type, UiRect bounds, boolean enabled) {
     }
 
 }

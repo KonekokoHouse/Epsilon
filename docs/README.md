@@ -10,13 +10,29 @@ docs/
 ├── architecture/
 │   ├── overview.md
 │   └── lifecycle-and-components.md
-└── development/
-    ├── build-and-versioning.md
-    ├── modules-and-addons.md
-    ├── events-and-mixins.md
-    ├── configuration-and-rotation.md
-    ├── rendering.md
-    └── internationalization.md
+├── development/
+│   ├── build-and-versioning.md
+│   ├── modules-and-addons.md
+│   ├── events-and-mixins.md
+│   ├── configuration-and-rotation.md
+│   ├── rendering.md
+│   └── internationalization.md
+├── lua-scripting/
+│   ├── README.md
+│   ├── getting-started.md
+│   ├── packages-and-modules.md
+│   ├── settings-and-storage.md
+│   ├── events-and-java.md
+│   ├── util-code-completion.md
+│   ├── rendering.md
+│   ├── internationalization.md
+│   ├── management-and-lifecycle.md
+│   ├── architecture.md
+│   └── testing-and-troubleshooting.md
+└── examples/
+    └── lua/
+        ├── epsilon_lib.lua
+        └── example-suite/
 ```
 
 ## 阅读路径
@@ -30,6 +46,8 @@ docs/
 | EventBus、事件目录、Mixin | [事件与 Mixin](development/events-and-mixins.md) |
 | 配置目录、持久化、RotationManager | [配置与旋转](development/configuration-and-rotation.md) |
 | Lumin、GUI/HUD、2D/3D 渲染 | [渲染](development/rendering.md) |
+| Lua 脚本包、Module、Java 调用、Setting、事件、渲染和管理 | [Lua 脚本教程](lua-scripting/) |
+| Lua 代码补全库与可直接安装的多模块示例包 | [Lua 示例](examples/lua/) |
 | key、JSON 格式和同步流程 | [国际化](development/internationalization.md) |
 
 ## 维护原则

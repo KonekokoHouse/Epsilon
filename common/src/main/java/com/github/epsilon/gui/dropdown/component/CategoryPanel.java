@@ -50,6 +50,40 @@ public class CategoryPanel extends AbstractDropdownPanel {
         refreshSortedModuleButtons();
     }
 
+    /** 动态脚本会替换 Module 实例，Dropdown 必须同步注册表而不是长期持有旧 runtime。 */
+    private void synchronizeModuleButtons() {
+        if (category == null) return;
+        List<Module> registered = ModuleHolder.INSTANCE.getModules().stream()
+                .filter(module -> module.getCategory() == category)
+                .toList();
+        if (registered.size() == moduleButtons.size()) {
+            boolean unchanged = true;
+            for (int index = 0; index < registered.size(); index++) {
+                if (moduleButtons.get(index).getModule() != registered.get(index)) {
+                    unchanged = false;
+                    break;
+                }
+            }
+            if (unchanged) return;
+        }
+
+        Map<Module, ModuleButton> existing = new IdentityHashMap<>();
+        for (ModuleButton button : moduleButtons) existing.put(button.getModule(), button);
+        moduleButtons.clear();
+        for (Module module : registered) {
+            ModuleButton button = existing.get(module);
+            moduleButtons.add(button != null ? button : new ModuleButton(module));
+        }
+        sortedModuleButtons = List.of();
+        visibleModuleButtons = List.of();
+        searchTextCache.clear();
+        cachedSortMode = null;
+        cachedSortSignature = Long.MIN_VALUE;
+        cachedFilterSignature = Long.MIN_VALUE;
+        cachedSearchTextRevision = Long.MIN_VALUE;
+        cachedContentHeightFrameId = Integer.MIN_VALUE;
+    }
+
     @Override
     protected void drawPanelContent(UiTree.Scope scope, UiTextMetrics textMetrics, int mouseX, int mouseY, float visibleHeight) {
         List<ModuleButton> buttons = visibleButtons();
@@ -173,6 +207,7 @@ public class CategoryPanel extends AbstractDropdownPanel {
     }
 
     private List<ModuleButton> visibleButtons() {
+        synchronizeModuleButtons();
         refreshSortedModuleButtons();
         long filterSignature = cachedSortSignature * 31L + searchQuery.hashCode();
         if (filterSignature == cachedFilterSignature) {

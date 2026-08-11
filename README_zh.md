@@ -59,6 +59,18 @@ Lumin 渲染系统通过 LuminGraphics-MC 接入 Minecraft，并由 PrismRHI 提
 ./gradlew runClient
 ```
 
+## 🐍 Python 开发工具
+
+仓库维护与代码生成脚本使用 [uv](https://docs.astral.sh/uv/)。Python 依赖声明在 `pyproject.toml` 中，并由
+`uv.lock` 锁定：
+
+```bash
+uv sync --frozen
+uv run scripts/dev.py verify
+```
+
+完整的代码生成流程、生成产物、发现规则和测试命令见 [scripts 说明](scripts/README.md)。
+
 ## 🙏 鸣谢
 
 感谢以下项目。第三方代码归属信息详见 [NOTICE](NOTICE.md)。

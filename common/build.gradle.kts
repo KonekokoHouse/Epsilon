@@ -67,6 +67,7 @@ dependencies {
     annotationProcessor(libs.mixinextras.common)
     compileOnly(libs.asm)
     compileOnly(libs.jsr305)
+    implementation(libs.luaj.jse)
 }
 
 configurations {
@@ -111,7 +112,9 @@ val verifyLuminJarInJarArchives = tasks.register("verifyLuminJarInJarArchives") 
     dependsOn(":fabric:remapJar", ":neoforge:jar")
 
     doLast {
-        val fabricOuter = rootProject.project(":fabric").tasks.named<Jar>("jar").get().archiveFile.get().asFile
+        val fabricOuter = rootProject.project(":fabric")
+            .tasks.named<org.gradle.api.tasks.bundling.AbstractArchiveTask>("remapJar")
+            .get().archiveFile.get().asFile
         val neoForgeOuter = rootProject.project(":neoforge").tasks.named<Jar>("jar").get().archiveFile.get().asFile
         fun verifyOuter(outer: File, nestedDirectory: String, expectedLoader: File, metadata: String) {
             ZipFile(outer).use { archive ->
@@ -124,6 +127,9 @@ val verifyLuminJarInJarArchives = tasks.register("verifyLuminJarInJarArchives") 
                 }
                 check(nested.none { it.contains("mc-1.21.1-common") || it.contains("bridge-contract") }) {
                     "${outer.name} must not embed Lumin common or bridge artifacts: $nested"
+                }
+                check(nested.count { it.substringAfterLast('/').startsWith("luaj-jse-") } == 1) {
+                    "${outer.name} must embed exactly one LuaJ runtime: $nested"
                 }
                 check(archive.getEntry(metadata) != null) {
                     "${outer.name} is missing $metadata"

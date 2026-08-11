@@ -103,6 +103,15 @@ public interface SettingHost {
         return addSetting(new StringSetting(name, defaultValue, () -> true, onChanged));
     }
 
+    default ChoiceSetting choiceSetting(String name, String defaultValue, List<String> choices) {
+        return addSetting(new ChoiceSetting(name, defaultValue, choices, () -> true, null));
+    }
+
+    default ChoiceSetting choiceSetting(String name, String defaultValue, List<String> choices,
+                                        Setting.Dependency dependency, Consumer<String> onChanged) {
+        return addSetting(new ChoiceSetting(name, defaultValue, choices, dependency, onChanged));
+    }
+
     default RegistryListSetting<Block> blockListSetting(String name, Collection<Block> defaultValue,
                                                         Setting.Dependency dependency) {
         return addSetting(new RegistryListSetting<>(name, defaultValue, RegistryListSetting.Type.BLOCK, null, dependency));

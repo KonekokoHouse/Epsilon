@@ -11,6 +11,7 @@ import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.managers.impl.rotations.RotationManager;
 import com.github.epsilon.modules.Module;
+import com.github.epsilon.scripting.lua.LuaScriptManager;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.FontPathResolver;
@@ -86,6 +87,7 @@ public class ClientSetting extends Module {
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgNotification = settingGroup("Notification");
+    private final SettingGroup sgLua = settingGroup("Lua Scripts");
     private MinecraftUiRuntime1211 fontRuntime;
     private FontMode appliedFontMode;
     private String appliedCustomFont;
@@ -167,6 +169,10 @@ public class ClientSetting extends Module {
     public final EnumSetting<MainMenuScreen.Background> mainMenuBackground = enumSetting("MainMenu Background", MainMenuScreen.Background.PLANET, useMainMenu::getValue).group(sgAppearance);
 
     public final BoolSetting showWelcomeScreen = boolSetting("Show Welcome Screen", true).rootSetting().group(sgAppearance);
+
+    // Lua Scripts
+    public final BoolSetting luaScriptsEnabled = boolSetting("Enable Lua Scripts", false,
+            LuaScriptManager.INSTANCE::setEnabled).rootSetting().group(sgLua);
 
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);

@@ -27,6 +27,10 @@ public class TranslateHolder {
         components.add(component);
     }
 
+    public void unregisterTranslateComponent(TranslateComponent component) {
+        components.remove(component);
+    }
+
     public long getRevision() {
         return revision.get();
     }
