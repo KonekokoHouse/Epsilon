@@ -59,7 +59,7 @@ public class RaytraceUtils {
     public static HitResult raytrace(Rot2f rotation, double range, float expand, Entity entity) {
         if (mc.level == null || entity == null) return null;
 
-        float partialTicks = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float partialTicks = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         Vec3 eyePos = entity.getEyePosition(partialTicks);
         Vec3 lookVec = Vec3.directionFromRotation(rotation.getPitch(), rotation.getYaw());

@@ -41,7 +41,7 @@ public class MixinLivingEntity {
         return original;
     }
 
-    @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
+    @ModifyExpressionValue(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 modifyFallFlyingLookAngle(Vec3 original) {
         if ((Object) this == mc.player) {
             FallFlyingEvent event = EventBus.INSTANCE.post(new FallFlyingEvent(mc.player.getYRot(), mc.player.getXRot()));
@@ -50,7 +50,7 @@ public class MixinLivingEntity {
         return original;
     }
 
-    @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
+    @ModifyExpressionValue(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float modifyFallFlyingPitch(float original) {
         if ((Object) this == mc.player) {
             FallFlyingEvent event = EventBus.INSTANCE.post(new FallFlyingEvent(mc.player.getYRot(), original));

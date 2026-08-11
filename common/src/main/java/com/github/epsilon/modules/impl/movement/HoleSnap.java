@@ -19,7 +19,6 @@ import com.github.epsilon.utils.world.hole.HoleType;
 import com.github.epsilon.utils.world.hole.HoleUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -96,7 +95,7 @@ public class HoleSnap extends Module {
     private void onPacketReceive(PacketEvent.Receive event) {
         if (rubberbandLimit.getValue() <= 0) return;
 
-        if (event.getPacket() instanceof ClientboundPlayerPositionPacket || event.getPacket() instanceof ClientboundPlayerRotationPacket) {
+        if (event.getPacket() instanceof ClientboundPlayerPositionPacket) {
             rubberbands++;
             if (rubberbands >= rubberbandLimit.getValue()) {
                 setEnabled(false);
@@ -171,7 +170,7 @@ public class HoleSnap extends Module {
     private void onRender3D(Render3DEvent event) {
         if (!render.getValue() || targetHole == null) return;
 
-        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float partialTick = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         Vec3 playerPos = mc.player.getPosition(partialTick);
         Vec3 topEdge = getTopEdge(targetHole, playerPos);
         float width = lineWidth.getValue().floatValue();

@@ -96,16 +96,10 @@ public class Criticals extends Module {
         Vec3 pos = mc.player.position();
         boolean ground = mc.player.onGround();
 
-        mc.player.setPos(pos.add(0.0, 0.0625, 0.0));
-        mc.player.setOnGround(false);
-        mc.player.sendPosition();
-
-        mc.player.setPos(pos.add(0.0, 0.00125, 0.0));
-        mc.player.setOnGround(false);
-        mc.player.sendPosition();
-
-        mc.player.setPos(pos);
-        mc.player.setOnGround(ground);
+        mc.getConnection().send(new net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos(
+                pos.x, pos.y + 0.0625, pos.z, false));
+        mc.getConnection().send(new net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos(
+                pos.x, pos.y + 0.00125, pos.z, false));
     }
 
     private boolean isCriticalHitAvailable() {

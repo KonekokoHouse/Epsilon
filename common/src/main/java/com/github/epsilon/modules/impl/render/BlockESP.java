@@ -15,7 +15,7 @@ import com.github.epsilon.utils.timer.TimerUtils;
 import com.google.common.collect.Lists;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -43,14 +43,6 @@ public class BlockESP extends Module {
             List.of(
                     Blocks.CHEST,
                     Blocks.TRAPPED_CHEST,
-                    Blocks.COPPER_CHEST,
-                    Blocks.EXPOSED_COPPER_CHEST,
-                    Blocks.WEATHERED_COPPER_CHEST,
-                    Blocks.OXIDIZED_COPPER_CHEST,
-                    Blocks.WAXED_COPPER_CHEST,
-                    Blocks.WAXED_EXPOSED_COPPER_CHEST,
-                    Blocks.WAXED_WEATHERED_COPPER_CHEST,
-                    Blocks.WAXED_OXIDIZED_COPPER_CHEST,
                     Blocks.ENDER_CHEST,
                     Blocks.BARREL,
                     Blocks.SHULKER_BOX,
@@ -125,8 +117,8 @@ public class BlockESP extends Module {
 
         int startX = Mth.floor(mc.player.getX() - range.getValue());
         int endX = Mth.ceil(mc.player.getX() + range.getValue());
-        int startY = mc.level.getMinY() + 1;
-        int endY = mc.level.getMaxY();
+        int startY = mc.level.getMinBuildHeight() + 1;
+        int endY = mc.level.getMaxBuildHeight();
         int startZ = Mth.floor(mc.player.getZ() - range.getValue());
         int endZ = Mth.ceil(mc.player.getZ() + range.getValue());
 
@@ -171,7 +163,7 @@ public class BlockESP extends Module {
         AABB box = getShapeAABB(blockPos, state);
 
         if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-            BlockPos connectedPos = ChestBlock.getConnectedBlockPos(blockPos, state);
+            BlockPos connectedPos = blockPos.relative(ChestBlock.getConnectedDirection(state));
             BlockState connectedState = mc.level.getBlockState(connectedPos);
             if (isConnectedChestPart(blockPos, state, connectedState, connectedPos)) {
                 processed.add(connectedPos);
@@ -183,13 +175,14 @@ public class BlockESP extends Module {
     }
 
     private boolean isConnectedChestPart(BlockPos blockPos, BlockState state, BlockState connectedState, BlockPos connectedPos) {
-        if (!(state.getBlock() instanceof ChestBlock chestBlock)) return false;
-        if (!chestBlock.chestCanConnectTo(connectedState)) return false;
+        if (!(state.getBlock() instanceof ChestBlock)) return false;
+        if (connectedState.getBlock() != state.getBlock()) return false;
         if (!connectedState.hasProperty(ChestBlock.TYPE) || !connectedState.hasProperty(ChestBlock.FACING))
             return false;
         if (connectedState.getValue(ChestBlock.TYPE) == ChestType.SINGLE) return false;
+        if (connectedState.getValue(ChestBlock.TYPE) != state.getValue(ChestBlock.TYPE).getOpposite()) return false;
         if (connectedState.getValue(ChestBlock.FACING) != state.getValue(ChestBlock.FACING)) return false;
-        if (!ChestBlock.getConnectedBlockPos(connectedPos, connectedState).equals(blockPos)) return false;
+        if (!connectedPos.relative(ChestBlock.getConnectedDirection(connectedState)).equals(blockPos)) return false;
 
         return shouldAdd(connectedState.getBlock(), connectedPos);
     }

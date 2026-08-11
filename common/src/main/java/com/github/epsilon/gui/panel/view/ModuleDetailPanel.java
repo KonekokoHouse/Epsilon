@@ -24,10 +24,10 @@ import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 import java.awt.*;
 import java.util.*;
@@ -68,10 +68,10 @@ public class ModuleDetailPanel implements AutoCloseable {
         this.hiddenHoverAnimation.setStartValue(0.0f);
     }
 
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics GuiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         UiContentBuffer contentBuffer = new UiContentBuffer(renderBatch);
         this.bounds = bounds;
-        this.guiHeight = GuiGraphicsExtractor.guiHeight();
+        this.guiHeight = GuiGraphics.guiHeight();
 
         if (Math.abs(scrollVelocity) > 0.01f) {
             state.scrollDetail(scrollVelocity * partialTick);
@@ -136,7 +136,7 @@ public class ModuleDetailPanel implements AutoCloseable {
                                 Animation hoverAnimation = hoverAnimations.computeIfAbsent(setting, ignored -> new Animation(Easing.EASE_OUT_CUBIC, 120L));
                                 hoverAnimation.run(rowBounds.contains(effectiveMouseX, effectiveMouseY) ? 1.0f : 0.0f);
                                 content.pushAbsolute(rowBounds, rowScope ->
-                                        row.buildUi(rowScope, GuiGraphicsExtractor, textRenderer, rowBounds,
+                                        row.buildUi(rowScope, GuiGraphics, textRenderer, rowBounds,
                                                 hoverAnimation.getValue(), effectiveMouseX, effectiveMouseY, partialTick));
                                 contentState.noteAnimation(!hoverAnimation.isFinished() || row.hasActiveAnimation());
                             });
@@ -145,7 +145,7 @@ public class ModuleDetailPanel implements AutoCloseable {
         renderBatch.render(contentTree);
 
         if (rebuildContent) {
-            rememberSnapshot(bounds, mouseX, mouseY, module, settings, GuiGraphicsExtractor.guiHeight(), contentSignature);
+            rememberSnapshot(bounds, mouseX, mouseY, module, settings, GuiGraphics.guiHeight(), contentSignature);
         }
     }
 

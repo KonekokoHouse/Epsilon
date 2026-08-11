@@ -11,7 +11,6 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.block.*;
 
 import java.util.*;
@@ -73,7 +72,6 @@ public class InvHelper {
     private static final Set<Item> SWORDS = Set.of(
             Items.WOODEN_SWORD,
             Items.STONE_SWORD,
-            Items.COPPER_SWORD,
             Items.IRON_SWORD,
             Items.GOLDEN_SWORD,
             Items.DIAMOND_SWORD,
@@ -82,7 +80,6 @@ public class InvHelper {
     private static final Set<Item> PICKAXES = Set.of(
             Items.WOODEN_PICKAXE,
             Items.STONE_PICKAXE,
-            Items.COPPER_PICKAXE,
             Items.IRON_PICKAXE,
             Items.GOLDEN_PICKAXE,
             Items.DIAMOND_PICKAXE,
@@ -166,12 +163,12 @@ public class InvHelper {
             return null;
         }
 
-        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
-        if (equippable == null) {
+        Equipable equipable = Equipable.get(stack);
+        if (equipable == null) {
             return null;
         }
 
-        EquipmentSlot slot = equippable.slot();
+        EquipmentSlot slot = equipable.getEquipmentSlot();
         return slot.isArmor() && slot != EquipmentSlot.BODY ? slot : null;
     }
 
@@ -202,11 +199,11 @@ public class InvHelper {
      * @return 获取或计算得到的结果
      */
     public static ItemStack getInventoryStack(int slot) {
-        if (mc.player == null || slot < 0 || slot >= mc.player.getInventory().getNonEquipmentItems().size()) {
+        if (mc.player == null || slot < 0 || slot >= mc.player.getInventory().items.size()) {
             return ItemStack.EMPTY;
         }
 
-        return mc.player.getInventory().getNonEquipmentItems().get(slot);
+        return mc.player.getInventory().items.get(slot);
     }
 
     /**
@@ -315,7 +312,7 @@ public class InvHelper {
             return -1;
         }
 
-        for (int i = 9; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
+        for (int i = 9; i < mc.player.getInventory().items.size(); i++) {
             if (getInventoryStack(i).isEmpty()) {
                 return i;
             }
@@ -506,7 +503,7 @@ public class InvHelper {
             return -1;
         }
 
-        for (int i = 0; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
+        for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
             if (getInventoryStack(i).getItem() == item) {
                 return i;
             }
@@ -1052,7 +1049,7 @@ public class InvHelper {
         }
 
         Block block = ((BlockItem) stack.getItem()).getBlock();
-        if (block instanceof FlowerBlock || block instanceof BushBlock || block instanceof NetherFungusBlock || block instanceof CropBlock) {
+        if (block instanceof FlowerBlock || block instanceof BushBlock || block instanceof CropBlock) {
             return false;
         }
 

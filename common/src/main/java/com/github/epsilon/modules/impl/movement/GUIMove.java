@@ -43,7 +43,7 @@ public class GUIMove extends Module {
     }
 
     private boolean isKeyDown(KeyMapping mapping) {
-        return InputConstants.isKeyDown(mc.getWindow(), mapping.getDefaultKey().getValue());
+        return InputConstants.isKeyDown(mc.getWindow().getWindow(), mapping.getDefaultKey().getValue());
     }
 
 }

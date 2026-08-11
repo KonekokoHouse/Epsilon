@@ -53,7 +53,7 @@ public class KeybindUtils {
      * @return 获取或计算得到的结果
      */
     public static int getKey(KeyMapping keyMapping) {
-        return keyMapping.key.getValue();
+        return InputConstants.getKey(keyMapping.saveString()).getValue();
     }
 
     /**
@@ -78,9 +78,9 @@ public class KeybindUtils {
         }
         Window window = mc.getWindow();
         if (isMouseButton(keyBind)) {
-            return GLFW.glfwGetMouseButton(window.handle(), decodeMouseButton(keyBind)) == GLFW.GLFW_PRESS;
+            return GLFW.glfwGetMouseButton(window.getWindow(), decodeMouseButton(keyBind)) == GLFW.GLFW_PRESS;
         }
-        return InputConstants.isKeyDown(window, keyBind);
+        return InputConstants.isKeyDown(window.getWindow(), keyBind);
     }
 
     /**

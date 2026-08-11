@@ -75,7 +75,7 @@ public class FreeCamera extends Module {
         perspective = mc.options.getCameraType();
         speedValue = speed.getValue();
 
-        Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
+        Vec3 cameraPos = mc.gameRenderer.getMainCamera().getPosition();
         pos.set(cameraPos.x, cameraPos.y, cameraPos.z);
         prevPos.set(pos);
 

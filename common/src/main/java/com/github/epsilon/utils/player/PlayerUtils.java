@@ -69,7 +69,7 @@ public class PlayerUtils {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
                     mutablePos.set(x, y, z);
-                    if (mc.level.getBlockState(mutablePos).isSolidRender()) {
+                    if (mc.level.getBlockState(mutablePos).isSolidRender(mc.level, mutablePos)) {
                         return true;
                     }
                 }

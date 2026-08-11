@@ -1,8 +1,8 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftBlurRegion1211;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
@@ -10,7 +10,7 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
@@ -107,7 +107,7 @@ public class Potions extends HudModule {
             float rowX = computeRowX(rowWidth, hAnchor);
 
             if (backgroundBlur.getValue()) {
-                MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+                MinecraftUiRuntime1211.current().applyBlur(MinecraftBlurRegion1211.rounded(
                         new UiRect(rowX, currentY, rowWidth, rowHeight), radius, blurStrength.getValue()));
             }
 
@@ -255,7 +255,7 @@ public class Potions extends HudModule {
             int maxDur = maxDurationMap.getOrDefault(holder, Math.max(duration, 1));
             float progress = infinite ? 1.0f : Mth.clamp((float) duration / Math.max(1, maxDur), 0f, 1f);
 
-            Identifier icon = getIconTexture(holder);
+            ResourceLocation icon = getIconTexture(holder);
 
             list.add(new EffectInfo(displayName, durationStr, alpha, effectColor, total, progress, icon));
         }
@@ -264,10 +264,10 @@ public class Potions extends HudModule {
         return list;
     }
 
-    private static Identifier getIconTexture(Holder<MobEffect> holder) {
+    private static ResourceLocation getIconTexture(Holder<MobEffect> holder) {
         return holder.unwrapKey()
-                .map(ResourceKey::identifier)
-                .map(id -> Identifier.fromNamespaceAndPath(id.getNamespace(), "textures/mob_effect/" + id.getPath() + ".png"))
+                .map(ResourceKey::location)
+                .map(id -> ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/mob_effect/" + id.getPath() + ".png"))
                 .orElse(null);
     }
 
@@ -308,7 +308,7 @@ public class Potions extends HudModule {
     }
 
     private record EffectInfo(String name, String duration, float alpha, Color effectColor, float totalWidth,
-                              float progress, Identifier iconTexture) {
+                              float progress, ResourceLocation iconTexture) {
     }
 
 }

@@ -161,7 +161,7 @@ public class ControlElytraFlightMode extends ElytraFlightMode {
 
         boolean jump = mc.options.keyJump.isDown();
         boolean sneak = mc.options.keyShift.isDown();
-        boolean moving = mc.player.isMoving();
+        boolean moving = com.github.epsilon.utils.player.MoveUtils.isMoving();
 
         if (sneak && jump) {
             pitch = -3f;

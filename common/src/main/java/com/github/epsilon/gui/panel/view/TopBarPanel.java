@@ -2,8 +2,8 @@ package com.github.epsilon.gui.panel.view;
 
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.epsilon.gui.panel.PanelState;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 public class TopBarPanel {
 
@@ -13,7 +13,7 @@ public class TopBarPanel {
         this.state = state;
     }
 
-    public void render(GuiGraphicsExtractor guiGraphics, UiRect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics guiGraphics, UiRect bounds, int mouseX, int mouseY, float partialTick) {
     }
 
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {

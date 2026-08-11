@@ -1,6 +1,6 @@
 package com.github.epsilon.assets.resources;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import org.lwjgl.system.MemoryUtil;
 
@@ -12,11 +12,11 @@ import static com.github.epsilon.Constants.mc;
 
 public class ResourceLocationUtils {
 
-    public static Identifier getIdentifier(String path) {
-        return Identifier.fromNamespaceAndPath("epsilon", path);
+    public static ResourceLocation getIdentifier(String path) {
+        return ResourceLocation.fromNamespaceAndPath("epsilon", path);
     }
 
-    public static ByteBuffer loadResource(Identifier identifier) {
+    public static ByteBuffer loadResource(ResourceLocation identifier) {
         final var manager = mc.getResourceManager();
         Optional<Resource> resource = manager.getResource(identifier);
 

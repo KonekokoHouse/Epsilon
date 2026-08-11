@@ -13,7 +13,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.timer.TimerUtils;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -100,7 +100,7 @@ public class AimBot extends Module {
             return;
         }
 
-        float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float tickDelta = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         if (isUsingBow() && target != null && (mc.player.hasLineOfSight(target) || ignoreWalls.getValue())) {
             if (rotation.is(Rotation.Client)) {
                 mc.player.setYRot(Mth.lerp(tickDelta, mc.player.yRotO, rotationYaw));
@@ -142,7 +142,7 @@ public class AimBot extends Module {
             return;
         }
 
-        if (onlyWeapon.getValue() && !mc.player.getMainHandItem().has(DataComponents.WEAPON)) {
+        if (onlyWeapon.getValue() && !mc.player.getMainHandItem().is(ItemTags.WEAPON_ENCHANTABLE)) {
             resetAimAssist();
             return;
         }

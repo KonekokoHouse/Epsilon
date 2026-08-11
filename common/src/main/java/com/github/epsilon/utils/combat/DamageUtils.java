@@ -225,8 +225,8 @@ public class DamageUtils {
      * 每级抗性提升减少 20% 伤害。
      */
     private static float applyResistanceReduction(LivingEntity target, float damage) {
-        if (target.hasEffect(MobEffects.RESISTANCE)) {
-            int amplifier = target.getEffect(MobEffects.RESISTANCE).getAmplifier();
+        if (target.hasEffect(MobEffects.DAMAGE_RESISTANCE)) {
+            int amplifier = target.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier();
             int reduction = (amplifier + 1) * 5; // 5 per level
             int remaining = 25 - reduction;
             float reduced = damage * remaining;

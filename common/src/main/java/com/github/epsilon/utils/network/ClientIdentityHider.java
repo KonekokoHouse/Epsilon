@@ -7,7 +7,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.BrandPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -46,7 +46,7 @@ public final class ClientIdentityHider {
                     : packet;
         }
 
-        Identifier id = payload.type().id();
+        ResourceLocation id = payload.type().id();
         if (mode == ClientSetting.HideMode.Vanilla && shouldHideAsVanilla(id)) {
             return null;
         }
@@ -71,7 +71,7 @@ public final class ClientIdentityHider {
         return ClientSetting.INSTANCE.hideMode.is(ClientSetting.HideMode.Vanilla) ? VANILLA_BRAND : brand;
     }
 
-    private static boolean shouldHideAsVanilla(Identifier id) {
+    private static boolean shouldHideAsVanilla(ResourceLocation id) {
         if ("minecraft".equals(id.getNamespace())) {
             return VANILLA_HIDDEN_MINECRAFT_PAYLOADS.contains(id.getPath());
         }
@@ -87,19 +87,19 @@ public final class ClientIdentityHider {
     }
 
     private static CustomPacketPayload filterChannelPayload(CustomPacketPayload payload, ClientSetting.HideMode mode) {
-        Collection<Identifier> channels = readChannels(payload);
+        Collection<ResourceLocation> channels = readChannels(payload);
         if (channels == null || channels.isEmpty()) {
             return payload;
         }
 
-        List<Identifier> filteredChannels = channels.stream()
+        List<ResourceLocation> filteredChannels = channels.stream()
                 .filter(channel -> !HIDDEN_NAMESPACES.contains(channel.getNamespace()))
                 .toList();
         if (filteredChannels.size() == channels.size()) {
             return payload;
         }
 
-        Identifier payloadId = payload.type().id();
+        ResourceLocation payloadId = payload.type().id();
         if (filteredChannels.isEmpty() && "minecraft".equals(payloadId.getNamespace()) && !"register".equals(payloadId.getPath())) {
             return null;
         }
@@ -126,7 +126,7 @@ public final class ClientIdentityHider {
                 Set<Object> filteredComponents = new HashSet<>();
                 for (Object component : entry.getValue()) {
                     Method idMethod = component.getClass().getMethod("id");
-                    Identifier componentId = (Identifier) idMethod.invoke(component);
+                    ResourceLocation componentId = (ResourceLocation) idMethod.invoke(component);
                     if (HIDDEN_NAMESPACES.contains(componentId.getNamespace())) {
                         changed = true;
                     } else {
@@ -149,17 +149,17 @@ public final class ClientIdentityHider {
     }
 
     @SuppressWarnings("unchecked")
-    private static Collection<Identifier> readChannels(CustomPacketPayload payload) {
+    private static Collection<ResourceLocation> readChannels(CustomPacketPayload payload) {
         try {
             Method channelsMethod = payload.getClass().getMethod("channels");
             Object value = channelsMethod.invoke(payload);
-            return value instanceof Collection<?> collection ? (Collection<Identifier>) collection : null;
+            return value instanceof Collection<?> collection ? (Collection<ResourceLocation>) collection : null;
         } catch (ReflectiveOperationException ignored) {
             return null;
         }
     }
 
-    private static CustomPacketPayload recreateChannelPayload(CustomPacketPayload payload, List<Identifier> filteredChannels) {
+    private static CustomPacketPayload recreateChannelPayload(CustomPacketPayload payload, List<ResourceLocation> filteredChannels) {
         try {
             Object type = payload.type();
             Object version = readAccessor(payload, "version");
@@ -187,7 +187,7 @@ public final class ClientIdentityHider {
         }
     }
 
-    private static Object[] createConstructorArguments(Class<?>[] parameterTypes, Object type, Object version, Object protocol, List<Identifier> channels) {
+    private static Object[] createConstructorArguments(Class<?>[] parameterTypes, Object type, Object version, Object protocol, List<ResourceLocation> channels) {
         if (parameterTypes.length == 1 && isCollectionParameter(parameterTypes[0])) {
             return new Object[]{asCollection(parameterTypes[0], channels)};
         }
@@ -207,7 +207,7 @@ public final class ClientIdentityHider {
         return Collection.class.isAssignableFrom(type);
     }
 
-    private static Collection<Identifier> asCollection(Class<?> type, List<Identifier> channels) {
+    private static Collection<ResourceLocation> asCollection(Class<?> type, List<ResourceLocation> channels) {
         if (Set.class.isAssignableFrom(type)) {
             return new HashSet<>(channels);
         }

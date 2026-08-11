@@ -21,10 +21,10 @@ import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.utils.client.ConfigFolderOpener;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -66,7 +66,7 @@ public class ConfigClientSettingTab implements ClientSettingTabView {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics guiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         UiContentBuffer contentBuffer = new UiContentBuffer(renderBatch);
         this.bounds = bounds;
 

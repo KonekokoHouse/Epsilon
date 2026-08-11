@@ -12,8 +12,8 @@ import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.utils.RegistryListUi;
 import com.github.epsilon.settings.impl.RegistryListSetting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 public class RegistryListSettingRow extends SettingRow<RegistryListSetting<?>> {
 
@@ -22,7 +22,7 @@ public class RegistryListSettingRow extends SettingRow<RegistryListSetting<?>> {
     }
 
     @Override
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer,
+    public void buildUi(UiTree.Scope scope, GuiGraphics guiGraphics, UiTextMetrics textRenderer,
                         UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.textHeight(labelScale, null)) / 2.0f;

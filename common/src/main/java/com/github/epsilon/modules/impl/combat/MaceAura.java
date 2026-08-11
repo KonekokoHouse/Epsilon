@@ -122,7 +122,7 @@ public class MaceAura extends Module {
     }
 
     private void doMaceAttack(double vclip) {
-        int currentSlot = mc.player.getInventory().getSelectedSlot();
+        int currentSlot = mc.player.getInventory().selected;
         boolean swappedInventory = false;
 
         FindItemResult hotbar = InvUtils.findInHotbar(Items.MACE);
@@ -135,7 +135,7 @@ public class MaceAura extends Module {
             if (!inv.found()) return;
             InvUtils.invSwap(inv.slot());
             swappedInventory = true;
-            InvUtils.swap(mc.player.getInventory().getSelectedSlot(), true);
+            InvUtils.swap(mc.player.getInventory().selected, true);
         }
 
         Vec3 startPos = mc.player.position();
@@ -144,7 +144,7 @@ public class MaceAura extends Module {
         // 何意味，，，
         if (paperServer.getValue()) {
             for (int i = 0; i < 4; i++) {
-                mc.getConnection().send(new ServerboundMovePlayerPacket.StatusOnly(false, false));
+                mc.getConnection().send(new ServerboundMovePlayerPacket.StatusOnly(false));
             }
         }
 
@@ -182,7 +182,7 @@ public class MaceAura extends Module {
     }
 
     private void sendMovePacket(double x, double y, double z, boolean onGround) {
-        mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y, z, onGround, false));
+        mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y, z, onGround));
     }
 
     private void attack() {

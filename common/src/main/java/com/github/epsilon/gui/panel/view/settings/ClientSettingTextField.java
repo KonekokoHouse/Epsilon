@@ -9,8 +9,8 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -205,7 +205,7 @@ public class ClientSettingTextField {
 
     private boolean isControlDown() {
         var window = mc.getWindow();
-        return InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_CONTROL);
+        return InputConstants.isKeyDown(window.getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(window.getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL);
     }
 }
 

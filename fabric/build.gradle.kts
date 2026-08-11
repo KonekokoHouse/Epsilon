@@ -1,25 +1,44 @@
 plugins {
     id("multiloader-loader")
-    alias(libs.plugins.fabric.loom)
+    id("fabric-loom")
 }
 
 val modId = project.property("mod_id").toString()
 
 dependencies {
     minecraft(libs.minecraft)
-    implementation(libs.lumin.graphics.mc.fabric.v2612) {
+    modRuntimeOnly(libs.lumin.graphics.mc.fabric.v1211) {
         isTransitive = false
     }
-    include(libs.lumin.graphics.mc.fabric.v2612) {
+    include(libs.lumin.graphics.mc.fabric.v1211) {
         isTransitive = false
+    }
+    compileOnly(libs.lumin.graphics.ui) {
+        exclude(group = "org.lwjgl")
+    }
+    compileOnly(libs.lumin.graphics.mc.common.v1211) {
+        exclude(group = "org.lwjgl")
     }
     compileOnly(libs.lumin.graphics.mc.bridge.contract) {
         isTransitive = false
     }
-    implementation(libs.fabric.loader)
-    implementation(libs.fabric.api)
-    compileOnly(libs.sodium.fabric)
+    compileOnly(libs.prism.rhi.backend.opengl41) {
+        isTransitive = false
+    }
+    compileOnly(libs.prism.rhi.backend.opengl46) {
+        isTransitive = false
+    }
+    modImplementation(libs.fabric.loader)
+    modImplementation(libs.fabric.api)
+    compileOnly(libs.mixin)
+    compileOnly(libs.mixinextras.common)
+    annotationProcessor(libs.mixinextras.common)
+    compileOnly(libs.asm)
     compileOnly(libs.jsr305)
+}
+
+dependencies {
+    mappings(loom.officialMojangMappings())
 }
 
 loom {
@@ -35,12 +54,6 @@ loom {
             runDir("runs/client")
         }
     }
-}
-
-tasks.register("remapJar") {
-    group = "build"
-    description = "Builds the final Fabric archive; Mojang mappings require no separate remap pass."
-    dependsOn(tasks.named("jar"))
 }
 
 val loaderAttribute = Attribute.of("io.github.mcgradleconventions.loader", String::class.java)

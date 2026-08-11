@@ -14,12 +14,12 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.WorldToScreen;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -49,7 +49,7 @@ public class NameTags extends Module {
     private final BoolSetting showSelf = boolSetting("Show Self", true);
 
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
 
     private NameTags() {
         super("Name Tags", Category.RENDER);
@@ -63,11 +63,11 @@ public class NameTags extends Module {
 
         drawList.clear();
 
-        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float partialTick = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         double maxDistanceSq = range.getValue() * range.getValue();
         float textScale = scale.getValue().floatValue();
 
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         UiTextMetrics textMetrics = runtime.textMetrics();
 
@@ -130,8 +130,8 @@ public class NameTags extends Module {
 
     @EventHandler
     private void renderTagList(Render2DEvent.Level event) {
-        GuiGraphicsExtractor graphics = event.getGuiGraphics();
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        GuiGraphics graphics = event.getGuiGraphics();
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         UiTextMetrics textMetrics = runtime.textMetrics();
 
@@ -174,7 +174,7 @@ public class NameTags extends Module {
         releaseScene();
     }
 
-    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+    private UiScene scene(MinecraftUiRuntime1211 runtime) {
         if (scene == null || sceneRuntime != runtime) {
             releaseScene();
             scene = runtime.createScene(EpsilonUiTheme.lumin());
@@ -220,16 +220,16 @@ public class NameTags extends Module {
         }
     }
 
-    private void drawItem(GuiGraphicsExtractor graphics, ItemStack stack, float x, float y, float scale) {
+    private void drawItem(GuiGraphics graphics, ItemStack stack, float x, float y, float scale) {
         float guiX = (float) UiCoordinateMapper.toMinecraftX(x);
         float guiY = (float) UiCoordinateMapper.toMinecraftY(y);
         float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(guiX, guiY);
-        graphics.pose().scale(guiScale, guiScale);
-        graphics.item(stack, 0, 0);
-        graphics.itemDecorations(mc.font, stack, 0, 0);
-        graphics.pose().popMatrix();
+        graphics.pose().pushPose();
+        graphics.pose().translate(guiX, guiY, 0.0f);
+        graphics.pose().scale(guiScale, guiScale, 1.0f);
+        graphics.renderItem(stack, 0, 0);
+        graphics.renderItemDecorations(mc.font, stack, 0, 0);
+        graphics.pose().popPose();
     }
 
     private record TagDrawData(

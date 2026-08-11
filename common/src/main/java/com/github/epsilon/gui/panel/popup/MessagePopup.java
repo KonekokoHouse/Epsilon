@@ -7,8 +7,8 @@ import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 import java.util.function.Supplier;
 
@@ -47,7 +47,7 @@ public class MessagePopup implements PanelPopupHost.Popup {
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void extractGui(GuiGraphics guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         openAnimation.run(1.0f);
         float progress = openAnimation.getValue();
         float popupY = bounds.y() - (1.0f - progress) * 6.0f;

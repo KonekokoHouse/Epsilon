@@ -161,8 +161,8 @@ public class PlayerAlarms extends Module {
             if (worldChanged) lastLevel = currentLevel;
             alarmedJoinPlayers.clear();
             for (var entry : mc.getConnection().getListedOnlinePlayers()) {
-                UUID id = entry.getProfile().id();
-                String playerName = entry.getProfile().name();
+                UUID id = entry.getProfile().getId();
+                String playerName = entry.getProfile().getName();
                 if (shouldAlarm(playerName)) {
                     startRing(joinRing, joinRings.getValue(), joinRingDelay.getValue());
                     sendAlert(joinChatMessage.getValue(), EpsilonTranslations.PlayerAlarms.JOIN_ALERT_TEXT, playerName, id, ChatFormatting.RED);
@@ -213,7 +213,7 @@ public class PlayerAlarms extends Module {
         if (event.getPacket() instanceof ClientboundPlayerInfoUpdatePacket packet) {
             if (packet.actions().contains(Action.ADD_PLAYER)) {
                 for (Entry entry : packet.entries()) {
-                    String playerName = entry.profile().name();
+                    String playerName = entry.profile().getName();
                     gamemodeCache.put(entry.profileId(), entry.gameMode());
                     if (!alarmedJoinPlayers.contains(entry.profileId()) && shouldAlarm(playerName)) {
                         startRing(joinRing, joinRings.getValue(), joinRingDelay.getValue());
@@ -343,11 +343,11 @@ public class PlayerAlarms extends Module {
     private String getPlayerName(UUID id) {
         if (mc.level == null) return null;
         Player player = mc.level.getPlayerByUUID(id);
-        if (player != null) return player.getGameProfile().name();
+        if (player != null) return player.getGameProfile().getName();
         // fallback: try to get from network player list
         if (mc.getConnection() != null) {
             var entry = mc.getConnection().getPlayerInfo(id);
-            if (entry != null && entry.getProfile() != null) return entry.getProfile().name();
+            if (entry != null && entry.getProfile() != null) return entry.getProfile().getName();
         }
         return null;
     }

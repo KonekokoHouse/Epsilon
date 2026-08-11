@@ -6,6 +6,7 @@ import com.github.epsilon.modules.impl.render.SneakTweak;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.phys.Vec3;
@@ -54,14 +55,15 @@ public class MixinCamera {
         }
     }
 
-    @Inject(method = "alignWithEntity", at = @At("TAIL"))
-    private void onAlignWithEntityTail(float partialTicks, CallbackInfo ci) {
+    @Inject(method = "setup", at = @At("TAIL"))
+    private void onSetupTail(BlockGetter level, Entity entity, boolean detached, boolean mirrored,
+                             float partialTicks, CallbackInfo ci) {
         if (FreeCamera.INSTANCE.isEnabled()) {
             this.detached = true;
         }
     }
 
-    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
+    @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
     private void onAlignSetPosArgs(Args args, @Local(argsOnly = true) float partialTicks) {
         FreeCamera freeCamera = FreeCamera.INSTANCE;
         if (freeCamera.isEnabled()) {
@@ -87,7 +89,7 @@ public class MixinCamera {
         }
     }
 
-    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
+    @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V", ordinal = 0))
     private void onAlignSetRotationArgs(Args args, @Local(argsOnly = true) float partialTicks) {
         FreeCamera freeCamera = FreeCamera.INSTANCE;
         if (freeCamera.isEnabled()) {

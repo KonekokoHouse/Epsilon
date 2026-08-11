@@ -15,7 +15,6 @@ import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.InvUtils;
 import net.minecraft.client.gui.screens.ChatScreen;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.InteractionHand;
@@ -24,8 +23,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Equipable;
+import net.minecraft.world.item.ElytraItem;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.equipment.Equippable;
 
 import java.util.List;
 
@@ -119,7 +119,7 @@ public class AutoArmor extends Module {
                     InvUtils.swapBack();
                 }
             } else {
-                if (mc.player.isMoving() && noMove.getValue()) return;
+                if (com.github.epsilon.utils.player.MoveUtils.isMoving() && noMove.getValue()) return;
 
                 int inventorySlot = slot < 9 ? 36 + slot : slot;
                 int armorSlot = 8 - armorPiece.getEquipmentSlot().getIndex();
@@ -148,12 +148,12 @@ public class AutoArmor extends Module {
     private EquipmentSlot getEquipmentSlot(ItemStack stack) {
         if (stack.isEmpty()) return null;
 
-        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
-        if (equippable == null || equippable.slot().getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
+        Equipable equipable = Equipable.get(stack);
+        if (equipable == null || equipable.getEquipmentSlot().getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
             return null;
         }
 
-        return equippable.slot();
+        return equipable.getEquipmentSlot();
     }
 
     private int getProtection(ItemStack stack) {
@@ -166,7 +166,7 @@ public class AutoArmor extends Module {
         int enchantmentScore = 0;
 
         if (elytra) {
-            if (!LivingEntity.canGlideUsing(stack, slot)) return 0;
+            if (!ElytraItem.isFlyEnabled(stack)) return 0;
 
             boolean elytraFlyActive = elytraPriority.is(ElytraPriority.ElytraPlus)
                     && ElytraFly.INSTANCE.isEnabled()

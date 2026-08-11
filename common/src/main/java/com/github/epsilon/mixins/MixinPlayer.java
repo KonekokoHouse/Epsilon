@@ -1,7 +1,6 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
-import com.github.epsilon.events.impl.AttackSlowDownEvent;
 import com.github.epsilon.events.impl.AttackYawEvent;
 import com.github.epsilon.events.impl.TravelEvent;
 import com.github.epsilon.modules.impl.movement.KeepSprint;
@@ -29,18 +28,10 @@ public class MixinPlayer {
         }
     }
 
-    @ModifyExpressionValue(method = {"causeExtraKnockback", "doSweepAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
+    @ModifyExpressionValue(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
     private float modifyAttackYaw(float original) {
         AttackYawEvent event = EventBus.INSTANCE.post(new AttackYawEvent(original));
         return event.getYaw();
-    }
-
-    @Inject(method = "causeExtraKnockback", at = @At("HEAD"), cancellable = true)
-    private void onCauseExtraKnockback(Entity entity, float knockbackAmount, Vec3 oldMovement, CallbackInfo ci) {
-        AttackSlowDownEvent event = EventBus.INSTANCE.post(new AttackSlowDownEvent(entity, knockbackAmount));
-        if (event.isCancelled()) {
-            ci.cancel();
-        }
     }
 
     @Inject(method = "attack", at = @At("RETURN"))

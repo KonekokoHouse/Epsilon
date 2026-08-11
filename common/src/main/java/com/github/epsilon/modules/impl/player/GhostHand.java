@@ -29,7 +29,7 @@ public class GhostHand extends Module {
     private void onStartUseItem(StartUseItemEvent event) {
         if (!mc.options.keyUse.isDown()) return;
 
-        HitResult normalHit = mc.player.pick(mc.player.blockInteractionRange(), mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), false);
+        HitResult normalHit = mc.player.pick(mc.player.blockInteractionRange(), com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true), false);
         if (mc.level.getBlockState(BlockPos.containing(normalHit.getLocation())).hasBlockEntity()) {
             return;
         }
@@ -41,7 +41,7 @@ public class GhostHand extends Module {
         posList.clear();
 
         for (int i = 1; i < mc.player.blockInteractionRange() * 10; i++) {
-            BlockPos pos = BlockPos.containing(mc.player.getEyePosition(mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)).add(direction.scale(i)));
+            BlockPos pos = BlockPos.containing(mc.player.getEyePosition(com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true)).add(direction.scale(i)));
 
             if (posList.contains(pos)) continue;
             posList.add(pos);
@@ -49,7 +49,7 @@ public class GhostHand extends Module {
             if (mc.level.getBlockState(pos).hasBlockEntity()) {
                 for (InteractionHand hand : InteractionHand.values()) {
                     InteractionResult result = mc.gameMode.useItemOn(mc.player, hand, new BlockHitResult(pos.getCenter(), RotationUtils.getDirection(pos), pos, true));
-                    if (result instanceof InteractionResult.Success || result instanceof InteractionResult.Fail) {
+                    if (result == InteractionResult.SUCCESS || result == InteractionResult.FAIL) {
                         mc.player.swing(hand);
                         event.cancel();
                         return;

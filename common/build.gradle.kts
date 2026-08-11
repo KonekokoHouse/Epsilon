@@ -41,14 +41,18 @@ val luminGraphicsMcNeoForge by configurations.creating {
 }
 
 dependencies {
-    luminGraphicsMcFabric(libs.lumin.graphics.mc.fabric.v2612) {
+    luminGraphicsMcFabric(libs.lumin.graphics.mc.fabric.v1211) {
         isTransitive = false
     }
-    luminGraphicsMcNeoForge(libs.lumin.graphics.mc.neoforge.v2612) {
+    luminGraphicsMcNeoForge(libs.lumin.graphics.mc.neoforge.v1211) {
         isTransitive = false
     }
-    compileOnly(libs.lumin.graphics.ui)
-    compileOnly(libs.lumin.graphics.mc.common.v2612)
+    compileOnly(libs.lumin.graphics.ui) {
+        exclude(group = "org.lwjgl")
+    }
+    compileOnly(libs.lumin.graphics.mc.common.v1211) {
+        exclude(group = "org.lwjgl")
+    }
     compileOnly(libs.lumin.graphics.mc.bridge.contract) {
         isTransitive = false
     }
@@ -118,7 +122,7 @@ val verifyLuminJarInJarArchives = tasks.register("verifyLuminJarInJarArchives") 
                 check("$nestedDirectory${expectedLoader.name}" in nested) {
                     "${outer.name} is missing ${expectedLoader.name}: $nested"
                 }
-                check(nested.none { it.contains("mc-26.1.2-common") || it.contains("bridge-contract") }) {
+                check(nested.none { it.contains("mc-1.21.1-common") || it.contains("bridge-contract") }) {
                     "${outer.name} must not embed Lumin common or bridge artifacts: $nested"
                 }
                 check(archive.getEntry(metadata) != null) {

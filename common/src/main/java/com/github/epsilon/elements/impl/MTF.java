@@ -1,10 +1,6 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftGlyphAtlasTexture2612;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
-import com.github.slmpc.lumingraphics.text.emoji.EmojiGlyph;
-import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import net.minecraft.client.DeltaTracker;
@@ -28,18 +24,8 @@ public class MTF extends HudModule {
         float boxSize = size.getValue().floatValue();
         setBounds(boxSize, boxSize);
 
-        float originX = this.x + boxSize / 2.0f;
-        float originY = this.y + boxSize / 2.0f;
-        float rotation = (System.currentTimeMillis() % 3_600_000L) / 1000.0f * speed.getValue().floatValue();
-
         final String fishcake = "\uD83C\uDF65";
-        EmojiGlyph glyph = MinecraftUiRuntime2612.current().systemEmojiAtlas().require(fishcake.codePointAt(0));
-        MinecraftGlyphAtlasTexture2612 texture =
-                (MinecraftGlyphAtlasTexture2612) glyph.atlas().upload().texture();
-
-        renderScope().rotatedTexture(texture.minecraftId().toString(), new UiRect(this.x, this.y, boxSize, boxSize),
-                glyph.uv().u0(), glyph.uv().v0(), glyph.uv().u1(), glyph.uv().v1(),
-                lumin(color.getValue()), originX, originY, rotation);
+        renderScope().text(fishcake, this.x, this.y, boxSize / 16.0f, lumin(color.getValue()));
     }
 
 }

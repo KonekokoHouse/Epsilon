@@ -6,41 +6,17 @@ plugins {
 val neoforgeVersion = project.property("neoforge_version").toString()
 val modId = project.property("mod_id").toString()
 
-val sodiumNeoForgeOuterJar by configurations.creating {
-    isCanBeResolved = true
-    isCanBeConsumed = false
-}
-
-val extractSodiumNeoForgeModJar by tasks.registering(Copy::class) {
-    from({ zipTree(sodiumNeoForgeOuterJar.singleFile) }) {
-        include("META-INF/jarjar/*-mod.jar")
-        eachFile {
-            path = name
-        }
-        includeEmptyDirs = false
-    }
-    into(layout.buildDirectory.dir("extracted-sodium-neoforge"))
-}
-
-val extractedSodiumNeoForgeModJar = files(
-    layout.buildDirectory.dir("extracted-sodium-neoforge")
-        .map { it.asFileTree.matching { include("*.jar") } }
-).builtBy(extractSodiumNeoForgeModJar)
-
 dependencies {
-    implementation(libs.lumin.graphics.mc.neoforge.v2612) {
+    implementation(libs.lumin.graphics.mc.neoforge.v1211) {
         isTransitive = false
     }
-    jarJar(libs.lumin.graphics.mc.neoforge.v2612) {
+    jarJar(libs.lumin.graphics.mc.neoforge.v1211) {
         isTransitive = false
         version { strictly("[${libs.versions.lumin.graphics.get()}]") }
     }
     compileOnly(libs.lumin.graphics.mc.bridge.contract) {
         isTransitive = false
     }
-    compileOnly(libs.sodium.neoforge)
-    sodiumNeoForgeOuterJar(libs.sodium.neoforge)
-    compileOnly(extractedSodiumNeoForgeModJar)
 }
 
 neoForge {
@@ -61,7 +37,7 @@ neoForge {
             gameDirectory = file("runs/client").also { it.mkdirs() }
         }
         register("data") {
-            clientData()
+            data()
             gameDirectory = file("runs/data").also { it.mkdirs() }
             programArguments.addAll("--mod", modId, "--all", "--output", file("src/generated/resources/").absolutePath, "--existing", file("src/main/resources/").absolutePath)
         }

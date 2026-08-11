@@ -3,7 +3,7 @@ package com.github.epsilon.gui.panel.popup;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.slmpc.lumingraphics.ui.render.UiContentBuffer;
@@ -18,14 +18,14 @@ import com.github.epsilon.settings.impl.RegistryListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.github.epsilon.utils.world.BlockRegistryUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
@@ -70,7 +70,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     private final Consumer<T> removeFn;
     private final List<T> allEntries;
     private final List<Category<T>> categories;
-    private final UiTextMetrics textRenderer = MinecraftUiRuntime2612.current().textMetrics();
+    private final UiTextMetrics textRenderer = MinecraftUiRuntime1211.current().textMetrics();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState availableScrollBarDrag = new ScrollBarDragState();
     private final ScrollBarDragState selectedScrollBarDrag = new ScrollBarDragState();
@@ -132,7 +132,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
             }
         }
         entries.sort(Comparator.comparing(e -> {
-            Identifier key = registry.getKey(e);
+            ResourceLocation key = registry.getKey(e);
             return key != null ? key.toString() : "";
         }));
         return entries;
@@ -180,7 +180,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
                                                                        RegistryListSetting<SoundEvent> setting) {
         return new RegistryListSelectPopup<>(bounds, setting, BuiltInRegistries.SOUND_EVENT,
                 sound -> {
-                    Identifier key = BuiltInRegistries.SOUND_EVENT.getKey(sound);
+                    ResourceLocation key = BuiltInRegistries.SOUND_EVENT.getKey(sound);
                     return key != null ? key.getPath() : "";
                 },
                 setting::add, setting::remove);
@@ -197,8 +197,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         if (mc.level != null) {
             mc.level.registryAccess().lookup(Registries.ENCHANTMENT).ifPresent(registry ->
                     registry.listElementIds()
-                            .map(ResourceKey::identifier)
-                            .map(Identifier::toString)
+                            .map(ResourceKey::location)
+                            .map(ResourceLocation::toString)
                             .forEach(ids::add)
             );
         }
@@ -207,7 +207,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private static String enchantmentDisplayName(String id) {
-        Identifier identifier = Identifier.tryParse(id);
+        ResourceLocation identifier = ResourceLocation.tryParse(id);
         if (identifier == null || mc.level == null) {
             return formatPath(id);
         }
@@ -221,10 +221,10 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         if (item == null) {
             return "";
         }
-        if (item.builtInRegistryHolder().areComponentsBound()) {
+        if (item.builtInRegistryHolder().isBound()) {
             return item.getDefaultInstance().getHoverName().getString();
         }
-        Identifier key = BuiltInRegistries.ITEM.getKey(item);
+        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
         return key != null ? formatPath(key.getPath()) : "";
     }
 
@@ -236,18 +236,18 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     private static ItemStack itemPreviewStack(Item item) {
-        if (item == null || item == Items.AIR || !item.builtInRegistryHolder().areComponentsBound()) {
+        if (item == null || item == Items.AIR || !item.builtInRegistryHolder().isBound()) {
             return ItemStack.EMPTY;
         }
         return item.getDefaultInstance();
     }
 
     private static ItemStack entityTypePreviewStack(EntityType<?> entityType) {
-        Identifier key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+        ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
         if (key == null) {
             return ItemStack.EMPTY;
         }
-        Identifier eggId = Identifier.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
+        ResourceLocation eggId = ResourceLocation.tryParse(key.getNamespace() + ":" + key.getPath() + "_spawn_egg");
         if (eggId != null) {
             Item egg = BuiltInRegistries.ITEM.getOptional(eggId).orElse(null);
             ItemStack eggStack = itemPreviewStack(egg);
@@ -286,7 +286,7 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void extractGui(GuiGraphics guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         UiContentBuffer availableBuffer = new UiContentBuffer(renderBatch);
         UiContentBuffer selectedBuffer = new UiContentBuffer(renderBatch);
         itemPreviews.clear();
@@ -386,9 +386,8 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
     }
 
     @Override
-    public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (iconProvider == null || itemPreviews.isEmpty()) return;
-        guiGraphics.nextStratum();
         if (lastOverlayViewport != null) {
             guiGraphics.enableScissor(
                     toMinecraftGuiXInt(lastOverlayViewport.x()),
@@ -682,17 +681,17 @@ public class RegistryListSelectPopup<T> implements PanelPopupHost.Popup {
         return boxY + (boxHeight - textRenderer.textHeight(scale, null)) * 0.5f;
     }
 
-    private void drawItemPreview(GuiGraphicsExtractor guiGraphics, ItemPreview preview) {
+    private void drawItemPreview(GuiGraphics guiGraphics, ItemPreview preview) {
         if (preview.stack().isEmpty()) return;
         float scale = preview.size() / 16.0f;
         float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
         float guiX = toMinecraftGuiX(preview.x());
         float guiY = toMinecraftGuiY(preview.y());
-        guiGraphics.pose().pushMatrix();
-        guiGraphics.pose().translate(guiX + guiScale, guiY + guiScale);
-        guiGraphics.pose().scale(guiScale, guiScale);
-        guiGraphics.item(preview.stack(), 0, 0);
-        guiGraphics.pose().popMatrix();
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(guiX + guiScale, guiY + guiScale, 0.0f);
+        guiGraphics.pose().scale(guiScale, guiScale, 1.0f);
+        guiGraphics.renderItem(preview.stack(), 0, 0);
+        guiGraphics.pose().popPose();
     }
 
     private float toMinecraftGuiX(float uiX) {

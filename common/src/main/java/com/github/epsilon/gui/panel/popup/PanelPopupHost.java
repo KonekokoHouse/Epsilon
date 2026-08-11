@@ -3,10 +3,10 @@ package com.github.epsilon.gui.panel.popup;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.epsilon.gui.panel.utils.IMEFocusHelper;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 /**
  * 面板弹窗宿主。
@@ -79,7 +79,7 @@ public class PanelPopupHost {
     /**
      * 让当前弹窗提取本帧 UI，并写入 scene 当前批次。
      */
-    public void render(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         if (activePopup == null) {
             pendingBatch = null;
             return;
@@ -97,7 +97,7 @@ public class PanelPopupHost {
         pendingBatch = null;
     }
 
-    public void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (activePopup != null) {
             activePopup.extractOverlay(guiGraphics, mouseX, mouseY, partialTick);
         }
@@ -189,19 +189,19 @@ public class PanelPopupHost {
         /**
          * 将当前弹窗的 UI 内容提取到给定批次中。
          *
-         * @param GuiGraphicsExtractor 当前 GUI 提取器
+         * @param GuiGraphics 当前 GUI 提取器
          * @param renderBatch          目标渲染批次
          * @param mouseX               鼠标 X 坐标
          * @param mouseY               鼠标 Y 坐标
          * @param partialTick          局部时间
          */
-        void extractGui(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick);
+        void extractGui(GuiGraphics GuiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick);
 
         /** 保留给需要显式提交附加缓冲的兼容实现。 */
         default void flush(UiRenderBatch renderBatch) {
         }
 
-        default void extractOverlay(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        default void extractOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         }
 
         /**

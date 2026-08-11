@@ -3,10 +3,8 @@ package com.github.epsilon.mixins;
 import com.github.epsilon.modules.impl.render.Filter;
 import com.github.epsilon.modules.impl.render.Fullbright;
 import com.github.epsilon.modules.impl.render.Xray;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
-import net.minecraft.client.renderer.Lightmap;
-import net.minecraft.client.renderer.state.LightmapRenderState;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.LightTexture;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,23 +12,33 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Lightmap.class)
+import java.awt.Color;
+
+@Mixin(LightTexture.class)
 public class MixinLightmap {
 
     @Final
     @Shadow
-    private GpuTexture texture;
+    private NativeImage lightPixels;
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void onRender(LightmapRenderState renderState, CallbackInfo ci) {
-        if (Xray.INSTANCE.isEnabled() || Fullbright.INSTANCE.isGammaMode() || Filter.INSTANCE.isLightMapMode()) {
-            if (Filter.INSTANCE.isLightMapMode()) {
-                RenderSystem.getDevice().createCommandEncoder().clearColorTexture(this.texture, Filter.INSTANCE.getLightMapColor().getRGB());
-            } else {
-                RenderSystem.getDevice().createCommandEncoder().clearColorTexture(this.texture, -1);
+    @Inject(
+            method = "updateLightTexture",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/DynamicTexture;upload()V")
+    )
+    private void overrideLightPixels(float partialTick, CallbackInfo ci) {
+        if (!Xray.INSTANCE.isEnabled() && !Fullbright.INSTANCE.isGammaMode() && !Filter.INSTANCE.isLightMapMode()) {
+            return;
+        }
+
+        int color = Filter.INSTANCE.isLightMapMode() ? nativeColor(Filter.INSTANCE.getLightMapColor()) : -1;
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
+                lightPixels.setPixelRGBA(x, y, color);
             }
-            ci.cancel();
         }
     }
 
+    private static int nativeColor(Color color) {
+        return color.getAlpha() << 24 | color.getBlue() << 16 | color.getGreen() << 8 | color.getRed();
+    }
 }

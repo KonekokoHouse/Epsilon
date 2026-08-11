@@ -43,7 +43,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     }
 
     // the server sends a GameJoin packet after the reconfiguration phase
-    @Inject(method = "handleConfigurationStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    @Inject(method = "handleConfigurationStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V", shift = At.Shift.AFTER))
     private void onHandleConfigurationStart(ClientboundStartConfigurationPacket packet, CallbackInfo ci) {
         EventBus.INSTANCE.post(new GameLeftEvent());
     }
@@ -56,7 +56,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
     @Inject(method = "handleSetEntityData", at = @At("HEAD"), cancellable = true)
     private void hookSneakTweakSetEntityData(ClientboundSetEntityDataPacket packet, CallbackInfo ci) {
         if (SneakTweak.INSTANCE.isEnabled()) {
-            PacketUtils.ensureRunningOnSameThread(packet, (ClientPacketListener) (Object) this, minecraft.packetProcessor());
+            PacketUtils.ensureRunningOnSameThread(packet, (ClientPacketListener) (Object) this, minecraft);
             if (minecraft.player == null || minecraft.level == null || packet.id() != minecraft.player.getId()) {
                 return;
             }

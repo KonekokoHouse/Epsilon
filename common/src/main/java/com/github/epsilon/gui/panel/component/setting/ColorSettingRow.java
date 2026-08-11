@@ -6,7 +6,7 @@ import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.ColorSetting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class ColorSettingRow extends SettingRow<ColorSetting> {
 
@@ -15,7 +15,7 @@ public class ColorSettingRow extends SettingRow<ColorSetting> {
     }
 
     @Override
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphics guiGraphics, UiTextMetrics textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.textHeight(labelScale, null)) / 2.0f;
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(hoverProgress));
@@ -33,7 +33,7 @@ public class ColorSettingRow extends SettingRow<ColorSetting> {
     }
 
     @Override
-    public boolean mouseClicked(UiRect bounds, net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(UiRect bounds, com.github.epsilon.gui.input.MouseButtonEvent event, boolean isDoubleClick) {
         return event.button() == 0 && bounds.contains(event.x(), event.y());
     }
 

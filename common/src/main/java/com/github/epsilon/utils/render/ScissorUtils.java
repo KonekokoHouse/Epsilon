@@ -1,8 +1,6 @@
 package com.github.epsilon.utils.render;
 
 import com.github.epsilon.graphics.LuminRenderSystem;
-import com.mojang.blaze3d.systems.RenderPass;
-import net.minecraft.client.renderer.state.WindowRenderState;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -108,53 +106,11 @@ public class ScissorUtils {
         return width > 0 && height > 0;
     }
 
-    /**
-     * 在渲染通道中启用非空裁剪区域。
-     *
-     * @param pass 渲染通道
-     * @param x X 坐标
-     * @param y Y 坐标
-     * @param width 宽度
-     * @param height 高度
-     * @return 判断结果
-     */
-    public static boolean enableScissor(RenderPass pass, int x, int y, int width, int height) {
-        if (!isVisible(width, height)) {
-            return false;
-        }
-
-        pass.enableScissor(x, y, width, height);
-        return true;
-    }
-
-    /**
-     * 在渲染通道中启用非空裁剪区域。
-     *
-     * @param pass 渲染通道
-     * @param scissor 帧缓冲裁剪矩形
-     * @return 判断结果
-     */
-    public static boolean enableScissor(RenderPass pass, LuminRenderSystem.ScissorRect scissor) {
-        return enableScissor(pass, scissor.x(), scissor.y(), scissor.width(), scissor.height());
-    }
-
     private static int getFramebufferWidth() {
-        LuminRenderSystem.LuminRenderTarget activeTarget = LuminRenderSystem.getActiveTarget();
-        if (activeTarget != null) {
-            return activeTarget.width();
-        }
-
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
-        return windowState.width;
+        return mc.getWindow().getWidth();
     }
 
     private static int getFramebufferHeight() {
-        LuminRenderSystem.LuminRenderTarget activeTarget = LuminRenderSystem.getActiveTarget();
-        if (activeTarget != null) {
-            return activeTarget.height();
-        }
-
-        WindowRenderState windowState = mc.gameRenderer.getGameRenderState().windowRenderState;
-        return windowState.height;
+        return mc.getWindow().getHeight();
     }
 }

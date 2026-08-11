@@ -1,7 +1,7 @@
 package com.github.epsilon.events.impl;
 
 import com.github.epsilon.events.bus.Cancellable;
-import net.minecraft.client.input.KeyEvent;
+import com.github.epsilon.gui.input.KeyEvent;
 
 public class KeyPressEvent extends Cancellable {
 

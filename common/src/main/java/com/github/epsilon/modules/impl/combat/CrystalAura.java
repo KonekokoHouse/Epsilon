@@ -153,7 +153,7 @@ public class CrystalAura extends Module {
                     return;
                 }
 
-                int prevSlot = mc.player.getInventory().getSelectedSlot();
+                int prevSlot = mc.player.getInventory().selected;
                 boolean swappedForWeakness = false;
 
                 if ((entity instanceof EndCrystal || entity instanceof Slime) && antiWeakness.getValue() && cantBreakCrystal()) {
@@ -216,7 +216,7 @@ public class CrystalAura extends Module {
 
     private boolean cantBreakCrystal() {
         MobEffectInstance weakness = mc.player.getEffect(MobEffects.WEAKNESS);
-        MobEffectInstance strength = mc.player.getEffect(MobEffects.STRENGTH);
+        MobEffectInstance strength = mc.player.getEffect(MobEffects.DAMAGE_BOOST);
 
         return weakness != null
                 && (strength == null || strength.getAmplifier() <= weakness.getAmplifier())

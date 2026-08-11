@@ -304,7 +304,7 @@ public class AutoMap extends Module {
     }
 
     private String currentDimension() {
-        return mc.level == null ? "" : mc.level.dimension().identifier().toString();
+        return mc.level == null ? "" : mc.level.dimension().location().toString();
     }
 
     private void sendMessage(String message) {

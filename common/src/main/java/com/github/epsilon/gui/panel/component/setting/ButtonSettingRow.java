@@ -8,8 +8,8 @@ import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.impl.ButtonSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 public class ButtonSettingRow extends SettingRow<ButtonSetting> {
 
@@ -21,7 +21,7 @@ public class ButtonSettingRow extends SettingRow<ButtonSetting> {
     }
 
     @Override
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphics guiGraphics, UiTextMetrics textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.textHeight(labelScale, null)) / 2.0f;
         hoverAnimation.run(hoverProgress);

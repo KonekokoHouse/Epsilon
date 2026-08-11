@@ -57,7 +57,7 @@ public class AutoFirework extends Module {
             isKeyDown = true;
 
             if (this.previousSelectedSlot == -1) {
-                this.previousSelectedSlot = mc.player.getInventory().getSelectedSlot();
+                this.previousSelectedSlot = mc.player.getInventory().selected;
                 this.previousItem = mc.player.getMainHandItem();
             }
 

@@ -21,10 +21,10 @@ import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 import java.awt.*;
 import java.util.*;
@@ -73,10 +73,10 @@ public class ModuleListPanel implements AutoCloseable {
      * <p>
      * 面板标题、搜索框和滚动列表内容都写入当前 scene 帧的批次。
      */
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics GuiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         UiContentBuffer contentBuffer = new UiContentBuffer(renderBatch);
         this.bounds = bounds;
-        this.guiHeight = GuiGraphicsExtractor.guiHeight();
+        this.guiHeight = GuiGraphics.guiHeight();
 
         if (Math.abs(scrollVelocity) > 0.01f) {
             state.scrollModules(scrollVelocity * partialTick);
@@ -140,7 +140,7 @@ public class ModuleListPanel implements AutoCloseable {
         renderBatch.render(tree);
 
         if (rebuildContent) {
-            rememberSnapshot(bounds, mouseX, mouseY, modules, GuiGraphicsExtractor.guiHeight(), contentSignature);
+            rememberSnapshot(bounds, mouseX, mouseY, modules, GuiGraphics.guiHeight(), contentSignature);
         }
     }
 

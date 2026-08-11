@@ -20,7 +20,7 @@ import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.render.WireframeEntityRenderer;
 import com.github.epsilon.utils.render.WorldToScreen;
 import com.google.common.collect.Maps;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
@@ -28,7 +28,6 @@ import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action;
@@ -67,7 +66,7 @@ public class LogoutSpots extends Module {
     private final Map<UUID, LogoutPlayer> logoutCache = Maps.newConcurrentMap();
 
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
 
     @Override
     protected void onEnable() {
@@ -115,7 +114,7 @@ public class LogoutSpots extends Module {
     private void onPlayerTick(PlayerTickEvent.Pre event) {
         for (Player player : mc.level.players()) {
             if (player.equals(mc.player)) continue;
-            playerCache.put(player.getGameProfile().id(), player);
+            playerCache.put(player.getGameProfile().getId(), player);
         }
     }
 
@@ -144,11 +143,11 @@ public class LogoutSpots extends Module {
 
     @EventHandler
     private void onRender2D(Render2DEvent.Level event) {
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         UiTextMetrics textMetrics = runtime.textMetrics();
 
-        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float partialTick = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         float screenWidth = LuminRenderSystem.getScaledWidth();
         float screenHeight = LuminRenderSystem.getScaledHeight();
 
@@ -190,7 +189,7 @@ public class LogoutSpots extends Module {
         }
     }
 
-    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+    private UiScene scene(MinecraftUiRuntime1211 runtime) {
         if (scene == null || sceneRuntime != runtime) {
             releaseScene();
             scene = runtime.createScene(EpsilonUiTheme.lumin());
@@ -218,9 +217,9 @@ public class LogoutSpots extends Module {
         private final float attackAnimation;
 
         private LogoutPlayer(Player player) {
-            super(mc.level, new GameProfile(player.getGameProfile().id(), player.getGameProfile().name()));
+            super(mc.level, new GameProfile(player.getGameProfile().getId(), player.getGameProfile().getName()));
 
-            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             walkPosition = player.walkAnimation.position(tickDelta);
             walkSpeed = player.walkAnimation.speed(tickDelta);
             attackAnimation = player.getAttackAnim(tickDelta);
@@ -239,7 +238,7 @@ public class LogoutSpots extends Module {
         }
 
         private void render(PoseStack poseStack) {
-            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             oAttackAnim = attackAnimation;
             attackAnim = attackAnimation;
             ((WalkAnimationStateAccessor) walkAnimation).epsilon$freeze(walkPosition, walkSpeed, tickDelta);
@@ -252,10 +251,6 @@ public class LogoutSpots extends Module {
             return false;
         }
 
-        @Override
-        public Component belowNameDisplay() {
-            return null;
-        }
     }
 
 }

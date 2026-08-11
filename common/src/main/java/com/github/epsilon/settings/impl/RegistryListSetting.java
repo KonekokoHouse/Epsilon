@@ -4,7 +4,7 @@ import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.world.BlockRegistryUtils;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -43,7 +43,7 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
                 case ITEM -> (Predicate<Item>) item -> item != null && item != Items.AIR;
                 case ENTITY_TYPE -> (Predicate<EntityType<?>>) entityType -> entityType != null;
                 case SOUND_EVENT -> (Predicate<SoundEvent>) sound -> sound != null;
-                case ENCHANTMENT -> (Predicate<String>) id -> id != null && Identifier.tryParse(id) != null;
+                case ENCHANTMENT -> (Predicate<String>) id -> id != null && ResourceLocation.tryParse(id) != null;
             };
         }
 
@@ -56,13 +56,13 @@ public class RegistryListSetting<T> extends Setting<List<T>> {
             if (registry == null) {
                 return "";
             }
-            Identifier key = registry.getKey(entry);
+            ResourceLocation key = registry.getKey(entry);
             return key != null ? key.toString() : "";
         }
 
         @SuppressWarnings("unchecked")
         <T> T fromId(String id) {
-            Identifier loc = Identifier.tryParse(id);
+            ResourceLocation loc = ResourceLocation.tryParse(id);
             if (loc == null) {
                 return null;
             }

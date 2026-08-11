@@ -8,7 +8,7 @@ import com.github.epsilon.modules.impl.render.NoRender;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,25 +18,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Gui.class)
 public class MixinGui {
 
-    @Inject(method = "extractEffects", at = @At("HEAD"), cancellable = true)
-    private void onExtractEffects(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    @Inject(method = "renderEffects", at = @At("HEAD"), cancellable = true)
+    private void onRenderEffects(GuiGraphics graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         NoRender noRender = NoRender.INSTANCE;
         if (noRender.isEnabled() && noRender.potionEffects.getValue()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "extractRenderState", at = @At("TAIL"))
-    private void onExtractRenderState(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    @Inject(method = "render", at = @At("TAIL"))
+    private void onRender(GuiGraphics graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        EventBus.INSTANCE.post(new Render2DEvent.Level(graphics));
         EventBus.INSTANCE.post(new Render2DEvent.HUD(graphics));
     }
 
-    @ModifyArg(method = "extractItemHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V", ordinal = 1), index = 2)
+    @ModifyArg(method = "renderItemHotbar", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V", ordinal = 1), index = 1)
     private int modifyHotbarSelectionX(int x) {
         return GameAnimation.INSTANCE.getHotbarSelectionX(x);
     }
 
-    @ModifyExpressionValue(method = "extractCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/CameraType;isFirstPerson()Z"))
+    @ModifyExpressionValue(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/CameraType;isFirstPerson()Z"))
     private boolean alwaysRenderCrosshairInFreecam(boolean firstPerson) {
         return FreeCamera.INSTANCE.isEnabled() || firstPerson;
     }

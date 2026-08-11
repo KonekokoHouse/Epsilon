@@ -1,11 +1,8 @@
 {
   "required": true,
   "package": "com.github.epsilon.fabric.mixins",
-  "plugin": "com.github.epsilon.fabric.mixins.FabricMixinPlugin",
-  "compatibilityLevel": "JAVA_25",
-  "client": [
-    "sodium.MixinSodiumAbstractBlockRenderContext"
-  ],
+  "compatibilityLevel": "JAVA_21",
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

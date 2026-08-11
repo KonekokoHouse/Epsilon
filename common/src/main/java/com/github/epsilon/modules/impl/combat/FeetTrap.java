@@ -83,7 +83,7 @@ public class FeetTrap extends Module {
 
         progress = 0;
 
-        if (!mc.player.isMoving() && !mc.options.keyJump.isDown()) {
+        if (!com.github.epsilon.utils.player.MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
             startX = mc.player.getX();
             startY = mc.player.getY();
             startZ = mc.player.getZ();
@@ -96,7 +96,7 @@ public class FeetTrap extends Module {
             return;
         }
 
-        if (toggleOnMove.getValue() && mc.player.distanceToSqr(startX, startY, startZ) > 1.0 || toggleOnJump.getValue() && mc.player.input.keyPresses.jump()) {
+        if (toggleOnMove.getValue() && mc.player.distanceToSqr(startX, startY, startZ) > 1.0 || toggleOnJump.getValue() && mc.player.input.jumping) {
             toggle();
             return;
         }

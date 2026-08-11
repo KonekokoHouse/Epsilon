@@ -14,13 +14,11 @@ import com.github.epsilon.utils.render.WireframeEntityRenderer;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -54,7 +52,7 @@ public class PopChams extends Module {
 
     @EventHandler
     private void onReceivePacket(PacketEvent.Receive event) {
-        if (!(event.getPacket() instanceof ClientboundEntityEventPacket packet) || packet.getEventId() != EntityEvent.PROTECTED_FROM_DEATH)
+        if (!(event.getPacket() instanceof ClientboundEntityEventPacket packet) || packet.getEventId() != EntityEvent.TALISMAN_ACTIVATE)
             return;
 
         Entity entity = packet.getEntity(mc.level);
@@ -87,8 +85,8 @@ public class PopChams extends Module {
         private final double startY;
 
         private GhostPlayer(Player player) {
-            super(mc.level, new GameProfile(player.getGameProfile().id(), player.getGameProfile().name()));
-            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            super(mc.level, new GameProfile(player.getGameProfile().getId(), player.getGameProfile().getName()));
+            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             walkPosition = player.walkAnimation.position(tickDelta);
             walkSpeed = player.walkAnimation.speed(tickDelta);
             attackAnimation = player.getAttackAnim(tickDelta);
@@ -106,11 +104,11 @@ public class PopChams extends Module {
         }
 
         private boolean render(Render3DEvent event) {
-            float frameTime = mc.getDeltaTracker().getGameTimeDeltaTicks() / 20.0f;
+            float frameTime = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaTicks() / 20.0f;
             timer += frameTime;
             if (timer > renderTime.getValue()) return true;
 
-            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            float tickDelta = mc.level.tickRateManager().isFrozen() ? 1.0f : com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             tickCount = (int) (timer * 20.0);
 
             float progress = Mth.clamp((float) (timer / renderTime.getValue()), 0.0f, 1.0f);
@@ -146,10 +144,6 @@ public class PopChams extends Module {
             return false;
         }
 
-        @Override
-        public @Nullable Component belowNameDisplay() {
-            return null;
-        }
     }
 
 }

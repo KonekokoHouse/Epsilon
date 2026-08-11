@@ -8,19 +8,14 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
-import com.github.epsilon.utils.player.EnchantmentUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.WindChargeItem;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.Optional;
 
 public class Velocity extends Module {
 
@@ -82,7 +77,7 @@ public class Velocity extends Module {
             case Cancel -> {
                 if (nullCheck()) return;
 
-                if (serverMotion.getValue() && event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.id() == mc.player.getId()) {
+                if (serverMotion.getValue() && event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.getId() == mc.player.getId()) {
                     if (!shouldExcludeMotion(packet)) {
                         event.cancel();
                     }
@@ -97,18 +92,21 @@ public class Velocity extends Module {
                         return;
                     }
                     event.setPacket(new ClientboundExplodePacket(
-                            packet.center(),
-                            packet.radius(),
-                            packet.blockCount(),
-                            Optional.empty(),
-                            packet.explosionParticle(),
-                            packet.explosionSound(),
-                            packet.blockParticles()
+                            packet.getX(),
+                            packet.getY(),
+                            packet.getZ(),
+                            packet.getPower(),
+                            packet.getToBlow(),
+                            null,
+                            packet.getBlockInteraction(),
+                            packet.getSmallExplosionParticles(),
+                            packet.getLargeExplosionParticles(),
+                            packet.getExplosionSound()
                     ));
                 }
             }
             case Legit -> {
-                if (event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.id() == mc.player.getId()) {
+                if (event.getPacket() instanceof ClientboundSetEntityMotionPacket packet && packet.getId() == mc.player.getId()) {
                     jump = true;
                 }
             }
@@ -118,8 +116,8 @@ public class Velocity extends Module {
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
         if (jump) {
-            if (mc.player.onGround() && mc.player.isMoving()) {
-                mc.player.input.makeJump();
+            if (mc.player.onGround() && com.github.epsilon.utils.player.MoveUtils.isMoving()) {
+                event.setJump(true);
             }
             jump = false;
         }
@@ -134,33 +132,21 @@ public class Velocity extends Module {
     }
 
     private boolean isSpearLungeMotion(ClientboundSetEntityMotionPacket packet) {
-        if (!isSpearWithLunge(mc.player.getMainHandItem())) return false;
-        if (!mc.options.keyAttack.isDown()) return false;
-
-        Vec3 vel = packet.movement();
-        double horiz = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
-        if (horiz < 0.15) return false;
-
-        Vec3 look = mc.player.getLookAngle();
-        double dot = vel.x * look.x + vel.z * look.z;
-        return dot > 0;
+        return false;
     }
 
     private boolean isWindChargeExplosion(ClientboundExplodePacket packet) {
         if (windChargeTimer.passedMillise(3000)) return false;
 
-        double dist = packet.center().distanceTo(mc.player.position());
+        Vec3 center = new Vec3(packet.getX(), packet.getY(), packet.getZ());
+        double dist = center.distanceTo(mc.player.position());
         if (dist > 12.0) return false;
 
-        if (packet.radius() > 3.0f) return false;
+        if (packet.getPower() > 3.0f) return false;
 
-        return packet.playerKnockback().isPresent();
-    }
-
-    private boolean isSpearWithLunge(ItemStack stack) {
-        if (stack.isEmpty()) return false;
-        return stack.has(DataComponents.PIERCING_WEAPON)
-                && EnchantmentUtils.getEnchantmentLevel(stack, Enchantments.LUNGE) > 0;
+        return packet.getKnockbackX() != 0.0f
+                || packet.getKnockbackY() != 0.0f
+                || packet.getKnockbackZ() != 0.0f;
     }
 
 }

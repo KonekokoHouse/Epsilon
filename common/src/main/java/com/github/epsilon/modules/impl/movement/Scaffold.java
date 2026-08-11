@@ -207,7 +207,7 @@ public class Scaffold extends Module {
                 InvUtils.swapBack();
                 shouldSwapBack = false;
             }
-            boolean isHoldingShift = InputConstants.isKeyDown(mc.getWindow(), mc.options.keyShift.getDefaultKey().getValue());
+            boolean isHoldingShift = InputConstants.isKeyDown(mc.getWindow().getWindow(), mc.options.keyShift.getDefaultKey().getValue());
             mc.options.keyShift.setDown(isHoldingShift);
         }
     }
@@ -237,14 +237,15 @@ public class Scaffold extends Module {
                 }
             }
 
-            if ((!reachable || mc.player.getDeltaMovement().horizontal().length() >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
+            Vec3 movement = mc.player.getDeltaMovement();
+            if ((!reachable || Math.hypot(movement.x, movement.z) >= 1.5) && rotateCount <= 8 && getBlockCount() >= 1) {
                 Rot2f rotation = getRotation(blockPos, direction);
                 event.cancel();
 
                 rotateCount++;
                 Managers.ROTATION.rotations = rotation;
                 Managers.ROTATION.setActive(true);
-                mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround(), mc.player.horizontalCollision));
+                mc.getConnection().send(new ServerboundMovePlayerPacket.Rot(rotation.getYaw(), rotation.getPitch(), mc.player.onGround()));
 
                 swap();
 
@@ -274,7 +275,7 @@ public class Scaffold extends Module {
 
     @EventHandler
     private void onMoveInput(KeyboardInputEvent event) {
-        if (mc.player.onGround() && !mc.options.keyJump.isDown() && mc.player.isMoving() && mode.is(Mode.TellyBridge)) {
+        if (mc.player.onGround() && !mc.options.keyJump.isDown() && com.github.epsilon.utils.player.MoveUtils.isMoving() && mode.is(Mode.TellyBridge)) {
             event.setJump(true);
         }
     }
@@ -364,7 +365,7 @@ public class Scaffold extends Module {
     }
 
     private int getYLevel() {
-        if (!mc.options.keyJump.isDown() && mc.player.isMoving() && mc.player.fallDistance <= 0.25f && mode.is(Mode.TellyBridge)) {
+        if (!mc.options.keyJump.isDown() && com.github.epsilon.utils.player.MoveUtils.isMoving() && mc.player.fallDistance <= 0.25f && mode.is(Mode.TellyBridge)) {
             return yLevel;
         }
         return Mth.floor(mc.player.getY()) - 1;
@@ -415,7 +416,7 @@ public class Scaffold extends Module {
 
         Vec3 center = pos.getBottomCenter();
         for (Direction dir : Direction.values()) {
-            Vec3 normal = dir.getUnitVec3();
+            Vec3 normal = Vec3.atLowerCornerOf(dir.getNormal());
             Vec3 hit = center.add(normal.scale(0.5));
             BlockPos baseBlockPos = pos.relative(dir);
 
@@ -429,7 +430,7 @@ public class Scaffold extends Module {
                 continue;
             }
 
-            if (face == Direction.UP && mc.player.isMoving() && !mc.options.keyJump.isDown()) {
+            if (face == Direction.UP && com.github.epsilon.utils.player.MoveUtils.isMoving() && !mc.options.keyJump.isDown()) {
                 continue;
             }
 
@@ -536,7 +537,7 @@ public class Scaffold extends Module {
 
         switch (swapMode.getValue()) {
             case Normal -> {
-                int selectedSlot = mc.player.getInventory().getSelectedSlot();
+                int selectedSlot = mc.player.getInventory().selected;
                 InvUtils.swap(blockResult.slot(), true);
                 if (swapBack.getValue() && blockResult.slot() != selectedSlot) {
                     shouldSwapBack = true;
@@ -573,7 +574,7 @@ public class Scaffold extends Module {
         }
 
         Block block = ((BlockItem) stack.getItem()).getBlock();
-        if (block instanceof FlowerBlock || block instanceof BushBlock || block instanceof NetherFungusBlock || block instanceof CropBlock) {
+        if (block instanceof FlowerBlock || block instanceof BushBlock || block instanceof CropBlock) {
             return false;
         }
 

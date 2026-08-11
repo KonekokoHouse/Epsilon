@@ -11,7 +11,7 @@ import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.text.icon.IconChars;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
@@ -19,11 +19,11 @@ import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
@@ -52,7 +52,7 @@ public class HudEditorScreen extends Screen {
     private SnapInfo currentSnap = SnapInfo.none();
 
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
     private UiTextMetrics textMetrics;
     private UiRenderBatch editorBatch;
     private UiTree.Scope editorScope;
@@ -76,14 +76,14 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         pendingMouseX = UiCoordinateMapper.toProjectionX(mouseX);
         pendingMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         framePending = true;
         drawElementOverlays(graphics);
     }
 
-    private void prepareScene(MinecraftUiRuntime2612 runtime) {
+    private void prepareScene(MinecraftUiRuntime1211 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
         releaseScene();
         runtime.useDefaultFont(DEFAULT_FONT_ID);
@@ -154,19 +154,19 @@ public class HudEditorScreen extends Screen {
     public void renderPendingHudElements() {
         if (!framePending || minecraft.screen != this) return;
         framePending = false;
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         prepareScene(runtime);
         runtime.render(scene, activeScene -> {
             drawEditor(activeScene, pendingMouseX, pendingMouseY);
-            HudElementHolder.INSTANCE.submitHudTree(activeScene, -40, minecraft.getDeltaTracker());
+            HudElementHolder.INSTANCE.submitHudTree(activeScene, -40, com.github.epsilon.Constants.getDeltaTracker());
         });
     }
 
-    private void drawElementOverlays(GuiGraphicsExtractor graphics) {
+    private void drawElementOverlays(GuiGraphics graphics) {
         for (HudModule element : HudElementHolder.INSTANCE.getElements()) {
             if (!element.isEnabled()) continue;
-            element.renderOverlay(graphics, minecraft.getDeltaTracker());
+            element.renderOverlay(graphics, com.github.epsilon.Constants.getDeltaTracker());
         }
     }
 
@@ -302,7 +302,8 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        KeyEvent event = new KeyEvent(keyCode, scanCode, modifiers);
         if (hudPanel != null && hudPanel.hasActiveInput() && hudPanel.keyPressed(event.key(), event.scancode(), event.modifiers())) {
             return true;
         }
@@ -316,20 +317,22 @@ public class HudEditorScreen extends Screen {
         if (hudPanel != null && hudPanel.keyPressed(event.key(), event.scancode(), event.modifiers())) {
             return true;
         }
-        return super.keyPressed(event);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean charTyped(CharacterEvent event) {
+    public boolean charTyped(char codePoint, int modifiers) {
+        CharacterEvent event = new CharacterEvent(codePoint, modifiers);
         String typed = event.codepointAsString();
         if (hudPanel != null && !typed.isEmpty() && hudPanel.charTyped(typed)) {
             return true;
         }
-        return super.charTyped(event);
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (hudPanel != null && hudPanel.mouseClicked(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
             validateSelection();
@@ -349,11 +352,12 @@ public class HudEditorScreen extends Screen {
             currentSnap = SnapInfo.none();
             return true;
         }
-        return super.mouseClicked(epsilonEvent, isDoubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (draggingElement != null && event.button() == 0) {
             draggingElement = null;
@@ -363,14 +367,15 @@ public class HudEditorScreen extends Screen {
         if (hudPanel != null && hudPanel.mouseReleased(epsilonEvent.x(), epsilonEvent.y(), epsilonEvent.button())) {
             return true;
         }
-        return super.mouseReleased(epsilonEvent);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
-        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(mouseX);
-        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(mouseY);
+        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(deltaX);
+        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(deltaY);
         if (draggingElement != null) {
             moveElementTo(draggingElement, (float) epsilonEvent.x() - dragOffsetX,
                     (float) epsilonEvent.y() - dragOffsetY, true);
@@ -379,7 +384,7 @@ public class HudEditorScreen extends Screen {
         if (hudPanel != null) {
             hudPanel.mouseDragged(epsilonEvent.x(), epsilonEvent.y());
         }
-        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
     @Override
@@ -549,9 +554,9 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         if (this.minecraft.level == null) {
-            this.extractPanorama(graphics, a);
+            this.renderPanorama(graphics, a);
         }
     }
 

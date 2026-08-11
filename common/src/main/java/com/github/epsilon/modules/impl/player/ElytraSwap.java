@@ -10,11 +10,11 @@ import com.github.epsilon.settings.impl.KeybindSetting;
 import com.github.epsilon.utils.client.KeybindUtils;
 import com.github.epsilon.utils.player.ClickSlotUtils;
 import com.github.epsilon.utils.player.InvUtils;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Equipable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Predicate;
@@ -61,7 +61,7 @@ public class ElytraSwap extends Module {
             isKeyDown = true;
 
             if (this.originalSlot == -1) {
-                this.originalSlot = mc.player.getInventory().getSelectedSlot();
+                this.originalSlot = mc.player.getInventory().selected;
             }
 
             if (this.swapCounter < this.swapDelay.getValue()) {
@@ -76,8 +76,8 @@ public class ElytraSwap extends Module {
             Predicate<ItemStack> predicate = wearingElytra ?
                     stack -> {
                         if (stack.isEmpty()) return false;
-                        var equippable = stack.get(DataComponents.EQUIPPABLE);
-                        return equippable != null && equippable.slot() == EquipmentSlot.CHEST;
+                        Equipable equippable = Equipable.get(stack);
+                        return equippable != null && equippable.getEquipmentSlot() == EquipmentSlot.CHEST;
                     } :
                     stack -> stack.is(Items.ELYTRA);
             if (!this.isItemSwapped) {

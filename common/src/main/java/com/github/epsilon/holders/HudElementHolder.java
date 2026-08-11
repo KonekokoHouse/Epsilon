@@ -11,7 +11,7 @@ import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.utils.client.ClientUtils;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -34,7 +34,7 @@ public class HudElementHolder {
 
     private final List<HudModule> elements = new ArrayList<>();
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
 
     public void initElements() {
         addElement(Notifications.INSTANCE);
@@ -62,9 +62,9 @@ public class HudElementHolder {
     private void onRender2D(Render2DEvent.HUD event) {
         if (ClientUtils.isLoading() || mc.level == null || mc.screen instanceof HudEditorScreen) return;
 
-        DeltaTracker deltaTracker = mc.getDeltaTracker();
+        DeltaTracker deltaTracker = com.github.epsilon.Constants.getDeltaTracker();
         try {
-            MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+            MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
             configureFonts(runtime);
             runtime.render(scene(runtime), activeScene -> submitHudTree(activeScene, 0, deltaTracker));
         } catch (RuntimeException failure) {
@@ -82,7 +82,7 @@ public class HudElementHolder {
         }
     }
 
-    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+    private UiScene scene(MinecraftUiRuntime1211 runtime) {
         if (scene != null && sceneRuntime != runtime) {
             releaseScene();
         }
@@ -112,7 +112,7 @@ public class HudElementHolder {
         }
     }
 
-    private void configureFonts(MinecraftUiRuntime2612 runtime) {
+    private void configureFonts(MinecraftUiRuntime1211 runtime) {
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
     }
 

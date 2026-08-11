@@ -2,7 +2,7 @@ package com.github.epsilon.gui.panel.popup;
 
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.slmpc.lumingraphics.ui.render.UiContentBuffer;
@@ -15,10 +15,10 @@ import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
@@ -45,7 +45,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     private final Setting<List<String>> setting;
     private final Consumer<String> addFn;
     private final Consumer<String> removeFn;
-    private final UiTextMetrics textRenderer = MinecraftUiRuntime2612.current().textMetrics();
+    private final UiTextMetrics textRenderer = MinecraftUiRuntime1211.current().textMetrics();
     private final Animation openAnimation = new Animation(Easing.EASE_OUT_CUBIC, 160L);
     private final ScrollBarDragState scrollBarDrag = new ScrollBarDragState();
 
@@ -72,7 +72,7 @@ public class StringListSelectPopup implements PanelPopupHost.Popup {
     }
 
     @Override
-    public void extractGui(GuiGraphicsExtractor guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
+    public void extractGui(GuiGraphics guiGraphics, UiRenderBatch renderBatch, int mouseX, int mouseY, float partialTick) {
         UiContentBuffer contentBuffer = new UiContentBuffer(renderBatch);
         List<String> entries = entries();
         float contentHeight = entries.size() * (ROW_HEIGHT + ROW_GAP);

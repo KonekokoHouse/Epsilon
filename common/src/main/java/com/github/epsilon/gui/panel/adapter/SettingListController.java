@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.adapter;
 
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
@@ -14,11 +14,11 @@ import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingLayoutPlanner;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.input.PreeditEvent;
-import org.jspecify.annotations.Nullable;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.PreeditEvent;
+import javax.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +33,7 @@ public class SettingListController implements AutoCloseable {
     private static final float GROUP_COUNT_CHIP_HEIGHT = 14.0f;
 
     private final PanelPopupHost popupHost;
-    private final UiTextMetrics measureTextRenderer = MinecraftUiRuntime2612.current().textMetrics();
+    private final UiTextMetrics measureTextRenderer = MinecraftUiRuntime1211.current().textMetrics();
     private final Map<Setting<?>, SettingRow<?>> rowCache = new HashMap<>();
     private final Map<String, Animation> sectionHoverAnimations = new HashMap<>();
     private final Map<String, Animation> sectionExpandAnimations = new HashMap<>();

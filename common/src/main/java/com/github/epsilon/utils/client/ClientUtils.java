@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.client;
 
-import net.minecraft.client.ResourceLoadStateTracker;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -12,8 +12,7 @@ public class ClientUtils {
      * @return 仍在加载时返回 true
      */
     public static boolean isLoading() {
-        ResourceLoadStateTracker.ReloadState state = mc.reloadStateTracker.reloadState;
-        return state == null || !state.finished;
+        return !mc.isGameLoadFinished() || mc.getOverlay() instanceof LoadingOverlay;
     }
 
 }

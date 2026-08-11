@@ -1,8 +1,8 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftBlurRegion1211;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.epsilon.settings.impl.BoolSetting;
@@ -90,7 +90,7 @@ public class BPS extends HudModule {
         float panelH = 58f * s;
 
         if (backgroundBlur.getValue()) {
-            MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+            MinecraftUiRuntime1211.current().applyBlur(MinecraftBlurRegion1211.rounded(
                     new UiRect(this.x, this.y, panelW, panelH), radius, blurStrength.getValue()));
         }
 

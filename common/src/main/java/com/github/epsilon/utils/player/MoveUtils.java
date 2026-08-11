@@ -6,6 +6,11 @@ import static com.github.epsilon.Constants.mc;
 
 public class MoveUtils {
 
+    public static boolean isMoving() {
+        Vec2 movement = mc.player.input.getMoveVector();
+        return movement.x != 0.0f || movement.y != 0.0f;
+    }
+
     /**
      * 根据当前旋转计算忽略横移输入的水平速度向量。
      *

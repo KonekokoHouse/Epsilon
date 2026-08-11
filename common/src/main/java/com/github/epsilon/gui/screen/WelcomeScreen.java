@@ -2,13 +2,13 @@ package com.github.epsilon.gui.screen;
 
 import com.github.epsilon.holders.ConfigHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 import java.awt.*;
 import java.net.URI;
@@ -79,7 +79,7 @@ public class WelcomeScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         float fade = Mth.clamp((Util.getMillis() - openedAtMs) / 250.0f, 0.0f, 1.0f);
         int alpha = Math.round(255.0f * fade);
 
@@ -95,25 +95,25 @@ public class WelcomeScreen extends Screen {
         int bodyColor = new Color(220, 223, 230, alpha).getRGB();
 
         graphics.fill(cardX, cardY, cardX + cardWidth, cardY + cardHeight, cardColor);
-        graphics.outline(cardX, cardY, cardWidth, cardHeight, outlineColor);
+        graphics.renderOutline(cardX, cardY, cardWidth, cardHeight, outlineColor);
 
         String title = getTitle().getString();
         int titleX = this.width / 2 - font.width(title) / 2;
         int titleY = cardY + TITLE_TOP;
-        graphics.text(font, title, titleX, titleY, titleColor, false);
+        graphics.drawString(font, title, titleX, titleY, titleColor, false);
 
         int textX = cardX + CARD_PADDING;
         int textY = titleY + TITLE_TO_BODY_GAP;
         for (Component line : bodyLines) {
             List<net.minecraft.util.FormattedCharSequence> wrapped = font.split(line, bodyWidth);
             for (net.minecraft.util.FormattedCharSequence wrappedLine : wrapped) {
-                graphics.text(font, wrappedLine, textX, textY, bodyColor, false);
+                graphics.drawString(font, wrappedLine, textX, textY, bodyColor, false);
                 textY += BODY_LINE_HEIGHT;
             }
             textY += BODY_BLOCK_GAP;
         }
 
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override

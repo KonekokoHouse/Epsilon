@@ -4,6 +4,7 @@ import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.Render3DEvent;
 import com.github.epsilon.events.impl.StartDestroyBlockEvent;
 import com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler;
+import com.github.epsilon.interfaces.ClientLevelPredictionAccessor;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.*;
@@ -271,7 +272,7 @@ public class PacketMine extends Module {
                         && ((secondProgressPercent >= switchDamage.getValue() || mainProgressPercent >= switchDamage.getValue()) && !hasSwitch && secondPos != null)
         ) {
             int bestSlot = getTool(secondPos);
-            if (!hasSwitch) oldSlot = mc.player.getInventory().getSelectedSlot();
+            if (!hasSwitch) oldSlot = mc.player.getInventory().selected;
             if (!switchMode.is(SwitchMode.None) && bestSlot != -1) {
                 if (switchMode.is(SwitchMode.Delay)) {
                     InvUtils.swap(bestSlot, false);
@@ -336,7 +337,7 @@ public class PacketMine extends Module {
         mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, RotationUtils.getDirection(pos)));
         if (fastBypass.getValue()) {
             BlockPos bypassPos = BlockPos.containing(mc.player.getX(), 321, mc.player.getZ());
-            mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, bypassPos, Direction.DOWN, mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence()));
+            sendPredictedAction(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, bypassPos, Direction.DOWN);
         }
         if (doubleBreak.getValue()) {
             long delay = packetDelay.getValue();
@@ -367,7 +368,7 @@ public class PacketMine extends Module {
         }
         if (!doubleBreak.getValue() || secondPos == null) {
             int bestSlot = getTool(targetPos);
-            if (!hasSwitch) oldSlot = mc.player.getInventory().getSelectedSlot();
+            if (!hasSwitch) oldSlot = mc.player.getInventory().selected;
             if (switchMode.getValue() != SwitchMode.None && bestSlot != -1) {
                 if (switchMode.is(SwitchMode.Delay)) {
                     InvUtils.swap(bestSlot, false);
@@ -380,11 +381,11 @@ public class PacketMine extends Module {
             }
         }
         if (bypassGround.getValue() && !mc.player.isFallFlying() && targetPos != null && !isAir(targetPos) && !mc.player.onGround()) {
-            mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 1.0e-9, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), true, mc.player.horizontalCollision));
+            mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 1.0e-9, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), true));
             mc.player.resetFallDistance();
         }
         if (swing.getValue()) mc.player.swing(InteractionHand.MAIN_HAND);
-        mc.getConnection().send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, targetPos, RotationUtils.getDirection(targetPos), mc.level.getBlockStatePredictionHandler().startPredicting().currentSequence()));
+        sendPredictedAction(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, targetPos, RotationUtils.getDirection(targetPos));
         if (clientRemove.getValue() && targetPos != null && !isAir(targetPos)) {
             mc.gameMode.destroyBlock(targetPos);
         }
@@ -392,7 +393,7 @@ public class PacketMine extends Module {
 
     private void sendStopSecond() {
         if (bypassGround.getValue() && !mc.player.isFallFlying() && secondPos != null && !isAir(secondPos) && !mc.player.onGround()) {
-            mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 1.0e-9, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), true, mc.player.horizontalCollision));
+            mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(), mc.player.getY() + 1.0e-9, mc.player.getZ(), mc.player.getYRot(), mc.player.getXRot(), true));
             mc.player.resetFallDistance();
         }
         if (swing.getValue()) {
@@ -400,6 +401,13 @@ public class PacketMine extends Module {
         }
         if (clientRemove.getValue() && secondPos != null && !isAir(secondPos)) {
             mc.gameMode.destroyBlock(secondPos);
+        }
+    }
+
+    private void sendPredictedAction(ServerboundPlayerActionPacket.Action action, BlockPos pos, Direction direction) {
+        try (var prediction = ((ClientLevelPredictionAccessor) mc.level)
+                .epsilon$getBlockStatePredictionHandler().startPredicting()) {
+            mc.getConnection().send(new ServerboundPlayerActionPacket(action, pos, direction, prediction.currentSequence()));
         }
     }
 
@@ -416,12 +424,12 @@ public class PacketMine extends Module {
         if (efficiency > 0 && speed > 1.0f) {
             speed += efficiency * efficiency + 1;
         }
-        if (mc.player.hasEffect(MobEffects.HASTE)) {
-            int amp = mc.player.getEffect(MobEffects.HASTE).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.DIG_SPEED)) {
+            int amp = mc.player.getEffect(MobEffects.DIG_SPEED).getAmplifier();
             speed *= 1.0f + (amp + 1) * 0.2f;
         }
-        if (mc.player.hasEffect(MobEffects.MINING_FATIGUE)) {
-            int amp = mc.player.getEffect(MobEffects.MINING_FATIGUE).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+            int amp = mc.player.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier();
             speed *= switch (amp) {
                 case 0 -> 0.3f;
                 case 1 -> 0.09f;
@@ -447,12 +455,12 @@ public class PacketMine extends Module {
         if (efficiency > 0 && speed > 1.0f) {
             speed += efficiency * efficiency + 1;
         }
-        if (mc.player.hasEffect(MobEffects.HASTE)) {
-            int amp = mc.player.getEffect(MobEffects.HASTE).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.DIG_SPEED)) {
+            int amp = mc.player.getEffect(MobEffects.DIG_SPEED).getAmplifier();
             speed *= 1.0f + (amp + 1) * 0.2f;
         }
-        if (mc.player.hasEffect(MobEffects.MINING_FATIGUE)) {
-            int amp = mc.player.getEffect(MobEffects.MINING_FATIGUE).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+            int amp = mc.player.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier();
             speed *= switch (amp) {
                 case 0 -> 0.3f;
                 case 1 -> 0.09f;

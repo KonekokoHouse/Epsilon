@@ -2,14 +2,14 @@ package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.gui.utils.UiCoordinateMapper;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftBlurRegion1211;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.IntSetting;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 
@@ -56,7 +56,7 @@ public class Inventory extends HudModule {
         float totalHeight = padding * 2f + 3 * slotSize + (3 - 1) * gap;
 
         if (backgroundBlur.getValue()) {
-            MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+            MinecraftUiRuntime1211.current().applyBlur(MinecraftBlurRegion1211.rounded(
                     new UiRect(this.x, this.y, totalWidth, totalHeight), radius, blurStrength.getValue()));
         }
 
@@ -77,7 +77,7 @@ public class Inventory extends HudModule {
     }
 
     @Override
-    public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void renderOverlay(GuiGraphics graphics, DeltaTracker deltaTracker) {
         if (nullCheck()) return;
 
         float scale = this.scale.getValue().floatValue();
@@ -98,18 +98,18 @@ public class Inventory extends HudModule {
         }
     }
 
-    private void drawItem(GuiGraphicsExtractor graphics, ItemStack stack, float slotX, float slotY, float scale) {
+    private void drawItem(GuiGraphics graphics, ItemStack stack, float slotX, float slotY, float scale) {
         float guiX = (float) UiCoordinateMapper.toMinecraftX(slotX);
         float guiY = (float) UiCoordinateMapper.toMinecraftY(slotY);
         float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(guiX + guiScale, guiY + guiScale);
-        graphics.pose().scale(guiScale, guiScale);
-        graphics.item(stack, 0, 0);
+        graphics.pose().pushPose();
+        graphics.pose().translate(guiX + guiScale, guiY + guiScale, 0.0f);
+        graphics.pose().scale(guiScale, guiScale, 1.0f);
+        graphics.renderItem(stack, 0, 0);
         if (showCount.getValue() && stack.getCount() > 1) {
-            graphics.itemDecorations(mc.font, stack, 0, 0, String.valueOf(stack.getCount()));
+            graphics.renderItemDecorations(mc.font, stack, 0, 0, String.valueOf(stack.getCount()));
         }
-        graphics.pose().popMatrix();
+        graphics.pose().popPose();
     }
 
 }

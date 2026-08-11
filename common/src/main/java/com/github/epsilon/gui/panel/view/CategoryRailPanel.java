@@ -17,8 +17,8 @@ import com.github.epsilon.managers.impl.sound.SoundKey;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 import java.awt.*;
 
@@ -66,7 +66,7 @@ public class CategoryRailPanel {
         return expandAnimation.getValue();
     }
 
-    public void render(GuiGraphicsExtractor GuiGraphicsExtractor, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics GuiGraphics, UiRenderBatch renderBatch, UiRect bounds, int mouseX, int mouseY, float partialTick) {
         this.bounds = bounds;
         float targetWidth = state.isSidebarExpanded() ? MD3Theme.RAIL_EXPANDED_WIDTH : MD3Theme.RAIL_COLLAPSED_WIDTH;
         float targetContent = state.isSidebarExpanded() ? 1.0f : 0.0f;

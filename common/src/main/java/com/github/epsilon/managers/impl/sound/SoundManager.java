@@ -28,7 +28,7 @@ public class SoundManager {
 
         SimpleSoundInstance instance = new SimpleSoundInstance(
                 key.id(),
-                SoundSource.UI,
+                SoundSource.MASTER,
                 Math.max(0.0f, volume),
                 Mth.clamp(pitch, 0.5f, 2.0f),
                 SoundInstance.createUnseededRandom(),

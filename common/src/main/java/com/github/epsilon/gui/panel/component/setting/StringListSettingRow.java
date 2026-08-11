@@ -12,8 +12,8 @@ import com.github.epsilon.gui.panel.component.SettingRow;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.settings.impl.StringListSetting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 public class StringListSettingRow extends SettingRow<StringListSetting> {
 
@@ -22,7 +22,7 @@ public class StringListSettingRow extends SettingRow<StringListSetting> {
     }
 
     @Override
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer,
+    public void buildUi(UiTree.Scope scope, GuiGraphics guiGraphics, UiTextMetrics textRenderer,
                         UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.textHeight(labelScale, null)) / 2.0f;

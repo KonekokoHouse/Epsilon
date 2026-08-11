@@ -6,7 +6,7 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.GsonHelper;
@@ -82,7 +82,7 @@ public class EpsilonLanguageManager {
         String path = String.format(Locale.ROOT, "%s/%s.json", LANGUAGE_DIRECTORY, languageCode);
         for (String namespace : resourceManager.getNamespaces()) {
             try {
-                Identifier location = Identifier.fromNamespaceAndPath(namespace, path);
+                ResourceLocation location = ResourceLocation.fromNamespaceAndPath(namespace, path);
                 appendResources(location, resourceManager.getResourceStack(location), output);
             } catch (Exception exception) {
                 Constants.LOGGER.warn("跳过 Epsilon 语言文件: {}:{} ({})", namespace, path, exception.toString());
@@ -90,7 +90,7 @@ public class EpsilonLanguageManager {
         }
     }
 
-    private void appendResources(Identifier location, List<Resource> resources, Map<String, String> output) {
+    private void appendResources(ResourceLocation location, List<Resource> resources, Map<String, String> output) {
         for (Resource resource : resources) {
             try (InputStreamReader reader = new InputStreamReader(resource.open(), StandardCharsets.UTF_8)) {
                 JsonObject entries = GSON.fromJson(reader, JsonObject.class);

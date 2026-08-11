@@ -151,8 +151,8 @@ public class HoleESP extends Module {
         double radiusSquared = radius * radius;
         int minX = Mth.floor(center.x - radius);
         int maxX = Mth.floor(center.x + radius);
-        int minY = Math.max(mc.level.getMinY() + 1, Mth.floor(center.y - radius));
-        int maxY = Math.min(mc.level.getMaxY() - 2, Mth.floor(center.y + radius));
+        int minY = Math.max(mc.level.getMinBuildHeight() + 1, Mth.floor(center.y - radius));
+        int maxY = Math.min(mc.level.getMaxBuildHeight() - 2, Mth.floor(center.y + radius));
         int minZ = Mth.floor(center.z - radius);
         int maxZ = Mth.floor(center.z + radius);
 

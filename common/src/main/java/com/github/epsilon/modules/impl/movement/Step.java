@@ -88,7 +88,7 @@ public class Step extends Module {
                     packets = 2;
                 }
                 for (double offset : offsets) {
-                    mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(mc.player.xo, mc.player.yo + offset, mc.player.zo, false, mc.player.horizontalCollision));
+                    mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(mc.player.xo, mc.player.yo + offset, mc.player.zo, false));
                 }
             }
         }

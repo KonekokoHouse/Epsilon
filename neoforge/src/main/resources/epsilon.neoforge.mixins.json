@@ -1,12 +1,9 @@
 {
   "required": true,
   "package": "com.github.epsilon.neoforge.mixins",
-  "plugin": "com.github.epsilon.neoforge.mixins.NeoForgeMixinPlugin",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_21",
   "client": [
-    "MixinCamera",
-    "MixinMinecraft",
-    "sodium.MixinSodiumAbstractBlockRenderContext"
+    "MixinMinecraft"
   ],
   "injectors": {
     "defaultRequire": 1

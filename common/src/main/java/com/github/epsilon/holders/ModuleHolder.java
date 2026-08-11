@@ -65,7 +65,6 @@ public class ModuleHolder {
         addModule(SafeAnchor.INSTANCE);
         addModule(SafeCrystal.INSTANCE);
         addModule(SilentAim.INSTANCE);
-        addModule(SpearKill.INSTANCE);
         addModule(TriggerBot.INSTANCE);
 
         // Player
@@ -116,12 +115,10 @@ public class ModuleHolder {
         addModule(Velocity.INSTANCE);
 
         // Render
-        addModule(AntiAlias.INSTANCE);
         addModule(AspectRatio.INSTANCE);
         addModule(BlockESP.INSTANCE);
         addModule(BlockHighlight.INSTANCE);
         addModule(CameraClip.INSTANCE);
-        addModule(Chams.INSTANCE);
         addModule(CrystalChams.INSTANCE);
         addModule(ESP2D.INSTANCE);
         addModule(Filter.INSTANCE);
@@ -129,16 +126,10 @@ public class ModuleHolder {
         addModule(Fullbright.INSTANCE);
         addModule(GameAnimation.INSTANCE);
         addModule(HandsView.INSTANCE);
-        addModule(Hat.INSTANCE);
-        addModule(HitParticles.INSTANCE);
         addModule(HoleESP.INSTANCE);
-        addModule(JumpCircle.INSTANCE);
-        addModule(MasEffects.INSTANCE);
         addModule(NameTags.INSTANCE);
         addModule(NoRender.INSTANCE);
-        addModule(Particles.INSTANCE);
         addModule(PopChams.INSTANCE);
-        addModule(Shaders.INSTANCE);
         addModule(SneakTweak.INSTANCE);
         addModule(Xray.INSTANCE);
 

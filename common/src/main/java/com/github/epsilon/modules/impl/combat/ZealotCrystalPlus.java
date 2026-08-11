@@ -26,7 +26,7 @@ import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
@@ -201,7 +201,7 @@ public class ZealotCrystalPlus extends Module {
     private boolean renderHasTarget;
 
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
     private final Deque<Integer> explosionSamples = new ArrayDeque<>();
     private int explosionsThisWindow;
 
@@ -353,7 +353,7 @@ public class ZealotCrystalPlus extends Module {
         }
         if (text.isEmpty()) return;
 
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         UiTextMetrics textMetrics = runtime.textMetrics();
         float scale = 1.0f;
@@ -365,7 +365,7 @@ public class ZealotCrystalPlus extends Module {
         runtime.render(scene(runtime), UiLayer.CONTENT, tree);
     }
 
-    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+    private UiScene scene(MinecraftUiRuntime1211 runtime) {
         if (scene == null || sceneRuntime != runtime) {
             releaseScene();
             scene = runtime.createScene(EpsilonUiTheme.lumin());
@@ -549,7 +549,7 @@ public class ZealotCrystalPlus extends Module {
                 player.getBoundingBox(),
                 getTotalHealth(player),
                 player.hasEffect(MobEffects.WEAKNESS)
-                        && (!player.hasEffect(MobEffects.STRENGTH) || player.getEffect(MobEffects.STRENGTH) == null || player.getEffect(MobEffects.STRENGTH).getAmplifier() <= 0),
+                        && (!player.hasEffect(MobEffects.DAMAGE_BOOST) || player.getEffect(MobEffects.DAMAGE_BOOST) == null || player.getEffect(MobEffects.DAMAGE_BOOST).getAmplifier() <= 0),
                 isToolLike(player.getMainHandItem()),
                 player.getMainHandItem().is(ItemTags.SWORDS),
                 DamageReductionData.fromEntity(player, armorMode),
@@ -995,7 +995,7 @@ public class ZealotCrystalPlus extends Module {
         if (!crystals.found()) return false;
 
         InteractionHand hand = crystals.getHand();
-        if (hand == InteractionHand.MAIN_HAND && crystals.slot() != player.getInventory().getSelectedSlot() && crystals.slot() != 40) {
+        if (hand == InteractionHand.MAIN_HAND && crystals.slot() != player.getInventory().selected && crystals.slot() != 40) {
             switch (placeSwitchMode.getValue()) {
                 case Off -> {
                     return false;
@@ -2039,8 +2039,8 @@ public class ZealotCrystalPlus extends Module {
             float armorValue = (float) entity.getAttributeValue(Attributes.ARMOR);
             float toughness = (float) entity.getAttributeValue(Attributes.ARMOR_TOUGHNESS);
             float resistanceMultiplier = 1.0f;
-            if (entity.hasEffect(MobEffects.RESISTANCE) && entity.getEffect(MobEffects.RESISTANCE) != null) {
-                resistanceMultiplier = Math.max(1.0f - (entity.getEffect(MobEffects.RESISTANCE).getAmplifier() + 1) * 0.2f, 0.0f);
+            if (entity.hasEffect(MobEffects.DAMAGE_RESISTANCE) && entity.getEffect(MobEffects.DAMAGE_RESISTANCE) != null) {
+                resistanceMultiplier = Math.max(1.0f - (entity.getEffect(MobEffects.DAMAGE_RESISTANCE).getAmplifier() + 1) * 0.2f, 0.0f);
             }
 
             int epf = switch (armorMode) {

@@ -18,7 +18,7 @@ import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.Items;
 
 import java.util.Queue;
@@ -180,7 +180,7 @@ public class NoSlow extends Module {
     }
 
     private void grimC0F(SlowdownEvent event) {
-        ItemUseAnimation activeUseAnim = mc.player.getUseItem().getUseAnimation();
+        UseAnim activeUseAnim = mc.player.getUseItem().getUseAnimation();
         if (!isUsable(activeUseAnim) || mc.player.getUseItemRemainingTicks() <= 0) {
             return;
         }
@@ -229,8 +229,8 @@ public class NoSlow extends Module {
         }
     }
 
-    private boolean isUsable(ItemUseAnimation useAnim) {
-        return useAnim == ItemUseAnimation.EAT || useAnim == ItemUseAnimation.DRINK;
+    private boolean isUsable(UseAnim useAnim) {
+        return useAnim == UseAnim.EAT || useAnim == UseAnim.DRINK;
     }
 
 }

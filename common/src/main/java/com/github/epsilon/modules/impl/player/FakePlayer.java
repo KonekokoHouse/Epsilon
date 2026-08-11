@@ -89,9 +89,11 @@ public class FakePlayer extends Module {
                 PlayerState state = positions.get(movementTick);
                 movementTick++;
 
-                fakePlayer.snapTo(state.x, state.y, state.z, state.yaw, state.pitch); // 啥阴，懒得修了
+                fakePlayer.setPos(state.x, state.y, state.z);
                 fakePlayer.setYRot(state.yaw);
                 fakePlayer.setXRot(state.pitch);
+                fakePlayer.yRotO = state.yaw;
+                fakePlayer.xRotO = state.pitch;
                 fakePlayer.setYHeadRot(state.yaw);
             } else {
                 movementTick = 0;

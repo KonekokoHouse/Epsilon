@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel;
 
 import com.github.epsilon.gui.utils.UiCoordinateMapper;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
@@ -18,13 +18,12 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.holders.TranslateHolder;
 import com.github.epsilon.modules.impl.ClientSetting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.IMEPreeditOverlay;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.input.PreeditEvent;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.PreeditEvent;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -41,7 +40,7 @@ public class PanelScreen extends Screen {
     private final PanelDirtyState dirtyState = new PanelDirtyState();
     private UiTextMetrics textMetrics;
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final PanelInputRouter inputRouter = new PanelInputRouter();
     private CategoryRailPanel categoryRailPanel;
@@ -58,7 +57,6 @@ public class PanelScreen extends Screen {
     private boolean lastClientSettingMode;
     private long lastI18nRevision = Long.MIN_VALUE;
 
-    private IMEPreeditOverlay preeditOverlay;
 
     private PanelScreen() {
         super(Component.literal("PanelGui"));
@@ -76,9 +74,9 @@ public class PanelScreen extends Screen {
      * 最后由 runtime 统一提交 scene。
      */
     @Override
-    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
 
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         int epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
         int epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
@@ -96,16 +94,10 @@ public class PanelScreen extends Screen {
         runtime.render(scene, activeScene -> extractPanelFrame(guiGraphics, activeScene,
                 epsilonMouseX, epsilonMouseY, partialTick));
 
-        if (preeditOverlay != null) {
-            this.preeditOverlay.updateInputPosition(
-                    (int) UiCoordinateMapper.toMinecraftX(IMEFocusHelper.activeCursorX),
-                    (int) UiCoordinateMapper.toMinecraftY(IMEFocusHelper.activeCursorY));
-            guiGraphics.setPreeditOverlay(this.preeditOverlay);
-        }
         popupHost.extractOverlay(guiGraphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
-    private void extractPanelFrame(GuiGraphicsExtractor guiGraphics, UiScene scene, int mouseX, int mouseY, float partialTick) {
+    private void extractPanelFrame(GuiGraphics guiGraphics, UiScene scene, int mouseX, int mouseY, float partialTick) {
 
         String currentCategory = state.getSelectedCategory().name();
         String currentModule = state.getSelectedModule() == null ? "" : state.getSelectedModule().getName();
@@ -208,7 +200,7 @@ public class PanelScreen extends Screen {
         scene.submit(UiLayer.CHROME, -20, tree);
     }
 
-    private void renderPopup(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    private void renderPopup(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (popupHost.getActivePopup() == null) {
             return;
         }
@@ -217,10 +209,12 @@ public class PanelScreen extends Screen {
 
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
+        boolean isDoubleClick = false;
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
-        double mouseX = epsilonEvent.x();
-        double mouseY = epsilonEvent.y();
+        double projectedMouseX = epsilonEvent.x();
+        double projectedMouseY = epsilonEvent.y();
         if (event.button() != 0) {
             if (state.getListeningKeyBindModule() != null && moduleDetailPanel.mouseClicked(epsilonEvent, isDoubleClick)) {
                 dirtyState.markAllDirty();
@@ -233,30 +227,30 @@ public class PanelScreen extends Screen {
                     return true;
                 }
             }
-            return super.mouseClicked(epsilonEvent, isDoubleClick);
+            return super.mouseClicked(mouseX, mouseY, button);
         }
 
         if (popupHost.getActivePopup() != null) {
             return inputRouter.routeMouseClicked(epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel, categoryRailPanel, clientSettingPanel, state.isClientSettingMode())
-                    || super.mouseClicked(epsilonEvent, isDoubleClick);
+                    || super.mouseClicked(mouseX, mouseY, button);
         }
 
         PanelLayout.Layout layout = PanelLayout.compute(
                 UiCoordinateMapper.getProjectionWidthInt(),
                 UiCoordinateMapper.getProjectionHeightInt(),
                 categoryRailPanel.getAnimatedWidth());
-        if (!layout.panel().contains(mouseX, mouseY)) {
+        if (!layout.panel().contains(projectedMouseX, projectedMouseY)) {
             if (ClientSetting.INSTANCE.closeOnOutside.getValue()) minecraft.setScreen(null);
             return true;
         }
         if (!state.isClientSettingMode()) {
-            moduleListPanel.handleGlobalClick(mouseX, mouseY);
+            moduleListPanel.handleGlobalClick(projectedMouseX, projectedMouseY);
         }
         boolean handled = inputRouter.routeMouseClicked(epsilonEvent, isDoubleClick, popupHost, moduleDetailPanel, moduleListPanel, categoryRailPanel, clientSettingPanel, state.isClientSettingMode());
         if (handled) {
             dirtyState.markAllDirty();
         }
-        return handled || super.mouseClicked(epsilonEvent, isDoubleClick);
+        return handled || super.mouseClicked(mouseX, mouseY, button);
     }
 
     private void releaseScene() {
@@ -294,17 +288,19 @@ public class PanelScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (inputRouter.routeMouseReleased(epsilonEvent, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
         }
-        return super.mouseReleased(epsilonEvent);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         double epsilonDeltaX = UiCoordinateMapper.toProjectionX(deltaX);
         double epsilonDeltaY = UiCoordinateMapper.toProjectionY(deltaY);
@@ -313,11 +309,12 @@ public class PanelScreen extends Screen {
             dirtyState.markAllDirty();
             return true;
         }
-        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        KeyEvent event = new KeyEvent(keyCode, scanCode, modifiers);
         if (inputRouter.routeKeyPressed(event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
@@ -326,22 +323,21 @@ public class PanelScreen extends Screen {
             onClose();
             return true;
         }
-        return super.keyPressed(event);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean charTyped(CharacterEvent event) {
+    public boolean charTyped(char codePoint, int modifiers) {
+        CharacterEvent event = new CharacterEvent(codePoint, modifiers);
         if (inputRouter.routeCharTyped(event, popupHost, moduleDetailPanel, moduleListPanel, clientSettingPanel, state.isClientSettingMode())) {
             dirtyState.markAllDirty();
             return true;
         }
-        return super.charTyped(event);
+        return super.charTyped(codePoint, modifiers);
     }
 
-    @Override
     public boolean preeditUpdated(PreeditEvent event) {
-        this.preeditOverlay = event != null ? new IMEPreeditOverlay(event, this.font, 10) : null;
-        return true;
+        return false;
     }
 
     @Override
@@ -361,7 +357,6 @@ public class PanelScreen extends Screen {
         state.setListeningKeyBindModule(null);
         state.setListeningKeybindSetting(null);
         IMEFocusHelper.forceDeactivate();
-        preeditOverlay = null;
     }
 
 }

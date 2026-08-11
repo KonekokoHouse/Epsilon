@@ -69,7 +69,8 @@ public class RotationUtils {
     }
 
     private static AABB getCollisionBox(BlockPos pos) {
-        VoxelShape shape = mc.level.getBlockState(pos).getCollisionShape(mc.level, pos).move(pos);
+        VoxelShape shape = mc.level.getBlockState(pos).getCollisionShape(mc.level, pos)
+                .move(pos.getX(), pos.getY(), pos.getZ());
         AABB collisionBox = new AABB(pos);
 
         for (AABB box : shape.toAabbs()) {

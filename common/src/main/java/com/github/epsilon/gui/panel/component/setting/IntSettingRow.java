@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.panel.component.setting;
 
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.panel.component.SettingRow;
@@ -10,10 +10,10 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 public class IntSettingRow extends SettingRow<IntSetting> {
 
@@ -38,7 +38,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
     }
 
     @Override
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
+    public void buildUi(UiTree.Scope scope, GuiGraphics guiGraphics, UiTextMetrics textRenderer, UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
         this.textMetrics = textRenderer;
         float labelScale = 0.68f;
         float labelY = (bounds.height() - textRenderer.textHeight(labelScale, null)) / 2.0f;
@@ -317,7 +317,7 @@ public class IntSettingRow extends SettingRow<IntSetting> {
     }
 
     private UiTextMetrics textMetrics() {
-        return textMetrics == null ? MinecraftUiRuntime2612.current().textMetrics() : textMetrics;
+        return textMetrics == null ? MinecraftUiRuntime1211.current().textMetrics() : textMetrics;
     }
 
 }

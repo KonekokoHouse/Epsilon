@@ -37,7 +37,11 @@ Windows PowerShell：
 .\gradlew.bat buildRelease --stacktrace
 .\gradlew.bat :fabric:runClient
 .\gradlew.bat :neoforge:runClient
+.\gradlew.bat :neoforge:runData
 ```
+
+Minecraft 1.21.1 的 NeoForge 数据生成 run type 为 `data`。Gradle 配置必须调用 ModDevGradle 的
+`data()`；`clientData()` 仅适用于 Minecraft 1.21.4 及以上。
 
 CI 使用 Java 25 执行：
 

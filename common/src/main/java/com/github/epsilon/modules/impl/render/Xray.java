@@ -113,7 +113,7 @@ public class Xray extends Module {
                 event.setZ(0);
                 event.setX(0);
                 event.cancel();
-                if (mc.player.tickCount % 8 == 0 && mc.player.isMoving()) {
+                if (mc.player.tickCount % 8 == 0 && com.github.epsilon.utils.player.MoveUtils.isMoving()) {
                     log("Don't move while deobf!");
                 }
             } else {

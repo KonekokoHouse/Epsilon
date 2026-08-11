@@ -13,7 +13,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ElytraItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -63,7 +63,7 @@ public abstract class ElytraFlightMode {
         if (!unbreakingTimer.passedMillise(elytraFly.unbreakingDelay.getValue())) return;
 
         ItemStack chestStack = mc.player.getItemBySlot(EquipmentSlot.CHEST);
-        if (!LivingEntity.canGlideUsing(chestStack, EquipmentSlot.CHEST)) return;
+        if (!ElytraItem.isFlyEnabled(chestStack)) return;
 
         int containerId = mc.player.containerMenu.containerId;
         ClickSlotUtils.click(containerId, 6);
@@ -95,12 +95,7 @@ public abstract class ElytraFlightMode {
         if (elytraFly.armored.getValue() && hasElytraInInventory) {
             return true;
         }
-        for (EquipmentSlot slot : EquipmentSlot.VALUES) {
-            if (LivingEntity.canGlideUsing(mc.player.getItemBySlot(slot), slot)) {
-                return true;
-            }
-        }
-        return false;
+        return ElytraItem.isFlyEnabled(mc.player.getItemBySlot(EquipmentSlot.CHEST));
     }
 
     protected boolean useFirework() {

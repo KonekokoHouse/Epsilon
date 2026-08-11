@@ -10,7 +10,7 @@ import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.epsilon.gui.panel.popup.PanelPopupHost;
 import com.github.epsilon.gui.panel.popup.RegistryListSelectPopup;
 import com.github.epsilon.gui.panel.popup.StringListSelectPopup;
@@ -24,13 +24,12 @@ import com.github.epsilon.settings.impl.StringListSetting;
 import com.github.epsilon.utils.render.animation.Animation;
 import com.github.epsilon.utils.render.animation.Easing;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.IMEPreeditOverlay;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.input.PreeditEvent;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.PreeditEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
@@ -49,13 +48,12 @@ public class DropdownScreen extends Screen {
     private final List<DropdownPanel> panels = new ArrayList<>();
     private UiTextMetrics uiTextMetrics;
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
     private final PanelPopupHost popupHost = new PanelPopupHost();
     private final Animation scrimAnim = new Animation(Easing.EASE_OUT_SINE, 200L);
     private final DropdownTextField searchField = new DropdownTextField(64);
     private final Set<String> visiblePanelIds = new HashSet<>();
 
-    private IMEPreeditOverlay preeditOverlay;
     private boolean initialized;
     private int sessionId;
     private int renderFrameId;
@@ -87,24 +85,18 @@ public class DropdownScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         int epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
         int epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
         prepareScene(runtime);
         runtime.render(scene, activeScene -> drawGui(graphics, activeScene,
                 epsilonMouseX, epsilonMouseY, partialTick));
-        if (preeditOverlay != null) {
-            preeditOverlay.updateInputPosition(
-                    (int) UiCoordinateMapper.toMinecraftX(IMEFocusHelper.activeCursorX),
-                    (int) UiCoordinateMapper.toMinecraftY(IMEFocusHelper.activeCursorY));
-            graphics.setPreeditOverlay(preeditOverlay);
-        }
         popupHost.extractOverlay(graphics, epsilonMouseX, epsilonMouseY, partialTick);
     }
 
-    private void prepareScene(MinecraftUiRuntime2612 runtime) {
+    private void prepareScene(MinecraftUiRuntime1211 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
         releaseScene();
         scene = runtime.createScene(EpsilonUiTheme.lumin());
@@ -122,7 +114,7 @@ public class DropdownScreen extends Screen {
         if (previous != null) previous.close();
     }
 
-    private void drawGui(GuiGraphicsExtractor graphics, UiScene activeScene, int mouseX, int mouseY, float partialTick) {
+    private void drawGui(GuiGraphics graphics, UiScene activeScene, int mouseX, int mouseY, float partialTick) {
         float uiWidth = UiCoordinateMapper.getProjectionWidth();
         float uiHeight = UiCoordinateMapper.getProjectionHeight();
         scrimAnim.run(1.0f);
@@ -254,26 +246,28 @@ public class DropdownScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
+        boolean isDoubleClick = false;
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         double mx = epsilonEvent.x();
         double my = epsilonEvent.y();
-        int button = epsilonEvent.button();
+        int epsilonButton = epsilonEvent.button();
 
         if (popupHost.mouseClicked(epsilonEvent, isDoubleClick)) {
             return true;
         }
 
-        if (button == 0 && searchField.focusIfContains(mx, my, getSearchX(), getSearchY(), getSearchWidth(), getSearchHeight())) {
+        if (epsilonButton == 0 && searchField.focusIfContains(mx, my, getSearchX(), getSearchY(), getSearchWidth(), getSearchHeight())) {
             return true;
-        } else if (button == 0 && searchField.isFocused()) {
+        } else if (epsilonButton == 0 && searchField.isFocused()) {
             searchField.blur();
         }
 
         for (int i = panels.size() - 1; i >= 0; i--) {
             DropdownPanel panel = panels.get(i);
             if (!panel.isVisible()) continue;
-            if (panel.mouseClicked(mx, my, button)) {
+            if (panel.mouseClicked(mx, my, epsilonButton)) {
                 if (i < panels.size() - 1) {
                     panels.remove(i);
                     panels.add(panel);
@@ -282,15 +276,16 @@ public class DropdownScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseClicked(epsilonEvent, isDoubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         double mx = epsilonEvent.x();
         double my = epsilonEvent.y();
-        int button = epsilonEvent.button();
+        int epsilonButton = epsilonEvent.button();
 
         if (popupHost.mouseReleased(epsilonEvent)) {
             return true;
@@ -298,19 +293,20 @@ public class DropdownScreen extends Screen {
 
         for (DropdownPanel panel : panels) {
             if (!panel.isVisible()) continue;
-            if (panel.mouseReleased(mx, my, button)) {
+            if (panel.mouseReleased(mx, my, epsilonButton)) {
                 DropdownLayoutState.save(panels);
                 return true;
             }
         }
-        return super.mouseReleased(epsilonEvent);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double mouseX, double mouseY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
-        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(mouseX);
-        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(mouseY);
+        double epsilonDeltaX = UiCoordinateMapper.toProjectionX(deltaX);
+        double epsilonDeltaY = UiCoordinateMapper.toProjectionY(deltaY);
         if (popupHost.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY)) {
             return true;
         }
@@ -325,7 +321,7 @@ public class DropdownScreen extends Screen {
             DropdownLayoutState.save(panels);
             return true;
         }
-        return super.mouseDragged(epsilonEvent, epsilonDeltaX, epsilonDeltaY);
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
     @Override
@@ -346,11 +342,12 @@ public class DropdownScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        KeyEvent event = new KeyEvent(keyCode, scanCode, modifiers);
         if (popupHost.keyPressed(event)) {
             return true;
         }
-        if (event.key() == GLFW.GLFW_KEY_F && InputConstants.isKeyDown(minecraft.getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL)) {
+        if (event.key() == GLFW.GLFW_KEY_F && InputConstants.isKeyDown(minecraft.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL)) {
             searchField.focus();
             return true;
         }
@@ -387,11 +384,12 @@ public class DropdownScreen extends Screen {
                 return true;
             }
         }
-        return super.keyPressed(event);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean charTyped(CharacterEvent event) {
+    public boolean charTyped(char codePoint, int modifiers) {
+        CharacterEvent event = new CharacterEvent(codePoint, modifiers);
         if (popupHost.charTyped(event)) {
             return true;
         }
@@ -406,7 +404,7 @@ public class DropdownScreen extends Screen {
                 return true;
             }
         }
-        return super.charTyped(event);
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override
@@ -416,10 +414,8 @@ public class DropdownScreen extends Screen {
         super.onClose();
     }
 
-    @Override
     public boolean preeditUpdated(PreeditEvent event) {
-        this.preeditOverlay = event != null ? new IMEPreeditOverlay(event, this.font, 10) : null;
-        return true;
+        return false;
     }
 
     @Override
@@ -428,7 +424,6 @@ public class DropdownScreen extends Screen {
         popupHost.close();
         searchField.blur();
         IMEFocusHelper.forceDeactivate();
-        preeditOverlay = null;
         releaseScene();
     }
 

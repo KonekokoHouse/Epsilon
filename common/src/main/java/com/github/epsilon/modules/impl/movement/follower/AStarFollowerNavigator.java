@@ -121,7 +121,7 @@ public class AStarFollowerNavigator implements FollowerNavigator {
         AABB box = collisionBox(player, feet);
         return hasLoadedChunks(player, box)
                 && player.level().noBlockCollision(player, box)
-                && player.level().noBorderCollision(player, box);
+                && player.level().getWorldBorder().isWithinBounds(box);
     }
 
     private AABB collisionBox(LocalPlayer player, Vec3 feet) {
@@ -150,12 +150,12 @@ public class AStarFollowerNavigator implements FollowerNavigator {
 
         AABB sweptBox = box.expandTowards(delta);
         if (!hasLoadedChunks(player, sweptBox)
-                || !player.level().noBorderCollision(player, box.move(delta))) {
+                || !player.level().getWorldBorder().isWithinBounds(box.move(delta))) {
             return false;
         }
 
         for (var shape : player.level().getBlockCollisions(player, sweptBox)) {
-            if (box.collidedAlongVector(delta, shape.toAabbs())) {
+            if (shape.toAabbs().stream().anyMatch(collision -> collision.intersects(box.move(delta)))) {
                 return false;
             }
         }

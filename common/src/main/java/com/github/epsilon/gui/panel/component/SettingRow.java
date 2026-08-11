@@ -4,12 +4,12 @@ import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.settings.Setting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.input.PreeditEvent;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.client.gui.GuiGraphics;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.PreeditEvent;
+import javax.annotation.Nullable;
 
 public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable {
 
@@ -27,7 +27,7 @@ public abstract class SettingRow<T extends Setting<?>> implements AutoCloseable 
         return 28.0f;
     }
 
-    public void buildUi(UiTree.Scope scope, GuiGraphicsExtractor guiGraphics, UiTextMetrics textRenderer,
+    public void buildUi(UiTree.Scope scope, GuiGraphics guiGraphics, UiTextMetrics textRenderer,
                         UiRect bounds, float hoverProgress, int mouseX, int mouseY, float partialTick) {
     }
 

@@ -1,6 +1,7 @@
 package com.github.epsilon.utils.player;
 
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.interfaces.ClientLevelPredictionAccessor;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RotationUtils;
 import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
@@ -39,7 +40,8 @@ public class InteractionUtils {
         BlockHitResult result = new BlockHitResult(directionVec, side, pos, false);
         InteractionResult interactionResult;
         if (packet) {
-            try (BlockStatePredictionHandler prediction = mc.level.getBlockStatePredictionHandler().startPredicting()) {
+            try (BlockStatePredictionHandler prediction = ((ClientLevelPredictionAccessor) mc.level)
+                    .epsilon$getBlockStatePredictionHandler().startPredicting()) {
                 mc.getConnection().send(new ServerboundUseItemOnPacket(placeHand, result, prediction.currentSequence()));
             }
             interactionResult = InteractionResult.SUCCESS;

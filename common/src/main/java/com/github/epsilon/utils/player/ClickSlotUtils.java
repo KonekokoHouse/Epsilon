@@ -1,6 +1,6 @@
 package com.github.epsilon.utils.player;
 
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -14,8 +14,8 @@ public class ClickSlotUtils {
      * @param button 点击按钮编号
      * @param action 容器操作类型
      */
-    public static void clickSlot(int containerId, int slot, int button, ContainerInput action) {
-        mc.gameMode.handleContainerInput(containerId, slot, button, action, mc.player);
+    public static void clickSlot(int containerId, int slot, int button, ClickType action) {
+        mc.gameMode.handleInventoryMouseClick(containerId, slot, button, action, mc.player);
     }
 
     /**
@@ -25,7 +25,7 @@ public class ClickSlotUtils {
      * @param button 点击按钮编号
      * @param action 容器操作类型
      */
-    public static void clickSlot(int slot, int button, ContainerInput action) {
+    public static void clickSlot(int slot, int button, ClickType action) {
         clickSlot(mc.player.inventoryMenu.containerId, slot, button, action);
     }
 
@@ -36,7 +36,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void click(int containerId, int slot) {
-        clickSlot(containerId, slot, 0, ContainerInput.PICKUP);
+        clickSlot(containerId, slot, 0, ClickType.PICKUP);
     }
 
     /**
@@ -45,7 +45,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void click(int slot) {
-        clickSlot(slot, 0, ContainerInput.PICKUP);
+        clickSlot(slot, 0, ClickType.PICKUP);
     }
 
     /**
@@ -55,7 +55,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void shiftClick(int containerId, int slot) {
-        clickSlot(containerId, slot, 0, ContainerInput.QUICK_MOVE);
+        clickSlot(containerId, slot, 0, ClickType.QUICK_MOVE);
     }
 
     /**
@@ -64,7 +64,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void shiftClick(int slot) {
-        clickSlot(slot, 0, ContainerInput.QUICK_MOVE);
+        clickSlot(slot, 0, ClickType.QUICK_MOVE);
     }
 
     /**
@@ -74,7 +74,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void drop(int containerId, int slot) {
-        clickSlot(containerId, slot, 0, ContainerInput.THROW);
+        clickSlot(containerId, slot, 0, ClickType.THROW);
     }
 
     /**
@@ -83,7 +83,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void drop(int slot) {
-        clickSlot(slot, 0, ContainerInput.THROW);
+        clickSlot(slot, 0, ClickType.THROW);
     }
 
     /**
@@ -93,7 +93,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void dropAll(int containerId, int slot) {
-        clickSlot(containerId, slot, 1, ContainerInput.THROW);
+        clickSlot(containerId, slot, 1, ClickType.THROW);
     }
 
     /**
@@ -102,7 +102,7 @@ public class ClickSlotUtils {
      * @param slot 背包、容器或装备槽位
      */
     public static void dropAll(int slot) {
-        clickSlot(slot, 1, ContainerInput.THROW);
+        clickSlot(slot, 1, ClickType.THROW);
     }
 
     /**
@@ -113,7 +113,7 @@ public class ClickSlotUtils {
      * @param hotbarSlot 快捷栏槽位编号
      */
     public static void swap(int containerId, int slot, int hotbarSlot) {
-        clickSlot(containerId, slot, hotbarSlot, ContainerInput.SWAP);
+        clickSlot(containerId, slot, hotbarSlot, ClickType.SWAP);
     }
 
     /**
@@ -123,7 +123,7 @@ public class ClickSlotUtils {
      * @param hotbarSlot 快捷栏槽位编号
      */
     public static void swap(int slot, int hotbarSlot) {
-        clickSlot(slot, hotbarSlot, ContainerInput.SWAP);
+        clickSlot(slot, hotbarSlot, ClickType.SWAP);
     }
 
 }

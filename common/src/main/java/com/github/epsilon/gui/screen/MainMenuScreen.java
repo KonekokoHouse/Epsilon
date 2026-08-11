@@ -2,7 +2,6 @@ package com.github.epsilon.gui.screen;
 
 import com.github.epsilon.Constants;
 import com.github.epsilon.assets.i18n.EpsilonTranslations;
-import com.github.epsilon.graphics.LuminRenderSystem;
 import com.github.epsilon.graphics.shaders.GlslSandBox;
 import com.github.epsilon.gui.dropdown.DropdownScreen;
 import com.github.epsilon.gui.panel.PanelScreen;
@@ -10,22 +9,22 @@ import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
 import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.epsilon.modules.impl.ClientSetting;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.text.UiTextMetrics;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.multiplayer.SafetyScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
-import net.minecraft.client.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -40,14 +39,9 @@ public class MainMenuScreen extends Screen {
 
     private final List<MenuEntry> entries = new ArrayList<>();
 
-    private LuminRenderSystem.LuminRenderTarget backgroundRenderTarget;
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
     private UiTextMetrics textMetrics;
-    private int pendingMouseX;
-    private int pendingMouseY;
-    private boolean overlayPending;
-
     private long introStartMs;
     private boolean initialized;
 
@@ -62,8 +56,8 @@ public class MainMenuScreen extends Screen {
             case Panel -> PanelScreen.INSTANCE;
             case Dropdown -> DropdownScreen.INSTANCE;
         })));
-        entries.add(new MenuEntry("Options", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options, false))));
-        entries.add(new MenuEntry("Quit", minecraft::stop));
+        entries.add(new MenuEntry("Options", () -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
+        entries.add(new MenuEntry("Quit", () -> minecraft.stop()));
     }
 
     @Override
@@ -81,46 +75,29 @@ public class MainMenuScreen extends Screen {
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        final var window = minecraft.getWindow();
-        if (backgroundRenderTarget == null) {
-            backgroundRenderTarget = LuminRenderSystem.LuminRenderTarget.create("main-menu-background", window.getWidth(), window.getHeight());
-        }
-
-        backgroundRenderTarget.clear();
-        backgroundRenderTarget.resize(window.getWidth(), window.getHeight());
-        LuminRenderSystem.setActiveTarget(backgroundRenderTarget);
-
-        final var background = switch (ClientSetting.INSTANCE.mainMenuBackground.getValue()) {
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        graphics.fill(0, 0, graphics.guiWidth(), graphics.guiHeight(), 0xff101214);
+        graphics.flush();
+        GlslSandBox.INSTANCE.render(switch (ClientSetting.INSTANCE.mainMenuBackground.getValue()) {
             case SEA_LEVEL -> GlslSandBox.SEA_LEVEL;
             case PLANET -> GlslSandBox.PLANET;
             case BLACK_HOLE -> GlslSandBox.BLACK_HOLE;
             case MINECRAFT -> GlslSandBox.MINECRAFT;
-        };
-
-        GlslSandBox.INSTANCE.render(background, LuminRenderSystem.toEpsilonMouseX(mouseX), LuminRenderSystem.toEpsilonMouseY(mouseY));
-
-        LuminRenderSystem.setActiveTarget(null);
-        graphics.blit(backgroundRenderTarget.getIdentifier(), 0, 0, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0, 1, 1, 0);
+        }, mouseX, mouseY);
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        pendingMouseX = UiCoordinateMapper.toProjectionX(mouseX);
-        pendingMouseY = UiCoordinateMapper.toProjectionY(mouseY);
-        overlayPending = true;
-    }
-
-    public void renderPendingOverlay() {
-        if (!overlayPending || minecraft.screen != this) return;
-        overlayPending = false;
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderBackground(graphics, mouseX, mouseY, partialTick);
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         prepareScene(runtime);
-        runtime.render(scene, activeScene -> drawMenu(activeScene, pendingMouseX, pendingMouseY));
+        int epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
+        int epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
+        runtime.render(scene, activeScene -> drawMenu(activeScene, epsilonMouseX, epsilonMouseY));
     }
 
-    private void prepareScene(MinecraftUiRuntime2612 runtime) {
+    private void prepareScene(MinecraftUiRuntime1211 runtime) {
         if (scene != null && sceneRuntime == runtime) return;
         releaseScene();
         runtime.useDefaultFont(DEFAULT_FONT_ID);
@@ -267,7 +244,8 @@ public class MainMenuScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, button);
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
         if (epsilonEvent.button() == 0) {
             for (MenuEntry entry : entries) {
@@ -277,19 +255,15 @@ public class MainMenuScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(epsilonEvent, doubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public void removed() {
         super.removed();
         releaseScene();
+        GlslSandBox.INSTANCE.close();
         initialized = false;
-        overlayPending = false;
-        if (backgroundRenderTarget != null) {
-            backgroundRenderTarget.close();
-            backgroundRenderTarget = null;
-        }
     }
 
     @Override

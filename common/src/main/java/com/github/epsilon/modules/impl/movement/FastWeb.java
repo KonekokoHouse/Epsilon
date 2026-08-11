@@ -35,7 +35,7 @@ public class FastWeb extends Module {
             return;
         }
 
-        if (!mc.player.isMoving()) {
+        if (!com.github.epsilon.utils.player.MoveUtils.isMoving()) {
             return;
         }
 

@@ -1,6 +1,6 @@
 package com.github.epsilon.events.impl;
 
-import net.minecraft.world.entity.player.Input;
+import net.minecraft.client.player.Input;
 
 public class KeyboardInputEvent {
 
@@ -18,16 +18,15 @@ public class KeyboardInputEvent {
         this.sprint = sprint;
     }
 
-    public Input toNewInput() {
-        return new Input(
-                this.forward > 0.0f,
-                this.forward < 0.0f,
-                this.strafe > 0.0f,
-                this.strafe < 0.0f,
-                this.jump,
-                this.sneak,
-                this.sprint
-        );
+    public void applyTo(Input input) {
+        input.forwardImpulse = this.forward;
+        input.leftImpulse = this.strafe;
+        input.up = this.forward > 0.0f;
+        input.down = this.forward < 0.0f;
+        input.left = this.strafe > 0.0f;
+        input.right = this.strafe < 0.0f;
+        input.jumping = this.jump;
+        input.shiftKeyDown = this.sneak;
     }
 
     public float getForward() {

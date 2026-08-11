@@ -45,12 +45,12 @@ public class AutoTool extends Module {
         }
 
         if (getTool(pos) != -1 && mc.options.keyAttack.isDown()) {
-            lastItem.add(mc.player.getInventory().getSelectedSlot());
+            lastItem.add(mc.player.getInventory().selected);
 
             if (silent.getValue()) {
                 mc.getConnection().send(new ServerboundSetCarriedItemPacket(getTool(pos)));
             } else {
-                mc.player.getInventory().setSelectedSlot(getTool(pos));
+                mc.player.getInventory().selected = getTool(pos);
             }
 
             itemIndex = getTool(pos);
@@ -61,7 +61,7 @@ public class AutoTool extends Module {
             if (silent.getValue()) {
                 mc.getConnection().send(new ServerboundSetCarriedItemPacket(lastItem.get(0)));
             } else {
-                mc.player.getInventory().setSelectedSlot(lastItem.get(0));
+                mc.player.getInventory().selected = lastItem.get(0);
             }
 
             itemIndex = lastItem.get(0);

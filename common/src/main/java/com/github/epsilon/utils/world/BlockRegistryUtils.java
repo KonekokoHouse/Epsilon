@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.world;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -42,7 +42,7 @@ public class BlockRegistryUtils {
         if (block.asItem() == Items.AIR) {
             return false;
         }
-        Identifier id = BuiltInRegistries.BLOCK.getKey(block);
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
         return !id.getPath().endsWith("_wall_banner");
     }
 
@@ -53,7 +53,7 @@ public class BlockRegistryUtils {
      * @return 获取或计算得到的结果
      */
     public static String id(Block block) {
-        Identifier id = BuiltInRegistries.BLOCK.getKey(block);
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
         return id.toString();
     }
 
@@ -67,11 +67,11 @@ public class BlockRegistryUtils {
         if (id == null || id.isBlank()) {
             return null;
         }
-        Identifier identifier = Identifier.tryParse(id.trim().toLowerCase(Locale.ROOT));
+        ResourceLocation identifier = ResourceLocation.tryParse(id.trim().toLowerCase(Locale.ROOT));
         if (identifier == null) {
             return null;
         }
-        Block block = BuiltInRegistries.BLOCK.getValue(identifier);
+        Block block = BuiltInRegistries.BLOCK.get(identifier);
         return block == Blocks.AIR && !identifier.equals(BuiltInRegistries.BLOCK.getKey(Blocks.AIR)) ? null : block;
     }
 

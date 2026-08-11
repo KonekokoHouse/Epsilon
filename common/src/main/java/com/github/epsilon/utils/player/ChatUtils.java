@@ -53,9 +53,9 @@ public class ChatUtils {
     public static void addChatMessage(boolean prefix, Component message) {
         Component component = buildClientMessage(prefix, message);
         if (mc.isSameThread()) {
-            mc.gui.getChat().addClientSystemMessage(component);
+            mc.gui.getChat().addMessage(component);
         } else {
-            mc.execute(() -> mc.gui.getChat().addClientSystemMessage(component));
+            mc.execute(() -> mc.gui.getChat().addMessage(component));
         }
     }
 

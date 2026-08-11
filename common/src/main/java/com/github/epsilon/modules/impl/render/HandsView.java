@@ -11,10 +11,10 @@ import com.mojang.math.Axis;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.Items;
 
 public class HandsView extends Module {
@@ -63,9 +63,9 @@ public class HandsView extends Module {
         return hand == InteractionHand.MAIN_HAND && canRenderMainHand(itemStack) && isBlocking();
     }
 
-    public boolean shouldApplyThirdPersonBlockingAnim(Avatar avatar, HumanoidArm arm) {
-        ItemStack itemStack = avatar.getItemInHand(InteractionHand.MAIN_HAND);
-        return avatar == mc.player && avatar.getMainArm() == arm && canRenderMainHand(itemStack) && isBlocking();
+    public boolean shouldApplyThirdPersonBlockingAnim(Player player, HumanoidArm arm) {
+        ItemStack itemStack = player.getItemInHand(InteractionHand.MAIN_HAND);
+        return player == mc.player && player.getMainArm() == arm && canRenderMainHand(itemStack) && isBlocking();
     }
 
     private boolean canRenderMainHand(ItemStack itemStack) {
@@ -80,7 +80,7 @@ public class HandsView extends Module {
         if (!mc.options.keyUse.isDown() || !mc.player.getOffhandItem().is(Items.SHIELD)) {
             return false;
         }
-        return !mc.player.isUsingItem() ? mc.player.getMainHandItem().getUseAnimation() == ItemUseAnimation.NONE : mc.player.getUsedItemHand() == InteractionHand.OFF_HAND;
+        return !mc.player.isUsingItem() ? mc.player.getMainHandItem().getUseAnimation() == UseAnim.NONE : mc.player.getUsedItemHand() == InteractionHand.OFF_HAND;
     }
 
     public void applyBlockingTransform(PoseStack poseStack, HumanoidArm arm, float attack) {

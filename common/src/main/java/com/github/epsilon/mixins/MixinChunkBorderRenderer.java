@@ -4,8 +4,9 @@ import com.github.epsilon.modules.impl.render.FreeCamera;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.debug.ChunkBorderRenderer;
-import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,16 +19,13 @@ public class MixinChunkBorderRenderer {
     @Shadow
     private Minecraft minecraft;
 
-    @ModifyExpressionValue(method = "emitGizmos", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;of(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/core/SectionPos;"))
-    private SectionPos emitGizmos$getChunkPos(SectionPos original) {
+    @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;chunkPosition()Lnet/minecraft/world/level/ChunkPos;"))
+    private ChunkPos render$getChunkPos(ChunkPos original) {
         FreeCamera freeCamera = FreeCamera.INSTANCE;
         if (freeCamera.isEnabled()) {
-            float tickDelta = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-            return SectionPos.of(
-                    SectionPos.posToSectionCoord(Mth.floor(freeCamera.getX(tickDelta))),
-                    SectionPos.posToSectionCoord(Mth.floor(freeCamera.getY(tickDelta))),
-                    SectionPos.posToSectionCoord(Mth.floor(freeCamera.getZ(tickDelta)))
-            );
+            float tickDelta = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            return new ChunkPos(Mth.floor(freeCamera.getX(tickDelta)) >> 4,
+                    Mth.floor(freeCamera.getZ(tickDelta)) >> 4);
         }
         return original;
     }

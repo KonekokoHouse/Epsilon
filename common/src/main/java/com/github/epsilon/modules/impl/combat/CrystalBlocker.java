@@ -66,7 +66,7 @@ public class CrystalBlocker extends Module {
                 if (swapBackTicks > 0) return;
             }
             if (savedOldSlot >= 0) {
-                mc.player.getInventory().setSelectedSlot(savedOldSlot);
+                mc.player.getInventory().selected = savedOldSlot;
             }
             waitingSwapBack = false;
             savedOldSlot = -1;
@@ -148,7 +148,7 @@ public class CrystalBlocker extends Module {
     }
 
     private void placeBlock(BlockPos pos, FindItemResult item) {
-        int oldSlot = mc.player.getInventory().getSelectedSlot();
+        int oldSlot = mc.player.getInventory().selected;
 
         Direction side = RotationUtils.getDirection(pos);
         BlockHitResult bhr = new BlockHitResult(Vec3.atCenterOf(pos), side, pos, false);

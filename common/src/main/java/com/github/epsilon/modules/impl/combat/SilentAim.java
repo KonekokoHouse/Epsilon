@@ -13,7 +13,7 @@ import com.github.epsilon.settings.impl.IntSetting;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.HitResult;
@@ -67,7 +67,7 @@ public class SilentAim extends Module {
     private void onSwingHand(SwingHandEvent event) {
         if (redirecting) return;
 
-        if (weaponOnly.getValue() && !mc.player.getMainHandItem().has(DataComponents.WEAPON)) {
+        if (weaponOnly.getValue() && !mc.player.getMainHandItem().is(ItemTags.WEAPON_ENCHANTABLE)) {
             return;
         }
 

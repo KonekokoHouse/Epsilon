@@ -57,7 +57,7 @@ public class InvUtils {
         if (testInOffHand(isGood)) {
             return new FindItemResult(40, mc.player.getOffhandItem().getCount(), mc.player.getOffhandItem().getMaxStackSize());
         } else if (testInMainHand(isGood)) {
-            return new FindItemResult(mc.player.getInventory().getSelectedSlot(), mc.player.getMainHandItem().getCount(), mc.player.getMainHandItem().getMaxStackSize());
+            return new FindItemResult(mc.player.getInventory().selected, mc.player.getMainHandItem().getCount(), mc.player.getMainHandItem().getMaxStackSize());
         }
 
         return find(isGood, 0, 8);
@@ -119,17 +119,17 @@ public class InvUtils {
      * @param saveSwap 是否保存切换前的槽位以便恢复
      */
     public static void swap(int slot, boolean saveSwap) {
-        if (slot == 40 || mc.player.getInventory().getSelectedSlot() == slot) {
+        if (slot == 40 || mc.player.getInventory().selected == slot) {
             return;
         }
 
         if (saveSwap && previousSlot == -1) {
-            previousSlot = mc.player.getInventory().getSelectedSlot();
+            previousSlot = mc.player.getInventory().selected;
         } else if (!saveSwap) {
             previousSlot = -1;
         }
 
-        mc.player.getInventory().setSelectedSlot(slot);
+        mc.player.getInventory().selected = slot;
     }
 
     /**
@@ -151,7 +151,7 @@ public class InvUtils {
         if (slot < 9) containerSlot += 36;
         else if (slot == 40) containerSlot = 45;
 
-        int selectedSlot = mc.player.getInventory().getSelectedSlot();
+        int selectedSlot = mc.player.getInventory().selected;
         ClickSlotUtils.swap(mc.player.containerMenu.containerId, containerSlot, selectedSlot);
         invSlots = new int[]{containerSlot, selectedSlot};
     }

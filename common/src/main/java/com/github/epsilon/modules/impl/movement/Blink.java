@@ -134,7 +134,7 @@ public class Blink extends Module {
     public void onRender(Render3DEvent event) {
         if (nullCheck()) return;
         if (localPlayer != null && fakePlayer.getValue()) {
-            float pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+            float pt = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             double lerpX = prevServerX + (serverX - prevServerX) * pt;
             double lerpY = prevServerY + (serverY - prevServerY) * pt;
             double lerpZ = prevServerZ + (serverZ - prevServerZ) * pt;

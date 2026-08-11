@@ -31,15 +31,15 @@ public class Strafe extends Module {
             return;
         }
 
-        if (airStop.getValue() && !mc.player.isMoving()) {
+        if (airStop.getValue() && !com.github.epsilon.utils.player.MoveUtils.isMoving()) {
             mc.player.setDeltaMovement(0.0, mc.player.getDeltaMovement().y, 0.0);
             return;
         }
 
         double speed = 0.2873;
 
-        if (mc.player.hasEffect(MobEffects.SPEED) && !mc.player.hasEffect(MobEffects.SLOWNESS)) {
-            speed *= 1.0 + 0.2 * (mc.player.getEffect(MobEffects.SPEED).getAmplifier() + 1.0);
+        if (mc.player.hasEffect(MobEffects.MOVEMENT_SPEED) && !mc.player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
+            speed *= 1.0 + 0.2 * (mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() + 1.0);
         }
 
         double[] strafe = MoveUtils.forward(speed);
@@ -50,7 +50,7 @@ public class Strafe extends Module {
 
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
-        if (autoJump.getValue() && mc.player.isMoving()) event.setJump(true);
+        if (autoJump.getValue() && com.github.epsilon.utils.player.MoveUtils.isMoving()) event.setJump(true);
     }
 
 }

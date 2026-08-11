@@ -1,7 +1,7 @@
 package com.github.epsilon.gui.utils;
 
 import com.github.epsilon.modules.impl.ClientSetting;
-import net.minecraft.client.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 import static com.github.epsilon.Constants.mc;
 
@@ -30,7 +30,7 @@ public final class UiCoordinateMapper {
     }
 
     public static MouseButtonEvent toProjectionEvent(MouseButtonEvent event) {
-        return new MouseButtonEvent(toProjectionX(event.x()), toProjectionY(event.y()), event.buttonInfo());
+        return new MouseButtonEvent(toProjectionX(event.x()), toProjectionY(event.y()), event.button());
     }
 
     public static double toMinecraftX(double projectionX) {

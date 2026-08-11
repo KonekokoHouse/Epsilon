@@ -1,7 +1,9 @@
 package com.github.epsilon.mixins;
 
 import com.github.epsilon.modules.impl.render.Xray;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinBlock {
 
     @Inject(method = "shouldRenderFace", at = @At("HEAD"), cancellable = true)
-    private static void hookShouldRenderFace(BlockState state, BlockState neighborState, Direction direction, CallbackInfoReturnable<Boolean> cir) {
+    private static void hookShouldRenderFace(BlockState state, BlockGetter level, BlockPos pos, Direction direction,
+                                             BlockPos adjacentPos, CallbackInfoReturnable<Boolean> cir) {
         Xray xray = Xray.INSTANCE;
         if (xray.isEnabled() && xray.wallHack.getValue()) {
             cir.setReturnValue(xray.isCheckableOre(state.getBlock()));

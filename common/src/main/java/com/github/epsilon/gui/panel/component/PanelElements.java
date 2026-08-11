@@ -5,7 +5,7 @@ import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.gui.theme.EpsilonUiTheme;
 import com.github.epsilon.gui.theme.MD3Theme;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 import java.awt.*;
 

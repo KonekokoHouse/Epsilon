@@ -14,10 +14,10 @@ import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.impl.*;
 import com.github.epsilon.utils.client.FontPathResolver;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.mojang.blaze3d.platform.IconSet;
 import net.minecraft.SharedConstants;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
@@ -86,7 +86,7 @@ public class ClientSetting extends Module {
     private final SettingGroup sgAntiCheat = settingGroup("Anti Cheat");
     private final SettingGroup sgAppearance = settingGroup("Appearance");
     private final SettingGroup sgNotification = settingGroup("Notification");
-    private MinecraftUiRuntime2612 fontRuntime;
+    private MinecraftUiRuntime1211 fontRuntime;
     private FontMode appliedFontMode;
     private String appliedCustomFont;
 
@@ -155,7 +155,7 @@ public class ClientSetting extends Module {
 
     public final EnumSetting<IconMode> customIcon = enumSetting("Custom Icon", IconMode.Epsilon, _ -> {
         try {
-            mc.getWindow().setIcon(mc.getVanillaPackResources(), SharedConstants.getCurrentVersion().stable() ? IconSet.RELEASE : IconSet.SNAPSHOT);
+            mc.getWindow().setIcon(mc.getVanillaPackResources(), SharedConstants.getCurrentVersion().isStable() ? IconSet.RELEASE : IconSet.SNAPSHOT);
         } catch (IOException ignored) {
         }
     }).group(sgAppearance);
@@ -198,15 +198,15 @@ public class ClientSetting extends Module {
     }
 
     /** 向 MC-owned UI runtime 注册 Epsilon 字体，并应用当前业务字体选择。 */
-    public synchronized void configureMinecraftFonts(MinecraftUiRuntime2612 runtime) {
+    public synchronized void configureMinecraftFonts(MinecraftUiRuntime1211 runtime) {
         runtime.setProjectionScale(getScale());
         runtime.setUiTextScaleMultiplier((float) getFontScale());
         runtime.setFontGlyphsPerFrame(getFontGlyphsPerFrame());
         if (fontRuntime != runtime) {
-            runtime.registerFont("epsilon-default", Identifier.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
-            runtime.registerFont("epsilon-icons", Identifier.fromNamespaceAndPath("epsilon", "fonts/icons.ttf"));
-            runtime.registerFont("epsilon-jura-light", Identifier.fromNamespaceAndPath("epsilon", "fonts/jura-light.ttf"));
-            runtime.registerFont("epsilon-osakachips", Identifier.fromNamespaceAndPath("epsilon", "fonts/osakachips.ttf"));
+            runtime.registerFont("epsilon-default", ResourceLocation.fromNamespaceAndPath("epsilon", "fonts/font.ttf"));
+            runtime.registerFont("epsilon-icons", ResourceLocation.fromNamespaceAndPath("epsilon", "fonts/icons.ttf"));
+            runtime.registerFont("epsilon-jura-light", ResourceLocation.fromNamespaceAndPath("epsilon", "fonts/jura-light.ttf"));
+            runtime.registerFont("epsilon-osakachips", ResourceLocation.fromNamespaceAndPath("epsilon", "fonts/osakachips.ttf"));
             fontRuntime = runtime;
             appliedFontMode = null;
             appliedCustomFont = null;

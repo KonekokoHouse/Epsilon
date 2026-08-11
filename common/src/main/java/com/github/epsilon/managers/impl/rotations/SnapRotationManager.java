@@ -46,8 +46,8 @@ public class SnapRotationManager extends RotationManager {
         if (Float.isNaN(yaw) || Float.isNaN(pitch)) return;
 
         mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(
-                mc.player.position(), yaw, pitch,
-                mc.player.onGround(), mc.player.horizontalCollision)
+                mc.player.getX(), mc.player.getY(), mc.player.getZ(),
+                yaw, pitch, mc.player.onGround())
         );
     }
 

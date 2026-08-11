@@ -10,7 +10,7 @@ public class FriendManager {
     private final HashSet<String> friends = new HashSet<>();
 
     public boolean isFriend(Player player) {
-        return friends.contains(player.getGameProfile().name());
+        return friends.contains(player.getGameProfile().getName());
     }
 
     public boolean isFriend(String name) {

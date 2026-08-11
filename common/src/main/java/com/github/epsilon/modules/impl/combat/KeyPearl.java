@@ -57,7 +57,7 @@ public class KeyPearl extends Module {
 
         if (active) {
             if (previousSlot == -1)
-                previousSlot = mc.player.getInventory().getSelectedSlot();
+                previousSlot = mc.player.getInventory().selected;
 
             FindItemResult pearl = InvUtils.findInHotbar(Items.ENDER_PEARL);
             if (!pearl.found()) {

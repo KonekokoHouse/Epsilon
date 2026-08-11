@@ -2,13 +2,13 @@ package com.github.epsilon.modules.impl.player;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.PacketEvent;
+import com.github.epsilon.interfaces.LocalPlayerAccessor;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.utils.network.PacketUtils;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.world.entity.player.Input;
 
 public class Disabler extends Module {
 
@@ -25,7 +25,7 @@ public class Disabler extends Module {
 
     private int lastSendSlot = -1;
     private boolean hasOldInput;
-    private Input oldInput;
+    private InputState oldInput;
     private boolean shouldRestore;
 
     @EventHandler
@@ -72,24 +72,37 @@ public class Disabler extends Module {
 
     private void raoGuoSprinting(boolean sprintState) {
         mc.player.setSprinting(sprintState);
-        mc.player.wasSprinting = sprintState; // BadPacketsF
+        ((LocalPlayerAccessor) mc.player).epsilon$setWasSprinting(sprintState); // BadPacketsF
         mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, sprintState ? ServerboundPlayerCommandPacket.Action.START_SPRINTING : ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
     }
 
     private void spoofInput() {
         if (shouldRestore) return;
-        oldInput = mc.player.input.keyPresses;
-        mc.player.input.keyPresses = Input.EMPTY;
-        mc.getConnection().send(new ServerboundPlayerInputPacket(Input.EMPTY));
-        mc.player.lastSentInput = Input.EMPTY;
+        oldInput = new InputState(
+                mc.player.input.leftImpulse,
+                mc.player.input.forwardImpulse,
+                mc.player.input.jumping,
+                mc.player.input.shiftKeyDown
+        );
+        mc.player.input.leftImpulse = 0.0f;
+        mc.player.input.forwardImpulse = 0.0f;
+        mc.player.input.jumping = false;
+        mc.player.input.shiftKeyDown = false;
+        mc.getConnection().send(new ServerboundPlayerInputPacket(0.0f, 0.0f, false, false));
         shouldRestore = true;
     }
 
     private void restoreInput() {
         if (!shouldRestore) return;
-        mc.player.input.keyPresses = oldInput;
+        mc.player.input.leftImpulse = oldInput.leftImpulse();
+        mc.player.input.forwardImpulse = oldInput.forwardImpulse();
+        mc.player.input.jumping = oldInput.jumping();
+        mc.player.input.shiftKeyDown = oldInput.shiftKeyDown();
         oldInput = null;
         shouldRestore = false;
+    }
+
+    private record InputState(float leftImpulse, float forwardImpulse, boolean jumping, boolean shiftKeyDown) {
     }
 
 }

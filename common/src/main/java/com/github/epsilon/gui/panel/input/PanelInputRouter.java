@@ -5,9 +5,9 @@ import com.github.epsilon.gui.panel.view.CategoryRailPanel;
 import com.github.epsilon.gui.panel.view.ClientSettingPanel;
 import com.github.epsilon.gui.panel.view.ModuleDetailPanel;
 import com.github.epsilon.gui.panel.view.ModuleListPanel;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import com.github.epsilon.gui.input.CharacterEvent;
+import com.github.epsilon.gui.input.KeyEvent;
+import com.github.epsilon.gui.input.MouseButtonEvent;
 
 public class PanelInputRouter {
 

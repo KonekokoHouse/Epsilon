@@ -1,7 +1,7 @@
 package com.github.epsilon.utils.client;
 
 import com.github.epsilon.holders.ConfigHolder;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 import java.io.IOException;
 import java.nio.file.Files;

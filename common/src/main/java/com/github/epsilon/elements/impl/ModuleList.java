@@ -1,8 +1,8 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftBlurRegion1211;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.holders.ModuleHolder;
@@ -338,9 +338,9 @@ public class ModuleList extends HudModule {
     private void drawOpenBox(UiTree.Scope scope, float x, float y, float width, float height, float radius, float alpha) {
         Color background = withAlpha(backgroundColor.getValue(), alpha);
         if (openBackgroundBlur.getValue()) {
-            MinecraftUiRuntime2612.current().applyBlur(new MinecraftBlurRegion2612(
+            MinecraftUiRuntime1211.current().applyBlur(new MinecraftBlurRegion1211(
                     new UiRect(x, y, width, height),
-                    MinecraftBlurRegion2612.CornerRadii.uniform(radius),
+                    MinecraftBlurRegion1211.CornerRadii.uniform(radius),
                     openBlurStrength.getValue(),
                     List.of()
             ));

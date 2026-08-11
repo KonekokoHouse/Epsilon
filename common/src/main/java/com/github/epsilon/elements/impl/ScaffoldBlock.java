@@ -1,8 +1,8 @@
 package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftBlurRegion1211;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -134,7 +134,7 @@ public class ScaffoldBlock extends HudModule {
         float animatedRadius = Math.min(layout.radius(), animatedWidth / 2.0f);
 
         if (backgroundBlur.getValue()) {
-            MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+            MinecraftUiRuntime1211.current().applyBlur(MinecraftBlurRegion1211.rounded(
                     new UiRect(animatedX, this.y, animatedWidth, layout.height()), animatedRadius, blurStrength.getValue()));
         }
         if (drawShadow.getValue()) {

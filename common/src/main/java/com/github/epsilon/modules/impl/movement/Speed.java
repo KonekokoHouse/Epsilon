@@ -15,14 +15,13 @@ import com.github.epsilon.utils.player.PlayerUtils;
 import com.github.epsilon.utils.timer.TimerUtils;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.vehicle.boat.Boat;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -90,8 +89,9 @@ public class Speed extends Module {
         if (nullCheck()) return;
 
         if (mode.is(Mode.Strafe)) {
-            if (event.getPacket() instanceof ClientboundSetEntityMotionPacket(int id, Vec3 packetMovement)) {
-                if (id == mc.player.getId() && this.velocity.getValue()) {
+            if (event.getPacket() instanceof ClientboundSetEntityMotionPacket packet) {
+                if (packet.getId() == mc.player.getId() && this.velocity.getValue()) {
+                    Vec3 packetMovement = new Vec3(packet.getXa(), packet.getYa(), packet.getZa());
                     double speed = Math.hypot(packetMovement.x, packetMovement.z);
 
                     this.lastExp = this.expTimer
@@ -112,8 +112,9 @@ public class Speed extends Module {
                 }
             } else if (event.getPacket() instanceof ClientboundExplodePacket packet) {
                 if (this.explosions.getValue()) {
-                    if (mc.player.position().distanceTo(packet.center()) < 15) {
-                        Vec3 knockback = packet.playerKnockback().orElse(Vec3.ZERO);
+                    Vec3 center = new Vec3(packet.getX(), packet.getY(), packet.getZ());
+                    if (mc.player.position().distanceTo(center) < 15) {
+                        Vec3 knockback = new Vec3(packet.getKnockbackX(), packet.getKnockbackY(), packet.getKnockbackZ());
                         double speed = Math.hypot(knockback.x, knockback.z);
                         this.lastExp = this.expTimer.passedMillise(this.coolDown.getValue()) ? speed : (speed - this.lastExp);
 
@@ -131,7 +132,7 @@ public class Speed extends Module {
                 }
             }
         }
-        if (event.getPacket() instanceof ClientboundPlayerPositionPacket || event.getPacket() instanceof ClientboundPlayerRotationPacket) {
+        if (event.getPacket() instanceof ClientboundPlayerPositionPacket) {
             lagTimer.reset();
             resetStrafe();
         }
@@ -140,7 +141,7 @@ public class Speed extends Module {
     @EventHandler
     private void onPlayerTickPre(PlayerTickEvent.Pre event) {
         if (mode.is(Mode.Grim)) {
-            if (!mc.player.isMoving()) {
+            if (!com.github.epsilon.utils.player.MoveUtils.isMoving()) {
                 return;
             }
 
@@ -172,7 +173,7 @@ public class Speed extends Module {
 
     @EventHandler
     private void onMove(MoveEvent event) {
-        if (!mc.player.isMoving() && airStop.getValue() && !mode.is(Mode.Grim)) {
+        if (!com.github.epsilon.utils.player.MoveUtils.isMoving() && airStop.getValue() && !mode.is(Mode.Grim)) {
             mc.player.setDeltaMovement(0.0, mc.player.getDeltaMovement().y, 0.0);
         }
         if (!this.inWater.getValue() && (mc.player.isUnderWater() || mc.player.isInWater() || mc.player.isInLava())
@@ -181,7 +182,7 @@ public class Speed extends Module {
                 || !inBlock.getValue() && PlayerUtils.isInBlock()
                 || mc.player.getAbilities().flying
                 || mc.player.isFallFlying()
-                || !mc.player.isMoving()) {
+                || !com.github.epsilon.utils.player.MoveUtils.isMoving()) {
             resetStrafe();
             this.stop = true;
             return;
@@ -239,18 +240,18 @@ public class Speed extends Module {
         }
         double speedEffect = 1.0;
         double slowEffect = 1.0;
-        if (mc.player.hasEffect(MobEffects.SPEED)) {
-            double amplifier = mc.player.getEffect(MobEffects.SPEED).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
+            double amplifier = mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier();
             speedEffect = 1 + (0.2 * (amplifier + 1));
         }
-        if (mc.player.hasEffect(MobEffects.SLOWNESS)) {
-            double amplifier = mc.player.getEffect(MobEffects.SLOWNESS).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
+            double amplifier = mc.player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier();
             slowEffect = 1 + (0.2 * (amplifier + 1));
         }
         final double base = 0.2873f * speedEffect / slowEffect;
         float jumpEffect = 0.0f;
-        if (mc.player.hasEffect(MobEffects.JUMP_BOOST)) {
-            jumpEffect += (mc.player.getEffect(MobEffects.JUMP_BOOST).getAmplifier() + 1) * 0.1f;
+        if (mc.player.hasEffect(MobEffects.JUMP)) {
+            jumpEffect += (mc.player.getEffect(MobEffects.JUMP).getAmplifier() + 1) * 0.1f;
         }
 
         if (mode.getValue() == Mode.StrafeStrict) {
@@ -260,7 +261,7 @@ public class Speed extends Module {
             if (strafe == 1) {
                 speed = 1.35f * base - 0.01f;
             } else if (strafe == 2) {
-                if (mc.player.input.keyPresses.jump() || !mc.player.onGround()) {
+                if (mc.player.input.jumping || !mc.player.onGround()) {
                     return;
                 }
                 float jump = 0.3999999463558197f + jumpEffect;
@@ -298,7 +299,7 @@ public class Speed extends Module {
         Vec2 moveVector = mc.player.input.getMoveVector();
         float forward = moveVector.y;
         float strafe = moveVector.x;
-        float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float tickDelta = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         float yaw = Mth.lerp(tickDelta, mc.player.yRotO, mc.player.getYRot());
         if (forward == 0.0f && strafe == 0.0f) {
             return Vec2.ZERO;
@@ -314,13 +315,13 @@ public class Speed extends Module {
     }
 
     private double getSpeed(boolean slowness, double defaultSpeed) {
-        if (mc.player.hasEffect(MobEffects.SPEED)) {
-            int amplifier = mc.player.getEffect(MobEffects.SPEED).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
+            int amplifier = mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier();
             defaultSpeed *= 1.0 + 0.2 * (amplifier + 1);
         }
 
-        if (slowness && mc.player.hasEffect(MobEffects.SLOWNESS)) {
-            int amplifier = mc.player.getEffect(MobEffects.SLOWNESS).getAmplifier();
+        if (slowness && mc.player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
+            int amplifier = mc.player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getAmplifier();
             defaultSpeed /= 1.0 + 0.2 * (amplifier + 1);
         }
 
@@ -333,8 +334,8 @@ public class Speed extends Module {
     private double getJumpSpeed() {
         double defaultSpeed = 0.0;
 
-        if (mc.player.hasEffect(MobEffects.JUMP_BOOST)) {
-            int amplifier = mc.player.getEffect(MobEffects.JUMP_BOOST).getAmplifier();
+        if (mc.player.hasEffect(MobEffects.JUMP)) {
+            int amplifier = mc.player.getEffect(MobEffects.JUMP).getAmplifier();
             defaultSpeed += (amplifier + 1) * 0.1;
         }
 

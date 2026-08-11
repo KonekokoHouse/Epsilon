@@ -12,7 +12,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.WorldToScreen;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -57,15 +57,15 @@ public class ESP2D extends Module {
     private final ColorSetting healthColor = colorSetting("Health Color", new Color(0x2FFF00), false, renderHealth::getValue);
 
     private UiScene scene;
-    private MinecraftUiRuntime2612 sceneRuntime;
+    private MinecraftUiRuntime1211 sceneRuntime;
 
     @EventHandler
     private void onRender2D(Render2DEvent.Level event) {
         if (nullCheck() || mc.options.hideGui) return;
 
-        MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
+        MinecraftUiRuntime1211 runtime = MinecraftUiRuntime1211.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
-        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float partialTick = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         float screenWidth = LuminRenderSystem.getScaledWidth();
         float screenHeight = LuminRenderSystem.getScaledHeight();
 
@@ -191,7 +191,7 @@ public class ESP2D extends Module {
         releaseScene();
     }
 
-    private UiScene scene(MinecraftUiRuntime2612 runtime) {
+    private UiScene scene(MinecraftUiRuntime1211 runtime) {
         if (scene == null || sceneRuntime != runtime) {
             releaseScene();
             scene = runtime.createScene(EpsilonUiTheme.lumin());

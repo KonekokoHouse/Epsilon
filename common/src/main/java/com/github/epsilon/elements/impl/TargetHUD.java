@@ -2,8 +2,8 @@ package com.github.epsilon.elements.impl;
 
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.gui.utils.UiCoordinateMapper;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftBlurRegion2612;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftBlurRegion1211;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.epsilon.gui.hudeditor.HudEditorScreen;
 import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -14,7 +14,7 @@ import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.utils.render.animation.Easing;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -170,7 +170,7 @@ public class TargetHUD extends HudModule {
         float finalHeadRadius = scaledHeadRadius * headDamageScale;
         Color headTintColor = withAlpha(tintColor(Color.WHITE, damageProgress), animationScale);
 
-        MinecraftUiRuntime2612.current().applyBlur(MinecraftBlurRegion2612.rounded(
+        MinecraftUiRuntime1211.current().applyBlur(MinecraftBlurRegion1211.rounded(
                 new UiRect(scaledPanelX, scaledPanelY, scaledPanelWidth, scaledPanelHeight),
                 scaledCornerRadius, blurStrength.getValue().floatValue()));
 
@@ -196,7 +196,7 @@ public class TargetHUD extends HudModule {
         }
 
         if (target instanceof AbstractClientPlayer player) {
-            String skin = player.getSkin().body().texturePath().toString();
+            String skin = player.getSkin().texture().toString();
             UiRect head = new UiRect(finalHeadX, finalHeadY, finalHeadSize, finalHeadSize);
             scope.texture(skin, head, finalHeadRadius, finalHeadRadius, finalHeadRadius, finalHeadRadius,
                     8f / 64f, 8f / 64f, 16f / 64f, 16f / 64f, lumin(headTintColor));
@@ -209,7 +209,7 @@ public class TargetHUD extends HudModule {
     }
 
     @Override
-    public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void renderOverlay(GuiGraphics graphics, DeltaTracker deltaTracker) {
         float panelScale = scale.getValue().floatValue();
         LivingEntity target = renderedTarget;
         if (target == null || visibilityProgress <= 0.01f) return;
@@ -244,7 +244,7 @@ public class TargetHUD extends HudModule {
         renderEquipmentItems(graphics, target, scaledEquipmentX, scaledEquipmentY, scaledEquipmentScale, scaledEquipmentGap);
     }
 
-    private void renderEquipmentItems(GuiGraphicsExtractor graphics, LivingEntity target, float startX, float y, float scale, float gap) {
+    private void renderEquipmentItems(GuiGraphics graphics, LivingEntity target, float startX, float y, float scale, float gap) {
         List<ItemStack> equipmentItems = new ArrayList<>(5);
         appendEquipmentItem(equipmentItems, target.getMainHandItem());
         appendEquipmentItem(equipmentItems, target.getItemBySlot(EquipmentSlot.HEAD));
@@ -270,15 +270,15 @@ public class TargetHUD extends HudModule {
         }
     }
 
-    private void drawItem(GuiGraphicsExtractor graphics, LivingEntity owner, ItemStack stack, float x, float y, float scale, int seed) {
+    private void drawItem(GuiGraphics graphics, LivingEntity owner, ItemStack stack, float x, float y, float scale, int seed) {
         float guiX = (float) UiCoordinateMapper.toMinecraftX(x);
         float guiY = (float) UiCoordinateMapper.toMinecraftY(y);
         float guiScale = (float) UiCoordinateMapper.toMinecraftLength(scale);
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(guiX + guiScale, guiY + guiScale);
-        graphics.pose().scale(guiScale, guiScale);
-        graphics.item(owner, stack, 0, 0, seed);
-        graphics.pose().popMatrix();
+        graphics.pose().pushPose();
+        graphics.pose().translate(guiX + guiScale, guiY + guiScale, 0.0f);
+        graphics.pose().scale(guiScale, guiScale, 1.0f);
+        graphics.renderItem(owner, stack, 0, 0, seed);
+        graphics.pose().popPose();
     }
 
     private LivingEntity resolveTarget() {

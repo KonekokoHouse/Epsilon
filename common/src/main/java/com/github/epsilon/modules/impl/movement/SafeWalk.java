@@ -41,7 +41,7 @@ public class SafeWalk extends Module {
         double motionZ = mc.player.getDeltaMovement().z;
         if (!canSafeWalk(motionX, motionZ)) return;
 
-        double multiplier = mc.player.hasEffect(MobEffects.SPEED) ? speedMotion.getValue() : motion.getValue();
+        double multiplier = mc.player.hasEffect(MobEffects.MOVEMENT_SPEED) ? speedMotion.getValue() : motion.getValue();
         if (multiplier == 1.0) return;
 
         mc.player.setDeltaMovement(

@@ -1,7 +1,7 @@
 package com.github.epsilon.managers.impl.sound;
 
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public enum SoundKey {
 
@@ -23,7 +23,7 @@ public enum SoundKey {
         this.path = path;
     }
 
-    public Identifier id() {
+    public ResourceLocation id() {
         return ResourceLocationUtils.getIdentifier(path);
     }
 

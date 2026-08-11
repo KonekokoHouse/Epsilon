@@ -94,7 +94,7 @@ public class AutoDtap extends Module {
                     int endCrystalSlot = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                     if (endCrystalSlot == -1) return;
 
-                    originalSlot = mc.player.getInventory().getSelectedSlot();
+                    originalSlot = mc.player.getInventory().selected;
 
                     if (isObsidian) {
                         // 如果已经是黑曜石，直接切水晶并放�?

@@ -6,8 +6,8 @@ import com.github.epsilon.events.impl.*;
 import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
+import com.github.epsilon.utils.rotation.RaytraceUtils;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.HitResult;
 
@@ -131,7 +131,7 @@ public abstract class RotationManager {
 
         updateHitResult();
         if (shouldModifyCrosshair()) {
-            mc.pick(1.0f);
+            mc.gameRenderer.pick(1.0f);
         }
     }
 
@@ -143,7 +143,8 @@ public abstract class RotationManager {
 
         calculatingHitResult = true;
         try {
-            rotationHitResult = mc.player.raycastHitResult(1.0f, mc.player);
+            double range = Math.max(mc.player.blockInteractionRange(), mc.player.entityInteractionRange());
+            rotationHitResult = RaytraceUtils.raytrace(rotations, range);
         } finally {
             calculatingHitResult = false;
         }
@@ -244,7 +245,7 @@ public abstract class RotationManager {
 
     @EventHandler
     protected void onPacketReceive(PacketEvent.Receive event) {
-        if (event.getPacket() instanceof ClientboundPlayerPositionPacket || event.getPacket() instanceof ClientboundPlayerRotationPacket) {
+        if (event.getPacket() instanceof ClientboundPlayerPositionPacket) {
             s08 = true;
         }
     }

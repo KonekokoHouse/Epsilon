@@ -114,7 +114,7 @@ public class AutoWeapon extends Module {
         }
 
         if (slotIndex < 0 || slotIndex > 8) return;
-        if (slotIndex == mc.player.getInventory().getSelectedSlot()) return;
+        if (slotIndex == mc.player.getInventory().selected) return;
 
         InvUtils.swap(slotIndex, swapBack.getValue());
 
@@ -159,9 +159,9 @@ public class AutoWeapon extends Module {
         boolean isLiving = target instanceof LivingEntity;
         boolean isPlayer = target instanceof Player;
         boolean isOnFire = target != null && target.isOnFire();
-        boolean isUndead = target != null && target.is(EntityTypeTags.SENSITIVE_TO_SMITE);
-        boolean isArthropod = target != null && target.is(EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS);
-        boolean isAquatic = target != null && target.is(EntityTypeTags.SENSITIVE_TO_IMPALING);
+        boolean isUndead = target != null && target.getType().is(EntityTypeTags.SENSITIVE_TO_SMITE);
+        boolean isArthropod = target != null && target.getType().is(EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS);
+        boolean isAquatic = target != null && target.getType().is(EntityTypeTags.SENSITIVE_TO_IMPALING);
         boolean hasFireResistance = isLiving && (((LivingEntity) target).hasEffect(MobEffects.FIRE_RESISTANCE) || hasFireProtectionArmor((LivingEntity) target));
         double armor = isLiving ? ((LivingEntity) target).getAttributeValue(Attributes.ARMOR) : 0;
         float health = isLiving ? ((LivingEntity) target).getHealth() : 0;
@@ -170,7 +170,7 @@ public class AutoWeapon extends Module {
         double bestScore = getItemScore(currentStack, isFalling, durability, isLiving, isPlayer, isOnFire, hasFireResistance, isUndead, isArthropod, isAquatic, armor, health);
 
         for (int i = 0; i < 9; i++) {
-            if (i == mc.player.getInventory().getSelectedSlot()) continue;
+            if (i == mc.player.getInventory().selected) continue;
 
             ItemStack stack = mc.player.getInventory().getItem(i);
             if (stack.isEmpty() && !durability) continue;

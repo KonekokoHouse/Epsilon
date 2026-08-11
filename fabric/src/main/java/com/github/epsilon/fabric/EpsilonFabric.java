@@ -8,10 +8,18 @@ import com.github.epsilon.assets.i18n.LanguageReloadListener;
 import com.github.epsilon.assets.resources.ResourceLocationUtils;
 import com.github.epsilon.fabric.addon.FabricEpsilonAddonEntrypoint;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 public class EpsilonFabric implements ClientModInitializer {
 
@@ -32,10 +40,24 @@ public class EpsilonFabric implements ClientModInitializer {
         AddonBootstrap.registerAddons(addonEvent);
 
         EpsilonCommon.init();
-        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(
-                ResourceLocationUtils.getIdentifier("objects/reload_listener"),
-                new LanguageReloadListener()
-        );
+        LanguageReloadListener languageReloadListener = new LanguageReloadListener();
+        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new IdentifiableResourceReloadListener() {
+            @Override
+            public ResourceLocation getFabricId() {
+                return ResourceLocationUtils.getIdentifier("objects/reload_listener");
+            }
+
+            @Override
+            public CompletableFuture<Void> reload(PreparableReloadListener.PreparationBarrier barrier,
+                                                  ResourceManager resourceManager,
+                                                  ProfilerFiller preparationProfiler,
+                                                  ProfilerFiller applyProfiler,
+                                                  Executor preparationExecutor,
+                                                  Executor applyExecutor) {
+                return languageReloadListener.reload(barrier, resourceManager, preparationProfiler, applyProfiler,
+                        preparationExecutor, applyExecutor);
+            }
+        });
     }
 
 }

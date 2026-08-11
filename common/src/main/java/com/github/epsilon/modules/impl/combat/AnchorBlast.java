@@ -67,9 +67,9 @@ public class AnchorBlast extends Module {
             }
 
             if (phase != Phase.IDLE && originalSlot >= 0) {
-                mc.player.getInventory().setSelectedSlot(originalSlot);
+                mc.player.getInventory().selected = originalSlot;
             }
-            originalSlot = mc.player.getInventory().getSelectedSlot();
+            originalSlot = mc.player.getInventory().selected;
             cooldown = 0;
             phase = Phase.PLACE_ANCHOR;
         }
@@ -107,7 +107,7 @@ public class AnchorBlast extends Module {
             return;
         }
 
-        mc.player.getInventory().setSelectedSlot(anchorSlot);
+        mc.player.getInventory().selected = anchorSlot;
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
         mc.player.swing(InteractionHand.MAIN_HAND);
         cooldown = humanizedCooldownTicks(placeCps.getValue());
@@ -126,7 +126,7 @@ public class AnchorBlast extends Module {
             return;
         }
 
-        mc.player.getInventory().setSelectedSlot(glowstoneSlot);
+        mc.player.getInventory().selected = glowstoneSlot;
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
         mc.player.swing(InteractionHand.MAIN_HAND);
         cooldown = humanizedCooldownTicks(chargeCps.getValue());
@@ -140,7 +140,7 @@ public class AnchorBlast extends Module {
         if (!mc.level.getBlockState(blockHit.getBlockPos()).is(Blocks.RESPAWN_ANCHOR)) return;
 
         int slot = detonateSlot.getValue() - 1;
-        mc.player.getInventory().setSelectedSlot(slot);
+        mc.player.getInventory().selected = slot;
         mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
         mc.player.swing(InteractionHand.MAIN_HAND);
 
@@ -149,7 +149,7 @@ public class AnchorBlast extends Module {
 
     private void doCleanup() {
         if (originalSlot >= 0) {
-            mc.player.getInventory().setSelectedSlot(originalSlot);
+            mc.player.getInventory().selected = originalSlot;
         }
         resetState();
     }

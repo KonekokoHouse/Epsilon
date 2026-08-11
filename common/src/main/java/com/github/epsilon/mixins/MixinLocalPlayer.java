@@ -2,6 +2,7 @@ package com.github.epsilon.mixins;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.impl.*;
+import com.github.epsilon.interfaces.LocalPlayerAccessor;
 import com.github.epsilon.modules.impl.movement.Velocity;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -13,19 +14,36 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LocalPlayer.class)
-public class MixinLocalPlayer extends AbstractClientPlayer {
+public class MixinLocalPlayer extends AbstractClientPlayer implements LocalPlayerAccessor {
+
+    @Shadow
+    private int positionReminder;
+
+    @Shadow
+    private boolean wasSprinting;
 
     @Unique
     private SendPositionEvent epsilon$sendPositionEvent;
 
     protected MixinLocalPlayer(ClientLevel level, GameProfile gameProfile) {
         super(level, gameProfile);
+    }
+
+    @Override
+    public int epsilon$getPositionReminder() {
+        return positionReminder;
+    }
+
+    @Override
+    public void epsilon$setWasSprinting(boolean sprinting) {
+        wasSprinting = sprinting;
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;tick()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
@@ -56,11 +74,6 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
         if (event.isCancelled()) {
             ci.cancel();
         }
-    }
-
-    @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;position()Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 redirectPosition(LocalPlayer instance, Operation<Vec3> original) {
-        return new Vec3(epsilon$sendPositionEvent.getX(), epsilon$sendPositionEvent.getY(), epsilon$sendPositionEvent.getZ());
     }
 
     @WrapOperation(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getX()D"))
@@ -100,7 +113,7 @@ public class MixinLocalPlayer extends AbstractClientPlayer {
         }
     }
 
-    @WrapOperation(method = "modifyInput", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
+    @WrapOperation(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
     private boolean onSlowdown(LocalPlayer localPlayer, Operation<Boolean> original) {
         SlowdownEvent event = EventBus.INSTANCE.post(new SlowdownEvent(original.call(localPlayer)));
         return event.isSlowdown();

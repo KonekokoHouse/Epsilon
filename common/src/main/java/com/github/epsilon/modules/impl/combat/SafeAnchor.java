@@ -210,7 +210,7 @@ public class SafeAnchor extends Module {
                 FindItemResult glowstone = InvUtils.find(Items.GLOWSTONE);
                 if (!glowstone.found()) return;
 
-                originalSlot = mc.player.getInventory().getSelectedSlot();
+                originalSlot = mc.player.getInventory().selected;
                 currentAnchorPos = pos;
                 stage = Stage.Charging;
 
@@ -251,7 +251,7 @@ public class SafeAnchor extends Module {
         }
 
         if (!silentRotation.getValue()) {
-            smoothAim(targetRotation, mc.getDeltaTracker().getGameTimeDeltaPartialTick(false));
+            smoothAim(targetRotation, com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(false));
         }
 
         Rot2f currentRot = silentRotation.getValue()
@@ -705,7 +705,7 @@ public class SafeAnchor extends Module {
     private HitResult getCrosshairHit() {
         if (mc.player == null) return null;
         double reach = mc.player.blockInteractionRange();
-        float tickDelta = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        float tickDelta = com.github.epsilon.Constants.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         return mc.player.pick(reach, tickDelta, false);
     }
 

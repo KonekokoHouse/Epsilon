@@ -3,13 +3,13 @@ package com.github.epsilon.elements;
 import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
 import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.core.geometry.LuminColor;
-import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.mc.v1211.runtime.MinecraftUiRuntime1211;
 import com.github.slmpc.lumingraphics.text.render.TextRenderer;
 import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
 import com.github.epsilon.modules.Module;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 
 import java.awt.Color;
@@ -219,7 +219,7 @@ public abstract class HudModule extends Module {
     }
 
     protected static float textWidth(String text, float scale, String fontId) {
-        return MinecraftUiRuntime2612.current().textMetrics().textWidth(text, scale, fontId);
+        return MinecraftUiRuntime1211.current().textMetrics().textWidth(text, scale, fontId);
     }
 
     protected static float textHeight(TextRenderer renderer, float scale) {
@@ -231,12 +231,12 @@ public abstract class HudModule extends Module {
     }
 
     protected static float textHeight(float scale, String fontId) {
-        return MinecraftUiRuntime2612.current().textMetrics().textHeight(scale, fontId);
+        return MinecraftUiRuntime1211.current().textMetrics().textHeight(scale, fontId);
     }
 
     public abstract void render(DeltaTracker deltaTracker);
 
-    public void renderOverlay(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+    public void renderOverlay(GuiGraphics graphics, DeltaTracker deltaTracker) {
     }
 
 }
