@@ -12,10 +12,11 @@ Lua library、语言文件、2D HUD 和 3D 世界渲染。脚本可以通过 `lu
 1. [快速开始](getting-started.md)：安装示例包、启用系统并配置 VS Code。
 2. [脚本包与 Module](packages-and-modules.md)：`script.json`、多 entrypoint、`lib/` 和生命周期。
 3. [Setting 与存储](settings-and-storage.md)：Module/包级 Setting、number 规则和持久化。
-4. [事件与 Java 调用](events-and-java.md)：事件订阅、`bindEventClass`、Minecraft 和任意公开 Java API。
-5. [2D 与 3D 渲染](rendering.md)：LuminGraphics `UiTree` 和 `Render3DScheduler`。
-6. [脚本 i18n](internationalization.md)：语言文件结构、完整 key 和回退规则。
-7. [管理与生命周期](management-and-lifecycle.md)：全局开关、包开关、Reload、配置切换和卸载语义。
+4. [事件与 Java 调用](events-and-java.md)：事件订阅、`bindEventClass`、`bindUtilClass`、Minecraft 和 Java API。
+5. [Util 简写与代码补全](util-code-completion.md)：静态/实例成员、构造器、重载、类型映射和 codegen。
+6. [2D 与 3D 渲染](rendering.md)：LuminGraphics `UiTree` 和 `Render3DScheduler`。
+7. [脚本 i18n](internationalization.md)：语言文件结构、完整 key 和回退规则。
+8. [管理与生命周期](management-and-lifecycle.md)：全局开关、包开关、Reload、配置切换和卸载语义。
 
 维护者还应阅读 [内部架构](architecture.md) 和 [测试与排错](testing-and-troubleshooting.md)。
 
@@ -72,6 +73,8 @@ end)
 
 - 完整可运行示例：[example-suite](../examples/lua/example-suite/)
 - Lua Language Server 类型库：[epsilon_lib.lua](../examples/lua/epsilon_lib.lua)
+- Util 补全与生成器教程：[util-code-completion.md](util-code-completion.md)
 - 类型库生成器：[`scripts/generate_epsilon_lib.py`](../../scripts/generate_epsilon_lib.py)
+- Python/uv codegen 维护说明：[`scripts/README.md`](../../scripts/README.md)
 - 当前游戏版本：Minecraft 26.1.2，具体 Java 方法签名以本仓库当前源码和
   `common/build/moddev/artifacts/vanilla-26.1.2-sources.jar` 为准。

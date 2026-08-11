@@ -107,7 +107,7 @@ entrypoint。
 | `epsilon` | 当前包的只读元数据与 `packageStorage` |
 | `addon` | 当前包的只读 Setting API，只能 `setting(id)` |
 | `module` | 当前 Module 的 Setting、事件、生命周期和 storage API |
-| `luajava` | LuaJ Java interop，加上 Epsilon 的 `bindEventClass` |
+| `luajava` | LuaJ Java interop，加上 Epsilon 的 `bindEventClass` 与 `bindUtilClass` |
 
 `settings.lua` 使用单独的 runtime；它没有 `module`，其中的 `addon` 允许声明包级 Setting。entrypoint 正常
 返回后声明阶段关闭，回调中不能再增加 Setting 或生命周期声明。

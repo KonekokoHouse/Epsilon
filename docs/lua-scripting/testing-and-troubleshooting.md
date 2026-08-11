@@ -41,6 +41,12 @@ Epsilon 事件短名才使用：
 luajava.bindEventClass("MoveEvent")
 ```
 
+Epsilon 工具类短名使用：
+
+```lua
+luajava.bindUtilClass("PlayerUtils")
+```
+
 若升级后找不到 Minecraft 方法或字段，直接查当前版本的 vanilla sources，不要根据旧教程猜测签名。
 
 ### callback 不触发
@@ -68,12 +74,15 @@ Setting handle、`java_module()` 结果、UiTree scope、render context 或事�
 修改 Java Lua API 或事件 registry 后执行：
 
 ```powershell
-python scripts/generate_epsilon_lib.py
-python scripts/generate_epsilon_lib.py --check
+uv sync --frozen
+uv run --frozen python -m unittest discover -s scripts/tests
+uv run --frozen python scripts/generate_epsilon_lib.py
+uv run --frozen python scripts/generate_epsilon_lib.py --check
 ```
 
-`--check` 失败表示仓库中的 `docs/examples/lua/epsilon_lib.lua` 不是当前生成结果，或生成器发现 Java 导出键
-与元数据约定不一致。
+`--check` 失败表示 `LuaUtilRegistry.java` 或 `docs/examples/lua/epsilon_lib.lua` 不是当前生成结果，或生成器
+发现 Java AST、`scripts/lua_codegen/epsilon_api.json`、导出键与元数据约定不一致。单元测试覆盖公开成员、
+重载、构造器、varargs、nullable、嵌套 enum 和保守类型映射。
 
 ## 维护验证矩阵
 
@@ -96,7 +105,8 @@ python scripts/generate_epsilon_lib.py --check
 - 连续启停/Reload 不产生重复 Module、listener 或 stale Dropdown Module。
 - 当前语言、`en_us` 和 fallback 的优先级；非法 i18n 叶节点被拒绝。
 - 精确事件 class、priority、取消、修改值与 packet 原线程行为。
-- `bindEventClass` 的顶层/嵌套名称、未知名称和 `bindClass` fallback 用法。
+- `bindEventClass` 的顶层/嵌套名称、`bindUtilClass` 注册短名与成员级补全、未知名称和 `bindClass` fallback
+  用法。
 - HUD callback 共用宿主 tree，Level callback 共用 scene，layer/scissor 隔离。
 - 3D 命令在 priority `-999` flush 前提交并由 scheduler 当帧清理。
 - raw Minecraft、Java class、UiTree scope 和 scheduler 的 smoke test。
@@ -106,7 +116,8 @@ python scripts/generate_epsilon_lib.py --check
 纯文档或补全库修改至少执行：
 
 ```powershell
-python scripts/generate_epsilon_lib.py --check
+uv run --frozen python -m unittest discover -s scripts/tests
+uv run --frozen python scripts/generate_epsilon_lib.py --check
 git diff --check
 git diff -- AGENTS.md
 git status --short

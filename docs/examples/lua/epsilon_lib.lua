@@ -6,7 +6,13 @@
 -- This file is metadata only. Do not execute or require it from a script package.
 
 ---@alias EpsilonArgb integer
----@alias EpsilonDirection "down"|"up"|"north"|"south"|"west"|"east"
+---@alias EpsilonDirection
+---| "down"
+---| "up"
+---| "north"
+---| "south"
+---| "west"
+---| "east"
 ---@alias EpsilonJsonValue boolean|number|string|EpsilonJsonArray|EpsilonJsonObject
 ---@alias EpsilonEventId
 ---| "client_tick.pre"
@@ -60,14 +66,41 @@
 ---| "TravelEvent"
 ---| "UseItemEvent"
 ---| "UseItemRaytraceEvent"
+---@alias EpsilonUtilClassName
+---| "BlockRegistryUtils"
+---| "BlockUtils"
+---| "ChatUtils"
+---| "ClickSlotUtils"
+---| "ClientUtils"
+---| "ColorUtils"
+---| "DamageUtils"
+---| "EnchantmentUtils"
+---| "HoleUtils"
+---| "InteractionUtils"
+---| "InvUtils"
+---| "KeybindUtils"
+---| "MathUtils"
+---| "MoveUtils"
+---| "PacketUtils"
+---| "PlayerUtils"
+---| "RaytraceUtils"
+---| "RotationUtils"
+---| "ScissorUtils"
+---| "TimerUtils"
+---| "WorldToScreen"
+---@alias EpsilonEventCallback fun(event: userdata)
+---@alias EpsilonRender2DCallback fun(ui: EpsilonUiContext, event: userdata)
+---@alias EpsilonRender3DCallback fun(render3d: EpsilonRender3DContext, event: userdata)
 
 ---@class EpsilonJsonArray: table<integer, EpsilonJsonValue>
+
 ---@class EpsilonJsonObject: table<string, EpsilonJsonValue>
 
 ---@class EpsilonLuaJava
 local LuaJava = {}
 
 ---Binds a fully qualified Java class name.
+---@overload fun(className: "com.github.epsilon.utils.combat.DamageUtils$ArmorEnchantmentMode"): EpsilonJavaDamageUtilsArmorEnchantmentModeClass
 ---@param className string
 ---@return userdata javaClass
 function LuaJava.bindClass(className) end
@@ -77,13 +110,69 @@ function LuaJava.bindClass(className) end
 ---@return userdata javaClass
 function LuaJava.bindEventClass(eventName) end
 
+---Binds an explicitly registered Epsilon utility class by its short name.
+---@overload fun(utilName: "BlockRegistryUtils"): EpsilonJavaBlockRegistryUtilsClass
+---@overload fun(utilName: "BlockUtils"): EpsilonJavaBlockUtilsClass
+---@overload fun(utilName: "ChatUtils"): EpsilonJavaChatUtilsClass
+---@overload fun(utilName: "ClickSlotUtils"): EpsilonJavaClickSlotUtilsClass
+---@overload fun(utilName: "ClientUtils"): EpsilonJavaClientUtilsClass
+---@overload fun(utilName: "ColorUtils"): EpsilonJavaColorUtilsClass
+---@overload fun(utilName: "DamageUtils"): EpsilonJavaDamageUtilsClass
+---@overload fun(utilName: "EnchantmentUtils"): EpsilonJavaEnchantmentUtilsClass
+---@overload fun(utilName: "HoleUtils"): EpsilonJavaHoleUtilsClass
+---@overload fun(utilName: "InteractionUtils"): EpsilonJavaInteractionUtilsClass
+---@overload fun(utilName: "InvUtils"): EpsilonJavaInvUtilsClass
+---@overload fun(utilName: "KeybindUtils"): EpsilonJavaKeybindUtilsClass
+---@overload fun(utilName: "MathUtils"): EpsilonJavaMathUtilsClass
+---@overload fun(utilName: "MoveUtils"): EpsilonJavaMoveUtilsClass
+---@overload fun(utilName: "PacketUtils"): EpsilonJavaPacketUtilsClass
+---@overload fun(utilName: "PlayerUtils"): EpsilonJavaPlayerUtilsClass
+---@overload fun(utilName: "RaytraceUtils"): EpsilonJavaRaytraceUtilsClass
+---@overload fun(utilName: "RotationUtils"): EpsilonJavaRotationUtilsClass
+---@overload fun(utilName: "ScissorUtils"): EpsilonJavaScissorUtilsClass
+---@overload fun(utilName: "TimerUtils"): EpsilonJavaTimerUtilsClass
+---@overload fun(utilName: "WorldToScreen"): EpsilonJavaWorldToScreenClass
+---@param utilName EpsilonUtilClassName
+---@return userdata javaClass
+function LuaJava.bindUtilClass(utilName) end
+
 ---Creates a Java object from a fully qualified class name.
+---@overload fun(className: "com.github.epsilon.utils.world.BlockUtils"): EpsilonJavaBlockUtils
+---@overload fun(className: "com.github.epsilon.utils.player.ChatUtils"): EpsilonJavaChatUtils
+---@overload fun(className: "com.github.epsilon.utils.player.ClickSlotUtils"): EpsilonJavaClickSlotUtils
+---@overload fun(className: "com.github.epsilon.utils.client.ClientUtils"): EpsilonJavaClientUtils
+---@overload fun(className: "com.github.epsilon.utils.render.ColorUtils"): EpsilonJavaColorUtils
+---@overload fun(className: "com.github.epsilon.utils.player.EnchantmentUtils"): EpsilonJavaEnchantmentUtils
+---@overload fun(className: "com.github.epsilon.utils.world.hole.HoleUtils"): EpsilonJavaHoleUtils
+---@overload fun(className: "com.github.epsilon.utils.player.InteractionUtils"): EpsilonJavaInteractionUtils
+---@overload fun(className: "com.github.epsilon.utils.player.InvUtils"): EpsilonJavaInvUtils
+---@overload fun(className: "com.github.epsilon.utils.player.MoveUtils"): EpsilonJavaMoveUtils
+---@overload fun(className: "com.github.epsilon.utils.network.PacketUtils"): EpsilonJavaPacketUtils
+---@overload fun(className: "com.github.epsilon.utils.player.PlayerUtils"): EpsilonJavaPlayerUtils
+---@overload fun(className: "com.github.epsilon.utils.rotation.RaytraceUtils"): EpsilonJavaRaytraceUtils
+---@overload fun(className: "com.github.epsilon.utils.rotation.RotationUtils"): EpsilonJavaRotationUtils
+---@overload fun(className: "com.github.epsilon.utils.timer.TimerUtils"): EpsilonJavaTimerUtils
 ---@param className string
 ---@param ... any
 ---@return userdata javaObject
 function LuaJava.newInstance(className, ...) end
 
----Creates a Java object from a class returned by bindClass.
+---Creates a Java object from a class returned by bindClass or bindUtilClass.
+---@overload fun(javaClass: EpsilonJavaBlockUtilsClass): EpsilonJavaBlockUtils
+---@overload fun(javaClass: EpsilonJavaChatUtilsClass): EpsilonJavaChatUtils
+---@overload fun(javaClass: EpsilonJavaClickSlotUtilsClass): EpsilonJavaClickSlotUtils
+---@overload fun(javaClass: EpsilonJavaClientUtilsClass): EpsilonJavaClientUtils
+---@overload fun(javaClass: EpsilonJavaColorUtilsClass): EpsilonJavaColorUtils
+---@overload fun(javaClass: EpsilonJavaEnchantmentUtilsClass): EpsilonJavaEnchantmentUtils
+---@overload fun(javaClass: EpsilonJavaHoleUtilsClass): EpsilonJavaHoleUtils
+---@overload fun(javaClass: EpsilonJavaInteractionUtilsClass): EpsilonJavaInteractionUtils
+---@overload fun(javaClass: EpsilonJavaInvUtilsClass): EpsilonJavaInvUtils
+---@overload fun(javaClass: EpsilonJavaMoveUtilsClass): EpsilonJavaMoveUtils
+---@overload fun(javaClass: EpsilonJavaPacketUtilsClass): EpsilonJavaPacketUtils
+---@overload fun(javaClass: EpsilonJavaPlayerUtilsClass): EpsilonJavaPlayerUtils
+---@overload fun(javaClass: EpsilonJavaRaytraceUtilsClass): EpsilonJavaRaytraceUtils
+---@overload fun(javaClass: EpsilonJavaRotationUtilsClass): EpsilonJavaRotationUtils
+---@overload fun(javaClass: EpsilonJavaTimerUtilsClass): EpsilonJavaTimerUtils
 ---@param javaClass userdata
 ---@param ... any
 ---@return userdata javaObject
@@ -222,10 +311,6 @@ function SettingHostApi:stringListSetting(spec) end
 
 ---@class EpsilonAddonApi: EpsilonSettingHostApi
 local AddonApi = {}
-
----@alias EpsilonEventCallback fun(event: userdata)
----@alias EpsilonRender2DCallback fun(ui: EpsilonUiContext, event: userdata)
----@alias EpsilonRender3DCallback fun(render3d: EpsilonRender3DContext, event: userdata)
 
 ---@class EpsilonModuleApi: EpsilonSettingHostApi
 ---@field readonly storage EpsilonStorage
@@ -421,10 +506,572 @@ function Render3DContext:vec3(x, y, z) end
 ---@return userdata scheduler A Render3DScheduler.
 function Render3DContext:raw_scheduler() end
 
+---Java utility: `com.github.epsilon.utils.world.BlockRegistryUtils`.
+---@class EpsilonJavaBlockRegistryUtilsClass
+local JavaBlockRegistryUtilsClass = {}
+
+---@return userdata value Java type: `List<Block>`.
+function JavaBlockRegistryUtilsClass:allSelectableBlocks() end
+
+---@param block userdata Java type: `Block`.
+---@return boolean value Java type: `boolean`.
+function JavaBlockRegistryUtilsClass:isSelectable(block) end
+
+---@param block userdata Java type: `Block`.
+---@return string value Java type: `String`.
+function JavaBlockRegistryUtilsClass:id(block) end
+
+---@param id string Java type: `String`.
+---@return userdata value Java type: `Block`.
+function JavaBlockRegistryUtilsClass:byId(id) end
+
+---@param block userdata Java type: `Block`.
+---@return string value Java type: `String`.
+function JavaBlockRegistryUtilsClass:displayName(block) end
+
+---@param block userdata Java type: `Block`.
+---@return string value Java type: `String`.
+function JavaBlockRegistryUtilsClass:searchText(block) end
+
+---@param blocks userdata Java type: `Collection<Block>`.
+---@return userdata value Java type: `List<String>`.
+function JavaBlockRegistryUtilsClass:toIds(blocks) end
+
+---Java utility: `com.github.epsilon.utils.world.BlockUtils`.
+---@class EpsilonJavaBlockUtils
+local JavaBlockUtils = {}
+
+---@class EpsilonJavaBlockUtilsClass
+local JavaBlockUtilsClass = {}
+
+---@param pos userdata Java type: `BlockPos`.
+---@return boolean value Java type: `boolean`.
+function JavaBlockUtilsClass:canPlaceAt(pos) end
+
+---Java utility: `com.github.epsilon.utils.player.ChatUtils`.
+---@class EpsilonJavaChatUtils
+local JavaChatUtils = {}
+
+---@class EpsilonJavaChatUtilsClass
+---@field readonly PREFIX string Java type: `String`.
+local JavaChatUtilsClass = {}
+
+---@overload fun(self: EpsilonJavaChatUtilsClass, message: userdata)
+---@overload fun(self: EpsilonJavaChatUtilsClass, prefix: boolean, message: string)
+---@overload fun(self: EpsilonJavaChatUtilsClass, prefix: boolean, message: userdata)
+---@overload fun(self: EpsilonJavaChatUtilsClass, message: string, hash: integer)
+---@overload fun(self: EpsilonJavaChatUtilsClass, message: userdata, hash: integer)
+---@overload fun(self: EpsilonJavaChatUtilsClass, prefix: boolean, message: string, hash: integer)
+---@overload fun(self: EpsilonJavaChatUtilsClass, prefix: boolean, message: userdata, hash: integer)
+---@param message string Java type: `String`.
+function JavaChatUtilsClass:addChatMessage(message) end
+
+---@overload fun(self: EpsilonJavaChatUtilsClass, prefix: boolean, message: userdata): userdata
+---@param prefix boolean Java type: `boolean`.
+---@param message string Java type: `String`.
+---@return userdata value Java type: `Component`.
+function JavaChatUtilsClass:buildClientMessage(prefix, message) end
+
+---@param original userdata Java type: `FormattedCharSequence`.
+---@return userdata value Java type: `FormattedCharSequence`.
+function JavaChatUtilsClass:applyAnimatedPrefix(original) end
+
+---Java utility: `com.github.epsilon.utils.player.ClickSlotUtils`.
+---@class EpsilonJavaClickSlotUtils
+local JavaClickSlotUtils = {}
+
+---@class EpsilonJavaClickSlotUtilsClass
+local JavaClickSlotUtilsClass = {}
+
+---@overload fun(self: EpsilonJavaClickSlotUtilsClass, slot: integer, button: integer, action: userdata)
+---@param containerId integer Java type: `int`.
+---@param slot integer Java type: `int`.
+---@param button integer Java type: `int`.
+---@param action userdata Java type: `ContainerInput`.
+function JavaClickSlotUtilsClass:clickSlot(containerId, slot, button, action) end
+
+---@overload fun(self: EpsilonJavaClickSlotUtilsClass, slot: integer)
+---@param containerId integer Java type: `int`.
+---@param slot integer Java type: `int`.
+function JavaClickSlotUtilsClass:click(containerId, slot) end
+
+---@overload fun(self: EpsilonJavaClickSlotUtilsClass, slot: integer)
+---@param containerId integer Java type: `int`.
+---@param slot integer Java type: `int`.
+function JavaClickSlotUtilsClass:shiftClick(containerId, slot) end
+
+---@overload fun(self: EpsilonJavaClickSlotUtilsClass, slot: integer)
+---@param containerId integer Java type: `int`.
+---@param slot integer Java type: `int`.
+function JavaClickSlotUtilsClass:drop(containerId, slot) end
+
+---@overload fun(self: EpsilonJavaClickSlotUtilsClass, slot: integer)
+---@param containerId integer Java type: `int`.
+---@param slot integer Java type: `int`.
+function JavaClickSlotUtilsClass:dropAll(containerId, slot) end
+
+---@overload fun(self: EpsilonJavaClickSlotUtilsClass, slot: integer, hotbarSlot: integer)
+---@param containerId integer Java type: `int`.
+---@param slot integer Java type: `int`.
+---@param hotbarSlot integer Java type: `int`.
+function JavaClickSlotUtilsClass:swap(containerId, slot, hotbarSlot) end
+
+---Java utility: `com.github.epsilon.utils.client.ClientUtils`.
+---@class EpsilonJavaClientUtils
+local JavaClientUtils = {}
+
+---@class EpsilonJavaClientUtilsClass
+local JavaClientUtilsClass = {}
+
+---@return boolean value Java type: `boolean`.
+function JavaClientUtilsClass:isLoading() end
+
+---Java utility: `com.github.epsilon.utils.render.ColorUtils`.
+---@class EpsilonJavaColorUtils
+local JavaColorUtils = {}
+
+---@class EpsilonJavaColorUtilsClass
+local JavaColorUtilsClass = {}
+
+---@param color1 userdata Java type: `Color`.
+---@param color2 userdata Java type: `Color`.
+---@param fraction number Java type: `float`.
+---@return userdata value Java type: `Color`.
+function JavaColorUtilsClass:interpolateColor(color1, color2, fraction) end
+
+---Java utility: `com.github.epsilon.utils.combat.DamageUtils`.
+---@class EpsilonJavaDamageUtilsClass
+---@field readonly CRYSTAL_EXPLOSION_RADIUS number Java type: `float`.
+---@field readonly ANCHOR_EXPLOSION_RADIUS number Java type: `float`.
+local JavaDamageUtilsClass = {}
+
+---@param target userdata Java type: `LivingEntity`.
+---@param crystalPos userdata Java type: `Vec3`.
+---@param targetPos userdata Java type: `Vec3`.
+---@param mode EpsilonJavaDamageUtilsArmorEnchantmentMode Java type: `ArmorEnchantmentMode`.
+---@return number value Java type: `float`.
+function JavaDamageUtilsClass:crystalDamage(target, crystalPos, targetPos, mode) end
+
+---@param target userdata Java type: `LivingEntity`.
+---@param anchorPos userdata Java type: `Vec3`.
+---@param mode EpsilonJavaDamageUtilsArmorEnchantmentMode Java type: `ArmorEnchantmentMode`.
+---@return number value Java type: `float`.
+function JavaDamageUtilsClass:anchorDamage(target, anchorPos, mode) end
+
+---@param target userdata Java type: `LivingEntity`.
+---@param explosionPos userdata Java type: `Vec3`.
+---@param radius number Java type: `float`.
+---@param targetPos userdata Java type: `Vec3`.
+---@param mode EpsilonJavaDamageUtilsArmorEnchantmentMode Java type: `ArmorEnchantmentMode`.
+---@return number value Java type: `float`.
+function JavaDamageUtilsClass:explosionDamage(target, explosionPos, radius, targetPos, mode) end
+
+---@param target userdata Java type: `LivingEntity`.
+---@param explosionPos userdata Java type: `Vec3`.
+---@param radius number Java type: `float`.
+---@return number value Java type: `float`.
+function JavaDamageUtilsClass:rawExplosionDamage(target, explosionPos, radius) end
+
+---@overload fun(self: EpsilonJavaDamageUtilsClass, center: userdata, bb: userdata, entity: userdata): number
+---@param center userdata Java type: `Vec3`.
+---@param entity userdata Java type: `LivingEntity`.
+---@return number value Java type: `float`.
+function JavaDamageUtilsClass:getSeenPercent(center, entity) end
+
+---@overload fun(self: EpsilonJavaDamageUtilsClass, crystalPos: userdata, selfPos: userdata, mode: EpsilonJavaDamageUtilsArmorEnchantmentMode): number
+---@param crystalPos userdata Java type: `Vec3`.
+---@param mode EpsilonJavaDamageUtilsArmorEnchantmentMode Java type: `ArmorEnchantmentMode`.
+---@return number value Java type: `float`.
+function JavaDamageUtilsClass:selfCrystalDamage(crystalPos, mode) end
+
+---@param entity userdata Java type: `LivingEntity`.
+---@param pos userdata Java type: `Vec3`.
+---@return userdata value Java type: `AABB`.
+function JavaDamageUtilsClass:getPredictedBoundingBox(entity, pos) end
+
+---Java enum: `com.github.epsilon.utils.combat.DamageUtils.ArmorEnchantmentMode` (`com.github.epsilon.utils.combat.DamageUtils$ArmorEnchantmentMode`).
+---@class EpsilonJavaDamageUtilsArmorEnchantmentMode
+local JavaDamageUtilsArmorEnchantmentMode = {}
+
+---@class EpsilonJavaDamageUtilsArmorEnchantmentModeClass
+---@field readonly None EpsilonJavaDamageUtilsArmorEnchantmentMode
+---@field readonly PPPP EpsilonJavaDamageUtilsArmorEnchantmentMode
+---@field readonly PPBP EpsilonJavaDamageUtilsArmorEnchantmentMode
+local JavaDamageUtilsArmorEnchantmentModeClass = {}
+
+---Java utility: `com.github.epsilon.utils.player.EnchantmentUtils`.
+---@class EpsilonJavaEnchantmentUtils
+local JavaEnchantmentUtils = {}
+
+---@class EpsilonJavaEnchantmentUtilsClass
+local JavaEnchantmentUtilsClass = {}
+
+---@param itemStack userdata Java type: `ItemStack`.
+---@param enchantments userdata Java type: `Object2IntMap<Holder<Enchantment>>`.
+function JavaEnchantmentUtilsClass:getEnchantments(itemStack, enchantments) end
+
+---@overload fun(self: EpsilonJavaEnchantmentUtilsClass, itemEnchantments: userdata, enchantment: userdata): integer
+---@param itemStack userdata Java type: `ItemStack`.
+---@param enchantment userdata Java type: `ResourceKey<Enchantment>`.
+---@return integer value Java type: `int`.
+function JavaEnchantmentUtilsClass:getEnchantmentLevel(itemStack, enchantment) end
+
+---@param itemStack userdata Java type: `ItemStack`.
+---@param ... userdata Java type: `ResourceKey<Enchantment>...`.
+---@return boolean value Java type: `boolean`.
+function JavaEnchantmentUtilsClass:hasEnchantments(itemStack, ...) end
+
+---@param itemStack userdata Java type: `ItemStack`.
+---@param enchantmentKey userdata Java type: `ResourceKey<Enchantment>`.
+---@return boolean value Java type: `boolean`.
+function JavaEnchantmentUtilsClass:hasEnchantment(itemStack, enchantmentKey) end
+
+---Java utility: `com.github.epsilon.utils.world.hole.HoleUtils`.
+---@class EpsilonJavaHoleUtils
+local JavaHoleUtils = {}
+
+---@class EpsilonJavaHoleUtilsClass
+local JavaHoleUtilsClass = {}
+
+---@overload fun(self: EpsilonJavaHoleUtilsClass, pos: userdata, depth: integer): userdata
+---@overload fun(self: EpsilonJavaHoleUtilsClass, pos: userdata, depth: integer, floor: boolean): userdata
+---@overload fun(self: EpsilonJavaHoleUtilsClass, pos: userdata, single: boolean, doubles: boolean, quad: boolean, depth: integer, floor: boolean): userdata
+---@param pos userdata Java type: `BlockPos`.
+---@return userdata value Java type: `Hole`.
+function JavaHoleUtilsClass:getHole(pos) end
+
+---@param pos userdata Java type: `BlockPos`.
+---@return boolean value Java type: `boolean`.
+function JavaHoleUtilsClass:isBlock(pos) end
+
+---@param player userdata Java type: `Player`.
+---@return boolean value Java type: `boolean`.
+function JavaHoleUtilsClass:inHole(player) end
+
+---Java utility: `com.github.epsilon.utils.player.InteractionUtils`.
+---@class EpsilonJavaInteractionUtils
+local JavaInteractionUtils = {}
+
+---@class EpsilonJavaInteractionUtilsClass
+local JavaInteractionUtilsClass = {}
+
+---@param pos userdata Java type: `BlockPos`.
+---@param rotate boolean Java type: `boolean`.
+---@param hand userdata Java type: `InteractionHand`.
+---@param packet boolean Java type: `boolean`.
+---@param grimBypass boolean Java type: `boolean`.
+---@return userdata value Java type: `InteractionResult`.
+function JavaInteractionUtilsClass:airPlace(pos, rotate, hand, packet, grimBypass) end
+
+---Java utility: `com.github.epsilon.utils.player.InvUtils`.
+---@class EpsilonJavaInvUtils
+local JavaInvUtils = {}
+
+---@class EpsilonJavaInvUtilsClass
+---@field invSlots userdata Java type: `int[]`.
+---@field previousSlot integer Java type: `int`.
+local JavaInvUtilsClass = {}
+
+---@param predicate userdata Java type: `Predicate<ItemStack>`.
+---@return boolean value Java type: `boolean`.
+function JavaInvUtilsClass:testInMainHand(predicate) end
+
+---@param predicate userdata Java type: `Predicate<ItemStack>`.
+---@return boolean value Java type: `boolean`.
+function JavaInvUtilsClass:testInOffHand(predicate) end
+
+---@overload fun(self: EpsilonJavaInvUtilsClass, isGood: userdata): userdata
+---@param ... userdata Java type: `Item...`.
+---@return userdata value Java type: `FindItemResult`.
+function JavaInvUtilsClass:findInHotbar(...) end
+
+---@overload fun(self: EpsilonJavaInvUtilsClass, isGood: userdata): userdata
+---@overload fun(self: EpsilonJavaInvUtilsClass, isGood: userdata, start: integer, end: integer): userdata
+---@param ... userdata Java type: `Item...`.
+---@return userdata value Java type: `FindItemResult`.
+function JavaInvUtilsClass:find(...) end
+
+---@param slot integer Java type: `int`.
+---@param saveSwap boolean Java type: `boolean`.
+function JavaInvUtilsClass:swap(slot, saveSwap) end
+
+function JavaInvUtilsClass:swapBack() end
+
+---@param slot integer Java type: `int`.
+function JavaInvUtilsClass:invSwap(slot) end
+
+function JavaInvUtilsClass:invSwapBack() end
+
+---Java utility: `com.github.epsilon.utils.client.KeybindUtils`.
+---@class EpsilonJavaKeybindUtilsClass
+---@field readonly NONE integer Java type: `int`.
+---@field readonly MOUSE_OFFSET integer Java type: `int`.
+local JavaKeybindUtilsClass = {}
+
+---@param keyBind integer Java type: `int`.
+---@return boolean value Java type: `boolean`.
+function JavaKeybindUtilsClass:isMouseButton(keyBind) end
+
+---@param button integer Java type: `int`.
+---@return integer value Java type: `int`.
+function JavaKeybindUtilsClass:encodeMouseButton(button) end
+
+---@param keyBind integer Java type: `int`.
+---@return integer value Java type: `int`.
+function JavaKeybindUtilsClass:decodeMouseButton(keyBind) end
+
+---@param keyMapping userdata Java type: `KeyMapping`.
+---@return integer value Java type: `int`.
+function JavaKeybindUtilsClass:getKey(keyMapping) end
+
+---@overload fun(self: EpsilonJavaKeybindUtilsClass, keyBind: integer): boolean
+---@param keyMapping userdata Java type: `KeyMapping`.
+---@return boolean value Java type: `boolean`.
+function JavaKeybindUtilsClass:isPressed(keyMapping) end
+
+---@param keyBind integer Java type: `int`.
+---@return string value Java type: `String`.
+function JavaKeybindUtilsClass:format(keyBind) end
+
+---Java utility: `com.github.epsilon.utils.math.MathUtils`.
+---@class EpsilonJavaMathUtilsClass
+local JavaMathUtilsClass = {}
+
+---@overload fun(self: EpsilonJavaMathUtilsClass, min: number, max: number): number
+---@overload fun(self: EpsilonJavaMathUtilsClass, min: number, max: number): number
+---@param min integer Java type: `int`.
+---@param max integer Java type: `int`.
+---@return integer value Java type: `int`.
+function JavaMathUtilsClass:getRandom(min, max) end
+
+---Java utility: `com.github.epsilon.utils.player.MoveUtils`.
+---@class EpsilonJavaMoveUtils
+local JavaMoveUtils = {}
+
+---@class EpsilonJavaMoveUtilsClass
+local JavaMoveUtilsClass = {}
+
+---@param speed number Java type: `double`.
+---@return userdata value Java type: `double[]`.
+function JavaMoveUtilsClass:forwardWithoutStrafe(speed) end
+
+---@param speed number Java type: `double`.
+---@return userdata value Java type: `double[]`.
+function JavaMoveUtilsClass:forward(speed) end
+
+---Java utility: `com.github.epsilon.utils.network.PacketUtils`.
+---@class EpsilonJavaPacketUtils
+local JavaPacketUtils = {}
+
+---@class EpsilonJavaPacketUtilsClass
+---@field readonly bypassedPackets userdata Java type: `Set<Packet<?>>`.
+local JavaPacketUtilsClass = {}
+
+---@param packet userdata Java type: `Packet<?>`.
+function JavaPacketUtilsClass:sendSilently(packet) end
+
+---Java utility: `com.github.epsilon.utils.player.PlayerUtils`.
+---@class EpsilonJavaPlayerUtils
+local JavaPlayerUtils = {}
+
+---@class EpsilonJavaPlayerUtilsClass
+local JavaPlayerUtilsClass = {}
+
+---@return boolean value Java type: `boolean`.
+function JavaPlayerUtilsClass:isEating() end
+
+---@return boolean value Java type: `boolean`.
+function JavaPlayerUtilsClass:isInWeb() end
+
+---@return boolean value Java type: `boolean`.
+function JavaPlayerUtilsClass:isInBlock() end
+
+---Java utility: `com.github.epsilon.utils.rotation.RaytraceUtils`.
+---@class EpsilonJavaRaytraceUtils
+local JavaRaytraceUtils = {}
+
+---@class EpsilonJavaRaytraceUtilsClass
+local JavaRaytraceUtilsClass = {}
+
+---@param eyes userdata Java type: `Vec3`.
+---@param vec3 userdata Java type: `Vec3`.
+---@return boolean value Java type: `boolean`.
+function JavaRaytraceUtilsClass:canSeePointFrom(eyes, vec3) end
+
+---@overload fun(self: EpsilonJavaRaytraceUtilsClass, rotation: userdata, range: number, expand: number): userdata
+---@overload fun(self: EpsilonJavaRaytraceUtilsClass, rotation: userdata, range: number, expand: number, entity: userdata): userdata
+---@param rotation userdata Java type: `Rot2f`.
+---@param range number Java type: `double`.
+---@return userdata value Java type: `HitResult`.
+function JavaRaytraceUtilsClass:raytrace(rotation, range) end
+
+---@overload fun(self: EpsilonJavaRaytraceUtilsClass, rotation: userdata, pos: userdata, strict: boolean): boolean
+---@overload fun(self: EpsilonJavaRaytraceUtilsClass, rotation: userdata, pos: userdata): boolean
+---@overload fun(self: EpsilonJavaRaytraceUtilsClass, rotation: userdata, pos: userdata, enumFacing: userdata): boolean
+---@param rotation userdata Java type: `Rot2f`.
+---@param dir userdata Java type: `Direction`.
+---@param pos userdata Java type: `BlockPos`.
+---@param strict boolean Java type: `boolean`.
+---@return boolean value Java type: `boolean`.
+function JavaRaytraceUtilsClass:overBlock(rotation, dir, pos, strict) end
+
+---Java utility: `com.github.epsilon.utils.rotation.RotationUtils`.
+---@class EpsilonJavaRotationUtils
+local JavaRotationUtils = {}
+
+---@class EpsilonJavaRotationUtilsClass
+local JavaRotationUtilsClass = {}
+
+---@param pos userdata Java type: `BlockPos`.
+---@return userdata value Java type: `Direction`.
+function JavaRotationUtilsClass:getDirection(pos) end
+
+---@param pos userdata Java type: `BlockPos`.
+---@param side userdata Java type: `Direction`.
+---@return boolean value Java type: `boolean`.
+function JavaRotationUtilsClass:canSee(pos, side) end
+
+---@param pos userdata Java type: `BlockPos`.
+---@param direction userdata Java type: `Direction`.
+---@return boolean value Java type: `boolean`.
+function JavaRotationUtilsClass:isGrimDirection(pos, direction) end
+
+---@param entity userdata Java type: `Entity`.
+---@param fov number Java type: `float`.
+---@return boolean value Java type: `boolean`.
+function JavaRotationUtilsClass:isInFov(entity, fov) end
+
+---@param entity userdata Java type: `Entity`.
+---@return userdata value Java type: `Rot2f`.
+function JavaRotationUtilsClass:getRotationsToEntity(entity) end
+
+---@param entity userdata Java type: `LivingEntity`.
+---@return number value Java type: `double`.
+function JavaRotationUtilsClass:getEyeDistanceToEntity(entity) end
+
+---@overload fun(self: EpsilonJavaRotationUtilsClass, entity: userdata): userdata
+---@overload fun(self: EpsilonJavaRotationUtilsClass, entity: userdata, adaptive: boolean, range: number): userdata
+---@overload fun(self: EpsilonJavaRotationUtilsClass, to: userdata): userdata
+---@overload fun(self: EpsilonJavaRotationUtilsClass, to: userdata): userdata
+---@overload fun(self: EpsilonJavaRotationUtilsClass, position: userdata, direction: userdata): userdata
+---@overload fun(self: EpsilonJavaRotationUtilsClass, position: userdata, direction: userdata): userdata
+---@param from userdata Java type: `Vec3`.
+---@param to userdata Java type: `Vec3`.
+---@return userdata value Java type: `Rot2f`.
+function JavaRotationUtilsClass:calculate(from, to) end
+
+---@overload fun(self: EpsilonJavaRotationUtilsClass, rotation: userdata, previousRotation: userdata): userdata
+---@param rotation userdata Java type: `Rot2f`.
+---@return userdata value Java type: `Rot2f`.
+function JavaRotationUtilsClass:applySensitivityPatch(rotation) end
+
+---@param rotation userdata Java type: `Rot2f`.
+---@return userdata value Java type: `Rot2f`.
+function JavaRotationUtilsClass:relateToPlayerRotation(rotation) end
+
+---@param rotation userdata Java type: `Rot2f`.
+---@return userdata value Java type: `Rot2f`.
+function JavaRotationUtilsClass:resetRotation(rotation) end
+
+---@overload fun(self: EpsilonJavaRotationUtilsClass, lastRotation: userdata, targetRotation: userdata, speed: number): userdata
+---@param targetRotation userdata Java type: `Rot2f`.
+---@param speed number Java type: `double`.
+---@return userdata value Java type: `Rot2f`.
+function JavaRotationUtilsClass:move(targetRotation, speed) end
+
+---@overload fun(self: EpsilonJavaRotationUtilsClass, lastRotation: userdata, targetRotation: userdata, speed: number): userdata
+---@param targetRotation userdata Java type: `Rot2f`.
+---@param speed number Java type: `double`.
+---@return userdata value Java type: `Rot2f`.
+function JavaRotationUtilsClass:smooth(targetRotation, speed) end
+
+---Java utility: `com.github.epsilon.utils.render.ScissorUtils`.
+---@class EpsilonJavaScissorUtilsClass
+local JavaScissorUtilsClass = {}
+
+---@overload fun(self: EpsilonJavaScissorUtilsClass, x: number, y: number, width: number, height: number, guiHeight: number): userdata
+---@overload fun(self: EpsilonJavaScissorUtilsClass, x: number, y: number, width: number, height: number, scale: number, framebufferHeight: integer): userdata
+---@param x number Java type: `float`.
+---@param y number Java type: `float`.
+---@param width number Java type: `float`.
+---@param height number Java type: `float`.
+---@return userdata value Java type: `LuminRenderSystem.ScissorRect`.
+function JavaScissorUtilsClass:toFramebufferScissor(x, y, width, height) end
+
+---@param x integer Java type: `int`.
+---@param y integer Java type: `int`.
+---@param width integer Java type: `int`.
+---@param height integer Java type: `int`.
+---@return userdata value Java type: `LuminRenderSystem.ScissorRect`.
+function JavaScissorUtilsClass:clampFramebufferScissor(x, y, width, height) end
+
+---@overload fun(self: EpsilonJavaScissorUtilsClass, width: integer, height: integer): boolean
+---@param scissor userdata Java type: `LuminRenderSystem.ScissorRect`.
+---@return boolean value Java type: `boolean`.
+function JavaScissorUtilsClass:isVisible(scissor) end
+
+---@overload fun(self: EpsilonJavaScissorUtilsClass, pass: userdata, scissor: userdata): boolean
+---@param pass userdata Java type: `RenderPass`.
+---@param x integer Java type: `int`.
+---@param y integer Java type: `int`.
+---@param width integer Java type: `int`.
+---@param height integer Java type: `int`.
+---@return boolean value Java type: `boolean`.
+function JavaScissorUtilsClass:enableScissor(pass, x, y, width, height) end
+
+---Java utility: `com.github.epsilon.utils.timer.TimerUtils`.
+---@class EpsilonJavaTimerUtils
+local JavaTimerUtils = {}
+
+function JavaTimerUtils:reset() end
+
+---@return integer value Java type: `long`.
+function JavaTimerUtils:getMs() end
+
+---@param ms integer Java type: `long`.
+function JavaTimerUtils:setMs(ms) end
+
+---@param seconds number Java type: `double`.
+---@return boolean value Java type: `boolean`.
+function JavaTimerUtils:passedSecond(seconds) end
+
+---@param ticks integer Java type: `int`.
+---@return boolean value Java type: `boolean`.
+function JavaTimerUtils:hasDelayed(ticks) end
+
+---@param ms integer Java type: `long`.
+---@return boolean value Java type: `boolean`.
+function JavaTimerUtils:every(ms) end
+
+---@overload fun(self: EpsilonJavaTimerUtils, ms: integer): boolean
+---@param ms number Java type: `double`.
+---@return boolean value Java type: `boolean`.
+function JavaTimerUtils:passedMillise(ms) end
+
+---@class EpsilonJavaTimerUtilsClass
+local JavaTimerUtilsClass = {}
+
+---Java utility: `com.github.epsilon.utils.render.WorldToScreen`.
+---@class EpsilonJavaWorldToScreenClass
+local JavaWorldToScreenClass = {}
+
+---@param pos userdata Java type: `Vec3`.
+---@return userdata value Java type: `Vector3f`.
+function JavaWorldToScreenClass:calcWorld2ScreenRaw(pos) end
+
+---@param pos userdata Java type: `Vec3`.
+---@return userdata|nil value Java type: `Vector3f`.
+function JavaWorldToScreenClass:calcWorld2Screen(pos) end
+
+---@param pos userdata Java type: `Vec3`.
+---@return number value Java type: `float`.
+function JavaWorldToScreenClass:calcScale(pos) end
+
 ---@type EpsilonLuaJava
 luajava = nil
 
----@type userdata net.minecraft.client.Minecraft
+---net.minecraft.client.Minecraft
+---@type userdata
 mc = nil
 
 ---Available in module entrypoints.

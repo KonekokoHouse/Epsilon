@@ -23,6 +23,7 @@ docs/
 │   ├── packages-and-modules.md
 │   ├── settings-and-storage.md
 │   ├── events-and-java.md
+│   ├── util-code-completion.md
 │   ├── rendering.md
 │   ├── internationalization.md
 │   ├── management-and-lifecycle.md

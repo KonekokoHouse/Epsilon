@@ -59,19 +59,25 @@ Epsilon 不监听文件变化。修改 `script.json`、`settings.lua`、`modules
 
 ## 重新生成补全库
 
-Java 层的 Lua API 变化后，在仓库根目录执行：
+Java 层的 Lua API 或 `com.github.epsilon.utils` 工具类变化后，在仓库根目录执行：
 
 ```powershell
-python scripts/generate_epsilon_lib.py
-python scripts/generate_epsilon_lib.py --check
+uv sync --frozen
+uv run --frozen python scripts/generate_epsilon_lib.py
+uv run --frozen python scripts/generate_epsilon_lib.py --check
 ```
 
-生成器从 Java 注册点提取事件 ID、`bindEventClass` 名称和各 API table 的导出键，并验证生成结果与 Java
-实现一致。Java userdata 自身的方法，例如 Minecraft 的 `LocalPlayer` 方法，不由该文件完整建模；这类方法
-仍需查阅当前 Minecraft 参考源码。
+生成器使用 Tree-sitter Java AST 发现公开 Util class，并解析其公开字段、构造器、方法重载和类型，同时生成
+Java `LuaUtilRegistry.java` 与 LuaLS `epsilon_lib.lua`。静态 host API 来自结构化 JSON；事件 ID、
+`bindEventClass` 事件名和各 API table 的导出键继续从 Java 注册点提取或校验。详细规则见
+[`scripts/README.md`](../../scripts/README.md)。已注册 Util 会获得成员级补全；任意 Minecraft userdata 自身的
+方法，例如 `LocalPlayer` 方法，不由该文件完整建模，仍需查阅当前 Minecraft 参考源码。
+
+静态方法、字段、构造器、重载、varargs、nullable、嵌套 enum 和 JSON 数据模型的完整示例见
+[Util 简写与代码补全](util-code-completion.md)。
 
 ## 下一步
 
 先阅读 [脚本包与 Module](packages-and-modules.md)，理解多 Module 包的 entrypoint 隔离，再按需阅读
 [Setting 与存储](settings-and-storage.md)、[事件与 Java 调用](events-and-java.md) 和
-[2D 与 3D 渲染](rendering.md)。
+[Util 简写与代码补全](util-code-completion.md)，再阅读 [2D 与 3D 渲染](rendering.md)。

@@ -24,6 +24,7 @@ common/src/main/java/com/github/epsilon/scripting/lua/
 ├── LuaScriptPackage.java
 ├── LuaScriptManifest.java
 ├── LuaRuntime.java
+├── LuaUtilRegistry.java
 ├── LuaModule.java
 ├── LuaModuleApi.java
 ├── LuaSettingApi.java
@@ -47,7 +48,8 @@ common/src/main/java/com/github/epsilon/scripting/lua/
 | `LuaScriptManager` | 扫描 manifest、维护 descriptor/loaded/error 状态、全局启停、包启停和 Reload |
 | `LuaScriptManifest` | manifest 数据模型、ID/entrypoint/category 校验 |
 | `LuaScriptPackage` | package settings runtime、Module runtime、配置、i18n、注册与包状态 |
-| `LuaRuntime` | 创建 LuaJ Globals、注入 `mc`、设置 `lib/` path、安装 `bindEventClass`、串行 callback |
+| `LuaRuntime` | 创建 LuaJ Globals、注入 `mc`、设置 `lib/` path、安装 class binder、串行 callback |
+| `LuaUtilRegistry` | codegen 生成的 `bindUtilClass` 短名到 Epsilon utility class 映射 |
 | `LuaModule` | Epsilon Module 生命周期、listener 集合、module storage 和连续错误隔离 |
 | `LuaModuleApi` | `module` table 的生命周期、事件、Setting 和 storage 方法 |
 | `LuaSettingApi` | `module`/`addon` Setting DSL、handle 和严格类型转换 |
@@ -84,7 +86,7 @@ ModuleHolder 通过 owner ID 与 Module ID 识别动态 Module。`LuaScriptPacka
 每个 settings/Module runtime 都由 `JsePlatform.standardGlobals()` 创建。初始化顺序是：
 
 1. 设置当前包 `lib/?.lua` 与 `lib/?/init.lua` 为唯一 Lua library path，并清空 `package.cpath`。
-2. 在 `luajava` table 安装 `bindEventClass`。
+2. 在 `luajava` table 安装 `bindEventClass` 与 `bindUtilClass`。
 3. 注入 `mc`。
 4. 由 package 注入 `epsilon`，并按 runtime 类型注入声明态/只读 `addon`。
 5. Module runtime 额外注入 `module`。
@@ -124,6 +126,14 @@ hydrate 后的值。
 新增、删除或重命名 Epsilon 事件时，必须同步更新 `LuaEventRegistry`、生成的 `epsilon_lib.lua` 和事件文档。
 不能让 `bindEventClass` 通过拼接包名或 classpath 扫描兜底。
 
+`LuaUtilRegistry` 由 Python codegen 使用 Tree-sitter Java AST 生成，不直接手工编辑。发现器只选择
+`com.github.epsilon.utils` 下公开的顶层 `*Utils` class，以及 codegen 配置中明确允许的非后缀入口；不会把
+整个 utils 树自动视作公共 API。新增、删除或重命名入口后运行生成器，重名短类名会直接失败，不能根据扫描
+顺序选择其中一个。AST 同时解析公开字段、构造器、方法重载、参数/返回类型、varargs、nullable 和公开嵌套
+enum，并将它们渲染为 LuaLS class。非 Java host API 由结构化
+[`epsilon_api.json`](../../scripts/lua_codegen/epsilon_api.json) 驱动，不再保存在 Python 字符串模板中。生成规则
+与 `uv` 命令见 [`scripts/README.md`](../../scripts/README.md)。
+
 ## 2D/3D 宿主关系
 
 HUD 渲染由 `HudElementHolder` 把 Lua contributor 追加到当帧共享 HUD scope。Level 2D 使用
@@ -155,7 +165,8 @@ HUD 渲染由 `HudElementHolder` 把 Lua contributor 追加到当帧共享 HUD s
 - 没有 timer/defer API、可抢占指令预算或 Java 调用超时。
 - 没有安全沙箱；library path 限制不能阻止 Java interop 访问外部资源。
 - raw Java 调用造成的外部状态和 GPU 资源必须由脚本清理。
-- Java/Minecraft userdata 的完整 IDE 补全不由 `epsilon_lib.lua` 保证。
+- 已注册 Epsilon Util 的公开源码 API 由 `epsilon_lib.lua` 建模；任意 Minecraft、第三方或未注册 Java
+  userdata 的完整 IDE 补全仍不保证。
 
 扩展这些能力时必须保持包 ID、独立 Globals、动态 registration、profile 配置、精确事件 class 和共享渲染
 调度这些既有契约。

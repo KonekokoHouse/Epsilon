@@ -28,7 +28,7 @@ public final class LuaRuntime implements AutoCloseable {
         this.id = id;
         globals = JsePlatform.standardGlobals();
         configureLibraryPath(libDirectory);
-        installEventBinder();
+        installEpsilonClassBinders();
         set("mc", Constants.mc);
     }
 
@@ -87,13 +87,21 @@ public final class LuaRuntime implements AutoCloseable {
         packageTable.set("cpath", LuaValue.valueOf(""));
     }
 
-    private void installEventBinder() {
+    private void installEpsilonClassBinders() {
         LuaValue luajava = globals.get("luajava");
+        LuaValue bindClass = luajava.get("bindClass");
         luajava.set("bindEventClass", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue value) {
                 Class<?> eventClass = LuaEventRegistry.resolveName(value.checkjstring());
                 return CoerceJavaToLua.coerce(eventClass);
+            }
+        });
+        luajava.set("bindUtilClass", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue value) {
+                Class<?> utilClass = LuaUtilRegistry.resolve(value.checkjstring());
+                return bindClass.call(LuaValue.valueOf(utilClass.getName()));
             }
         });
     }
