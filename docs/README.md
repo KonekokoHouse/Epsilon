@@ -10,15 +10,18 @@ docs/
 ├── architecture/
 │   ├── overview.md
 │   └── lifecycle-and-components.md
-└── development/
-    ├── build-and-versioning.md
-    ├── modules-and-addons.md
-    ├── events-and-mixins.md
-    ├── configuration-and-rotation.md
-    ├── rendering.md
-    ├── lua-scripting.md
-    ├── lua-scripting-plan.md
-    └── internationalization.md
+├── development/
+│   ├── build-and-versioning.md
+│   ├── modules-and-addons.md
+│   ├── events-and-mixins.md
+│   ├── configuration-and-rotation.md
+│   ├── rendering.md
+│   ├── lua-scripting.md
+│   ├── lua-scripting-plan.md
+│   └── internationalization.md
+└── examples/
+    └── lua/
+        └── example-suite/
 ```
 
 ## 阅读路径
@@ -34,6 +37,7 @@ docs/
 | Lumin、GUI/HUD、2D/3D 渲染 | [渲染](development/rendering.md) |
 | Lua 脚本包格式、Module API、Setting、事件和渲染接口 | [Lua 脚本系统](development/lua-scripting.md) |
 | Lua 多入口 Module、Addon Panel、包级 Setting、Java interop、i18n 与渲染计划 | [Lua 脚本系统实现计划](development/lua-scripting-plan.md) |
+| 可直接安装的 Lua 多模块示例包 | [Lua Example Suite](examples/lua/example-suite/) |
 | key、JSON 格式和同步流程 | [国际化](development/internationalization.md) |
 
 ## 维护原则

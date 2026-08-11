@@ -6,7 +6,8 @@ Epsilon 使用 LuaJ 3.0.1 加载本地可信脚本。脚本与 Java Addon 具有
 
 ## 包结构
 
-脚本根目录为 `~/.epsilon/scripts/`。每个一级目录是一个包：
+脚本根目录为 `~/.epsilon/scripts/`。每个一级目录是一个包。仓库中的完整可运行示例见
+[`docs/examples/lua/example-suite`](../examples/lua/example-suite/)：
 
 ```text
 example-suite/
