@@ -164,6 +164,40 @@ public final class LuaScriptPackage implements SettingHost, ExternalConfigState,
         return ConfigHolder.INSTANCE.getActiveConfigStorageDir().resolve(ownerId).resolve("package-state.json");
     }
 
+    static boolean readEnabledState(String packageId) {
+        Path file = ConfigHolder.INSTANCE.getActiveConfigStorageDir()
+                .resolve("lua." + packageId).resolve("package-state.json");
+        if (!Files.isRegularFile(file)) return true;
+        try {
+            JsonElement parsed = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8));
+            if (parsed != null && parsed.isJsonObject()) {
+                JsonElement enabled = parsed.getAsJsonObject().get("enabled");
+                if (enabled != null && enabled.isJsonPrimitive()) return enabled.getAsBoolean();
+            }
+        } catch (Exception failure) {
+            Constants.LOGGER.error("读取 Lua package 启用状态失败: {}", file, failure);
+        }
+        return true;
+    }
+
+    static void writeEnabledState(String packageId, boolean enabled) throws IOException {
+        Path file = ConfigHolder.INSTANCE.getActiveConfigStorageDir()
+                .resolve("lua." + packageId).resolve("package-state.json");
+        JsonObject state = new JsonObject();
+        if (Files.isRegularFile(file)) {
+            try {
+                JsonElement parsed = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8));
+                if (parsed != null && parsed.isJsonObject()) state = parsed.getAsJsonObject();
+            } catch (RuntimeException failure) {
+                Constants.LOGGER.warn("重建损坏的 Lua package state: {}", file, failure);
+            }
+        }
+        state.addProperty("enabled", enabled);
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, GSON.toJson(state), StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+    }
+
     private void loadPackageState() {
         loadExternalState(packageStateFile().getParent());
     }
@@ -317,7 +351,7 @@ public final class LuaScriptPackage implements SettingHost, ExternalConfigState,
     public void close() {
         if (closed) return;
         closed = true;
-        if (registered) ConfigHolder.INSTANCE.saveNow();
+        if (registered && packageEnabled) ConfigHolder.INSTANCE.saveNow();
         savePackageState();
         for (int index = moduleRegistrations.size() - 1; index >= 0; index--) {
             try {

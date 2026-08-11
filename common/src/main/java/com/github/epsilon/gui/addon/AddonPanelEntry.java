@@ -8,7 +8,6 @@ public interface AddonPanelEntry {
     enum Kind {
         JAVA_ADDON,
         LUA_SCRIPT,
-        LUA_SYSTEM,
         LUA_ERROR
     }
 

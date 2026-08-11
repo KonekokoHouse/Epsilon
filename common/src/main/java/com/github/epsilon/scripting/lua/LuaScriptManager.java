@@ -1,7 +1,6 @@
 package com.github.epsilon.scripting.lua;
 
 import com.github.epsilon.Constants;
-import com.github.epsilon.modules.impl.ClientSetting;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 
@@ -10,21 +9,12 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import java.util.concurrent.TimeUnit;
 
 public final class LuaScriptManager implements AutoCloseable {
     public static final LuaScriptManager INSTANCE = new LuaScriptManager();
@@ -36,9 +26,6 @@ public final class LuaScriptManager implements AutoCloseable {
     private final Map<String, ScriptDescriptor> descriptors = new LinkedHashMap<>();
     private boolean initialized;
     private boolean enabled;
-    private WatchService watchService;
-    private Thread watchThread;
-    private volatile boolean watcherEnabled;
 
     private LuaScriptManager() {
     }
@@ -61,31 +48,14 @@ public final class LuaScriptManager implements AutoCloseable {
     }
 
     private synchronized void setEnabledOnClient(boolean enabled) {
+        if (this.enabled == enabled) return;
         this.enabled = enabled;
         if (!initialized) return;
-        if (enabled) {
-            reloadAllOnClient();
-            setWatcherEnabledOnClient(ClientSetting.INSTANCE.luaScriptWatcher.getValue());
-        } else {
-            stopWatcher();
-            unloadAll();
-        }
+        if (enabled) reloadAllOnClient();
+        else unloadAll();
     }
 
-    public void setWatcherEnabled(boolean enabled) {
-        runOnClient(() -> setWatcherEnabledOnClient(enabled));
-    }
-
-    private synchronized void setWatcherEnabledOnClient(boolean enabled) {
-        watcherEnabled = enabled;
-        if (!initialized || !this.enabled || !enabled) {
-            stopWatcher();
-            return;
-        }
-        if (watchThread != null && watchThread.isAlive()) return;
-        startWatcher();
-    }
-
+    /** 重新扫描 manifest，并仅加载当前 profile 中独立开关为开的包。 */
     public void reloadAll() {
         runOnClient(this::reloadAllOnClient);
     }
@@ -106,23 +76,24 @@ public final class LuaScriptManager implements AutoCloseable {
                 Constants.LOGGER.error("Lua manifest 读取失败: {}", manifestFile, failure);
             }
         }
+
         descriptors.clear();
-        discovered.forEach((id, source) -> descriptors.put(id,
-                new ScriptDescriptor(source.manifestFile().getParent(), source.manifest())));
+        discovered.forEach((id, source) -> descriptors.put(id, new ScriptDescriptor(
+                source.manifestFile().getParent(), source.manifest(), LuaScriptPackage.readEnabledState(id))));
 
         for (String loadedId : new ArrayList<>(packages.keySet())) {
-            if (!discovered.containsKey(loadedId)) {
-                packages.remove(loadedId).close();
-            }
+            ScriptDescriptor descriptor = descriptors.get(loadedId);
+            if (descriptor == null || !descriptor.enabled()) packages.remove(loadedId).close();
         }
         for (ManifestSource source : discovered.values()) {
+            ScriptDescriptor descriptor = descriptors.get(source.manifest().id());
+            if (descriptor == null || !descriptor.enabled()) continue;
             LuaScriptPackage previous = packages.get(source.manifest().id());
             if (previous == null) loadManifest(source.manifestFile(), source.manifest(), nextErrors);
             else reloadPackageOnClient(previous, source.manifestFile(), source.manifest(), nextErrors);
         }
         errors.clear();
         errors.putAll(nextErrors);
-        if (watcherEnabled) restartWatcherRegistrations();
     }
 
     public void reload(String packageId) {
@@ -131,28 +102,73 @@ public final class LuaScriptManager implements AutoCloseable {
 
     private synchronized void reloadOnClient(String packageId) {
         if (!initialized || !enabled) return;
-        LuaScriptPackage previous = packages.get(packageId);
-        if (previous == null) {
-            reloadAllOnClient();
-            return;
-        }
-        Path manifestFile = previous.directory().resolve("script.json");
+        ScriptDescriptor descriptor = descriptors.get(packageId);
+        if (descriptor == null || !descriptor.enabled()) return;
+
+        Path manifestFile = descriptor.directory().resolve("script.json");
         try {
             LuaScriptManifest manifest = readManifest(manifestFile);
-            reloadPackageOnClient(previous, manifestFile, manifest, errors);
+            if (!packageId.equals(manifest.id())) {
+                throw new IllegalArgumentException("Reload 不能修改脚本包 ID: " + packageId + " -> " + manifest.id());
+            }
+            descriptors.put(packageId, new ScriptDescriptor(manifestFile.getParent(), manifest, true));
+            LuaScriptPackage previous = packages.get(packageId);
+            if (previous == null) loadManifest(manifestFile, manifest, errors);
+            else reloadPackageOnClient(previous, manifestFile, manifest, errors);
         } catch (Throwable failure) {
             errors.put(packageId, failure.toString());
-            Constants.LOGGER.error("Lua 脚本包重载失败，保留旧 runtime: {}", packageId, failure);
+            Constants.LOGGER.error("Lua 脚本包重载失败，保留当前状态: {}", packageId, failure);
         }
     }
 
     public void setPackageEnabled(String packageId, boolean enabled) {
-        runOnClient(() -> {
-            synchronized (LuaScriptManager.this) {
-                LuaScriptPackage scriptPackage = packages.get(packageId);
-                if (scriptPackage != null) scriptPackage.setEnabled(enabled);
+        runOnClient(() -> setPackageEnabledOnClient(packageId, enabled));
+    }
+
+    private synchronized void setPackageEnabledOnClient(String packageId, boolean enabled) {
+        if (!initialized || !this.enabled) return;
+        ScriptDescriptor descriptor = descriptors.get(packageId);
+        if (descriptor == null) return;
+
+        if (!enabled) {
+            try {
+                LuaScriptPackage scriptPackage = packages.remove(packageId);
+                if (scriptPackage != null) {
+                    scriptPackage.setEnabled(false);
+                    scriptPackage.close();
+                } else {
+                    LuaScriptPackage.writeEnabledState(packageId, false);
+                }
+                descriptors.put(packageId, new ScriptDescriptor(descriptor.directory(), descriptor.manifest(), false));
+                errors.remove(packageId);
+                Constants.LOGGER.info("Lua 脚本包已卸载: {}", packageId);
+            } catch (Throwable failure) {
+                errors.put(packageId, failure.toString());
+                Constants.LOGGER.error("Lua 脚本包卸载失败: {}", packageId, failure);
             }
-        });
+            return;
+        }
+
+        if (packages.containsKey(packageId)) return;
+        Path manifestFile = descriptor.directory().resolve("script.json");
+        LuaScriptPackage candidate = null;
+        try {
+            LuaScriptManifest manifest = readManifest(manifestFile);
+            if (!packageId.equals(manifest.id())) {
+                throw new IllegalArgumentException("开启脚本包时不能修改 ID: " + packageId + " -> " + manifest.id());
+            }
+            candidate = new LuaScriptPackage(manifestFile.getParent(), manifest);
+            candidate.load();
+            if (!candidate.isEnabled()) candidate.setEnabled(true);
+            packages.put(packageId, candidate);
+            descriptors.put(packageId, new ScriptDescriptor(manifestFile.getParent(), manifest, true));
+            errors.remove(packageId);
+            Constants.LOGGER.info("Lua 脚本包已加载并注册: {} ({} modules)", packageId, candidate.modules().size());
+        } catch (Throwable failure) {
+            if (candidate != null) candidate.close();
+            errors.put(packageId, failure.toString());
+            Constants.LOGGER.error("Lua 脚本包开启失败: {}", packageId, failure);
+        }
     }
 
     public synchronized List<LuaScriptPackage> packages() {
@@ -175,6 +191,17 @@ public final class LuaScriptManager implements AutoCloseable {
         return enabled;
     }
 
+    /** 配置 profile 切换后，重新协调包级启用状态与已注册 runtime。 */
+    public void onActiveConfigChanged() {
+        runOnClient(() -> {
+            synchronized (LuaScriptManager.this) {
+                if (!initialized) return;
+                if (enabled) reloadAllOnClient();
+                else refreshDescriptors();
+            }
+        });
+    }
+
     private List<Path> discoverManifests() {
         try (Stream<Path> children = Files.list(scriptsDirectory)) {
             return children.filter(Files::isDirectory)
@@ -194,8 +221,8 @@ public final class LuaScriptManager implements AutoCloseable {
         for (Path manifestFile : discoverManifests()) {
             try {
                 LuaScriptManifest manifest = readManifest(manifestFile);
-                if (descriptors.putIfAbsent(manifest.id(),
-                        new ScriptDescriptor(manifestFile.getParent(), manifest)) != null) {
+                if (descriptors.putIfAbsent(manifest.id(), new ScriptDescriptor(
+                        manifestFile.getParent(), manifest, LuaScriptPackage.readEnabledState(manifest.id()))) != null) {
                     throw new IllegalArgumentException("重复脚本包 ID: " + manifest.id());
                 }
             } catch (Throwable failure) {
@@ -215,15 +242,18 @@ public final class LuaScriptManager implements AutoCloseable {
     }
 
     private void loadManifest(Path manifestFile, LuaScriptManifest manifest, Map<String, String> errorTarget) {
-        String errorKey = manifestFile.getParent().getFileName().toString();
+        LuaScriptPackage scriptPackage = null;
         try {
             if (packages.containsKey(manifest.id())) throw new IllegalArgumentException("重复脚本包 ID: " + manifest.id());
-            LuaScriptPackage scriptPackage = new LuaScriptPackage(manifestFile.getParent(), manifest);
+            scriptPackage = new LuaScriptPackage(manifestFile.getParent(), manifest);
             scriptPackage.load();
+            if (!scriptPackage.isEnabled()) scriptPackage.setEnabled(true);
             packages.put(manifest.id(), scriptPackage);
+            errorTarget.remove(manifest.id());
             Constants.LOGGER.info("Lua 脚本包加载完成: {} ({} modules)", manifest.id(), scriptPackage.modules().size());
         } catch (Throwable failure) {
-            errorTarget.put(errorKey, failure.toString());
+            if (scriptPackage != null) scriptPackage.close();
+            errorTarget.put(manifest.id(), failure.toString());
             Constants.LOGGER.error("Lua 脚本包加载失败: {}", manifestFile, failure);
         }
     }
@@ -243,6 +273,7 @@ public final class LuaScriptManager implements AutoCloseable {
 
         try {
             candidate.replaceRegistration(previous);
+            if (!candidate.isEnabled()) candidate.setEnabled(true);
             previous.close();
             packages.remove(previous.id());
             packages.put(manifest.id(), candidate);
@@ -254,82 +285,6 @@ public final class LuaScriptManager implements AutoCloseable {
             errorTarget.put(manifest.id(), failure.toString());
             Constants.LOGGER.error("Lua 脚本包提交失败: {}", manifest.id(), failure);
         }
-    }
-
-    private synchronized void startWatcher() {
-        try {
-            watchService = FileSystems.getDefault().newWatchService();
-            registerTree(scriptsDirectory);
-            watchThread = new Thread(this::watchLoop, "Epsilon-Lua-Watcher");
-            watchThread.setDaemon(true);
-            watchThread.start();
-        } catch (IOException failure) {
-            stopWatcher();
-            Constants.LOGGER.error("启动 Lua watcher 失败", failure);
-        }
-    }
-
-    private void registerTree(Path root) throws IOException {
-        if (!Files.isDirectory(root) || watchService == null) return;
-        Files.walkFileTree(root, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
-                        StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-    }
-
-    private void watchLoop() {
-        long lastChange = 0L;
-        boolean pending = false;
-        while (watcherEnabled && enabled && watchService != null) {
-            try {
-                WatchKey key = watchService.poll(100, TimeUnit.MILLISECONDS);
-                if (key != null) {
-                    for (WatchEvent<?> event : key.pollEvents()) {
-                        if (event.kind() == StandardWatchEventKinds.OVERFLOW) continue;
-                        pending = true;
-                        lastChange = System.nanoTime();
-                    }
-                    key.reset();
-                }
-                long debounceNanos = TimeUnit.MILLISECONDS.toNanos(
-                        ClientSetting.INSTANCE.luaScriptReloadDebounce.getValue());
-                if (pending && System.nanoTime() - lastChange >= debounceNanos) {
-                    pending = false;
-                    reloadAll();
-                }
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-                return;
-            } catch (Throwable failure) {
-                if (watcherEnabled && enabled) Constants.LOGGER.error("Lua watcher 失败", failure);
-                return;
-            }
-        }
-    }
-
-    private synchronized void restartWatcherRegistrations() {
-        if (!watcherEnabled || !enabled) return;
-        stopWatcher();
-        startWatcher();
-    }
-
-    private synchronized void stopWatcher() {
-        WatchService service = watchService;
-        watchService = null;
-        Thread thread = watchThread;
-        watchThread = null;
-        if (service != null) {
-            try {
-                service.close();
-            } catch (IOException failure) {
-                Constants.LOGGER.warn("关闭 Lua watcher 失败", failure);
-            }
-        }
-        if (thread != null && thread != Thread.currentThread()) thread.interrupt();
     }
 
     private void unloadAll() {
@@ -346,7 +301,6 @@ public final class LuaScriptManager implements AutoCloseable {
 
     @Override
     public synchronized void close() {
-        stopWatcher();
         unloadAll();
         enabled = false;
     }
@@ -354,6 +308,6 @@ public final class LuaScriptManager implements AutoCloseable {
     private record ManifestSource(Path manifestFile, LuaScriptManifest manifest) {
     }
 
-    public record ScriptDescriptor(Path directory, LuaScriptManifest manifest) {
+    public record ScriptDescriptor(Path directory, LuaScriptManifest manifest, boolean enabled) {
     }
 }

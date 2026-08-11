@@ -21,6 +21,7 @@ docs/
 │   └── internationalization.md
 └── examples/
     └── lua/
+        ├── epsilon_lib.lua
         └── example-suite/
 ```
 
@@ -36,8 +37,7 @@ docs/
 | 配置目录、持久化、RotationManager | [配置与旋转](development/configuration-and-rotation.md) |
 | Lumin、GUI/HUD、2D/3D 渲染 | [渲染](development/rendering.md) |
 | Lua 脚本包格式、Module API、Setting、事件和渲染接口 | [Lua 脚本系统](development/lua-scripting.md) |
-| Lua 多入口 Module、Addon Panel、包级 Setting、Java interop、i18n 与渲染计划 | [Lua 脚本系统实现计划](development/lua-scripting-plan.md) |
-| 可直接安装的 Lua 多模块示例包 | [Lua Example Suite](examples/lua/example-suite/) |
+| Lua 代码补全库与可直接安装的多模块示例包 | [Lua 示例](examples/lua/) |
 | key、JSON 格式和同步流程 | [国际化](development/internationalization.md) |
 
 ## 维护原则

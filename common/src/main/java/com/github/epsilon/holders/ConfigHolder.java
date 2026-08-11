@@ -10,6 +10,7 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingHost;
 import com.github.epsilon.settings.ExternalConfigState;
+import com.github.epsilon.scripting.lua.LuaScriptManager;
 import com.github.epsilon.settings.impl.*;
 import com.google.gson.*;
 
@@ -805,6 +806,7 @@ public class ConfigHolder {
         loadFriends(getActiveConfigStorageDir());
         loadRootClientSettings();
         ClientSetting.INSTANCE.syncFontGlyphUploadBudget();
+        LuaScriptManager.INSTANCE.onActiveConfigChanged();
     }
 
     private void saveActiveConfigSnapshot() throws IOException {

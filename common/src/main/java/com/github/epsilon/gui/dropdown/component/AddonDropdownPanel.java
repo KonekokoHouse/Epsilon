@@ -23,6 +23,7 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
 
     private static final float ADDON_ROW_HEIGHT = 28.0f;
     private static final float INFO_HEIGHT = 38.0f;
+    private static final float LUA_INFO_HEIGHT = 60.0f;
     private static final float GAP = 4.0f;
     private static final float PADDING = 6.0f;
 
@@ -43,7 +44,8 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             return PADDING * 2.0f + ADDON_ROW_HEIGHT;
         }
         ensureWidgets(addon);
-        float height = PADDING + AddonPanelEntryRegistry.INSTANCE.entries().size() * (ADDON_ROW_HEIGHT + GAP) + INFO_HEIGHT + GAP;
+        float height = PADDING + AddonPanelEntryRegistry.INSTANCE.entries().size() * (ADDON_ROW_HEIGHT + GAP)
+                + getInfoHeight(addon) + GAP;
         if (widgets.isEmpty()) {
             height += ADDON_ROW_HEIGHT;
         } else {
@@ -84,15 +86,18 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
 
         if (selected == null) return;
         ensureWidgets(selected);
-        scope.roundRect(contentX, currentY, contentW, INFO_HEIGHT, DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
+        float infoY = currentY;
+        float infoHeight = getInfoHeight(selected);
+        scope.roundRect(contentX, infoY, contentW, infoHeight, DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGH);
         scope.text(trimToWidth(selected.getDisplayName(), 0.58f, contentW - 10.0f, textMetrics),
-                contentX + 6.0f, currentY + 5.0f, 0.58f, MD3Theme.TEXT_PRIMARY);
+                contentX + 6.0f, infoY + 5.0f, 0.58f, MD3Theme.TEXT_PRIMARY);
         String meta = EpsilonTranslations.Gui.ADDON_INFO_MODULES.getTranslatedName() + " " + selected.getModuleCount();
         if (!selected.getVersion().isBlank())
             meta += "  " + EpsilonTranslations.Gui.ADDON_INFO_VERSION.getTranslatedName() + " " + selected.getVersion();
         scope.text(trimToWidth(meta, 0.45f, contentW - 10.0f, textMetrics),
-                contentX + 6.0f, currentY + 18.0f, 0.45f, MD3Theme.TEXT_MUTED);
-        currentY += INFO_HEIGHT + GAP;
+                contentX + 6.0f, infoY + 18.0f, 0.45f, MD3Theme.TEXT_MUTED);
+        drawLuaActions(scope, selected, contentX, infoY);
+        currentY += infoHeight + GAP;
 
         if (widgets.isEmpty()) {
             scope.text(EpsilonTranslations.Gui.ADDON_NO_SETTINGS.getTranslatedName(), contentX, currentY + 4.0f, 0.55f, MD3Theme.TEXT_MUTED);
@@ -121,7 +126,24 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
             }
             currentY += ADDON_ROW_HEIGHT + GAP;
         }
-        currentY += INFO_HEIGHT + GAP;
+        AddonPanelEntry selected = resolveSelectedAddon();
+        if (selected == null) return false;
+        float infoY = currentY;
+        if (button == 0 && selected.isLua()) {
+            UiRect toggleBounds = getToggleBounds(selected, contentX, infoY);
+            if (toggleBounds != null && toggleBounds.contains((float) mouseX, (float) mouseY) && selected.canToggle()) {
+                selected.toggle();
+                invalidateWidgets();
+                return true;
+            }
+            UiRect reloadBounds = getReloadBounds(selected, contentX, infoY);
+            if (reloadBounds.contains((float) mouseX, (float) mouseY) && selected.canReload()) {
+                selected.reload();
+                invalidateWidgets();
+                return true;
+            }
+        }
+        currentY += getInfoHeight(selected) + GAP;
         for (SettingWidget<?> widget : widgets) {
             if (!widget.isVisible()) continue;
             if (widget.mouseClicked(mouseX, mouseY, button)) {
@@ -202,6 +224,43 @@ public class AddonDropdownPanel extends AbstractDropdownPanel {
         }
         lastAddon = addon;
         cachedWidgetsHeightFrameId = Integer.MIN_VALUE;
+    }
+
+    private void invalidateWidgets() {
+        widgets.clear();
+        lastAddon = null;
+        cachedWidgetsHeightFrameId = Integer.MIN_VALUE;
+    }
+
+    private float getInfoHeight(AddonPanelEntry addon) {
+        return addon != null && addon.isLua() ? LUA_INFO_HEIGHT : INFO_HEIGHT;
+    }
+
+    private void drawLuaActions(UiTree.Scope scope, AddonPanelEntry addon, float contentX, float infoY) {
+        if (!addon.isLua()) return;
+
+        UiRect toggleBounds = getToggleBounds(addon, contentX, infoY);
+        if (toggleBounds != null) {
+            scope.toggle(new UiRect(toggleBounds.x() + 3.0f, toggleBounds.y() + 4.0f,
+                            MD3Theme.SWITCH_WIDTH, MD3Theme.SWITCH_HEIGHT),
+                    addon.isEnabled() ? 1.0f : 0.0f, 0.0f);
+        }
+
+        UiRect reloadBounds = getReloadBounds(addon, contentX, infoY);
+        scope.roundRect(reloadBounds.x(), reloadBounds.y(), reloadBounds.width(), reloadBounds.height(),
+                DropdownTheme.BUTTON_RADIUS, MD3Theme.SURFACE_CONTAINER_HIGHEST);
+        scope.text(IconChars.REFRESH, reloadBounds.x() + 4.0f, reloadBounds.y() + 4.0f, 0.68f,
+                addon.canReload() ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_MUTED, "epsilon-icons");
+    }
+
+    private UiRect getToggleBounds(AddonPanelEntry addon, float contentX, float infoY) {
+        if (addon.getKind() != AddonPanelEntry.Kind.LUA_SCRIPT) return null;
+        return new UiRect(contentX + 4.0f, infoY + 34.0f, 32.0f, 22.0f);
+    }
+
+    private UiRect getReloadBounds(AddonPanelEntry addon, float contentX, float infoY) {
+        float reloadX = addon.getKind() == AddonPanelEntry.Kind.LUA_SCRIPT ? contentX + 42.0f : contentX + 6.0f;
+        return new UiRect(reloadX, infoY + 35.0f, 20.0f, 20.0f);
     }
 
     private float computeWidgetsHeight() {

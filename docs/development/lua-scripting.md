@@ -26,6 +26,44 @@ example-suite/
 一个 manifest 可以声明多个 Module，但每个 Module 必须使用不同的 `.lua` entrypoint。每个 entrypoint 有独立
 `Globals` 和 `package.loaded`；`lib/` 共享源码文件，不共享加载后的 Lua table 或 mutable global。
 
+## 代码补全
+
+[`epsilon_lib.lua`](../examples/lua/epsilon_lib.lua) 是从 Java 层公开给脚本的 API 整理出的 LuaLS/EmmyLua
+`---@meta` 类型库。将文件放入脚本 workspace，或在 Lua Language Server 的 `workspace.library` 中
+引用它，即可补全 `module`、`addon`、`epsilon`、`luajava`、Setting、storage 和 2D/3D 渲染接口。
+该文件只用于 IDE 元数据，不得在运行时 `require("epsilon_lib")`。Java userdata 的具体公开方法补全仍取决于
+IDE 是否安装并配置 Java-Lua 类型插件。
+
+该文件由 Java Lua API 注册点自动生成，不直接手工修改：
+
+```shell
+python scripts/generate_epsilon_lib.py
+python scripts/generate_epsilon_lib.py --check
+```
+
+生成器会从 `LuaEventRegistry` 提取事件 ID 与 `bindEventClass` 名称，并校验 Storage、Setting、Module、
+UiTree、Render3D 和 package table 的 Java 导出键。Java 接口与 LuaLS 元数据不一致时生成和检查都会失败。
+
+### VS Code 配置
+
+安装 VS Code 扩展 `sumneko.lua`，然后将 `.epsilon/scripts/` 作为工作区打开。在该目录创建
+`.luarc.json`，通过 `workspace.library` 引用生成文件所在目录：
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.2",
+  "workspace.library": [
+    "D:/Dev/OpenEpsilon/Open-Epsilon/docs/examples/lua"
+  ],
+  "workspace.checkThirdParty": false
+}
+```
+
+Windows 路径建议使用 `/`，并把示例中的仓库路径替换为本机实际路径。如果只打开单个脚本包，
+也可以把同一份 `.luarc.json` 放在该包根目录。配置完成后从命令面板执行
+`Lua: Restart Language Server`；补全库通过 workspace 加载，脚本中不得调用 `require("epsilon_lib")`。
+
 ```json
 {
   "schema": 1,
@@ -139,6 +177,8 @@ end)
 `lang/<code>.json` 的叶节点必须全部是 string。解析顺序是当前语言、`en_us`、manifest/ID fallback。完整
 key 和示例见 [`lua-scripting-plan.md`](lua-scripting-plan.md#i18n)。
 
-Addon Panel 同时显示 Java Addon、Lua 系统条目和脚本包。Lua 项有代码标识；包详情支持启用/禁用和 Reload，
-系统详情支持 Reload All。watcher 默认开启，并按 `Lua Script Reload Debounce` 合并文件变化。Reload 会先执行
-候选 runtime；候选失败时保留当前包，错误显示在脚本条目中。
+Addon Panel 同时显示 Java Addon 和已发现的脚本包，不再显示重复的 Lua 系统条目。Lua 包有代码标识，
+Panel 与 Dropdown 两种 GUI 中每个包的详情区都有独立开关和 Reload 按钮。关闭包时保存 Module 状态快照，
+然后注销 Module、SettingHost、事件监听并关闭全部 Lua runtime；重新开启时从磁盘重新加载并恢复注册。系统不监听
+脚本文件变化，只在启动、全局开关重新开启或手动 Reload 时读取脚本。Reload 使用候选 runtime；
+候选失败时保留当前包，错误显示在脚本条目中。

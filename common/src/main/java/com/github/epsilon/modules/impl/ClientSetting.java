@@ -174,12 +174,6 @@ public class ClientSetting extends Module {
     public final BoolSetting luaScriptsEnabled = boolSetting("Enable Lua Scripts", false,
             LuaScriptManager.INSTANCE::setEnabled).rootSetting().group(sgLua);
 
-    public final BoolSetting luaScriptWatcher = boolSetting("Lua Script Watcher", true,
-            LuaScriptManager.INSTANCE::setWatcherEnabled).rootSetting().group(sgLua);
-
-    public final IntSetting luaScriptReloadDebounce = intSetting("Lua Script Reload Debounce", 300, 100, 2000, 50)
-            .rootSetting().group(sgLua);
-
     // Notification
     public final BoolSetting soundNotify = boolSetting("Sound Notify", true).group(sgNotification);
 

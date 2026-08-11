@@ -20,6 +20,8 @@ build
 # other
 .kotlin
 .eclipse
+__pycache__/
+*.pyc
 run
 runs
 run-data

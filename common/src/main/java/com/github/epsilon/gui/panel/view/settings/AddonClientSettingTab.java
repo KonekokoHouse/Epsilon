@@ -505,19 +505,20 @@ public class AddonClientSettingTab implements ClientSettingTabView {
                 scope.text(trimToWidth(addon.getError(), 0.46f, infoBounds.width() - 18.0f),
                         MD3Theme.ROW_CONTENT_INSET, actionY - 13.0f, 0.46f, MD3Theme.ERROR);
             }
-            if (addon.canToggle() || addon.getKind() == AddonPanelEntry.Kind.LUA_SCRIPT) {
-                UiRect toggleBounds = new UiRect(infoBounds.x() + textX, infoBounds.y() + actionY, 20.0f, 20.0f);
-                actionEntries.add(new ActionEntry(addon, ActionType.TOGGLE, toggleBounds, addon.canToggle()));
-                scope.roundRect(textX, actionY, 20.0f, 20.0f, 5.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST);
-                scope.text(addon.isEnabled() ? IconChars.POWER_OFF : IconChars.POWER, textX + 4.0f, actionY + 4.0f,
-                        0.68f, addon.canToggle() ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_MUTED, "epsilon-icons");
-                textX += 25.0f;
+            if (addon.getKind() == AddonPanelEntry.Kind.LUA_SCRIPT) {
+                UiRect toggleHitBounds = new UiRect(infoBounds.x() + textX, infoBounds.y() + actionY, 32.0f, 20.0f);
+                actionEntries.add(new ActionEntry(addon, ActionType.TOGGLE, toggleHitBounds, addon.canToggle()));
+                scope.toggle(new UiRect(textX + 3.0f, actionY + 2.0f, MD3Theme.SWITCH_WIDTH, MD3Theme.SWITCH_HEIGHT),
+                        addon.isEnabled() ? 1.0f : 0.0f, 0.0f);
+                textX += 37.0f;
             }
-            UiRect reloadBounds = new UiRect(infoBounds.x() + textX, infoBounds.y() + actionY, 20.0f, 20.0f);
-            actionEntries.add(new ActionEntry(addon, ActionType.RELOAD, reloadBounds, addon.canReload()));
-            scope.roundRect(textX, actionY, 20.0f, 20.0f, 5.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST);
-            scope.text(IconChars.REFRESH, textX + 4.0f, actionY + 4.0f, 0.68f,
-                    addon.canReload() ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_MUTED, "epsilon-icons");
+            if (addon.getKind() == AddonPanelEntry.Kind.LUA_SCRIPT || addon.getKind() == AddonPanelEntry.Kind.LUA_ERROR) {
+                UiRect reloadBounds = new UiRect(infoBounds.x() + textX, infoBounds.y() + actionY, 20.0f, 20.0f);
+                actionEntries.add(new ActionEntry(addon, ActionType.RELOAD, reloadBounds, addon.canReload()));
+                scope.roundRect(textX, actionY, 20.0f, 20.0f, 5.0f, MD3Theme.SURFACE_CONTAINER_HIGHEST);
+                scope.text(IconChars.REFRESH, textX + 4.0f, actionY + 4.0f, 0.68f,
+                        addon.canReload() ? MD3Theme.TEXT_PRIMARY : MD3Theme.TEXT_MUTED, "epsilon-icons");
+            }
 
             String type = EpsilonTranslations.Gui.ADDON_LUA_SCRIPT.getTranslatedName();
             float typeScale = 0.46f;

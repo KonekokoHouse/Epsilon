@@ -108,10 +108,6 @@
         "empty": "No Addons Found",
         "no_settings": "No Available Settings",
         "lua_script": "Lua Script",
-        "lua_system": {
-          "name": "Lua Scripts",
-          "description": "Manage the trusted Lua runtime and script packages"
-        },
         "info": {
           "id": "ID",
           "version": "Version",
@@ -320,8 +316,6 @@
         },
         "show welcome screen": "Show Welcome Screen",
         "enable lua scripts": "Enable Lua Scripts",
-        "lua script watcher": "Lua Script Watcher",
-        "lua script reload debounce": "Lua Script Reload Debounce",
         "sound notify": "Sound Notify",
         "chat notify": "Chat Notify",
         "animated chat prefix": "Animated Chat Prefix",

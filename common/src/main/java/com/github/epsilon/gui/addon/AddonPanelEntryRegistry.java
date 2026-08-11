@@ -1,9 +1,7 @@
 package com.github.epsilon.gui.addon;
 
 import com.github.epsilon.addon.EpsilonAddon;
-import com.github.epsilon.assets.i18n.EpsilonTranslations;
 import com.github.epsilon.holders.AddonHolder;
-import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.scripting.lua.LuaScriptManager;
 import com.github.epsilon.scripting.lua.LuaScriptPackage;
 import com.github.epsilon.settings.Setting;
@@ -21,7 +19,6 @@ public final class AddonPanelEntryRegistry {
     public List<AddonPanelEntry> entries() {
         List<AddonPanelEntry> result = new ArrayList<>();
         for (EpsilonAddon addon : AddonHolder.INSTANCE.getAddons()) result.add(new JavaEntry(addon));
-        result.add(new LuaSystemEntry());
 
         Map<String, LuaScriptPackage> loaded = LuaScriptManager.INSTANCE.packages().stream()
                 .collect(java.util.stream.Collectors.toMap(LuaScriptPackage::id, value -> value));
@@ -47,25 +44,6 @@ public final class AddonPanelEntryRegistry {
         @Override public Kind getKind() { return Kind.JAVA_ADDON; }
     }
 
-    private static final class LuaSystemEntry implements AddonPanelEntry {
-        @Override public String getAddonId() { return "lua:system"; }
-        @Override public String getDisplayId() { return "lua"; }
-        @Override public String getDisplayName() { return EpsilonTranslations.Gui.ADDON_LUA_SYSTEM_NAME.getTranslatedName(); }
-        @Override public String getDescription() { return EpsilonTranslations.Gui.ADDON_LUA_SYSTEM_DESCRIPTION.getTranslatedName(); }
-        @Override public String getVersion() { return "API 1"; }
-        @Override public List<String> getAuthors() { return List.of("Epsilon"); }
-        @Override public List<Setting<?>> getSettings() {
-            return List.of(ClientSetting.INSTANCE.luaScriptsEnabled, ClientSetting.INSTANCE.luaScriptWatcher,
-                    ClientSetting.INSTANCE.luaScriptReloadDebounce);
-        }
-        @Override public int getModuleCount() {
-            return LuaScriptManager.INSTANCE.packages().stream().mapToInt(value -> value.modules().size()).sum();
-        }
-        @Override public Kind getKind() { return Kind.LUA_SYSTEM; }
-        @Override public boolean canReload() { return LuaScriptManager.INSTANCE.isEnabled(); }
-        @Override public void reload() { LuaScriptManager.INSTANCE.reloadAll(); }
-    }
-
     private record LuaEntry(LuaScriptManager.ScriptDescriptor descriptor,
                             LuaScriptPackage scriptPackage) implements AddonPanelEntry {
         @Override public String getAddonId() { return "lua:" + descriptor.manifest().id(); }
@@ -86,14 +64,12 @@ public final class AddonPanelEntryRegistry {
         }
         @Override public int getModuleCount() { return descriptor.manifest().modules().size(); }
         @Override public Kind getKind() { return Kind.LUA_SCRIPT; }
-        @Override public boolean canToggle() {
-            return scriptPackage != null && LuaScriptManager.INSTANCE.isEnabled();
-        }
-        @Override public boolean isEnabled() { return scriptPackage != null && scriptPackage.isEnabled(); }
+        @Override public boolean canToggle() { return LuaScriptManager.INSTANCE.isEnabled(); }
+        @Override public boolean isEnabled() { return descriptor.enabled(); }
         @Override public void toggle() {
             if (canToggle()) LuaScriptManager.INSTANCE.setPackageEnabled(descriptor.manifest().id(), !isEnabled());
         }
-        @Override public boolean canReload() { return LuaScriptManager.INSTANCE.isEnabled(); }
+        @Override public boolean canReload() { return LuaScriptManager.INSTANCE.isEnabled() && descriptor.enabled(); }
         @Override public void reload() { LuaScriptManager.INSTANCE.reload(descriptor.manifest().id()); }
         @Override public String getError() {
             return LuaScriptManager.INSTANCE.errors().getOrDefault(descriptor.manifest().id(), "");

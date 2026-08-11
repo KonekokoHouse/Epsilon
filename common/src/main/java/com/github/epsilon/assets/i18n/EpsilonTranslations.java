@@ -78,8 +78,6 @@ public final class EpsilonTranslations {
             Gui.ADDON_INFO_AUTHORS,
             Gui.ADDON_INFO_MODULES,
             Gui.ADDON_LUA_SCRIPT,
-            Gui.ADDON_LUA_SYSTEM_NAME,
-            Gui.ADDON_LUA_SYSTEM_DESCRIPTION,
             Gui.INSPECTOR,
             Gui.INSPECTOR_SELECT,
             Gui.LIST_ENTRIES,
@@ -202,8 +200,6 @@ public final class EpsilonTranslations {
         public static final TranslateComponent ADDON_INFO_AUTHORS = create("gui", "addon.info.authors");
         public static final TranslateComponent ADDON_INFO_MODULES = create("gui", "addon.info.modules");
         public static final TranslateComponent ADDON_LUA_SCRIPT = create("gui", "addon.lua_script");
-        public static final TranslateComponent ADDON_LUA_SYSTEM_NAME = create("gui", "addon.lua_system.name");
-        public static final TranslateComponent ADDON_LUA_SYSTEM_DESCRIPTION = create("gui", "addon.lua_system.description");
 
         public static final TranslateComponent INSPECTOR = create("gui", "inspector");
         public static final TranslateComponent INSPECTOR_SELECT = create("gui", "inspector.select");
