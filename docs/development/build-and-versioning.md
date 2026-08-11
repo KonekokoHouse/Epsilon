@@ -16,6 +16,9 @@
 
 Sodium 兼容代码只在对应平台编译，不会把 Sodium 打入 Epsilon 成品。
 
+NeoForge 发布元数据通过 `features.epsilon.openGLVersion` 声明客户端需要 OpenGL 4.6 或更高版本。
+该要求由 NeoForge EarlyWindow 已创建的 OpenGL 上下文在加载阶段校验；Epsilon 不修改 NeoForge 的 Window。
+
 ## Lumin 发布版本
 
 Epsilon 优先从本机 `mavenLocal()` 解析 `com.github.slmpc` 依赖，未找到时从

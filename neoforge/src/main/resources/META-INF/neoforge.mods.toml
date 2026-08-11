@@ -9,6 +9,9 @@ displayName = "${mod_name}"
 authors = "${mod_author}"
 description = '''A powerful cheat mod for Minecraft.'''
 
+[features.${mod_id}]
+openGLVersion = "[4.6,)"
+
 [[mixins]]
 config = "${mod_id}.mixins.json"
 
