@@ -209,6 +209,7 @@ Python 代码分工如下：
 
 | 文件 | 职责 |
 |---|---|
+| `scripts/dev.py` | 统一命令入口，编排 Lua 生成/验证并转发 i18n 参数 |
 | `scripts/generate_epsilon_lib.py` | 读取输入、校验 Java 导出、组织两个生成产物和 `--check` |
 | `scripts/lua_codegen/java_utils.py` | Tree-sitter Java 解析与结构化成员模型 |
 | `scripts/lua_codegen/api_model.py` | 加载并校验 JSON 静态 API 模型 |
@@ -239,9 +240,7 @@ Util 的字段和方法不要手工复制进 JSON；修改 Java 源码后由 AST
 
 ```powershell
 uv sync --frozen
-uv run --frozen python scripts/generate_epsilon_lib.py
-uv run --frozen python -m unittest discover -s scripts/tests
-uv run --frozen python scripts/generate_epsilon_lib.py --check
+uv run scripts/dev.py lua update
 ```
 
 生成器同时更新：

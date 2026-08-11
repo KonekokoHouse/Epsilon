@@ -66,7 +66,7 @@ declared in `pyproject.toml` and locked by `uv.lock`:
 
 ```bash
 uv sync --frozen
-uv run --frozen python scripts/generate_epsilon_lib.py --check
+uv run scripts/dev.py verify
 ```
 
 See the [scripts documentation](scripts/README.md) for the complete code generation workflow, generated files, discovery

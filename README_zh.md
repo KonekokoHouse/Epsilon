@@ -66,7 +66,7 @@ Lumin 渲染系统通过 LuminGraphics-MC 接入 Minecraft，并由 PrismRHI 提
 
 ```bash
 uv sync --frozen
-uv run --frozen python scripts/generate_epsilon_lib.py --check
+uv run scripts/dev.py verify
 ```
 
 完整的代码生成流程、生成产物、发现规则和测试命令见 [scripts 说明](scripts/README.md)。

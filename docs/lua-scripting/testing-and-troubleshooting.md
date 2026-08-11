@@ -75,9 +75,7 @@ Setting handle、`java_module()` 结果、UiTree scope、render context 或事�
 
 ```powershell
 uv sync --frozen
-uv run --frozen python -m unittest discover -s scripts/tests
-uv run --frozen python scripts/generate_epsilon_lib.py
-uv run --frozen python scripts/generate_epsilon_lib.py --check
+uv run scripts/dev.py lua update
 ```
 
 `--check` 失败表示 `LuaUtilRegistry.java` 或 `docs/examples/lua/epsilon_lib.lua` 不是当前生成结果，或生成器
@@ -116,8 +114,7 @@ uv run --frozen python scripts/generate_epsilon_lib.py --check
 纯文档或补全库修改至少执行：
 
 ```powershell
-uv run --frozen python -m unittest discover -s scripts/tests
-uv run --frozen python scripts/generate_epsilon_lib.py --check
+uv run scripts/dev.py verify
 git diff --check
 git diff -- AGENTS.md
 git status --short

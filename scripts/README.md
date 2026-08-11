@@ -6,6 +6,30 @@
 uv sync --frozen
 ```
 
+## 统一入口
+
+日常使用统一入口 `scripts/dev.py`，不需要记住各脚本文件名和完整 Python 参数：
+
+```powershell
+uv run scripts/dev.py --help
+```
+
+| 命令 | 行为 | 是否修改文件 |
+|---|---|---|
+| `uv run scripts/dev.py verify` | 运行全部非修改性检查；当前包含 Lua 测试和生成物漂移检查 | 否 |
+| `uv run scripts/dev.py lua generate` | 重新生成 Lua registry 和 LuaLS 类型库 | 是 |
+| `uv run scripts/dev.py lua check` | 检查 Lua 生成物是否过期 | 否 |
+| `uv run scripts/dev.py lua test` | 只运行 Lua codegen 测试 | 否 |
+| `uv run scripts/dev.py lua verify` | 依次运行 Lua 测试和漂移检查 | 否 |
+| `uv run scripts/dev.py lua update` | 生成后运行测试和漂移检查 | 是 |
+| `uv run scripts/dev.py i18n [参数]` | 运行 i18n 补全器，参数原样转发 | 取决于是否传入 `--dry-run` |
+
+子命令在任一步失败后立即停止并保留原退出码，适合本地开发和 CI。需要查看 i18n 的全部选项时执行：
+
+```powershell
+uv run scripts/dev.py i18n --help
+```
+
 ## Lua API codegen
 
 Lua codegen 使用 Tree-sitter Java AST 扫描 `common/src/main/java/com/github/epsilon/utils/`，使用
@@ -17,19 +41,19 @@ Lua codegen 使用 Tree-sitter Java AST 扫描 `common/src/main/java/com/github/
 生成命令：
 
 ```powershell
-uv run --frozen python scripts/generate_epsilon_lib.py
+uv run scripts/dev.py lua generate
 ```
 
 提交前检查生成产物没有漂移：
 
 ```powershell
-uv run --frozen python scripts/generate_epsilon_lib.py --check
+uv run scripts/dev.py lua check
 ```
 
 运行 Java AST 与 LuaLS renderer 的单元测试：
 
 ```powershell
-uv run --frozen python -m unittest discover -s scripts/tests
+uv run scripts/dev.py lua test
 ```
 
 Util 发现规则为：
@@ -61,8 +85,8 @@ Java 源码类型，不能把 Java collection 或数组当成 Lua table。
 
 ## i18n
 
-现有 i18n 补全脚本仍可直接运行：
+现有 i18n 补全脚本通过统一入口运行：
 
 ```powershell
-uv run --frozen python scripts/complete_i18n.py
+uv run scripts/dev.py i18n
 ```

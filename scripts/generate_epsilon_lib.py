@@ -174,7 +174,7 @@ def main() -> int:
         if stale:
             for path in stale:
                 print(f"out of date: {path}", file=sys.stderr)
-            print("run: uv run --frozen python scripts/generate_epsilon_lib.py", file=sys.stderr)
+            print("run: uv run scripts/dev.py lua generate", file=sys.stderr)
             return 1
         print(f"up to date: {util_registry_output}")
         print(f"up to date: {output}")

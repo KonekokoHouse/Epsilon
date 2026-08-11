@@ -63,8 +63,7 @@ Java 层的 Lua API 或 `com.github.epsilon.utils` 工具类变化后，在仓�
 
 ```powershell
 uv sync --frozen
-uv run --frozen python scripts/generate_epsilon_lib.py
-uv run --frozen python scripts/generate_epsilon_lib.py --check
+uv run scripts/dev.py lua update
 ```
 
 生成器使用 Tree-sitter Java AST 发现公开 Util class，并解析其公开字段、构造器、方法重载和类型，同时生成
