@@ -101,7 +101,7 @@ public class ModuleRow {
 
         scope.text(module.displayName(), PanelElements.ROW_LABEL_INSET, titleY, titleScale, titleColor);
         scope.text(module.module().getAddonId() != null ? module.module().getAddonId() : "unknown", PanelElements.ROW_LABEL_INSET, subY, subScale, subColor);
-        scope.toggle(localToggleBounds, toggleProgress, toggleHoverProgress);
+        PanelElements.buildSwitch(scope, localToggleBounds, toggleProgress, toggleHoverProgress);
 
         if (keyWidth <= KEYBIND_CLIP_WIDTH + 0.5f) {
             scope.text(keybindText, clipRight - keyWidth, keyY, keyScale, keyColor);

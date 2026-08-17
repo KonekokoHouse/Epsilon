@@ -12,6 +12,9 @@ import net.minecraft.client.input.MouseButtonEvent;
 public class PanelInputRouter {
 
     public boolean routeMouseClicked(MouseButtonEvent event, boolean isDoubleClick, PanelPopupHost popupHost, ModuleDetailPanel detailPanel, ModuleListPanel moduleListPanel, CategoryRailPanel categoryRailPanel, ClientSettingPanel clientSettingPanel, boolean clientSettingMode) {
+        if (notReady(detailPanel, moduleListPanel, clientSettingPanel) || categoryRailPanel == null) {
+            return false;
+        }
         if (popupHost.mouseClicked(event, isDoubleClick)) {
             return true;
         }
@@ -31,6 +34,9 @@ public class PanelInputRouter {
     }
 
     public boolean routeKeyPressed(KeyEvent event, PanelPopupHost popupHost, ModuleDetailPanel detailPanel, ModuleListPanel moduleListPanel, ClientSettingPanel clientSettingPanel, boolean clientSettingMode) {
+        if (notReady(detailPanel, moduleListPanel, clientSettingPanel)) {
+            return false;
+        }
         if (popupHost.keyPressed(event)) {
             return true;
         }
@@ -44,6 +50,9 @@ public class PanelInputRouter {
     }
 
     public boolean routeMouseReleased(MouseButtonEvent event, PanelPopupHost popupHost, ModuleDetailPanel detailPanel, ModuleListPanel moduleListPanel, ClientSettingPanel clientSettingPanel, boolean clientSettingMode) {
+        if (notReady(detailPanel, moduleListPanel, clientSettingPanel)) {
+            return false;
+        }
         if (popupHost.getActivePopup() != null) {
             return popupHost.mouseReleased(event);
         }
@@ -57,6 +66,9 @@ public class PanelInputRouter {
     }
 
     public boolean routeMouseDragged(MouseButtonEvent event, double mouseX, double mouseY, PanelPopupHost popupHost, ModuleDetailPanel detailPanel, ModuleListPanel moduleListPanel, ClientSettingPanel clientSettingPanel, boolean clientSettingMode) {
+        if (notReady(detailPanel, moduleListPanel, clientSettingPanel)) {
+            return false;
+        }
         if (popupHost.getActivePopup() != null) {
             return popupHost.mouseDragged(event, mouseX, mouseY);
         }
@@ -70,6 +82,9 @@ public class PanelInputRouter {
     }
 
     public boolean routeCharTyped(CharacterEvent event, PanelPopupHost popupHost, ModuleDetailPanel detailPanel, ModuleListPanel moduleListPanel, ClientSettingPanel clientSettingPanel, boolean clientSettingMode) {
+        if (notReady(detailPanel, moduleListPanel, clientSettingPanel)) {
+            return false;
+        }
         if (popupHost.getActivePopup() != null) {
             return popupHost.charTyped(event);
         }
@@ -80,6 +95,15 @@ public class PanelInputRouter {
             return true;
         }
         return detailPanel.charTyped(event);
+    }
+
+    /**
+     * 子面板在首帧 {@code extractRenderState} 里才随 UiScene 创建，而输入事件可能在首帧之前
+     * 就到达（例如按下 GUI 键的同一批 GLFW 事件里继续按键），此时必须放弃路由而不是抛 NPE。
+     */
+    private static boolean notReady(ModuleDetailPanel detailPanel, ModuleListPanel moduleListPanel,
+                                    ClientSettingPanel clientSettingPanel) {
+        return detailPanel == null || moduleListPanel == null || clientSettingPanel == null;
     }
 
 }

@@ -52,8 +52,15 @@ public class PanelElements {
         return alignTrailing(bounds, width, MD3Theme.CONTROL_HEIGHT);
     }
 
+    /**
+     * 构建行内 switch。
+     *
+     * <p>Lumin 的 {@code SwitchElement} 用 {@code UiNodes.unit} 断言两个 progress 都在 0..1，
+     * 而 switch 的开合动画使用带过冲的 {@code EASE_OUT_ELASTIC}（峰值约 1.19），
+     * 因此这里必须夹取后再提交，否则动画中途会抛 IllegalArgumentException 并崩掉整个渲染帧。
+     */
     public static void buildSwitch(UiTree.Scope scope, UiRect rect, float toggleProgress, float hoverProgress) {
-        scope.toggle(rect, toggleProgress, hoverProgress);
+        scope.toggle(rect, Math.clamp(toggleProgress, 0.0f, 1.0f), Math.clamp(hoverProgress, 0.0f, 1.0f));
     }
 
     /**

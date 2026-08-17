@@ -34,7 +34,7 @@ public class BoolSettingRow extends SettingRow<BoolSetting> {
 
         scope.roundRect(0.0f, 0.0f, bounds.width(), bounds.height(), MD3Theme.CARD_RADIUS, MD3Theme.rowSurface(animatedHover));
         scope.text(setting.getDisplayName(), MD3Theme.ROW_CONTENT_INSET, labelY, labelScale, MD3Theme.TEXT_PRIMARY);
-        scope.toggle(getSwitchBounds(bounds).relativeTo(bounds), toggleProgress, animatedHover);
+        PanelElements.buildSwitch(scope, getSwitchBounds(bounds).relativeTo(bounds), toggleProgress, animatedHover);
     }
 
     private UiRect getSwitchBounds(UiRect bounds) {

@@ -219,6 +219,9 @@ public class PanelScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         MouseButtonEvent epsilonEvent = UiCoordinateMapper.toProjectionEvent(event);
+        if (!panelsReady()) {
+            return super.mouseClicked(epsilonEvent, isDoubleClick);
+        }
         double mouseX = epsilonEvent.x();
         double mouseY = epsilonEvent.y();
         if (event.button() != 0) {
@@ -267,10 +270,19 @@ public class PanelScreen extends Screen {
         if (previous != null) previous.close();
     }
 
+    /** 子面板随首帧 UiScene 一起创建，首帧之前到达的输入必须直接放弃处理。 */
+    private boolean panelsReady() {
+        return categoryRailPanel != null && moduleListPanel != null
+                && moduleDetailPanel != null && clientSettingPanel != null;
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         double epsilonMouseX = UiCoordinateMapper.toProjectionX(mouseX);
         double epsilonMouseY = UiCoordinateMapper.toProjectionY(mouseY);
+        if (!panelsReady()) {
+            return super.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY);
+        }
         if (popupHost.mouseScrolled(epsilonMouseX, epsilonMouseY, scrollX, scrollY)) {
             dirtyState.markAllDirty();
             return true;
@@ -355,9 +367,11 @@ public class PanelScreen extends Screen {
         super.removed();
         popupHost.close();
         releaseScene();
-        moduleListPanel.resetTransientState();
-        moduleDetailPanel.resetTransientState();
-        clientSettingPanel.resetTransientState();
+        if (panelsReady()) {
+            moduleListPanel.resetTransientState();
+            moduleDetailPanel.resetTransientState();
+            clientSettingPanel.resetTransientState();
+        }
         state.setListeningKeyBindModule(null);
         state.setListeningKeybindSetting(null);
         IMEFocusHelper.forceDeactivate();
