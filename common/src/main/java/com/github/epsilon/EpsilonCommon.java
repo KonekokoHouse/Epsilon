@@ -31,6 +31,9 @@ public class EpsilonCommon {
         // 初始化 Managers
         Managers.initManagers();
 
+        // FriendManager 在配置加载之后才创建，这里补载好友列表
+        ConfigHolder.INSTANCE.loadFriendsIntoManager();
+
         // 初始化 Render3DScheduler 里的 RenderPipeline
         Render3DScheduler.init();
 

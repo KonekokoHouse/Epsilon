@@ -2,6 +2,7 @@ package com.github.epsilon.managers.impl;
 
 import com.github.epsilon.events.bus.EventBus;
 import com.github.epsilon.events.bus.EventHandler;
+import com.github.epsilon.events.impl.GameLeftEvent;
 import com.github.epsilon.events.impl.PacketEvent;
 import net.minecraft.network.protocol.game.ClientboundSetScorePacket;
 import net.minecraft.world.entity.Entity;
@@ -42,6 +43,12 @@ public class HealthManager {
                 scoreboardHealth.put(packet.owner(), packet.score());
             }
         }
+    }
+
+    /** 计分板血量按会话下发，换服或换世界后必须丢弃，否则会沿用上一个服务器的数值。 */
+    @EventHandler
+    private void onGameLeft(GameLeftEvent event) {
+        scoreboardHealth.clear();
     }
 
     private boolean isHealthObjective(String objectiveName) {

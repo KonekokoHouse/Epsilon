@@ -363,6 +363,11 @@ public class RotationUtils {
             double deltaPitch = (targetRotation.getPitch() - lastRotation.getPitch());
 
             double distance = Math.sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch);
+            // 已经在目标角度上时不能按 0 距离分配速度，否则会得到 NaN 旋转
+            if (distance == 0) {
+                return new Rot2f(0, 0);
+            }
+
             double distributionYaw = Math.abs(deltaYaw / distance);
             double distributionPitch = Math.abs(deltaPitch / distance);
 

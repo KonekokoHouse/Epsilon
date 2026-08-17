@@ -2,27 +2,14 @@ package com.github.epsilon.modules.impl.movement;
 
 import com.github.epsilon.events.bus.EventHandler;
 import com.github.epsilon.events.impl.KeyboardInputEvent;
-import com.github.epsilon.events.impl.PacketEvent;
 import com.github.epsilon.events.impl.PlayerTickEvent;
 import com.github.epsilon.events.impl.SlowdownEvent;
 import com.github.epsilon.modules.Category;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.common.ServerboundPongPacket;
-import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.Items;
-
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class NoSlow extends Module {
 
@@ -38,6 +25,7 @@ public class NoSlow extends Module {
         Grim1_2,
         Grim1_3
     }
+
     private final EnumSetting<Mode> mode = enumSetting("Mode", Mode.Vanilla);
     private final BoolSetting food = boolSetting("Food", true);
     private final BoolSetting bow = boolSetting("Bow", true);
@@ -52,6 +40,8 @@ public class NoSlow extends Module {
 
     @EventHandler
     private void onTick(PlayerTickEvent.Pre event) {
+        if (nullCheck()) return;
+
         if (mc.player.onGround()) {
             onGroundTick++;
         } else {
@@ -61,6 +51,8 @@ public class NoSlow extends Module {
 
     @EventHandler
     private void onSlowdown(SlowdownEvent event) {
+        if (nullCheck()) return;
+
         if (!food.getValue() && mc.player.getUseItem().has(DataComponents.FOOD)) return;
         if (!bow.getValue() && mc.player.getUseItem().is(Items.BOW)) return;
         if (!crossbow.getValue() && mc.player.getUseItem().is(Items.CROSSBOW)) return;
@@ -75,6 +67,8 @@ public class NoSlow extends Module {
 
     @EventHandler
     private void onKeyboardInput(KeyboardInputEvent event) {
+        if (nullCheck()) return;
+
         if (mode.is(Mode.Jump) && mc.player.onGround() && mc.player.isUsingItem() && (event.getForward() != 0 || event.getStrafe() != 0)) {
             event.setJump(true);
         }

@@ -68,7 +68,9 @@ public class SpearKill extends Module {
     }
 
     @EventHandler
-    public void onTick(PlayerTickEvent e) {
+    private void onTick(PlayerTickEvent.Pre event) {
+        if (nullCheck()) return;
+
         updateTarget();
 
         currentlyCharging = isUsingSpear();

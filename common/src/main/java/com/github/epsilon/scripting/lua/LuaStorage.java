@@ -15,36 +15,53 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Lua 脚本的键值存储。
+ *
+ * <p>callback 在事件原线程执行（packet 事件可能位于网络线程），而快照与载入由配置线程或
+ * shutdown hook 触发，因此所有 {@link #values} 访问都必须持有本对象的 monitor。
+ */
 public final class LuaStorage {
     private static final int MAX_DEPTH = 64;
     private final Map<String, JsonElement> values = new LinkedHashMap<>();
 
-    public synchronized LuaTable createApi(LuaRuntime runtime) {
+    public LuaTable createApi(LuaRuntime runtime) {
         LuaTable api = new LuaTable();
         api.set("get", function(args -> {
             runtime.requireAlive();
-            String key = argument(args, 2).checkjstring();
-            return fromJson(values.get(key));
+            return fromJson(get(argument(args, 2).checkjstring()));
         }));
         api.set("set", function(args -> {
             runtime.requireAlive();
             String key = argument(args, 2).checkjstring();
             LuaValue value = argument(args, 3);
-            if (value.isnil()) values.remove(key);
-            else values.put(key, toJson(value, new IdentityHashMap<>(), 0));
+            if (value.isnil()) remove(key);
+            else put(key, toJson(value, new IdentityHashMap<>(), 0));
             return LuaValue.NONE;
         }));
         api.set("remove", function(args -> {
             runtime.requireAlive();
-            values.remove(argument(args, 2).checkjstring());
+            remove(argument(args, 2).checkjstring());
             return LuaValue.NONE;
         }));
         api.set("clear", function(args -> {
             runtime.requireAlive();
-            values.clear();
+            clear();
             return LuaValue.NONE;
         }));
         return api;
+    }
+
+    private synchronized JsonElement get(String key) {
+        return values.get(key);
+    }
+
+    private synchronized void put(String key, JsonElement value) {
+        values.put(key, value);
+    }
+
+    private synchronized void remove(String key) {
+        values.remove(key);
     }
 
     public synchronized JsonObject toJson() {

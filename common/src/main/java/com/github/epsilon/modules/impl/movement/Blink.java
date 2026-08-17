@@ -79,8 +79,10 @@ public class Blink extends Module {
     @Override
     public void onDisable() {
         if (nullCheck()) return;
-        if (fakePlayer.getValue()) {
+        // 按实体是否已生成判断，避免启用后再切换 Fake Player 时漏删假人或空指针
+        if (localPlayer != null) {
             mc.level.removeEntity(localPlayer.getId(), Entity.RemovalReason.DISCARDED);
+            localPlayer = null;
         }
         releaseAll();
         packets.clear();
@@ -120,12 +122,11 @@ public class Blink extends Module {
     }
 
     private void releaseAll() {
-        if (!packets.isEmpty()) {
-            for (Packet packet : packets) {
-                PacketUtils.sendSilently(packet);
-                if (packet instanceof ServerboundMovePlayerPacket serverboundMovePlayerPacket) {
-                    handlePlayerMove(serverboundMovePlayerPacket);
-                }
+        Packet<?> packet;
+        while ((packet = packets.poll()) != null) {
+            PacketUtils.sendSilently(packet);
+            if (packet instanceof ServerboundMovePlayerPacket serverboundMovePlayerPacket) {
+                handlePlayerMove(serverboundMovePlayerPacket);
             }
         }
     }

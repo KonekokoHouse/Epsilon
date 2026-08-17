@@ -19,7 +19,10 @@ public class Timer extends Module {
 
     @Override
     protected void onEnable() {
-        Managers.TIMER.reset();
+        // 配置加载早于 Managers.initManagers()，从配置恢复启用状态时 TimerManager 可能尚未创建
+        if (Managers.TIMER != null) {
+            Managers.TIMER.reset();
+        }
     }
 
     @Override

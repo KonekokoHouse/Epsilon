@@ -281,6 +281,8 @@ public final class LuaScriptManager implements AutoCloseable {
             Constants.LOGGER.info("Lua 脚本包重载完成: {}", manifest.id());
         } catch (Throwable failure) {
             candidate.close();
+            // 提交失败后 previous 已被移出 packages，必须一并关闭，否则它的 runtime 与注册会永久泄漏
+            previous.close();
             packages.remove(previous.id());
             errorTarget.put(manifest.id(), failure.toString());
             Constants.LOGGER.error("Lua 脚本包提交失败: {}", manifest.id(), failure);

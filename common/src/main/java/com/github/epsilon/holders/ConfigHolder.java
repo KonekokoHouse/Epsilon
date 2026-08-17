@@ -5,6 +5,7 @@ import com.github.epsilon.addon.EpsilonAddon;
 import com.github.epsilon.assets.config.LegacyConfigMigrator;
 import com.github.epsilon.elements.HudModule;
 import com.github.epsilon.managers.Managers;
+import com.github.epsilon.managers.impl.FriendManager;
 import com.github.epsilon.modules.Module;
 import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.settings.Setting;
@@ -125,6 +126,16 @@ public class ConfigHolder {
 
     public synchronized void reloadOrThrow() throws IOException {
         loadActiveConfigSnapshot();
+    }
+
+    /**
+     * 把当前配置的好友列表载入 {@link Managers#FRIEND}。
+     *
+     * <p>{@code EpsilonCommon.init()} 中配置加载早于 {@code Managers.initManagers()}，
+     * 此前 {@code Managers.FRIEND} 仍为 null，因此必须在 Managers 就绪后补调一次。
+     */
+    public synchronized void loadFriendsIntoManager() {
+        loadFriends(getActiveConfigStorageDir());
     }
 
     public synchronized void applyToModules(List<Module> modules) {
@@ -586,9 +597,15 @@ public class ConfigHolder {
     }
 
     private synchronized void saveFriends(Path configStorageDir) throws IOException {
+        FriendManager friendManager = Managers.FRIEND;
+        if (friendManager == null) {
+            // Managers 尚未初始化时磁盘上的好友列表才是唯一有效数据，不能用空列表覆盖
+            return;
+        }
+
         Path friendFile = configStorageDir.resolve(FRIENDS_FILE_NAME);
         JsonArray array = new JsonArray();
-        for (String name : Managers.FRIEND.getFriends()) {
+        for (String name : friendManager.getFriends()) {
             array.add(name);
         }
         try {
@@ -604,8 +621,14 @@ public class ConfigHolder {
     }
 
     private synchronized void loadFriends(Path configStorageDir) {
+        FriendManager friendManager = Managers.FRIEND;
+        if (friendManager == null) {
+            // 启动时配置早于 Managers 加载，好友列表由 loadFriendsIntoManager() 补载
+            return;
+        }
+
         Path friendFile = configStorageDir.resolve(FRIENDS_FILE_NAME);
-        if (Managers.FRIEND != null) Managers.FRIEND.clearFriends();
+        friendManager.clearFriends();
         if (!Files.exists(friendFile)) return;
         try {
             String json = Files.readString(friendFile, StandardCharsets.UTF_8);
@@ -613,7 +636,7 @@ public class ConfigHolder {
             if (parsed != null && parsed.isJsonArray()) {
                 for (JsonElement el : parsed.getAsJsonArray()) {
                     if (el.isJsonPrimitive()) {
-                        Managers.FRIEND.addFriend(el.getAsString());
+                        friendManager.addFriend(el.getAsString());
                     }
                 }
             }

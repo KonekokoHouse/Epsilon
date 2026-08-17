@@ -15,15 +15,20 @@ Minecraft.<init> TAIL
 
 `EpsilonCommon.init()` 当前顺序：
 
-1. 设置 `Constants.mc`，注册 `com.github.epsilon` 包的 EventBus lambda factory。
+1. 注册 `com.github.epsilon` 包的 EventBus lambda factory。
 2. `ModuleHolder.initModules()`。
 3. `HudElementHolder.initElements()`。
 4. `AddonHolder.setupAddons()`。
 5. `ConfigHolder.initConfig()`。
 6. 选择当前语言。
 7. `Managers.initManagers()`。
-8. 初始化 `com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler`，注册 priority `-999` 的统一 flush。
-9. 生成空 i18n 模板，并注册退出时保存配置的 shutdown hook。
+8. `ConfigHolder.loadFriendsIntoManager()`：`FriendManager` 在配置加载之后才创建，好友列表在此补载。
+9. 初始化 `com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler`，注册 priority `-999` 的统一 flush。
+10. `LuaScriptManager.init(...)`：扫描 `~/.epsilon/scripts` 并按开关加载脚本包。
+11. 生成空 i18n 模板，并注册退出时保存配置与关闭 Lua runtime 的 shutdown hook。
+
+第 5 步先于第 7 步，因此配置恢复启用状态时 `Managers` 字段仍可能为 null；从配置进入的 `onEnable()`
+不得无条件访问 Manager。
 
 ## LuminGraphics-MC runtime
 
@@ -59,6 +64,6 @@ flush。2D runtime 的资源所有权和帧边界不得替代这些 3D 路径。
 
 运行时管理器通过 `Managers` 的静态字段访问：
 
-`ROTATION`、`EXTRAPOLATION`、`TARGET`、`HEALTH`、`C2SPACKET`、`S2CPACKET`、`FRIEND`、`SOUND`、`NOTIFICATION`、`TIMER`。
+`ROTATION`、`TARGET`、`HEALTH`、`C2SPACKET`、`S2CPACKET`、`FRIEND`、`SOUND`、`NOTIFICATION`、`TIMER`。
 
 这些字段由 `Managers.initManagers()` 初始化。其中 Rotation Manager 可在运行时因模式切换而替换，调用方应通过 `Managers.ROTATION` 获取当前实例。

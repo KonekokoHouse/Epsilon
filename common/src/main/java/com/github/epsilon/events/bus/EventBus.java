@@ -5,6 +5,7 @@ import com.github.epsilon.events.bus.listeners.LambdaListener;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +16,7 @@ public class EventBus {
 
     public static final EventBus INSTANCE = new EventBus();
 
-    private final Map<Object, List<IListener>> listenerCache = new ConcurrentHashMap<>();
+    private final Map<Object, List<IListener>> listenerCache = new IdentityHashMap<>();
     private final Map<Class<?>, List<IListener>> staticListenerCache = new ConcurrentHashMap<>();
 
     private final Map<Class<?>, List<IListener>> listenerMap = new ConcurrentHashMap<>();
@@ -127,16 +128,16 @@ public class EventBus {
 
         if (object == null) return staticListenerCache.computeIfAbsent(klass, func);
 
-        // We need to check if the instances are the same and avoid using .equals() and .hashCode()
-        for (Object key : listenerCache.keySet()) {
-            if (key == object) {
-                return listenerCache.get(object);
-            }
-        }
+        // 缓存按实例身份而非 .equals()/.hashCode() 命中，同一实例必须复用同一批 listener
+        synchronized (listenerCache) {
+            List<IListener> cached = listenerCache.get(object);
+            if (cached != null) return cached;
 
-        List<IListener> listeners = func.apply(object);
-        listenerCache.put(object, listeners);
-        return listeners;
+            List<IListener> listeners = func.apply(object);
+            // 没有 listener 的实例不入缓存，否则热重载的 Module 会被永久强引用
+            if (!listeners.isEmpty()) listenerCache.put(object, listeners);
+            return listeners;
+        }
     }
 
     private void getListeners(List<IListener> listeners, Class<?> klass, Object object) {
