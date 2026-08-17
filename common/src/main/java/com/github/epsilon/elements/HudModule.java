@@ -4,6 +4,7 @@ import com.github.epsilon.gui.hudeditor.HudLayoutHelper;
 import com.github.epsilon.gui.utils.UiCoordinateMapper;
 import com.github.slmpc.lumingraphics.core.geometry.LuminColor;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.render.scheduler.Render2DScheduler;
 import com.github.slmpc.lumingraphics.text.render.TextRenderer;
 import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -44,6 +45,7 @@ public abstract class HudModule extends Module {
     private HorizontalAnchor horizontalAnchor = HorizontalAnchor.Left;
     private VerticalAnchor verticalAnchor = VerticalAnchor.Top;
     private UiTree.Scope currentRenderScope;
+    private Render2DScheduler.LayerHandle currentRenderLayer;
 
     public HudModule(String name, float width, float height) {
         this(name, 0f, 0f, width, height);
@@ -179,7 +181,7 @@ public abstract class HudModule extends Module {
 
     public final void renderWithBatch(DeltaTracker deltaTracker, UiRenderBatch renderBatch) {
         UiTree.Scope scope = new UiTree.Scope();
-        appendToTree(deltaTracker, scope);
+        appendToTree(deltaTracker, scope, renderBatch.layerHandle(0));
         renderBatch.render(UiTree.from(scope));
     }
 
@@ -187,14 +189,28 @@ public abstract class HudModule extends Module {
      * 将当前 HUD 元素追加到宿主持有的 HUD 树，不在元素内部提交渲染批次。
      */
     public final void appendToTree(DeltaTracker deltaTracker, UiTree.Scope scope) {
+        appendToTree(deltaTracker, scope, null);
+    }
+
+    /**
+     * 将当前 HUD 元素追加到宿主持有的 HUD 树，不在元素内部提交渲染批次。
+     *
+     * @param layer 宿主批次的直接绘制层，供需要绘制运行时纹理对象（例如字形图集）的元素使用；
+     *              允许为 {@code null}，此时元素只能向 UI 树追加节点。
+     */
+    public final void appendToTree(DeltaTracker deltaTracker, UiTree.Scope scope,
+                                   Render2DScheduler.LayerHandle layer) {
         Objects.requireNonNull(deltaTracker, "deltaTracker");
         Objects.requireNonNull(scope, "scope");
-        UiTree.Scope previous = currentRenderScope;
+        UiTree.Scope previousScope = currentRenderScope;
+        Render2DScheduler.LayerHandle previousLayer = currentRenderLayer;
         currentRenderScope = scope;
+        currentRenderLayer = layer;
         try {
             render(deltaTracker);
         } finally {
-            currentRenderScope = previous;
+            currentRenderScope = previousScope;
+            currentRenderLayer = previousLayer;
         }
     }
 
@@ -203,6 +219,17 @@ public abstract class HudModule extends Module {
             throw new IllegalStateException("HUD elements must render through renderWithBatch.");
         }
         return currentRenderScope;
+    }
+
+    /**
+     * 返回宿主批次的直接绘制层。UI 树的纹理节点只接受资源 ID，因此运行时生成的纹理
+     * （例如字形/emoji 图集）必须通过该层直接绘制。
+     */
+    protected final Render2DScheduler.LayerHandle renderLayer() {
+        if (currentRenderLayer == null) {
+            throw new IllegalStateException("HUD elements must render through a host batch to draw runtime textures.");
+        }
+        return currentRenderLayer;
     }
 
     protected static LuminColor lumin(Color color) {

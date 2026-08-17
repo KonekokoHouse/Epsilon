@@ -13,6 +13,8 @@ import com.github.epsilon.modules.impl.ClientSetting;
 import com.github.epsilon.scripting.lua.render.LuaRender2DService;
 import com.github.epsilon.utils.client.ClientUtils;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.render.scheduler.Render2DScheduler;
+import com.github.slmpc.lumingraphics.ui.render.UiRenderBatch;
 import com.github.slmpc.lumingraphics.ui.scene.UiLayer;
 import com.github.slmpc.lumingraphics.ui.scene.UiScene;
 import com.github.slmpc.lumingraphics.ui.tree.UiTree;
@@ -121,20 +123,22 @@ public class HudElementHolder {
      * 构建并提交独立 HUD 树；调用方的 GUI 树不会接收任何 HUD 节点。
      */
     public void submitHudTree(UiScene targetScene, int relativeLayer, DeltaTracker deltaTracker, Render2DEvent.HUD event) {
-        targetScene.submit(UiLayer.CONTENT, relativeLayer, buildHudTree(deltaTracker, event));
+        UiRenderBatch batch = targetScene.batch(UiLayer.CONTENT, relativeLayer);
+        batch.render(buildHudTree(deltaTracker, event, batch));
     }
 
     public void submitHudTree(UiScene targetScene, int relativeLayer, DeltaTracker deltaTracker) {
-        targetScene.submit(UiLayer.CONTENT, relativeLayer, buildHudTree(deltaTracker, null));
+        submitHudTree(targetScene, relativeLayer, deltaTracker, null);
     }
 
-    private UiTree buildHudTree(DeltaTracker deltaTracker, Render2DEvent.HUD event) {
+    private UiTree buildHudTree(DeltaTracker deltaTracker, Render2DEvent.HUD event, UiRenderBatch batch) {
         UiTree.Scope hudScope = new UiTree.Scope();
+        Render2DScheduler.LayerHandle elementLayer = batch.layerHandle(0);
         for (HudModule element : elements) {
             if (!element.isEnabled()) continue;
             try {
                 element.updateLayout();
-                hudScope.layer(0, elementScope -> element.appendToTree(deltaTracker, elementScope));
+                hudScope.layer(0, elementScope -> element.appendToTree(deltaTracker, elementScope, elementLayer));
             } catch (RuntimeException failure) {
                 LOGGER.error("HUD content '{}' failed", element.getName(), failure);
             }

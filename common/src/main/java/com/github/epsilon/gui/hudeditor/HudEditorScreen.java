@@ -31,6 +31,8 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static com.github.epsilon.Constants.LOGGER;
+
 public class HudEditorScreen extends Screen {
 
     public static final HudEditorScreen INSTANCE = new HudEditorScreen();
@@ -157,10 +159,20 @@ public class HudEditorScreen extends Screen {
         MinecraftUiRuntime2612 runtime = MinecraftUiRuntime2612.current();
         ClientSetting.INSTANCE.configureMinecraftFonts(runtime);
         prepareScene(runtime);
-        runtime.render(scene, activeScene -> {
-            drawEditor(activeScene, pendingMouseX, pendingMouseY);
-            HudElementHolder.INSTANCE.submitHudTree(activeScene, -40, minecraft.getDeltaTracker());
-        });
+        // HUD 预览失败不应让游戏崩溃：释放场景并记录异常，下一帧重新创建。
+        try {
+            runtime.render(scene, activeScene -> {
+                drawEditor(activeScene, pendingMouseX, pendingMouseY);
+                HudElementHolder.INSTANCE.submitHudTree(activeScene, -40, minecraft.getDeltaTracker());
+            });
+        } catch (RuntimeException failure) {
+            try {
+                releaseScene();
+            } catch (RuntimeException cleanupFailure) {
+                failure.addSuppressed(cleanupFailure);
+            }
+            LOGGER.error("HUD editor frame failed", failure);
+        }
     }
 
     private void drawElementOverlays(GuiGraphicsExtractor graphics) {
