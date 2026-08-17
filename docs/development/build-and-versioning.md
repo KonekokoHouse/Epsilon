@@ -49,7 +49,14 @@ Lumin class 才抛 `NoClassDefFoundError`。因此：
 
 NeoForge 版内嵌元数据同样把 `neoforge` 与 `minecraft` 钉在单点区间，但 NeoForge 缺依赖时会直接报错
 而非静默丢弃，且其 Maven `ComparableVersion` 不能正确处理 `1.2.5+mc26.1.2` 这类构建元数据，所以这一侧
-不做重写，等上游放宽。
+不做重写。
+
+重打包只是过渡手段，根因在上游加载器元数据本身。已向上游提交
+[slmpc/LuminGraphics-MC#1](https://github.com/slmpc/LuminGraphics-MC/pull/1)：三个 Minecraft 版本树的
+`fabricloader`/`fabric-api` 由 `=` 改为 `>=`，NeoForge 的 `versionRange` 由 `[X]` 改为 `[X,)`，同时放宽
+上游 `verifyFabricWiring`/`verifyNeoForgeContract` 两个门禁（`minecraft` 仍是精确单版本——加载器区间放开
+后，它才是把 mod 约束在对应游戏版本上的那一条）。上游发布带该修复的版本后，可以删掉
+`processIncludeJars` 的重写，`verifyLuminJarInJar` 的断言留下来当回归门禁。
 
 ## 常用命令
 
