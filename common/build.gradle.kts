@@ -1,4 +1,5 @@
 import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 
 plugins {
     id("multiloader-common")
@@ -130,7 +131,51 @@ val verifyLuminJarInJarArchives = tasks.register("verifyLuminJarInJarArchives") 
                 }
             }
         }
+        fun readEntry(archive: ZipFile, name: String): String {
+            val entry = requireNotNull(archive.getEntry(name)) { "Missing $name" }
+            return archive.getInputStream(entry).use { it.readBytes() }.toString(Charsets.UTF_8)
+        }
+
+        // Fabric Loader 静默排除依赖不满足的内嵌 mod，因此内嵌 fabric.mod.json 一旦留下 "=" 精确
+        // 依赖，玩家更新 Loader 或 Fabric API 后整个 Lumin 运行时就会消失；Epsilon 自身也必须硬
+        // 依赖 lumin_graphics_mc，把这种缺失变成加载期报错而不是运行期 NoClassDefFoundError。
+        fun verifyFabricLuminRuntime(outer: File, nestedJar: String) {
+            ZipFile(outer).use { archive ->
+                val nestedEntry = requireNotNull(archive.getEntry(nestedJar)) {
+                    "${outer.name} is missing $nestedJar"
+                }
+                var nestedMetadata: String? = null
+                archive.getInputStream(nestedEntry).use { rawNested ->
+                    ZipInputStream(rawNested).use { nested ->
+                        var current = nested.nextEntry
+                        while (current != null) {
+                            if (current.name == "fabric.mod.json") {
+                                nestedMetadata = nested.readBytes().toString(Charsets.UTF_8)
+                                break
+                            }
+                            current = nested.nextEntry
+                        }
+                    }
+                }
+                val metadata = checkNotNull(nestedMetadata) { "$nestedJar does not contain fabric.mod.json" }
+                val pinned = Regex("\"(fabricloader|fabric-api)\"\\s*:\\s*\"=")
+                    .findAll(metadata)
+                    .map { it.groupValues[1] }
+                    .toList()
+                check(pinned.isEmpty()) {
+                    "$nestedJar still pins $pinned exactly; Fabric Loader would silently drop the Lumin runtime"
+                }
+                check(
+                    Regex("\"depends\"\\s*:\\s*\\{[^}]*\"lumin_graphics_mc\"")
+                        .containsMatchIn(readEntry(archive, "fabric.mod.json"))
+                ) {
+                    "${outer.name} must declare lumin_graphics_mc in fabric.mod.json depends"
+                }
+            }
+        }
+
         verifyOuter(fabricOuter, "META-INF/jars/", luminGraphicsMcFabric.singleFile, "fabric.mod.json")
+        verifyFabricLuminRuntime(fabricOuter, "META-INF/jars/${luminGraphicsMcFabric.singleFile.name}")
         verifyOuter(neoForgeOuter, "META-INF/jarjar/", luminGraphicsMcNeoForge.singleFile,
             "META-INF/jarjar/metadata.json")
     }
