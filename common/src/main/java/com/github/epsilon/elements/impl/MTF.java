@@ -3,8 +3,9 @@ package com.github.epsilon.elements.impl;
 import com.github.epsilon.elements.HudModule;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftGlyphAtlasTexture2612;
 import com.github.slmpc.lumingraphics.mc.v2612.runtime.MinecraftUiRuntime2612;
+import com.github.slmpc.lumingraphics.render.scheduler.Render2DBounds;
+import com.github.slmpc.lumingraphics.text.atlas.GlyphAtlasUpload;
 import com.github.slmpc.lumingraphics.text.emoji.EmojiGlyph;
-import com.github.slmpc.lumingraphics.ui.geometry.UiRect;
 import com.github.epsilon.settings.impl.ColorSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import net.minecraft.client.DeltaTracker;
@@ -34,11 +35,15 @@ public class MTF extends HudModule {
 
         final String fishcake = "\uD83C\uDF65";
         EmojiGlyph glyph = MinecraftUiRuntime2612.current().systemEmojiAtlas().require(fishcake.codePointAt(0));
-        MinecraftGlyphAtlasTexture2612 texture =
-                (MinecraftGlyphAtlasTexture2612) glyph.atlas().upload().texture();
+        GlyphAtlasUpload upload = glyph.atlas().upload();
+        // emoji 图集尚未上传或已随资源重载关闭时，跳过本帧绘制。
+        if (upload == null || upload.isClosed()
+                || !(upload.texture() instanceof MinecraftGlyphAtlasTexture2612 texture)) return;
 
-        renderScope().rotatedTexture(texture.minecraftId().toString(), new UiRect(this.x, this.y, boxSize, boxSize),
-                glyph.uv().u0(), glyph.uv().v0(), glyph.uv().u1(), glyph.uv().v1(),
+        // UI 树的纹理节点只接受资源 ID，而 emoji 图集只注册在 TextureManager 中，
+        // 无法通过 ResourceManager 解析，因此直接把图集纹理对象绘制到宿主批次所在层。
+        renderLayer().addRotatedTexture(new Render2DBounds(this.x, this.y, boxSize, boxSize),
+                texture.luminTexture(), glyph.uv().u0(), glyph.uv().v0(), glyph.uv().u1(), glyph.uv().v1(),
                 lumin(color.getValue()), originX, originY, rotation);
     }
 
