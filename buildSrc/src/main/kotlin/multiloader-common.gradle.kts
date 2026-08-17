@@ -35,6 +35,7 @@ val fabricLoaderVersion = project.property("fabric_loader_version").toString()
 val license = project.property("license").toString()
 val neoforgeVersion = project.property("neoforge_version").toString()
 val neoforgeLoaderVersionRange = project.property("neoforge_loader_version_range").toString()
+val luminGraphicsVersion = project.property("lumin_graphics_version").toString()
 val credits = project.findProperty("credits")?.toString() ?: ""
 base {
     archivesName.set("${modId}-${project.name}-${minecraftVersion}")
@@ -135,7 +136,8 @@ tasks.named<ProcessResources>("processResources") {
         "description" to (project.findProperty("description")?.toString() ?: ""),
         "neoforge_version" to neoforgeVersion,
         "neoforge_loader_version_range" to neoforgeLoaderVersionRange,
-        "java_version" to javaVersion
+        "java_version" to javaVersion,
+        "lumin_graphics_version" to luminGraphicsVersion
     )
 
     val jsonExpandProps = expandProps.mapValues { (_, value) ->

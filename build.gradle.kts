@@ -11,6 +11,7 @@ val catalogFabricLoaderVersion = libs.versions.project.fabric.loader.get()
 val catalogNeoFormVersion = libs.versions.project.neoform.get()
 val catalogNeoForgeVersion = libs.versions.project.neoforge.asProvider().get()
 val catalogNeoForgeLoaderVersionRange = libs.versions.project.neoforge.loader.range.get()
+val catalogLuminGraphicsVersion = libs.versions.lumin.graphics.get()
 
 allprojects {
     extra["java_version"] = catalogJavaVersion
@@ -21,4 +22,5 @@ allprojects {
     extra["neo_form_version"] = catalogNeoFormVersion
     extra["neoforge_version"] = catalogNeoForgeVersion
     extra["neoforge_loader_version_range"] = catalogNeoForgeLoaderVersionRange
+    extra["lumin_graphics_version"] = catalogLuminGraphicsVersion
 }
