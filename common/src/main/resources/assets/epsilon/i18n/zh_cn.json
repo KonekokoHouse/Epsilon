@@ -1861,7 +1861,8 @@
         "style": {
           "_value": "样式",
           "compact": "紧凑",
-          "open": "展开"
+          "open": "展开",
+          "saturn": "土星"
         },
         "mode": {
           "_value": "模式",
@@ -1891,6 +1892,16 @@
         "show icon": "显示图标",
         "text scale offset": "文本缩放偏移",
         "corner radius": "圆角半径",
+        "planet radius": "行星半径",
+        "ring spread": "环带跨度",
+        "ring flatten": "环带压扁",
+        "ring tilt": "环带倾角",
+        "ring width": "环带宽度",
+        "ring segments": "环带段数",
+        "ring speed": "环带流速",
+        "orbit curve": "轨道弧度",
+        "show count": "显示数量",
+        "orbit trail": "轨道拖尾",
         "drop shadow": "投影",
         "shadow blur": "阴影模糊",
         "shadow color": "阴影颜色",
