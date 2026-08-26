@@ -1861,7 +1861,8 @@
         "style": {
           "_value": "Style",
           "compact": "Compact",
-          "open": "Open"
+          "open": "Open",
+          "saturn": "Saturn"
         },
         "mode": {
           "_value": "Mode",
@@ -1891,6 +1892,16 @@
         "show icon": "Show Icon",
         "text scale offset": "Text Scale Offset",
         "corner radius": "Corner Radius",
+        "planet radius": "Planet Radius",
+        "ring spread": "Ring Spread",
+        "ring flatten": "Ring Flatten",
+        "ring tilt": "Ring Tilt",
+        "ring width": "Ring Width",
+        "ring segments": "Ring Segments",
+        "ring speed": "Ring Speed",
+        "orbit curve": "Orbit Curve",
+        "show count": "Show Count",
+        "orbit trail": "Orbit Trail",
         "drop shadow": "Drop Shadow",
         "shadow blur": "Shadow Blur",
         "shadow color": "Shadow Color",
