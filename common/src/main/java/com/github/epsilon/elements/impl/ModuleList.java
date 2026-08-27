@@ -68,8 +68,8 @@ public class ModuleList extends HudModule {
     private final DoubleSetting ringFlatten = doubleSetting("Ring Flatten", 0.3, 0.05, 0.7, 0.01, saturnStyle);
     private final DoubleSetting ringTilt = doubleSetting("Ring Tilt", -16.0, -45.0, 45.0, 1.0, saturnStyle);
     private final DoubleSetting ringWidth = doubleSetting("Ring Width", 2.4, 0.6, 6.0, 0.1, saturnStyle);
-    private final IntSetting ringSegments = intSetting("Ring Segments", 72,
-            SaturnRingGeometry.MIN_SEGMENTS, SaturnRingGeometry.MAX_SEGMENTS, 8, saturnStyle);
+    private final IntSetting ringBands = intSetting("Ring Bands", 3,
+            SaturnRingGeometry.MIN_BANDS, SaturnRingGeometry.MAX_BANDS, 1, saturnStyle);
     private final DoubleSetting ringSpeed = doubleSetting("Ring Speed", 0.5, 0.0, 4.0, 0.05, saturnStyle);
     private final DoubleSetting orbitCurve = doubleSetting("Orbit Curve", 7.0, 0.0, 24.0, 0.5, saturnStyle);
     private final BoolSetting showCount = boolSetting("Show Count", true, saturnStyle);
@@ -89,7 +89,7 @@ public class ModuleList extends HudModule {
     private final Map<Module, ModuleEntry> entries = new HashMap<>();
     /** 当前帧可见行，每帧清空后复用同一个列表。 */
     private final List<ModuleEntry> visibleRows = new ArrayList<>();
-    /** 土星环采样表，只在设置或 HUD 缩放变化时重算。 */
+    /** 土星环几何解算，每帧按当前设置重算一次即可供整帧使用。 */
     private final SaturnRingGeometry ring = new SaturnRingGeometry();
 
     private static final String FONT_TEXT = "epsilon-default";
@@ -126,17 +126,24 @@ public class ModuleList extends HudModule {
     private static final float SATURN_TRAIL_WIDTH = 1.0f;
     private static final float SATURN_ICON_SCALE = 0.9f;
     private static final float SATURN_COUNT_SCALE = 1.15f;
-    /** 主环带与外缘亮线相对采样半径的比例，两者叠加出有厚度的环。 */
-    private static final float SATURN_BAND_SCALE = 0.94f;
-    private static final float SATURN_EDGE_SCALE = 1.07f;
-    private static final float SATURN_EDGE_THICKNESS = 0.42f;
+    /** 环带由内向外的亮度梯度，让同心环系读起来有层次而不是一片同色。 */
+    private static final float SATURN_BAND_INNER_BRIGHTNESS = 0.72f;
+    private static final float SATURN_BAND_OUTER_BRIGHTNESS = 1.05f;
     private static final float SATURN_EDGE_BRIGHTNESS = 1.30f;
     private static final float SATURN_BAND_ALPHA = 0.70f;
     /** 后半环整体压暗，制造绕过行星背面的纵深感。 */
     private static final float SATURN_BACK_ALPHA = 0.52f;
-    /** 高光只改亮度不改透明度，避免密集圆点叠加出现色带。 */
-    private static final float SATURN_SHIMMER_BASE = 0.70f;
-    private static final float SATURN_SHIMMER_RANGE = 0.48f;
+    /**
+     * 沿环流动的镜面高光：外层宽而淡、内层窄而亮，两段同心叠加就近似出一条有衰减的反光，
+     * 而不是一段生硬的亮弧。高光只改亮度与透明度，不改色相。
+     */
+    private static final float SATURN_GLINT_SWEEP = 64.0f;
+    private static final float SATURN_GLINT_CORE_SWEEP = 26.0f;
+    private static final float SATURN_GLINT_ALPHA = 0.55f;
+    private static final float SATURN_GLINT_BRIGHTNESS = 1.55f;
+    private static final float SATURN_GLINT_CORE_BRIGHTNESS = 2.10f;
+    /** 高光绕环一周的基准时长（毫秒），除以环速得到实际周期。 */
+    private static final float SATURN_GLINT_PERIOD_MS = 4000.0f;
     private static final float SATURN_PLANET_LIT_ALPHA = 0.60f;
     private static final float SATURN_PLANET_LIT_BRIGHTNESS = 1.15f;
     private static final float SATURN_PLANET_SHADE_BRIGHTNESS = 0.55f;
@@ -325,9 +332,10 @@ public class ModuleList extends HudModule {
         float planetR = planetRadius.getValue().floatValue() * s;
         float ringRadiusX = planetR * ringSpread.getValue().floatValue();
         float ringRadiusY = ringRadiusX * ringFlatten.getValue().floatValue();
-        // 采样表只在设置或 HUD 缩放变化时重建，渲染循环里不再出现三角函数。
-        ring.configure(ringSegments.getValue(), ringRadiusX, ringRadiusY,
-                ringTilt.getValue().floatValue());
+        // 一整圈环现在只是几段圆弧，几何解算是常数级的，每帧重算比维护脏标记更简单。
+        ring.configure(ringBands.getValue(), ringRadiusX, ringRadiusY,
+                ringTilt.getValue().floatValue(),
+                Math.max(0.5f, ringWidth.getValue().floatValue() * s));
 
         float headerHalfWidth = Math.max(ring.halfWidth(), planetR);
         float headerHalfHeight = Math.max(ring.halfHeight(), planetR);
@@ -366,14 +374,14 @@ public class ModuleList extends HudModule {
         float timedHue = timedHue();
         // 头部始终不透明，即使一个模块都没开启也留出可拖拽的实体。
         Color headerAccent = rainbow.getValue() ? rainbowColor(timedHue, 0) : textColor.getValue();
-        int phase = ring.phaseOffset(ringPhase());
+        float glint = glintDegrees();
         int count = rows.size();
 
-        drawRingBand(scope, centerX, centerY, planetR, s, headerAccent, phase, false);
+        drawRingHalf(scope, centerX, centerY, planetR, headerAccent, glint, false);
         scope.layer(SATURN_LAYER_PLANET, planetScope ->
                 drawPlanet(planetScope, centerX, centerY, planetR, s, headerAccent, count));
         scope.layer(SATURN_LAYER_FRONT_RING, frontScope ->
-                drawRingBand(frontScope, centerX, centerY, planetR, s, headerAccent, phase, true));
+                drawRingHalf(frontScope, centerX, centerY, planetR, headerAccent, glint, true));
 
         if (rows.isEmpty()) return;
 
@@ -424,50 +432,125 @@ public class ModuleList extends HudModule {
         return width;
     }
 
-    /** 环带高光的动画相位，取值 0~1；速度为 0 时静止。 */
-    private float ringPhase() {
+    /**
+     * 镜面高光当前所在的环上角度（度）。
+     *
+     * @return 高光角度；环速为 0 时返回负值，表示这一帧不画高光
+     */
+    private float glintDegrees() {
         float speed = ringSpeed.getValue().floatValue();
-        if (speed <= 0.0f) return 0.0f;
-        float periodMs = Math.max(120.0f, 4000.0f / speed);
-        return (System.currentTimeMillis() % (long) periodMs) / periodMs;
+        if (speed <= 0.0f) {
+            return -1.0f;
+        }
+        float periodMs = Math.max(120.0f, SATURN_GLINT_PERIOD_MS / speed);
+        return (System.currentTimeMillis() % (long) periodMs) / periodMs * 360.0f;
     }
 
     /**
-     * 绘制半个环带：主环带用直径等于环宽的圆点铺出厚度，外缘再叠一圈更细更亮的点作为亮边。
+     * 绘制半个环系：由内向外逐条提交同心环带，最外侧再补一条更细更亮的边线。
      *
-     * <p>高光只调亮度不动透明度，密集圆点叠加时不会出现色带。完全落在行星圆盘内的后半环
-     * 采样点直接跳过，默认设置下能省掉约三分之一节点。</p>
+     * <p>亮度沿径向从 {@link #SATURN_BAND_INNER_BRIGHTNESS} 渐变到
+     * {@link #SATURN_BAND_OUTER_BRIGHTNESS}，环带之间留有环缝，读起来像卡西尼环缝而不是一整片。
+     * 高光颜色与半环整体透明度在这里算好后逐层传下去，单帧只有个位数的颜色对象。</p>
      *
+     * @param glint 高光所在角度，负值表示这一帧不画高光
      * @param front true 绘制靠近观察者的前半环，false 绘制绕到行星背面的后半环
-     * @param phase {@link SaturnRingGeometry#phaseOffset(float)} 换算出的查表位移
      */
-    private void drawRingBand(UiTree.Scope scope, float centerX, float centerY, float planetR,
-            float s, Color accent, int phase, boolean front) {
-        float thickness = Math.max(0.5f, ringWidth.getValue().floatValue() * s);
-        float bandHalf = thickness / 2.0f;
-        float edgeThickness = Math.max(0.4f, thickness * SATURN_EDGE_THICKNESS);
-        float edgeHalf = edgeThickness / 2.0f;
+    private void drawRingHalf(UiTree.Scope scope, float centerX, float centerY, float planetR,
+            Color accent, float glint, boolean front) {
         float alpha = SATURN_BAND_ALPHA * (front ? 1.0f : SATURN_BACK_ALPHA);
-        // 采样半径小于该阈值时，主环带与亮边都完全埋在行星圆盘内，可以整点丢弃。
-        float cullRadius = front ? 0.0f : Math.max(0.0f, (planetR - bandHalf) / SATURN_EDGE_SCALE);
-        float cullSq = cullRadius * cullRadius;
+        float glintAlpha = alpha * SATURN_GLINT_ALPHA;
+        LuminColor glintWide = lumin(accent, glintAlpha, SATURN_GLINT_BRIGHTNESS);
+        LuminColor glintCore = lumin(accent, glintAlpha, SATURN_GLINT_CORE_BRIGHTNESS);
+        int bands = ring.bands();
 
-        for (int index = 0; index < ring.segments(); index++) {
-            if (ring.isFront(index) != front) continue;
-            float dx = ring.offsetX(index);
-            float dy = ring.offsetY(index);
-            if (cullRadius > 0.0f && dx * dx + dy * dy <= cullSq) continue;
+        for (int index = 0; index < bands; index++) {
+            float t = bands == 1 ? 0.5f : index / (float) (bands - 1);
+            float brightness = Mth.lerp(t, SATURN_BAND_INNER_BRIGHTNESS, SATURN_BAND_OUTER_BRIGHTNESS);
+            drawRingBand(scope, centerX, centerY, ring.bandRadiusX(index), ring.bandRadiusY(index),
+                    ring.bandWidth(), planetR, lumin(accent, alpha, brightness),
+                    glintWide, glintCore, glint, front);
+        }
+        drawRingBand(scope, centerX, centerY, ring.edgeRadiusX(), ring.edgeRadiusY(),
+                ring.edgeThickness(), planetR, lumin(accent, alpha, SATURN_EDGE_BRIGHTNESS),
+                glintWide, glintCore, glint, front);
+    }
 
-            float brightness = SATURN_SHIMMER_BASE + SATURN_SHIMMER_RANGE * ring.shimmerAt(index, phase);
-            float bandX = centerX + dx * SATURN_BAND_SCALE;
-            float bandY = centerY + dy * SATURN_BAND_SCALE;
-            scope.roundRect(bandX - bandHalf, bandY - bandHalf, thickness, thickness, bandHalf,
-                    lumin(accent, alpha, brightness));
+    /**
+     * 提交一条同心环带在这半环上可见的部分。
+     *
+     * <p>前半环整段可见；后半环绕到行星背面，中段被行星圆盘挡住，只有紧邻长轴两端的两小段会
+     * 露出来，其边界由 {@link SaturnRingGeometry#visibleHalfSweep} 闭式解出。判据取环带外沿，
+     * 即只丢弃整条厚度都埋进行星里的角度区间。</p>
+     */
+    private void drawRingBand(UiTree.Scope scope, float centerX, float centerY,
+            float radiusX, float radiusY, float width, float planetR,
+            LuminColor base, LuminColor glintWide, LuminColor glintCore, float glint, boolean front) {
+        float left = centerX - radiusX;
+        float top = centerY - radiusY;
+        float boxWidth = radiusX * 2.0f;
+        float boxHeight = radiusY * 2.0f;
+        if (front) {
+            drawRingSpan(scope, left, top, boxWidth, boxHeight, width, 0.0f, 180.0f,
+                    base, glintWide, glintCore, glint);
+            return;
+        }
 
-            float edgeX = centerX + dx * SATURN_EDGE_SCALE;
-            float edgeY = centerY + dy * SATURN_EDGE_SCALE;
-            scope.roundRect(edgeX - edgeHalf, edgeY - edgeHalf, edgeThickness, edgeThickness, edgeHalf,
-                    lumin(accent, alpha, brightness * SATURN_EDGE_BRIGHTNESS));
+        float visible = SaturnRingGeometry.visibleHalfSweep(radiusX, radiusY,
+                Math.max(0.0f, planetR - width * 0.5f));
+        if (visible <= 0.0f) {
+            return;
+        }
+        if (visible >= 180.0f) {
+            // 短半轴都在行星之外，整个后半环可见；此时两段区间会完全重合，必须并成一段再提交。
+            drawRingSpan(scope, left, top, boxWidth, boxHeight, width, 180.0f, 180.0f,
+                    base, glintWide, glintCore, glint);
+            return;
+        }
+        drawRingSpan(scope, left, top, boxWidth, boxHeight, width, 180.0f, visible,
+                base, glintWide, glintCore, glint);
+        drawRingSpan(scope, left, top, boxWidth, boxHeight, width, 360.0f - visible, visible,
+                base, glintWide, glintCore, glint);
+    }
+
+    /**
+     * 提交一段环弧，并把落在这一段里的镜面高光叠上去。
+     *
+     * <p>角度是在环自身平面内量的，倾斜交给图元自己完成，所以这里只需给出未倾斜的包围盒和倾斜角；
+     * 环带边界由着色器按解析距离场抗锯齿，放大后也不会露出折角。</p>
+     */
+    private void drawRingSpan(UiTree.Scope scope, float left, float top, float boxWidth, float boxHeight,
+            float width, float start, float sweep,
+            LuminColor base, LuminColor glintWide, LuminColor glintCore, float glint) {
+        scope.rotatedArc(left, top, boxWidth, boxHeight, start, sweep, width, base, ring.tiltDegrees());
+        if (glint < 0.0f) {
+            return;
+        }
+        // 外层宽而淡、内层窄而亮，两段同心叠加近似出一条有衰减的反光，而不是一段生硬的亮弧。
+        drawGlint(scope, left, top, boxWidth, boxHeight, width, start, sweep,
+                glint, SATURN_GLINT_SWEEP * 0.5f, glintWide);
+        drawGlint(scope, left, top, boxWidth, boxHeight, width, start, sweep,
+                glint, SATURN_GLINT_CORE_SWEEP * 0.5f, glintCore);
+    }
+
+    /**
+     * 把高光区间与环弧区间求交，交集非空时补一段更亮的同心弧。
+     *
+     * @param center 高光中心角度
+     * @param half   高光半角
+     */
+    private void drawGlint(UiTree.Scope scope, float left, float top, float boxWidth, float boxHeight,
+            float width, float spanStart, float spanSweep, float center, float half, LuminColor color) {
+        float spanEnd = spanStart + spanSweep;
+        // 高光是环上的一个角度区间，可能跨过 0°/360° 接缝，所以把它整体平移 ±360° 各求一次交集。
+        for (int turn = -1; turn <= 1; turn++) {
+            float shift = turn * 360.0f;
+            float lo = Math.max(spanStart, center - half + shift);
+            float hi = Math.min(spanEnd, center + half + shift);
+            if (hi - lo > 0.01f) {
+                scope.rotatedArc(left, top, boxWidth, boxHeight, lo, hi - lo, width, color,
+                        ring.tiltDegrees());
+            }
         }
     }
 
@@ -475,8 +558,8 @@ public class ModuleList extends HudModule {
      * 行星本体：四角渐变模拟受光面，左上角压一枚椭圆高光，边缘描一圈强调色轮廓，中心可选
      * 显示已启用模块数量。
      *
-     * <p>同一 layer 内 SHADOW → ROUND_RECT → ROUND_RECT_OUTLINE → GLYPH 的管线顺序由批次
-     * 规划器保证，因此阴影、球体、轮廓和文字不需要再拆分 layer。</p>
+     * <p>同一 layer 内 SHADOW → ROUND_RECT → ARC → GLYPH 的管线顺序由批次规划器保证，因此阴影、
+     * 球体、高光、轮廓和文字不需要再拆分 layer；高光与轮廓同为弧图元，还能和环带并进同一个批次。</p>
      */
     private void drawPlanet(UiTree.Scope scope, float centerX, float centerY, float planetR,
             float s, Color accent, int count) {
@@ -498,19 +581,21 @@ public class ModuleList extends HudModule {
                     shadowBlur.getValue().floatValue(), lumin(shadowColor.getValue()));
         }
 
-        // 单半径重载即可画出正圆，四角颜色从左上受光排到右下暗面。
+        // 圆角取半边长时圆角矩形在距离场里就是一个正圆，而椭圆图元只带单色，画不出四角渐变，
+        // 所以球体本体仍走渐变圆角矩形：四角颜色从左上受光排到右下暗面。
         scope.roundRectGradient(left, top, diameter, diameter, planetR,
                 lumin(accent, SATURN_PLANET_LIT_ALPHA, SATURN_PLANET_LIT_BRIGHTNESS),
                 lumin(surface, 1.0f, SATURN_PLANET_EDGE_BRIGHTNESS),
                 lumin(surface, 1.0f, SATURN_PLANET_SHADE_BRIGHTNESS),
                 lumin(surface, 1.0f, SATURN_PLANET_EDGE_BRIGHTNESS));
 
+        // 高光与边缘轮廓都是真正的椭圆图元：前者不再是被圆角矩形凑出来的药丸形，后者与环带同批提交。
         float highlightWidth = planetR * SATURN_HIGHLIGHT_SCALE;
         float highlightHeight = highlightWidth * 0.72f;
-        scope.roundRect(centerX - planetR * 0.52f, centerY - planetR * 0.58f,
-                highlightWidth, highlightHeight, highlightHeight / 2.0f,
+        scope.ellipse(centerX - planetR * 0.52f, centerY - planetR * 0.58f,
+                highlightWidth, highlightHeight,
                 lumin(accent, SATURN_HIGHLIGHT_ALPHA, SATURN_HIGHLIGHT_BRIGHTNESS));
-        scope.outline(left, top, diameter, diameter, planetR,
+        scope.ellipseOutline(left, top, diameter, diameter,
                 Math.max(0.5f, planetR * 0.06f), lumin(accent, SATURN_RIM_ALPHA));
 
         if (!showCount.getValue()) return;
@@ -565,8 +650,8 @@ public class ModuleList extends HudModule {
         // 内容按“起始侧偏移”排布，镜像只发生在 itemX 里，宽度算式与 saturnChipWidth 完全一致。
         float cursor = SATURN_CHIP_PADDING_START * s;
         float moonSize = SATURN_MOON_SIZE * s;
-        scope.roundRect(itemX(chipX, chipWidth, cursor, moonSize, mirrored),
-                chipY + (visibleHeight - moonSize) / 2.0f, moonSize, moonSize, moonSize / 2.0f,
+        scope.ellipse(itemX(chipX, chipWidth, cursor, moonSize, mirrored),
+                chipY + (visibleHeight - moonSize) / 2.0f, moonSize, moonSize,
                 lumin(accent, alpha, SATURN_MOON_BRIGHTNESS));
         cursor += moonSize + SATURN_MOON_GAP * s;
 
