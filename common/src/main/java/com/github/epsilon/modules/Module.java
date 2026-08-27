@@ -6,6 +6,7 @@ import com.github.epsilon.managers.Managers;
 import com.github.epsilon.settings.Setting;
 import com.github.epsilon.settings.SettingGroup;
 import com.github.epsilon.settings.SettingHost;
+import com.github.epsilon.utils.rotation.Priority;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 
@@ -208,6 +209,19 @@ public class Module implements SettingHost {
     }
 
     public String getInfo() {
+        return null;
+    }
+
+    /**
+     * 模块向转头系统申请视角时使用的优先级。
+     *
+     * <p>{@link com.github.epsilon.managers.impl.rotations.RotationManager} 里的优先级是逐次调用的
+     * 临时值，完成后即清零，也不记录是哪个模块申请的，因此运行期无法反查。这里把映射静态声明在
+     * 模块自身上，供 HUD 等需要按“谁能抢到视角”排序的地方读取。</p>
+     *
+     * @return 该模块调用 {@code setRotations} 时传入的优先级；不接管视角的模块返回 {@code null}
+     */
+    public Priority rotationPriority() {
         return null;
     }
 

@@ -16,6 +16,7 @@ import com.github.epsilon.utils.player.FallingPlayer;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.render.animation.Easing;
+import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -83,6 +84,12 @@ public class Scaffold extends Module {
                     }
                 }
         ));
+    }
+
+    /** 走的是 {@code setRotations(rot, speed, raytrace)} 重载，默认优先级为 {@link Priority#Medium}。 */
+    @Override
+    public Priority rotationPriority() {
+        return Priority.Medium;
     }
 
     private enum Mode {

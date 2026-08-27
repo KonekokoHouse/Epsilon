@@ -8,6 +8,7 @@ import com.github.epsilon.settings.impl.BoolSetting;
 import com.github.epsilon.settings.impl.DoubleSetting;
 import com.github.epsilon.settings.impl.EnumSetting;
 import com.github.epsilon.settings.impl.IntSetting;
+import com.github.epsilon.utils.rotation.Priority;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.EnumMap;
@@ -21,6 +22,12 @@ public class ElytraFly extends Module {
         super("Elytra Fly", Category.MOVEMENT);
         modes.put(ElytraFlightModes.Control, new ControlElytraFlightMode(this));
         modes.put(ElytraFlightModes.Pitch40, new Pitch40ElytraFlightMode(this));
+    }
+
+    /** 实际调用 {@code setRotations} 的是各飞行模式，两者都用 {@link Priority#Highest}。 */
+    @Override
+    public Priority rotationPriority() {
+        return Priority.Highest;
     }
 
     public enum SwapMode {

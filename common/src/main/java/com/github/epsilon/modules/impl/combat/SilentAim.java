@@ -26,6 +26,11 @@ public class SilentAim extends Module {
         super("Silent Aim", Category.COMBAT);
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.High;
+    }
+
     private final BoolSetting weaponOnly = boolSetting("Weapon Only", false);
 
     private final BoolSetting player = boolSetting("Player", true);

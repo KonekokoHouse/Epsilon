@@ -77,6 +77,11 @@ public class ZealotCrystalPlus extends Module {
         workerThread.start();
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.High;
+    }
+
     private final SettingGroup sgGeneral = settingGroup("General");
     private final SettingGroup sgForcePlace = settingGroup("Force Place");
     private final SettingGroup sgCalculation = settingGroup("Calculation");

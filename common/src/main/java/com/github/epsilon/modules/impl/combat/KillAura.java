@@ -44,6 +44,11 @@ public class KillAura extends Module {
         }));
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.Medium;
+    }
+
     private enum Mode {
         OnePointEight,
         OnePointNinePlus
