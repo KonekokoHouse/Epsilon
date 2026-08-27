@@ -35,6 +35,11 @@ public class MaceAura extends Module {
         super("Mace Aura", Category.COMBAT);
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.Medium;
+    }
+
     private enum AttackMode {
         Normal,
         Mace

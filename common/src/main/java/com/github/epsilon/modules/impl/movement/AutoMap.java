@@ -58,6 +58,11 @@ public class AutoMap extends Module {
     }
 
     @Override
+    public Priority rotationPriority() {
+        return Priority.Highest;
+    }
+
+    @Override
     protected void onEnable() {
         saveTicks = 0;
         if (!nullCheck()) {

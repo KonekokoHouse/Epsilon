@@ -12,6 +12,7 @@ import com.github.epsilon.utils.player.ChatUtils;
 import com.github.epsilon.utils.player.FindItemResult;
 import com.github.epsilon.utils.player.InvUtils;
 import com.github.epsilon.utils.player.PlayerUtils;
+import com.github.epsilon.utils.rotation.Priority;
 import com.github.epsilon.utils.rotation.RaytraceUtils;
 import com.github.epsilon.utils.rotation.Rot2f;
 import com.github.epsilon.utils.rotation.RotationUtils;
@@ -36,6 +37,12 @@ public class FeetTrap extends Module {
 
     private FeetTrap() {
         super("Feet Trap", Category.COMBAT);
+    }
+
+    /** 走的是 {@code setRotations(rot, speed, raytrace)} 重载，默认优先级为 {@link Priority#Medium}。 */
+    @Override
+    public Priority rotationPriority() {
+        return Priority.Medium;
     }
 
     private final BoolSetting toggleOnMove = boolSetting("Toggle On Move", true);

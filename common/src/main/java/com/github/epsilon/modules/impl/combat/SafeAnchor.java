@@ -71,6 +71,11 @@ public class SafeAnchor extends Module {
         ));
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.High;
+    }
+
     private enum PlaceMode {
         Adaptive,
         Cover

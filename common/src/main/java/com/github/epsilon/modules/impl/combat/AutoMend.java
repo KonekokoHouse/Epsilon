@@ -23,6 +23,11 @@ public class AutoMend extends Module {
         super("Auto Mend", Category.COMBAT);
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.High;
+    }
+
     private enum SwitchMode {
         Normal,
         Silent

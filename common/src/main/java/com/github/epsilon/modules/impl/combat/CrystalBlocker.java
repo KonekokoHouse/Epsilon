@@ -36,6 +36,11 @@ public class CrystalBlocker extends Module {
         super("Crystal Blocker", Category.COMBAT);
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.Highest;
+    }
+
     private final DoubleSetting range = doubleSetting("Range", 4.0, 1.0, 6.0, 0.1);
     private final EnumSetting<RotateMode> rotate = enumSetting("Rotate", RotateMode.Silent);
     private final EnumSetting<SwitchMode> switchMode = enumSetting("Switch", SwitchMode.Visible);

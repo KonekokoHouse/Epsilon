@@ -19,20 +19,21 @@ public final class SaturnRingGeometry {
 
     private static final float TWO_PI = (float) (Math.PI * 2.0);
     private static final float TOLERANCE = 1.0e-4f;
-    private static final float[] NO_FLOATS = new float[0];
-    private static final boolean[] NO_FLAGS = new boolean[0];
+    /** 占位数组长度为 1，保证 {@link #configure} 之前索引 0 依然合法，读取器就不必逐个判空。 */
+    private static final float[] PLACEHOLDER_FLOATS = new float[1];
+    private static final boolean[] PLACEHOLDER_FLAGS = new boolean[1];
 
     /** 单位圆采样表，只随段数变化。 */
-    private float[] unitCos = NO_FLOATS;
-    private float[] unitSin = NO_FLOATS;
+    private float[] unitCos = PLACEHOLDER_FLOATS;
+    private float[] unitSin = PLACEHOLDER_FLOATS;
     /** 每个采样点的高光权重，用于让环带出现流动的明暗变化。 */
-    private float[] shimmer = NO_FLOATS;
+    private float[] shimmer = PLACEHOLDER_FLOATS;
     /** 采样点是否位于靠近观察者的前半环。 */
-    private boolean[] front = NO_FLAGS;
+    private boolean[] front = PLACEHOLDER_FLAGS;
 
     /** 倾斜后的屏幕空间偏移，随段数、半径或倾角变化。 */
-    private float[] offsetX = NO_FLOATS;
-    private float[] offsetY = NO_FLOATS;
+    private float[] offsetX = PLACEHOLDER_FLOATS;
+    private float[] offsetY = PLACEHOLDER_FLOATS;
 
     private int segments;
     private float radiusX = Float.NaN;
@@ -40,6 +41,11 @@ public final class SaturnRingGeometry {
     private float tiltDegrees = Float.NaN;
     private float halfWidth;
     private float halfHeight;
+
+    /** {@link #sampleAt(float)} 解析出的插值状态，仅供随后的 {@code sampled*} 读取器使用。 */
+    private int sampleIndex;
+    private int sampleNext;
+    private float sampleFraction;
 
     /**
      * 按当前设置刷新缓存；参数未变化时直接返回。
@@ -125,6 +131,70 @@ public final class SaturnRingGeometry {
             shifted -= segments;
         }
         return shimmer[shifted];
+    }
+
+    /**
+     * 把环上的连续位置解析成相邻两个采样点之间的插值系数。
+     *
+     * <p>吊牌要沿环平滑滑动，落点不会正好压在采样点上，所以这里在预计算表内做线性插值：
+     * 72 段时弦与椭圆的最大偏差约为半径的 0.1%，肉眼不可见，而渲染循环里依然没有三角函数。
+     * 解析结果存在实例字段上，随后由 {@link #sampledX()}、{@link #sampledY()}、
+     * {@link #sampledDepth()}、{@link #sampledLateral()} 读取，避免同一个落点重复取整。</p>
+     *
+     * <p>与本类其余部分一样只在渲染线程使用，因此不需要同步。</p>
+     *
+     * @param turn 环上位置，单位为整圈；0 对应表的起点，取值会先归一化到 {@code [0,1)}
+     */
+    public void sampleAt(float turn) {
+        if (segments == 0) {
+            sampleIndex = 0;
+            sampleNext = 0;
+            sampleFraction = 0.0f;
+            return;
+        }
+        float wrapped = turn - (float) Math.floor(turn);
+        float scaled = wrapped * segments;
+        int index = (int) scaled;
+        // wrapped 极限接近 1 时乘法舍入可能给出 segments，这里兜住越界。
+        if (index >= segments) {
+            index = segments - 1;
+        }
+        sampleIndex = index;
+        sampleNext = index + 1 == segments ? 0 : index + 1;
+        sampleFraction = scaled - index;
+    }
+
+    /** {@link #sampleAt(float)} 落点相对环心的横向偏移。 */
+    public float sampledX() {
+        return lerp(offsetX[sampleIndex], offsetX[sampleNext], sampleFraction);
+    }
+
+    /** {@link #sampleAt(float)} 落点相对环心的纵向偏移。 */
+    public float sampledY() {
+        return lerp(offsetY[sampleIndex], offsetY[sampleNext], sampleFraction);
+    }
+
+    /**
+     * {@link #sampleAt(float)} 落点的纵深，取值 -1~1。
+     *
+     * <p>正值表示靠近观察者的前半环（屏幕下方），负值表示绕到行星背后的后半环，
+     * 供调用方决定压暗、缩小和分层。</p>
+     */
+    public float sampledDepth() {
+        return lerp(unitSin[sampleIndex], unitSin[sampleNext], sampleFraction);
+    }
+
+    /**
+     * {@link #sampleAt(float)} 落点的左右分量，取值 -1~1。
+     *
+     * <p>正值在环的右侧，负值在左侧，0 表示正处在前后顶点；吊牌用它决定向哪一侧展开。</p>
+     */
+    public float sampledLateral() {
+        return lerp(unitCos[sampleIndex], unitCos[sampleNext], sampleFraction);
+    }
+
+    private static float lerp(float from, float to, float fraction) {
+        return from + (to - from) * fraction;
     }
 
     private void rebuildUnitTable(int count) {

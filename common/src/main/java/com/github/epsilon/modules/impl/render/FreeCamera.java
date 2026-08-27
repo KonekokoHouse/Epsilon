@@ -34,6 +34,11 @@ public class FreeCamera extends Module {
         super("Free Camera", Category.RENDER);
     }
 
+    @Override
+    public Priority rotationPriority() {
+        return Priority.Highest;
+    }
+
     private final DoubleSetting speed = doubleSetting("Speed", 1.0, 0.0, 10.0, 0.1, v -> speedValue = v);
     private final DoubleSetting speedScrollSensitivity = doubleSetting("Speed Scroll Sensitivity", 0.0, 0.0, 2.0, 0.1);
     private final BoolSetting staySneaking = boolSetting("Stay Sneaking", true);
