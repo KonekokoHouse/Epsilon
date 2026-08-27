@@ -53,7 +53,7 @@ rg -n "methodName" reference/vanilla-xx.x/net/minecraft -g "*.java"
 
 - `common/` 可以调用 Minecraft API，但不得导入 `net.fabricmc.*`、`net.neoforged.*` 或其他 ModLoader API。
 - 加载器专有功能必须放在 `fabric/` 或 `neoforge/`。共享能力应先在 `common/` 定义加载器无关的协议或数据结构，再由平台层接入。
-- 不得在三个子项目复制同一份共享实现；`multiloader-loader` 已复用 `common` 的 Java、生成源码和资源。
+- 不得在三个子项目复制同一份共享实现；`multiloader-loader` 已复用 `common` 的 Java、Kotlin、生成源码和资源。
 - Access Widener 只服务 Fabric，Access Transformer 只服务 NeoForge。共享代码需要额外访问权限时必须同时核验两个平台。
 - 不得在子项目脚本硬编码版本；版本统一来自 `gradle.properties` 和 `gradle/libs.versions.toml`。
 
@@ -71,7 +71,7 @@ rg -n "methodName" reference/vanilla-xx.x/net/minecraft -g "*.java"
 
 - 本体模块优先使用 `public static final ... INSTANCE` 和私有构造函数；维护既有例外时遵循现状，不做无关统一。
 - Setting 必须是实例字段，通过 `SettingHost` DSL 自动注册。依赖条件使用 lambda 或方法引用延迟读取，不得在字段初始化时固化结果。
-- 世界内事件处理器先执行 `nullCheck()`；仅依赖主菜单或资源系统的处理器按实际前置条件检查。
+- 世界内事件处理器先执行 `nullCheck()`；Kotlin 侧改用 `val player = mc.player ?: return` 逐个提取非空局部量，`nullCheck()` 不产生智能转换。仅依赖主菜单或资源系统的处理器按实际前置条件检查。
 - 模块禁用必须恢复按键、计时器、物品栏、旋转 pending 状态、缓存和其他外部状态。
 - 内置模块必须加入 `ModuleHolder.initModules()`；不得只创建 `INSTANCE` 而漏注册。
 - 仅在确有 Setting 之外的持久状态时重写 `resetCustomState()`、`saveCustomState()`、`loadCustomState(JsonObject)`。
@@ -104,6 +104,18 @@ rg -n "methodName" reference/vanilla-xx.x/net/minecraft -g "*.java"
 - raytrace 回调会被多次调用，必须无副作用。
 - 需要等待命中后攻击或放置时，由模块自行维护 pending 状态并保证动作只执行一次。
 
+## Kotlin 与调度器约束
+
+- Kotlin 源码只放 `common/src/main/kotlin`，与 Java 同为共享源目录；只依赖 `kotlin-stdlib`，不得引入 `kotlinx-coroutines` 或其他 Kotlin 运行时库。
+- 共享 Kotlin 在三个项目里各编译一次，模块名不同，`internal` 的 JVM 名会被各自 mangle；跨文件可见性只用 `public` 或 `private`。
+- `mc.player`、`mc.level`、`mc.gameMode` 在 Kotlin 侧是可空类型，必须先提取非空局部量再使用。
+- `multiloader-common` 里的 Kotlin 插件不带版本号，版本只来自版本目录。
+- 调度任务名是全局唯一键，使用带模块前缀的常量；`Module.onDisable()` 必须取消自己的任务。
+- 任务 `finally` 里的回滚只能是同步操作：任务已取消时挂起点会立刻再次抛出 `Cancelled`。
+- `delay(n)` 的截止点在构造时算定，只能就地写成 `await(delay(n))`。
+- 挂起点之后必须重新确认落点、目标实体和背包槽位，不得沿用挂起前的判断。
+- `Awaitable.poll()` 每 tick 调用一次且允许带副作用，但不得缓存 `Managers.ROTATION`。
+
 ## GUI、HUD 与渲染约束
 
 - Panel、Dropdown、popup 和 HUD chrome 优先通过 `UiTree`/`UiScene`/`Render2DScheduler` 提交，不得为每个面板各建一套 renderer。
@@ -128,8 +140,8 @@ rg -n "methodName" reference/vanilla-xx.x/net/minecraft -g "*.java"
 
 ## 代码规范
 
-- Java 25、UTF-8，沿用相邻代码格式和命名。
-- 新增 Javadoc 与解释性注释使用中文；只注释不明显的约束、线程或算法原因。
+- Java 25 与 Kotlin（版本见版本目录）、UTF-8，沿用相邻代码格式和命名。
+- 新增 Javadoc、KDoc 与解释性注释使用中文；只注释不明显的约束、线程或算法原因。
 - Logger 使用 `Constants.LOGGER`。
 - Minecraft 实例使用 `Constants.mc`；Module/HudModule 内优先使用继承的 `mc`。
 - 不得吞异常。边界层隔离单个 Addon 或资源失败时，记录包含上下文的日志。

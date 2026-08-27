@@ -11,6 +11,8 @@ fabric-loom = "1.15.5"
 neoforged-moddev = "2.0.140"
 buildconfig = "6.0.9"
 foojay-resolver-convention = "1.0.0"
+# 与 Gradle 9.7.1 内嵌的 Kotlin 保持一致，KGP 与 kotlin-stdlib 便可直接复用已有缓存。
+kotlin = "2.4.0"
 mixin = "0.8.5"
 mixinextras = "0.5.3"
 asm = "9.8"
@@ -29,6 +31,8 @@ mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
 mixinextras-common = { module = "io.github.llamalad7:mixinextras-common", version.ref = "mixinextras" }
 asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 luaj-jse = { module = "org.luaj:luaj-jse", version.ref = "luaj" }
 sodium-fabric = { module = "net.caffeinemc:sodium-fabric", version.ref = "sodium" }

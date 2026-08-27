@@ -65,3 +65,7 @@ Rotation priority 与 EventBus priority 是两套系统：
 - 旋转接近玩家真实角度时自动结束，没有 callback 或 `isDone()`。
 - 需要等待命中后攻击/放置时，模块保存 pending 状态，每 tick 继续请求旋转，并用当前 `getRotation()` 做 raytrace 后执行一次性动作。
 - 切换旋转模式会调用 `copyStateFrom()` 并替换实例。
+
+跨 tick 的 pending 状态也可以交给 [调度器](scheduler.md) 表达：`com.github.epsilon.schedule` 在
+`RotationManager` 平滑之前推进任务，把「转头到位再动手、动完等几 tick、被更高优先级抢走就回滚」写成串行
+代码。它是新增的一层，`setRotations` 与既有调用点不受影响。

@@ -43,7 +43,7 @@ Minecraft 纹理、targets、native extraction bridge、资源重载处理和 2D
 
 ## `common` 核心包
 
-全部共享 Java 代码位于 `common/src/main/java/com/github/epsilon/`。
+共享代码位于 `common/src/main/java/com/github/epsilon/`，Kotlin 部分位于同级的 `common/src/main/kotlin/com/github/epsilon/`。
 
 | 包 | 职责 |
 |---|---|
@@ -58,6 +58,7 @@ Minecraft 纹理、targets、native extraction bridge、资源重载处理和 2D
 | `managers/` | Rotation、Target、Extrapolation、Health、Packet、Friend、Sound、Notification、Timer |
 | `mixins/` | 共享客户端 Mixin；启用列表以 `epsilon.mixins.json` 为准 |
 | `modules/` | `Module`、`Category`、`ClientSetting` 和 combat/player/movement/render 模块 |
+| `schedule/` | Kotlin 实现的 tick 级协程调度器：资源锁、抢占、`await(delay(n))` 与一次性 DAG |
 | `settings/` | `SettingHost` DSL、分组、布局规划和各类 Setting 实现 |
 | `utils/` | client、combat、math、network、player、render、rotation、timer、world 工具 |
 

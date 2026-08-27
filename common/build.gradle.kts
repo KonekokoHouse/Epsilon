@@ -72,6 +72,10 @@ configurations {
         isCanBeResolved = false
         isCanBeConsumed = true
     }
+    create("commonKotlin") {
+        isCanBeResolved = false
+        isCanBeConsumed = true
+    }
     create("commonResources") {
         isCanBeResolved = false
         isCanBeConsumed = true
@@ -80,6 +84,7 @@ configurations {
 
 artifacts {
     add("commonJava", file("src/main/java"))
+    add("commonKotlin", file("src/main/kotlin"))
     add("commonResources", file("src/main/resources"))
 }
 
@@ -105,7 +110,7 @@ sourceSets.configureEach {
 
 val verifyLuminJarInJarArchives = tasks.register("verifyLuminJarInJarArchives") {
     group = "verification"
-    description = "Verifies that final archives contain only their matching Lumin Graphics-MC loader."
+    description = "Verifies that final archives contain only their matching Lumin Graphics-MC loader and one Kotlin standard library."
     dependsOn(":fabric:remapJar", ":neoforge:jar")
 
     doLast {
@@ -125,6 +130,11 @@ val verifyLuminJarInJarArchives = tasks.register("verifyLuminJarInJarArchives") 
                 }
                 check(nested.count { it.substringAfterLast('/').startsWith("luaj-jse-") } == 1) {
                     "${outer.name} must embed exactly one LuaJ runtime: $nested"
+                }
+                // 共享源码里的 Kotlin 缺了 stdlib 只会在首次触碰调度器时抛 NoClassDefFoundError，
+                // 和 Lumin 运行时消失是同一类故障，因此一并当门禁守住。
+                check(nested.count { it.substringAfterLast('/').startsWith("kotlin-stdlib-") } == 1) {
+                    "${outer.name} must embed exactly one Kotlin standard library: $nested"
                 }
                 check(archive.getEntry(metadata) != null) {
                     "${outer.name} is missing $metadata"

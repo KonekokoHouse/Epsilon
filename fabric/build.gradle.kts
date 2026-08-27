@@ -83,6 +83,9 @@ dependencies {
     implementation(libs.fabric.api)
     implementation(libs.luaj.jse)
     include(libs.luaj.jse)
+    include(libs.kotlin.stdlib) {
+        isTransitive = false
+    }
     compileOnly(libs.sodium.fabric)
     compileOnly(libs.jsr305)
 }

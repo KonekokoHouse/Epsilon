@@ -24,8 +24,9 @@ Minecraft.<init> TAIL
 7. `Managers.initManagers()`。
 8. `ConfigHolder.loadFriendsIntoManager()`：`FriendManager` 在配置加载之后才创建，好友列表在此补载。
 9. 初始化 `com.github.epsilon.graphics.schedulers.render3d.Render3DScheduler`，注册 priority `-999` 的统一 flush。
-10. `LuaScriptManager.init(...)`：扫描 `~/.epsilon/scripts` 并按开关加载脚本包。
-11. 生成空 i18n 模板，并注册退出时保存配置与关闭 Lua runtime 的 shutdown hook。
+10. `Scheduler.init()`：订阅 tick 级协程调度器，注册 priority `-900` 的任务推进。
+11. `LuaScriptManager.init(...)`：扫描 `~/.epsilon/scripts` 并按开关加载脚本包。
+12. 生成空 i18n 模板，并注册退出时保存配置与关闭 Lua runtime 的 shutdown hook。
 
 第 5 步先于第 7 步，因此配置恢复启用状态时 `Managers` 字段仍可能为 null；从配置进入的 `onEnable()`
 不得无条件访问 Manager。

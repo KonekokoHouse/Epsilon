@@ -3,7 +3,7 @@
 ## 版本来源
 
 - `gradle.properties`：Epsilon 自身的 `version`、`group`、`mod_id`、`mod_name`、`mod_author`、许可证和描述。
-- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Mixin、Sodium、LuminGraphics 和 PrismRHI 版本。
+- `gradle/libs.versions.toml`：JDK、Minecraft、NeoForm、Fabric API、Fabric Loader、NeoForge、Kotlin、Mixin、Sodium、LuminGraphics 和 PrismRHI 版本。
 - 根 `build.gradle.kts`：将版本目录中的值映射为各子项目使用的 Gradle 属性。
 - `common/build.gradle.kts`：生成 `com.github.epsilon.BuildConfig`，当前暴露 `MOD_ID` 和有效构建版本。
 
@@ -11,10 +11,27 @@
 
 ## 约定插件
 
-- `multiloader-common.gradle.kts`：Java 25 工具链、仓库、资源展开、Jar 元数据、源码 Jar、发布和 `buildRelease`。
-- `multiloader-loader.gradle.kts`：将 `:common` 的 Java、资源和生成源码加入 Fabric/NeoForge 编译与打包流程。
+- `multiloader-common.gradle.kts`：Java 25 工具链、Kotlin JVM 插件、仓库、资源展开、Jar 元数据、源码 Jar、发布和 `buildRelease`。
+- `multiloader-loader.gradle.kts`：将 `:common` 的 Java、Kotlin、资源和生成源码加入 Fabric/NeoForge 编译与打包流程。
 
 Sodium 兼容代码只在对应平台编译，不会把 Sodium 打入 Epsilon 成品。
+
+## Kotlin 源码
+
+`common/src/main/kotlin` 与 `common/src/main/java` 同为共享源目录，两侧可以互相引用。Kotlin 只用于新增的
+[调度器](scheduler.md)，其余代码仍是 Java。
+
+- KGP 通过 `buildSrc/build.gradle.kts` 的 `implementation(libs.kotlin.gradle.plugin)` 上到 buildSrc 的实现
+  类路径，`multiloader-common` 里的 `id("org.jetbrains.kotlin.jvm")` 因此不能再带版本号。`buildSrc` 自带
+  `settings.gradle.kts` 导入根版本目录，Kotlin 版本仍只写在 `gradle/libs.versions.toml` 一处。
+- 版本键 `kotlin` 与 Gradle 内嵌的 Kotlin 对齐，KGP 与 `kotlin-stdlib` 复用已有缓存。
+- 共享方式与 Java 一致：`:common` 用可消费配置 `commonKotlin` 暴露目录制品，`multiloader-loader` 把它加成
+  各 loader `compileKotlin` 的额外 `source(...)`，共享 Kotlin 在每个 loader 项目里各编译一次。`javadoc`
+  解析不了 `.kt`，故只接入 `commonJava`；`sourcesJar` 两者都收。
+- Kotlin 与 Java 共用同一个 Java 25 工具链声明。
+- 成品各自内嵌 `kotlin-stdlib`：Fabric 走 Loom `include`，NeoForge 走 JarJar 并 `strictly` 钉住版本，两侧
+  都关掉传递依赖，只带 stdlib 本体。`verifyLuminJarInJar` 断言两个成品各内嵌恰好一个 stdlib——缺了它，共享
+  源码里的 Kotlin 会在首次触碰时抛 `NoClassDefFoundError`。不引入 `kotlinx-coroutines`。
 
 ## Lumin 发布版本
 

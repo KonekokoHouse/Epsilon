@@ -15,6 +15,7 @@ docs/
 │   ├── modules-and-addons.md
 │   ├── events-and-mixins.md
 │   ├── configuration-and-rotation.md
+│   ├── scheduler.md
 │   ├── rendering.md
 │   └── internationalization.md
 ├── lua-scripting/
@@ -45,6 +46,7 @@ docs/
 | Module、Setting DSL、Addon | [模块与 Addon](development/modules-and-addons.md) |
 | EventBus、事件目录、Mixin | [事件与 Mixin](development/events-and-mixins.md) |
 | 配置目录、持久化、RotationManager | [配置与旋转](development/configuration-and-rotation.md) |
+| 跨 tick 任务、资源锁、抢占、`await(delay(n))` | [调度器](development/scheduler.md) |
 | Lumin、GUI/HUD、2D/3D 渲染 | [渲染](development/rendering.md) |
 | Lua 脚本包、Module、Java 调用、Setting、事件、渲染和管理 | [Lua 脚本教程](lua-scripting/) |
 | Lua 代码补全库与可直接安装的多模块示例包 | [Lua 示例](examples/lua/) |

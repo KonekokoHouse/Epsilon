@@ -10,6 +10,7 @@ import com.github.epsilon.holders.HudElementHolder;
 import com.github.epsilon.holders.ModuleHolder;
 import com.github.epsilon.managers.Managers;
 import com.github.epsilon.modules.impl.ClientSetting;
+import com.github.epsilon.schedule.Scheduler;
 import com.github.epsilon.scripting.lua.LuaScriptManager;
 
 import java.lang.invoke.MethodHandles;
@@ -36,6 +37,9 @@ public class EpsilonCommon {
 
         // 初始化 Render3DScheduler 里的 RenderPipeline
         Render3DScheduler.init();
+
+        // 订阅 tick 级协程调度器
+        Scheduler.init();
 
         LuaScriptManager.INSTANCE.init(ClientSetting.INSTANCE.luaScriptsEnabled.getValue());
 

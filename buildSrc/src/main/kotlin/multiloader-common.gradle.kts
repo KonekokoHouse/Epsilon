@@ -1,6 +1,8 @@
 plugins {
     `java-library`
     `maven-publish`
+    // 版本由 buildSrc 的 implementation(libs.kotlin.gradle.plugin) 固定，这里不能再带版本号。
+    id("org.jetbrains.kotlin.jvm")
 }
 
 val baseVersion = providers.gradleProperty("version")
