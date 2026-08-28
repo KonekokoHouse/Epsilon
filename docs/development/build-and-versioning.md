@@ -20,7 +20,7 @@ Sodium 兼容代码只在对应平台编译，不会把 Sodium 打入 Epsilon �
 
 Epsilon 优先从本机 `mavenLocal()` 解析 `com.github.slmpc` 依赖，未找到时从
 `https://slmpc.github.io/maven-repository` 获取，不依赖仓库绝对路径。版本目录当前消费 PrismRHI
-`0.2.2`、LuminGraphics `1.2.5` 和 LuminGraphics-MC `1.2.5`。LuminGraphics-MC
+`0.2.2`、LuminGraphics `1.2.6` 和 LuminGraphics-MC `1.2.6`。LuminGraphics-MC
 会将 LuminGraphics class 直接打入 loader JAR，因此两者必须共用同一版本键。三个上游项目发布到远端 Maven
 仓库后，CI 可以直接构建；本地开发也可以用 `publishToMavenLocal` 覆盖同版本依赖。
 
@@ -48,7 +48,7 @@ Lumin class 才抛 `NoClassDefFoundError`。因此：
   `fabric.mod.json` 的 `depends` 中声明了 `lumin_graphics_mc`。
 
 NeoForge 版内嵌元数据同样把 `neoforge` 与 `minecraft` 钉在单点区间，但 NeoForge 缺依赖时会直接报错
-而非静默丢弃，且其 Maven `ComparableVersion` 不能正确处理 `1.2.5+mc26.1.2` 这类构建元数据，所以这一侧
+而非静默丢弃，且其 Maven `ComparableVersion` 不能正确处理 `1.2.6+mc26.1.2` 这类构建元数据，所以这一侧
 不做重写。
 
 重打包只是过渡手段，根因在上游加载器元数据本身。已向上游提交
